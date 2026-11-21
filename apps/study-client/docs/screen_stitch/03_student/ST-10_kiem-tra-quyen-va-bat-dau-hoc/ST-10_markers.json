@@ -1,0 +1,522 @@
+{
+  "screen_id": "ST-10",
+  "source_image": "screen.png",
+  "source_html": "code.html",
+  "source_state": "Complete static entitlement-gate handoff mockup; not a Study Web runtime capture. The screenshot is used directly.",
+  "source_image_sha256": "5d1386bbeba8a21d2ee48cc4b62099cdd6fab3a0d3e0d96b2bc24f3133e840ce",
+  "source_html_sha256": "87178684dcd4dd6f4ca47fa3ed26ff63823616d84ca402015aa72a190d431b87",
+  "image_size": {
+    "width": 1566,
+    "height": 1600
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 3372,
+      "height": 3200
+    },
+    "source_offset_canvas_px": {
+      "x": 120,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 120,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 44,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "side gutter and image edge only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST10-EL-01",
+      "name": "Header brand",
+      "target": "Study2Work LMS logo and school icon",
+      "target_center_source_px": {
+        "x": 154,
+        "y": 34
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 70
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 68
+      },
+      "target_center_canvas_px": {
+        "x": 428,
+        "y": 68
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST10-EL-02",
+      "name": "Primary navigation",
+      "target": "Trang chủ, Khóa học của tôi, Tiến độ, Thảo luận, Thông báo",
+      "target_center_source_px": {
+        "x": 630,
+        "y": 36
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 72
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 72
+      },
+      "target_center_canvas_px": {
+        "x": 1380,
+        "y": 72
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST10-EL-03",
+      "name": "Student identity",
+      "target": "Static Nguyễn Văn A / Học viên identity and profile icon",
+      "target_center_source_px": {
+        "x": 1444,
+        "y": 37
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 132
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 74
+      },
+      "target_center_canvas_px": {
+        "x": 3008,
+        "y": 74
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST10-EL-04",
+      "name": "Breadcrumb and lesson context",
+      "target": "Khóa học / Kỹ sư Frontend Chuyên nghiệp / ST-10 transition label",
+      "target_center_source_px": {
+        "x": 360,
+        "y": 120
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 240
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 240
+      },
+      "target_center_canvas_px": {
+        "x": 840,
+        "y": 240
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST10-EL-05",
+      "name": "Entitlement gate status pill",
+      "target": "ENTITLEMENT GATE: ACTIVE",
+      "target_center_source_px": {
+        "x": 1390,
+        "y": 120
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 240
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 240
+      },
+      "target_center_canvas_px": {
+        "x": 2900,
+        "y": 240
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST10-EL-06",
+      "name": "Main hand-off heading",
+      "target": "Shield icon, Hand-off Transition Module label and waiting-for-access title",
+      "target_center_source_px": {
+        "x": 430,
+        "y": 245
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 490
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 490
+      },
+      "target_center_canvas_px": {
+        "x": 980,
+        "y": 490
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST10-EL-07",
+      "name": "Security gate badge",
+      "target": "SECURITY_GATE_ENFORCED",
+      "target_center_source_px": {
+        "x": 846,
+        "y": 195
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 390
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 390
+      },
+      "target_center_canvas_px": {
+        "x": 1812,
+        "y": 390
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST10-EL-08",
+      "name": "Gate progress and status panel",
+      "target": "Progress illustration, STATUS: 423_LOCKED and static access-check copy",
+      "target_center_source_px": {
+        "x": 530,
+        "y": 460
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 920
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 920
+      },
+      "target_center_canvas_px": {
+        "x": 1180,
+        "y": 920
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST10-EL-09",
+      "name": "Protected lesson player placeholder",
+      "target": "Disabled lesson/media surface, protected-content heading and explanatory text",
+      "target_center_source_px": {
+        "x": 530,
+        "y": 840
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 1680
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 1680
+      },
+      "target_center_canvas_px": {
+        "x": 1180,
+        "y": 1680
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST10-EL-10",
+      "name": "Session token restriction pill",
+      "target": "Chặn tự động stream / waiting for server Session Token copy",
+      "target_center_source_px": {
+        "x": 525,
+        "y": 950
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 1900
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 1900
+      },
+      "target_center_canvas_px": {
+        "x": 1170,
+        "y": 1900
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "ST10-EL-11",
+      "name": "Technical security contract callout",
+      "target": "Static policy copy naming APIs #22, #23 and #24",
+      "target_center_source_px": {
+        "x": 530,
+        "y": 1200
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 2400
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 2400
+      },
+      "target_center_canvas_px": {
+        "x": 1180,
+        "y": 2400
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "ST10-EL-12",
+      "name": "Return to ST-09 link",
+      "target": "Quay lại tổng quan khóa học (ST-09)",
+      "target_center_source_px": {
+        "x": 320,
+        "y": 1380
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 2760
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 2760
+      },
+      "target_center_canvas_px": {
+        "x": 760,
+        "y": 2760
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "ST10-EL-13",
+      "name": "Disabled start-to-ST-11 button",
+      "target": "Bắt đầu học (ST-11) - Đang khóa vĩnh viễn",
+      "target_center_source_px": {
+        "x": 760,
+        "y": 1380
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 2760
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 2760
+      },
+      "target_center_canvas_px": {
+        "x": 1640,
+        "y": 2760
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "ST10-EL-14",
+      "name": "Hand-off FSM heading",
+      "target": "Máy trạng thái Hand-off title, description and FSM badge",
+      "target_center_source_px": {
+        "x": 1288,
+        "y": 240
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 480
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 480
+      },
+      "target_center_canvas_px": {
+        "x": 2696,
+        "y": 480
+      }
+    },
+    {
+      "number": 15,
+      "element_id": "ST10-EL-15",
+      "name": "Checking state card",
+      "target": "checking / Active card and API #22 description",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 415
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 830
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 830
+      },
+      "target_center_canvas_px": {
+        "x": 2720,
+        "y": 830
+      }
+    },
+    {
+      "number": 16,
+      "element_id": "ST10-EL-16",
+      "name": "Denied state card",
+      "target": "denied / Fallback card and access-denied description",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 570
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 1140
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 1140
+      },
+      "target_center_canvas_px": {
+        "x": 2720,
+        "y": 1140
+      }
+    },
+    {
+      "number": 17,
+      "element_id": "ST10-EL-17",
+      "name": "Started state card",
+      "target": "started / Target ST-11 card and API #23 description",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 718
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 1440
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 1436
+      },
+      "target_center_canvas_px": {
+        "x": 2720,
+        "y": 1436
+      }
+    },
+    {
+      "number": 18,
+      "element_id": "ST10-EL-18",
+      "name": "Backend API status panel",
+      "target": "DESIGN_ONLY status rows for GET #22, POST #23 and GET #24",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 960
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 1920
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 1920
+      },
+      "target_center_canvas_px": {
+        "x": 2720,
+        "y": 1920
+      }
+    },
+    {
+      "number": 19,
+      "element_id": "ST10-EL-19",
+      "name": "Integration and bypass notice",
+      "target": "Static note about no mock bypass and ST-10 contract",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 1095
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 2190
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 2190
+      },
+      "target_center_canvas_px": {
+        "x": 2720,
+        "y": 2190
+      }
+    },
+    {
+      "number": 20,
+      "element_id": "ST10-EL-20",
+      "name": "Footer copyright and WCAG badge",
+      "target": "© 2025 Study2Work and WCAG 2.1 AA badge",
+      "target_center_source_px": {
+        "x": 325,
+        "y": 1555
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 34,
+        "y": 3100
+      },
+      "leader_to_canvas_px": {
+        "x": 120,
+        "y": 3110
+      },
+      "target_center_canvas_px": {
+        "x": 770,
+        "y": 3110
+      }
+    },
+    {
+      "number": 21,
+      "element_id": "ST10-EL-21",
+      "name": "Footer legal and help navigation",
+      "target": "Terms, privacy and help links",
+      "target_center_source_px": {
+        "x": 1305,
+        "y": 1555
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 3338,
+        "y": 3100
+      },
+      "leader_to_canvas_px": {
+        "x": 3252,
+        "y": 3110
+      },
+      "target_center_canvas_px": {
+        "x": 2730,
+        "y": 3110
+      }
+    }
+  ]
+}

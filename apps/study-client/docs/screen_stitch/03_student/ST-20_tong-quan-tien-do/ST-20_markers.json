@@ -1,0 +1,219 @@
+{
+  "screen_id": "ST-20",
+  "source": {
+    "image": "screen_rendered.png",
+    "width_px": 1280,
+    "height_px": 1079,
+    "coordinate_space": "rendered HTML screenshot pixels",
+    "provenance": "Rendered from code.html with Google Chrome Stable headless and full-document CDP Page.captureScreenshot; this is static HTML/CSS only, no application/API runtime."
+  },
+  "original_source": {
+    "image": "screen.png",
+    "width_px": 1280,
+    "height_px": 1123,
+    "sha256": "a308a1e1739b155f20abbb6d9269f132a0125997cf06a4f08caf15818559a135",
+    "note": "Preserved unchanged; main content region is blank in source PNG."
+  },
+  "annotation_canvas": {
+    "width_px": 1392,
+    "height_px": 1079,
+    "source_x_px": 56,
+    "source_y_px": 0,
+    "gutter_left_px": 56,
+    "gutter_right_px": 56
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST20-EL-01",
+      "label": "Study2Work brand and home link",
+      "x": 108,
+      "y": 40,
+      "badge_x": 72,
+      "badge_y": 40,
+      "side": "L",
+      "anchor_x": 88,
+      "anchor_y": 40
+    },
+    {
+      "number": 2,
+      "element_id": "ST20-EL-02",
+      "label": "Primary navigation group: overview, my courses, active progress",
+      "x": 393,
+      "y": 40,
+      "badge_x": 628,
+      "badge_y": 40,
+      "side": "R",
+      "anchor_x": 613,
+      "anchor_y": 40
+    },
+    {
+      "number": 3,
+      "element_id": "ST20-EL-03",
+      "label": "Breadcrumb trail",
+      "x": 193,
+      "y": 97,
+      "badge_x": 412,
+      "badge_y": 97,
+      "side": "R",
+      "anchor_x": 397,
+      "anchor_y": 97
+    },
+    {
+      "number": 4,
+      "element_id": "ST20-EL-04",
+      "label": "Page title “Tổng quan tiến độ”",
+      "x": 153,
+      "y": 163,
+      "badge_x": 348,
+      "badge_y": 163,
+      "side": "R",
+      "anchor_x": 337,
+      "anchor_y": 163
+    },
+    {
+      "number": 5,
+      "element_id": "ST20-EL-05",
+      "label": "Page summary description",
+      "x": 300,
+      "y": 201,
+      "badge_x": 625,
+      "badge_y": 201,
+      "side": "R",
+      "anchor_x": 613,
+      "anchor_y": 201
+    },
+    {
+      "number": 6,
+      "element_id": "ST20-EL-06",
+      "label": "Empty-state analytics icon",
+      "x": 640,
+      "y": 398,
+      "badge_x": 748,
+      "badge_y": 398,
+      "side": "R",
+      "anchor_x": 736,
+      "anchor_y": 398
+    },
+    {
+      "number": 7,
+      "element_id": "ST20-EL-07",
+      "label": "Empty-state heading",
+      "x": 641,
+      "y": 469,
+      "badge_x": 760,
+      "badge_y": 469,
+      "side": "R",
+      "anchor_x": 749,
+      "anchor_y": 469
+    },
+    {
+      "number": 8,
+      "element_id": "ST20-EL-08",
+      "label": "Empty-state explanatory copy",
+      "x": 640,
+      "y": 507,
+      "badge_x": 925,
+      "badge_y": 507,
+      "side": "R",
+      "anchor_x": 915,
+      "anchor_y": 507
+    },
+    {
+      "number": 9,
+      "element_id": "ST20-EL-09",
+      "label": "View my courses button",
+      "x": 640,
+      "y": 579,
+      "badge_x": 825,
+      "badge_y": 579,
+      "side": "R",
+      "anchor_x": 813,
+      "anchor_y": 579
+    },
+    {
+      "number": 10,
+      "element_id": "ST20-EL-10",
+      "label": "Footer brand and description",
+      "x": 220,
+      "y": 889,
+      "badge_x": 497,
+      "badge_y": 889,
+      "side": "R",
+      "anchor_x": 478,
+      "anchor_y": 889
+    },
+    {
+      "number": 11,
+      "element_id": "ST20-EL-11",
+      "label": "Footer program link group",
+      "x": 595,
+      "y": 886,
+      "badge_x": 779,
+      "badge_y": 852,
+      "side": "R",
+      "anchor_x": 762,
+      "anchor_y": 852
+    },
+    {
+      "number": 12,
+      "element_id": "ST20-EL-12",
+      "label": "Footer support link group",
+      "x": 845,
+      "y": 886,
+      "badge_x": 998,
+      "badge_y": 852,
+      "side": "R",
+      "anchor_x": 982,
+      "anchor_y": 852
+    },
+    {
+      "number": 13,
+      "element_id": "ST20-EL-13",
+      "label": "Footer contact details",
+      "x": 1120,
+      "y": 890,
+      "badge_x": 1283,
+      "badge_y": 852,
+      "side": "R",
+      "anchor_x": 1269,
+      "anchor_y": 852
+    },
+    {
+      "number": 14,
+      "element_id": "ST20-EL-14",
+      "label": "Copyright and platform strip text",
+      "x": 305,
+      "y": 1020,
+      "badge_x": 662,
+      "badge_y": 1020,
+      "side": "R",
+      "anchor_x": 647,
+      "anchor_y": 1020
+    },
+    {
+      "number": 15,
+      "element_id": "ST20-EL-15",
+      "label": "Terms of use link",
+      "x": 1009,
+      "y": 1020,
+      "badge_x": 1002,
+      "badge_y": 1000,
+      "side": "L",
+      "anchor_x": 1014,
+      "anchor_y": 1010
+    },
+    {
+      "number": 16,
+      "element_id": "ST20-EL-16",
+      "label": "Privacy policy link",
+      "x": 1166,
+      "y": 1020,
+      "badge_x": 1290,
+      "badge_y": 1000,
+      "side": "R",
+      "anchor_x": 1278,
+      "anchor_y": 1010
+    }
+  ]
+}

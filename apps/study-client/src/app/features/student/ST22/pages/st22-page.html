@@ -1,0 +1,68 @@
+<main class="static-page api-screen st22-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/progress">Tổng quan tiến độ</a><span>›</span><span>Thành tích</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">Thành tích và chứng nhận</p>
+      <h1>Thành tích đã đạt</h1>
+      <p>Các thành tích đã đạt của bạn.</p>
+    </div>
+    @if (pagination(); as page) {
+      @if (hasSnapshotCountMismatch()) {
+        <span class="api-pill">Số lượng đang đồng bộ</span>
+      } @else {
+        <span class="api-pill">{{ page.total }} thành tích</span>
+      }
+    }
+  </header>
+  @if (loading()) {
+    <section class="api-message" role="status"><strong>Đang tải thành tích…</strong></section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retry()">
+        Tải lại thành tích
+      </button>
+    </section>
+  }
+  @if (!loading() && !error() && hasSnapshotCountMismatch()) {
+    <section class="api-message achievement-snapshot-warning" role="status" aria-live="polite">
+      <div>
+        <strong>Danh sách và số tổng chưa cập nhật cùng lúc.</strong>
+        <p>Các mục bên dưới vẫn được giữ lại. Tải lại để đồng bộ danh sách.</p>
+      </div>
+      <button class="api-button secondary" type="button" (click)="retry()">
+        Tải lại thành tích
+      </button>
+    </section>
+  }
+  @if (!loading() && !error() && items().length === 0 && !hasSnapshotCountMismatch()) {
+    <section class="api-message">
+      <div>
+        <span class="api-empty-icon" aria-hidden="true">◇</span
+        ><strong>Chưa có thành tích được ghi nhận.</strong>
+        <p>Thành tích mới sẽ xuất hiện tại đây.</p>
+      </div>
+    </section>
+  }
+  @if (!loading() && items().length) {
+    <section class="api-card">
+      <ul class="achievement-list">
+        @for (achievement of items(); track achievement.id) {
+          <li>
+            <span class="achievement-icon" aria-hidden="true">✦</span>
+            <div>
+              <h2>{{ achievement.title }}</h2>
+              <p class="api-meta">
+                {{ achievement.awarded_at | date: 'medium' }}
+              </p>
+            </div>
+          </li>
+        }
+      </ul>
+      <p class="api-muted">Chứng nhận hiện chưa khả dụng.</p>
+    </section>
+  }
+</main>

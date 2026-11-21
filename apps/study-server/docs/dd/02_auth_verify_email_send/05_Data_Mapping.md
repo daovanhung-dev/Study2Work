@@ -10,6 +10,8 @@ format: markdown
 
 ## Flow xử lý data
 
+> Các bước dispatch/retry bên dưới mô tả expected flow của AC-01. Current source gọi provider đồng bộ; exception trả HTTP 500 và chưa có retry worker. API #01 hiện chỉ ghi `verification_dispatch_pending`, chưa gọi API #02; chi tiết tại [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md).
+
 ## Request Usage Matrix
 
 | Request field | Source | Validate | External/API usage | Response usage | Gap |
@@ -27,7 +29,7 @@ format: markdown
 
 | Mutation ID | Operation | Target table/API | Record condition | Fields | Value sources | Mapping file | Transaction | Failure behavior |
 |---|---|---|---|---|---|---|---|---|
-| `M1` | `DISPATCH` | `Email Provider` | Verification enabled; request accepted | `user_id`, `email` | Request body | `N/A — external side effect` | `N/A` | Log/retry bất đồng bộ sau acceptance; không tạo DB record |
+| `M1` | `DISPATCH` | `Email Provider` | Verification enabled; request accepted | `user_id`, `email` | Request body | `N/A — external side effect` | `N/A` | Expected AC-01: log/retry delivery failure sau acceptance; current source gọi đồng bộ, chưa có retry worker; không tạo DB record |
 
 ## Response Source Matrix
 
@@ -87,6 +89,8 @@ format: markdown
 - Không có local DB insert/update/delete hoặc transaction mapping được xác nhận; xem [07_table.md](./07_table.md).
 
 ### 3.3. Accept and retry
+
+- Đây là expected behavior theo AC-01; current provider failure được view ánh xạ đồng bộ thành HTTP 500.
 
 - Khi dispatch đã được chấp nhận/xếp xử lý: đi tới `4.1`; trả HTTP `202` và `DESIGN_OPERATION_ACCEPTED`.
 - Nếu Email Provider lỗi sau acceptance: ghi log và retry bất đồng bộ; không đổi response contract và không tạo account/record trùng.

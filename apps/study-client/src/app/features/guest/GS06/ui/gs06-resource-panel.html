@@ -1,0 +1,54 @@
+<section class="resource-panel" aria-labelledby="gs06-resources-heading">
+  <header class="resource-panel__heading">
+    <div>
+      <p class="resource-panel__eyebrow">Tài nguyên công khai</p>
+      <h2 id="gs06-resources-heading">Tài liệu khóa học</h2>
+      <p class="resource-panel__summary">Chọn tài liệu để xem thông tin và mở tệp an toàn.</p>
+    </div>
+    @if (state.status === 'ready') {
+      <span class="resource-panel__count">{{ state.resources.length }} tài liệu</span>
+    }
+  </header>
+
+  @if (state.status === 'loading') {
+    <div class="resource-panel__message" role="status" aria-live="polite">
+      <span class="resource-panel__spinner" aria-hidden="true"></span>
+      <span>Đang tải tài liệu…</span>
+    </div>
+  } @else if (state.status === 'invalid-course') {
+    <div class="resource-panel__message" role="alert">Mã khóa học không hợp lệ.</div>
+  } @else if (state.status === 'error') {
+    <div class="resource-panel__message resource-panel__message--error" role="alert">
+      <span>Không thể tải tài liệu lúc này.</span>
+      <button class="resource-panel__button" type="button" (click)="retry.emit()">
+        Thử tải lại
+      </button>
+    </div>
+  } @else if (state.status === 'empty') {
+    <div class="resource-panel__message resource-panel__message--empty">
+      <span class="resource-panel__empty-icon" aria-hidden="true"><study-icon name="layers" /></span>
+      <strong>Khóa học chưa có tài liệu công khai.</strong>
+      <span>Tài liệu riêng tư chỉ xuất hiện trong khu vực học viên đủ quyền.</span>
+    </div>
+  } @else {
+    <ul class="resource-list">
+      @for (resource of state.resources; track resource.id) {
+        <li class="resource-list__item">
+          <span class="resource-list__icon" aria-hidden="true"><study-icon name="layers" /></span>
+          <div class="resource-list__copy">
+            <h3>{{ resource.name }}</h3>
+            <p>{{ resource.type }}</p>
+          </div>
+          <a
+            class="resource-panel__button resource-panel__button--link"
+            [routerLink]="['/resources', resource.id]"
+            [queryParams]="{ from: 'course', courseId: courseId }"
+            [attr.aria-label]="'Mở tài liệu: ' + resource.name"
+          >
+            Xem tài liệu
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>

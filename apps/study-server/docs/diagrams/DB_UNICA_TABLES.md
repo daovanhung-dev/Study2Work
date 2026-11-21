@@ -1,6 +1,6 @@
 # UNICA Database Tables
 
-Tài liệu này mô tả 16 bảng trong [`DB_UNICA_ERD.drawio`](./DB_UNICA_ERD.drawio),
+Tài liệu này mô tả 19 bảng trong [`DB_UNICA_ERD.drawio`](./DB_UNICA_ERD.drawio),
 bao gồm mục đích lưu trữ, quan hệ, các query design đã được mô tả trong DD và
 trạng thái sử dụng trong source hiện hành.
 
@@ -26,18 +26,21 @@ context hiện hành của repository:
 | Study | `RUNTIME-VERIFIED` | `apps/study-server/app/core/database.py` có `execute_query`, `query_one`, `query_many` | Đây là helper generic, chưa có method nghiệp vụ truy vấn các bảng ERD. Study business module hiện chưa được xác minh runnable. |
 | Study | `VERIFIED_IMPORT; TEST_COLLECTION_BLOCKED` | `apps/study-server/app/api/v1.py` có `SELECT NOW()` trong `/api/v1/test/db` | Chỉ là DB connectivity check; không truy vấn bảng nghiệp vụ. Register test còn stale import. |
 | AI | `UNWIRED` | `apps/ai-server/app/core/database.py` có copied query helpers | Helper không được wiring vào runtime `app/main.py`; không có database runtime usage. |
-| Work | `RUNTIME-VERIFIED` | `apps/work-server/prisma/schema.prisma` chỉ có `SystemRecord`/`system_records` | Không có 16 bảng ERD. `HealthService.ready()` chỉ chạy `SELECT 1`; schema `system_records` không được domain service sử dụng. |
+| Work | `RUNTIME-VERIFIED` | `apps/work-server/prisma/schema.prisma` chỉ có `SystemRecord`/`system_records` | Không có 17 bảng ERD. `HealthService.ready()` chỉ chạy `SELECT 1`; schema `system_records` không được domain service sử dụng. |
 
 Vì vậy, các query cụ thể theo bảng bên dưới được ghi là `DESIGN_ONLY` nếu
 nguồn đến từ DD/API contract; không nên hiểu chúng là method đang chạy.
 
-## Tổng quan 16 bảng
+## Tổng quan 20 bảng
 
 | Nhóm | Bảng | Tên tiếng Việt | Vai trò |
 |---|---|---|---|
 | Account & User | `users` | Người dùng / tài khoản | Lưu tài khoản, thông tin liên hệ, vai trò và trạng thái. |
 | Course & Learning | `courses` | Khóa học | Lưu thông tin khóa học do mentor phụ trách. |
+| Course & Learning | `course_status_audit_logs` | Lịch sử trạng thái khóa học | Lưu trạng thái cũ/mới, Admin actor và thời điểm theo fallback DERIVED của API #76. |
+| Course & Learning | `content_review_audit_logs` | Lịch sử quyết định duyệt Content | Lưu Content, Admin actor, trạng thái trước/sau, reason nullable và thời điểm theo fallback DERIVED của API #80. |
 | Course & Learning | `lessons` | Bài học | Lưu nội dung và thứ tự bài học trong khóa học. |
+| Course & Learning | `contents` | Nội dung course | Lưu Content nodes BIGINT, payload JSONB, quan hệ parent và soft-delete marker cho API #49–#53. |
 | Course & Learning | `resources` | Tài nguyên học tập | Lưu metadata và URL tài nguyên gắn với bài học. |
 | Course & Learning | `enrollments` | Ghi danh khóa học | Lưu quyền/tham gia của người dùng vào khóa học. |
 | Course & Learning | `lesson_progress` | Tiến độ bài học | Lưu trạng thái và tiến độ học của người dùng theo bài học. |
@@ -109,8 +112,10 @@ thái xuất bản và mentor phụ trách.
 ### Quan hệ
 
 - `courses.mentor_id` → `users.id`.
-- `courses.id` → `enrollments.course_id`, `lessons.course_id`, `quizzes.course_id`,
-  `assignments.course_id`, `discussions.course_id` và `payments.course_id`.
+- `course_status_audit_logs.actor_user_id` → `users.id`.
+- `courses.id` → `course_status_audit_logs.course_id`, `enrollments.course_id`,
+  `lessons.course_id`, `quizzes.course_id`, `assignments.course_id`,
+  `discussions.course_id` và `payments.course_id`.
 
 ### Method/query liên quan
 
@@ -228,7 +233,7 @@ thời điểm ghi danh và thời điểm hoàn thành.
 | `DESIGN_ONLY` | API #15 `enrollment-status` | `SELECT` | Kiểm tra trạng thái user/course enrollment. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `DESIGN_ONLY` | API #19 `POST .../enrollments` | `INSERT` | Tạo quyền học cho user hiện tại trong course; điều kiện ownership/status theo contract. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `DESIGN_ONLY` | API #20 `GET /users/me/courses` | `SELECT` | Đọc danh sách khóa học đã đăng ký, có filter status/page theo contract. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
-| `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
+| `SOURCE_BACKED_LOCAL` | Table-specific runtime method | `SELECT` | API #65/#66 có query runtime cục bộ; #66 chỉ dùng `last_accessed_at` làm activity proxy. | Fake DB tests không xác minh live schema/deployment. |
 
 ### Chi tiết trường
 
@@ -260,6 +265,7 @@ học và các mốc truy cập/hoàn thành.
 | `DESIGN_ONLY` | API #21, #37 `GET /users/me/progress...` | `SELECT` | Đọc tiến độ tổng hợp hoặc chi tiết theo course; query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `DESIGN_ONLY` | API #25 `PATCH .../progress` | `UPDATE`/upsert | Lưu vị trí/trạng thái tiến độ của user trên lesson; field contract có `percent` và `completed`, còn mapping vật lý chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `DESIGN_ONLY` | API #65, #67 `GET .../progress` | `SELECT` | Mentor đọc tiến độ toàn lớp hoặc một student trong course; mapping SQL chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DERIVED_LOCAL` | API #66 `GET .../analytics` | `SELECT` | Đếm cặp Student/lesson phân biệt có `last_accessed_at` trên lesson PUBLISHED và lấy timestamp gần nhất; đây là activity proxy, không phải event history. | Runtime source `apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py`; live schema chưa xác minh. |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -337,6 +343,7 @@ câu.
 | `id` | `BIGSERIAL` | PK, bắt buộc | Định danh câu hỏi. | ERD V1 |
 | `quiz_id` | `BIGINT` | FK → `quizzes.id`, bắt buộc | Quiz chứa câu hỏi. | ERD V1; API contract |
 | `question_text` | `TEXT` | Bắt buộc | Nội dung câu hỏi. | ERD V1; API contract |
+| `question_type` | `VARCHAR(24)` | Nullable; CHECK `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE` | Loại câu hỏi. Legacy rows có thể NULL; API #88 luôn ghi giá trị. | Migration 013, DERIVED từ QuizQuestion.type và vocabulary V1-PILOT; không chứng minh live schema. |
 | `sort_order` | `INT` | Default `0` | Thứ tự câu hỏi trong quiz. | ERD V1 |
 | `score` | `NUMERIC(5,2)` | Default `1` | Điểm tối đa của câu hỏi. | ERD V1; API contract |
 
@@ -367,6 +374,7 @@ Lưu các phương án trả lời của một câu hỏi và đánh dấu phư�
 | `question_id` | `BIGINT` | FK → `quiz_questions.id`, bắt buộc | Câu hỏi sở hữu lựa chọn. | ERD V1; API contract |
 | `choice_text` | `TEXT` | Bắt buộc | Nội dung phương án trả lời. | ERD V1; API contract |
 | `is_correct` | `BOOLEAN` | Default `FALSE` | Đánh dấu phương án có phải đáp án đúng hay không. | ERD V1; API contract |
+| `sort_order` | `INT` | NOT NULL, default `0` | Thứ tự choice; API #88 gán index zero-based để giữ thứ tự input. | Migration 013, DERIVED; live schema chưa xác minh. |
 
 ## 10. `quiz_attempts` — Lần làm bài kiểm tra
 
@@ -529,8 +537,8 @@ parent là comment/reply.
 | `DESIGN_ONLY` | `Q3` của API #10 | `SELECT` + author join | Đọc `r.id`, `r.parent_id`, `r.user_id`, `r.content`, `r.created_at` cho replies với `parent_id IN (:review_ids)` và `status = 'ACTIVE'`; join `cu.id`, `cu.full_name`, `cu.avatar_url`. | [`docs/dd/10_courses_reviews/05_Data_Mapping.md`](../dd/10_courses_reviews/05_Data_Mapping.md) |
 | `DESIGN_ONLY` | `Q4` của API #10 | `COUNT` | Đếm review gốc theo cùng scope/visibility predicate với Q2. | [`docs/dd/10_courses_reviews/05_Data_Mapping.md`](../dd/10_courses_reviews/05_Data_Mapping.md) |
 | `DESIGN_ONLY` | API #39–#42 | `SELECT`/`INSERT` | Student đọc thread, tạo topic/reply và reload thread; mapping SQL chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
-| `DESIGN_ONLY` | API #97–#100 | `SELECT`/`UPDATE`/`DELETE` | Contract admin cho reported discussions, moderation và delete; query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
-| `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
+| `SOURCE_BACKED_WITH_DERIVED_SCHEMA` | API #97 | `COUNT`/`SELECT` | Đếm và đọc queue ở grain Discussion từ reports OPEN/IN_REVIEW; optional exact-match reason/severity và latest-report ordering. | [`api_97_admin_discussions_reported/query.py`](../../app/modules/admin/api_97_admin_discussions_reported/query.py); migration 014 |
+| `DESIGN_ONLY` | API #98–#100 | `SELECT`/`UPDATE`/`DELETE` | Contract admin cho detail, moderation và delete; query matrix runtime chưa có. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 
 ### Chi tiết trường
 
@@ -548,6 +556,18 @@ parent là comment/reply.
 > **DISCREPANCY:** Một số contract logical đề cập `discussions.title` hoặc
 > rating, nhưng ERD hiện không có cột `title` hoặc cột/bảng rating. Không tự
 > thêm field hoặc rating predicate.
+
+### API #97 DERIVED relation candidate: `discussion_reports`
+
+Migration 014 adds this Study-local candidate table with `discussion_id BIGINT`
+to the legacy `discussions.id` and `reporter_user_id BIGINT` to `users.id`, both
+with `ON DELETE RESTRICT` to retain report evidence. API #100 must account for
+the Discussion FK before any hard-delete behavior.
+It stores `reason_code`, free-form `severity`, OPEN/IN_REVIEW/RESOLVED/DISMISSED
+status and `created_at`. The table, FK targets, status set and report producer
+are local DERIVED decisions; the checked-in migration does not establish live
+schema or deployment. The endpoint needs a later report-ingest flow before this
+queue can receive records in a running environment.
 
 ## 15. `notifications` — Thông báo
 
@@ -619,9 +639,173 @@ mã giao dịch, trạng thái và thời điểm thanh toán thành công.
 | `paid_at` | `TIMESTAMP` | Nullable | Thời điểm payment thành công; null khi pending/failed hoặc chưa xác nhận. | ERD V1; API contract |
 | `created_at` | `TIMESTAMP` | Bắt buộc | Thời điểm tạo bản ghi payment. | ERD V1 |
 
+## 17. `contents` — Nội dung course
+
+### Mục đích và thông tin lưu trữ
+
+Lưu các Content node trong course theo reusable `Content` contract. Một response
+cây là danh sách phẳng; `parent_id` nối node với parent. Đây là bảng mới trong
+legacy Study schema artifact, chưa chứng minh migration đã được áp dụng trên DB
+live.
+
+### Quan hệ
+
+- `contents.course_id` → `courses.id`.
+- `(contents.parent_id, contents.course_id)` → `(contents.id, contents.course_id)` để parent và child cùng course.
+- `contents.id` → `content_review_audit_logs.content_id` để giữ lại lịch sử quyết định duyệt.
+
+### Method/query liên quan
+
+| Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
+|---|---|---|---|---|
+| `SOURCE_BACKED` | API #49 `LIST_COURSE_CONTENTS` | `SELECT` | Đọc mọi node theo `course_id`, bỏ row có `deleted_at`, sắp xếp `parent_id NULLS FIRST`, `content_order`, `id`. | [`apps/study-server/app/modules/mentor/api_49_mentor_content_list/query.py`](../../app/modules/mentor/api_49_mentor_content_list/query.py) |
+| `SOURCE_BACKED` | Legacy schema/migration | `CREATE TABLE` | Khai báo fields reusable Content cùng `deleted_at` để hỗ trợ API #49–#53. | [`infra/postgres/study-server/migrations/006_contents.sql`](../../../../infra/postgres/study-server/migrations/006_contents.sql) |
+| `SOURCE_BACKED` | API #51 `LOCK_MENTOR_CONTENT` / `UPDATE_CONTENT` | `SELECT FOR UPDATE`/`UPDATE` | Khóa Content và Course, rồi cập nhật ba editable fields cùng status. | [`apps/study-server/app/modules/mentor/api_51_mentor_content_update/query.py`](../../app/modules/mentor/api_51_mentor_content_update/query.py) |
+| `SOURCE_BACKED; LIVE_UNVERIFIED` | API #80 `INSERT_ADMIN_CONTENT_REVIEW_AUDIT` | `INSERT` | Append actor, trạng thái cũ/mới và nullable reason trong cùng transaction với quyết định duyệt. | [`apps/study-server/app/modules/admin/api_80_admin_content_approve/query.py`](../../app/modules/admin/api_80_admin_content_approve/query.py) |
+| `NOT_VERIFIED_HERE` | Live DB | — | Chưa xác minh migration 006 đã được áp dụng hoặc live columns/constraints tồn tại. | Runtime database chưa được probe |
+
+### Chi tiết trường
+
+| Trường | Kiểu | Khóa/ràng buộc | Mô tả | Nguồn/trạng thái |
+|---|---|---|---|---|
+| `id` | `BIGSERIAL` | PK, bắt buộc | Định danh node Content, map sang `Content.id`. | Legacy DDL/migration 006 |
+| `course_id` | `BIGINT` | FK → `courses.id`, bắt buộc | Course chứa node, map sang `Content.course_id`. | Legacy DDL/migration 006 |
+| `content_type` | `TEXT` | Bắt buộc; open string | Loại Content; enum members chưa được đặc tả. | Contract field; open string decision |
+| `title` | `TEXT` | Bắt buộc | Tiêu đề node Content. | Contract field; legacy DDL/migration 006 |
+| `payload` | `JSONB` | Bắt buộc; JSON object check | Payload object; subtype keys chưa được đặc tả. | Contract field; legacy DDL/migration 006 |
+| `status` | `TEXT` | Bắt buộc; open string | Content state; enum members và transition chưa được đặc tả. | Contract field; open string decision |
+| `parent_id` | `BIGINT` | Nullable; composite FK cùng `course_id` | Parent node; null ở root; response omit null. | Contract field; legacy DDL/migration 006 |
+| `content_order` | `INTEGER` | Bắt buộc | Sibling order; map sang response `order`. | Contract field; legacy DDL/migration 006 |
+| `deleted_at` | `TIMESTAMP` | Nullable | Soft-delete marker; API #49 loại node đã xóa khỏi active tree. | AC-22 soft-delete flow; implementation decision |
+
+> **Boundary:** API #49/#51 use this checked-in legacy mapping. It does not
+> establish live schema availability, Content enum semantics, payload subtype
+> validation or public selection of a published Content version.
+
+## 18. `content_versions` — Snapshot lịch sử Content
+
+### Mục đích và trạng thái
+
+Migration 007 adds a legacy BIGINT snapshot table for API #51's derived version
+fallback. Each successful update records the pre-update Content state and the
+Mentor who superseded that snapshot. The table is additive source evidence;
+live application and migration status are not verified.
+
+### Quan hệ
+
+- `(content_id, course_id)` → `(contents.id, contents.course_id)`.
+- `(parent_id, course_id)` → `(contents.id, contents.course_id)` when `parent_id` is non-null.
+- `archived_by` → `users.id`; this is the updater associated with superseding the snapshot, not the original Content author.
+
+### Method/query liên quan
+
+| Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
+|---|---|---|---|---|
+| `SOURCE_BACKED` | API #51 `ARCHIVE_CONTENT_VERSION` | `INSERT` | Copy the locked pre-update row; `version_no` increments per Content. | [`apps/study-server/app/modules/mentor/api_51_mentor_content_update/query.py`](../../app/modules/mentor/api_51_mentor_content_update/query.py) |
+| `SOURCE_BACKED` | Legacy schema/migration | `CREATE TABLE` | Define snapshot fields, object JSONB, composite key and foreign keys. | [`infra/postgres/study-server/migrations/007_content_versions.sql`](../../../../infra/postgres/study-server/migrations/007_content_versions.sql) |
+| `NOT_VERIFIED_HERE` | Live DB | — | Migration 007 and referenced live constraints are not probed. | Runtime database was not accessed. |
+
+### Chi tiết trường
+
+| Trường | Kiểu | Khóa/ràng buộc | Mô tả | Nguồn/trạng thái |
+|---|---|---|---|---|
+| `content_id` | `BIGINT` | PK part; composite FK with `course_id` | Base Content identity. | Migration 007; DERIVED version model |
+| `version_no` | `BIGINT` | PK part; `CHECK > 0` | Sequential archived snapshot number per Content. | Migration 007; DERIVED sequence |
+| `course_id` | `BIGINT` | Composite FK → `contents` | Stored course scope. | Migration 007 |
+| `content_type` | `TEXT` | Required | Pre-update type string. | Migration 007 |
+| `title` | `TEXT` | Required | Pre-update title. | Migration 007 |
+| `payload` | `JSONB` | Required; object check | Pre-update payload snapshot. | Migration 007 |
+| `status` | `TEXT` | Required | Pre-update status. | Migration 007 |
+| `parent_id` | `BIGINT` | Nullable; composite same-course FK | Pre-update parent. | Migration 007 |
+| `content_order` | `INTEGER` | Required | Pre-update order. | Migration 007 |
+| `archived_by` | `BIGINT` | FK → `users.id`, required | Mentor making the later update; not source-backed original author. | Migration 007; DERIVED actor semantics |
+| `archived_at` | `TIMESTAMPTZ` | Default `CURRENT_TIMESTAMP` | Time the prior state was recorded; not original creation time. | Migration 007 |
+
+### Boundary
+
+- Current `contents` row is treated as the implicit next version; response does not expose a version field.
+- The first update stores the previous state as archived version 1. No pre-migration history is reconstructed.
+- The table stores snapshots but does not itself route public reads to the prior published version or connect Admin approval to API #52.
+- `archived_by` must not be treated as original-author evidence for AC-33.
+
+## 19. `course_status_audit_logs` — Lịch sử trạng thái khóa học
+
+### Mục đích và thông tin lưu trữ
+
+Lưu mỗi lần API #76 thực sự đổi trạng thái course: course, Admin actor, status
+trước/sau và thời điểm ghi. Bảng này là physical fallback `DERIVED` từ yêu cầu
+“UPDATE status + audit log” trong AC-32, tương thích candidate BIGINT
+`courses.id`, `users.id` và JWT `sub` số của Study source. Nó không chứng minh
+schema live hoặc migration đã được áp dụng.
+
+### Quan hệ
+
+- `course_status_audit_logs.course_id` → `courses.id` (`ON DELETE RESTRICT`).
+- `course_status_audit_logs.actor_user_id` → `users.id` (`ON DELETE RESTRICT`).
+
+### Method/query liên quan
+
+| Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
+|---|---|---|---|---|
+| `SOURCE_PRESENT; LIVE_UNVERIFIED` | API #76 `INSERT_ADMIN_COURSE_STATUS_AUDIT` | `INSERT` | Append old/new status và actor trong cùng transaction với course update; same-status no-op không tạo row. | [`apps/study-server/app/modules/admin/api_76_admin_course_status/query.py`](../../app/modules/admin/api_76_admin_course_status/query.py) |
+| `DERIVED_SCHEMA` | API #76 | FK/index | Giữ lại lịch sử khi course/user bị xóa; truy vấn theo course hoặc actor cùng thời điểm. | [`infra/postgres/study-server/migrations/010_course_status_audit_logs.sql`](../../../../infra/postgres/study-server/migrations/010_course_status_audit_logs.sql) |
+
+### Chi tiết trường
+
+| Trường | Kiểu | Khóa/ràng buộc | Mô tả | Nguồn/trạng thái |
+|---|---|---|---|---|
+| `id` | `BIGSERIAL` | PK | Định danh audit row. | API #76 fallback; live schema chưa verify |
+| `course_id` | `BIGINT` | FK → `courses.id`; NOT NULL; RESTRICT | Course bị đổi trạng thái. | AC-32 audit intent + legacy ID; DERIVED |
+| `actor_user_id` | `BIGINT` | FK → `users.id`; NOT NULL; RESTRICT | Authenticated numeric JWT `sub`. | Shared auth helper + legacy ID; DERIVED |
+| `previous_status` | `VARCHAR(20)` | Nullable | Status cũ; nullable để giữ được row legacy cũ có status NULL. | Legacy DDL nullable + audit fallback; DERIVED |
+| `new_status` | `VARCHAR(20)` | NOT NULL | Target DRAFT/PUBLISHED/SUSPENDED. | API #76 candidate values; DERIVED |
+| `changed_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT CURRENT_TIMESTAMP | Thời điểm DB append event. | Timestamp fallback; DERIVED |
+
+Không lưu email, token, PII bổ sung, action JSON, outcome, trace hay retention
+metadata vì chưa có yêu cầu/schema tương ứng. API #76 chỉ insert relation này;
+không cung cấp update/delete path. DDL và migration là candidate artifacts, không
+xác nhận deployed database.
+
+## 20. `content_review_audit_logs` — Lịch sử quyết định duyệt Content
+
+### Mục đích và thông tin lưu trữ
+
+Lưu mỗi quyết định Admin gắn với một Content: Content ID, actor từ numeric JWT
+`sub`, trạng thái trước/sau, reason tùy chọn và thời điểm ghi. AC-33 yêu cầu
+approval kèm audit; migration 011 là physical fallback `DERIVED` cho legacy
+BIGINT candidate. Nó không chứng minh schema live hoặc migration đã được áp dụng.
+
+### Quan hệ
+
+- `content_review_audit_logs.content_id` → `contents.id` (`ON DELETE RESTRICT`).
+- `content_review_audit_logs.actor_user_id` → `users.id` (`ON DELETE RESTRICT`).
+
+### Method/query liên quan
+
+| Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
+|---|---|---|---|---|
+| `SOURCE_PRESENT; LIVE_UNVERIFIED` | API #80 `INSERT_ADMIN_CONTENT_REVIEW_AUDIT` | `INSERT` | Append trạng thái `PENDING_REVIEW` → `APPROVED` và authenticated actor trong cùng transaction. `reason` là NULL khi approve; nullable slot được dành cho direct reason của API #81. | [`apps/study-server/app/modules/admin/api_80_admin_content_approve/query.py`](../../app/modules/admin/api_80_admin_content_approve/query.py) |
+| `DERIVED_SCHEMA` | API #80 | FK/index | Giữ lịch sử khi Content/User bị xóa; hỗ trợ truy vấn theo Content hoặc actor và thời điểm. | [`infra/postgres/study-server/migrations/011_content_review_audit_logs.sql`](../../../../infra/postgres/study-server/migrations/011_content_review_audit_logs.sql) |
+
+### Chi tiết trường
+
+| Trường | Kiểu | Khóa/ràng buộc | Mô tả | Nguồn/trạng thái |
+|---|---|---|---|---|
+| `id` | `BIGSERIAL` | PK | Định danh audit row. | API #80 fallback; live schema chưa verify |
+| `content_id` | `BIGINT` | FK → `contents.id`; NOT NULL; RESTRICT | Content được quyết định. | AC-33 + legacy BIGINT ID; DERIVED |
+| `actor_user_id` | `BIGINT` | FK → `users.id`; NOT NULL; RESTRICT | Authenticated numeric JWT `sub`; không nhận từ request. | Shared auth helper + legacy ID; DERIVED |
+| `previous_status` | `TEXT` | NOT NULL | Trạng thái trước quyết định; hiện là `PENDING_REVIEW`. | API #80 transition; DERIVED |
+| `new_status` | `TEXT` | NOT NULL | Trạng thái mới; API #80 dùng `APPROVED`. | API #80 transition; DERIVED |
+| `reason` | `TEXT` | Nullable | NULL cho approval; slot dành cho direct rejection reason của API #81. | AC-33 #81 body; nullable mapping DERIVED |
+| `recorded_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT CURRENT_TIMESTAMP | Thời điểm DB append event. | Timestamp fallback; DERIVED |
+
+API #80 chỉ append; không cung cấp update/delete path hoặc audit read API. API #81
+runtime chưa được triển khai. DDL/migration chỉ là source candidate, không xác
+nhận deployed database.
+
 ## Tổng hợp discrepancy và giới hạn sử dụng
 
-1. 16 bảng trong tài liệu là cấu trúc `ERD V1`; context database hiện hành không
+1. 20 bảng trong tài liệu là cấu trúc `ERD V1` có bổ sung legacy `contents`, `content_versions`, fallback audit API #76 và API #80; context database hiện hành không
    xác nhận đây là schema đang chạy của Study, Work hoặc AI.
 2. Work runtime hiện chỉ có `system_records`, không có domain model tương ứng
    với ERD UNICA. Readiness query `SELECT 1` không chứng minh bảng nghiệp vụ tồn
@@ -631,9 +815,10 @@ mã giao dịch, trạng thái và thời điểm thanh toán thành công.
    AI database core là copied/unwired.
 4. Các query trong DD là design contract. Chúng mô tả intended data flow cho
    API, không phải bằng chứng method đã được implement hoặc endpoint đã runnable.
-5. `categories`, `orders`, `content`, `uploads`, `achievements` và các bảng
-   logical khác được API contract nhắc tới nhưng không nằm trong 16 bảng của ERD
-   này; tài liệu không tự bổ sung chúng vào schema.
+5. `categories`, `orders`, `uploads`, `achievements` và các bảng logical khác
+   được API contract nhắc tới nhưng không nằm trong các bảng ERD hiện tại. Bảng
+   `contents`, `content_versions`, `course_status_audit_logs` và `content_review_audit_logs` là bổ sung có chủ đích theo APIs #49/#51/#76/#80; các bảng còn lại không được
+   suy ra hoặc thêm nếu chưa có source/contract.
 
 ## Nguồn tham chiếu
 

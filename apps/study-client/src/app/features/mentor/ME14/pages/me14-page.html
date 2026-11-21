@@ -1,0 +1,111 @@
+<main class="mentor-page me14-page">
+  <study-mentor-page-header
+    title="Soạn thông báo Mentor"
+    description="Kiểm tra người nhận và nhập nội dung thông báo."
+    apiLabel="#63 · gửi thông báo"
+  />
+
+  @if (handoffError()) {
+    <section class="mentor-card me14-gate" aria-labelledby="me14-gate-heading">
+      <span class="me14-icon" aria-hidden="true">✉</span>
+      <h2 id="me14-gate-heading">Chọn người nhận trước</h2>
+      <p role="alert">{{ handoffError() }}</p>
+      <a class="mentor-button" routerLink="/mentor/notifications/new/recipients">Quay lại chọn người nhận</a>
+    </section>
+  } @else {
+    <section class="me14-flow" aria-label="Các bước soạn thông báo">
+      <div class="me14-step me14-step--done">
+        <span>1</span>
+        <div><strong>Người nhận</strong><small>{{ recipients().length }} học viên được chọn</small></div>
+      </div>
+      <div class="me14-step me14-step--current" aria-current="step">
+        <span>2</span>
+        <div><strong>Nội dung</strong><small>Soạn thông báo</small></div>
+      </div>
+    </section>
+
+    <form class="mentor-card me14-compose" (submit)="submitNotification($event)">
+      <div class="me14-section-heading">
+        <div><h2>Nội dung thông báo</h2><p class="mentor-meta">Bản nháp chỉ được giữ trong trang hiện tại.</p></div>
+        <span class="me14-required">* Bắt buộc</span>
+      </div>
+
+      <label for="me14-title">Tiêu đề <span aria-hidden="true">*</span></label>
+      <input
+        id="me14-title"
+        type="text"
+        maxlength="200"
+        required
+        [value]="title()"
+        (input)="updateTitle($any($event.target).value)"
+        [disabled]="isSubmitting() || !!acceptedOperationId() || submissionUncertain()"
+        placeholder="Nhập tiêu đề thông báo"
+        aria-describedby="me14-title-count"
+      />
+      <small id="me14-title-count" class="mentor-meta">{{ titleCount() }} / 200 ký tự</small>
+
+      <label for="me14-channels">Kênh gửi <span aria-hidden="true">*</span></label>
+      <fieldset id="me14-channels" aria-describedby="me14-channel-help">
+        <legend class="mentor-meta">Chọn ít nhất một kênh</legend>
+        <label><input type="checkbox" [checked]="channels().includes('PUSH')" [disabled]="isSubmitting() || !!acceptedOperationId() || submissionUncertain()" (change)="toggleChannel('PUSH', $any($event.target).checked)" /> Thông báo đẩy</label>
+        <label><input type="checkbox" [checked]="channels().includes('EMAIL')" [disabled]="isSubmitting() || !!acceptedOperationId() || submissionUncertain()" (change)="toggleChannel('EMAIL', $any($event.target).checked)" /> Email</label>
+      </fieldset>
+      <small id="me14-channel-help" class="mentor-meta">Kênh được gửi theo lựa chọn PUSH hoặc EMAIL.</small>
+
+      <label for="me14-content">Nội dung <span aria-hidden="true">*</span></label>
+      <textarea
+        id="me14-content"
+        rows="7"
+        required
+        [value]="content()"
+        (input)="updateContent($any($event.target).value)"
+        [disabled]="isSubmitting() || !!acceptedOperationId() || submissionUncertain()"
+        placeholder="Nhập nội dung thông báo"
+        aria-describedby="me14-word-count"
+      ></textarea>
+      <small id="me14-word-count" class="mentor-meta">{{ wordCount() }} từ</small>
+
+      <section class="me14-preview" aria-labelledby="me14-preview-heading">
+        <h3 id="me14-preview-heading">Xem trước thông báo</h3>
+        @if (title().trim() || content().trim()) {
+          @if (title().trim()) { <strong>{{ title().trim() }}</strong> }
+          @if (content().trim()) { <p>{{ content().trim() }}</p> }
+        } @else {
+          <p class="mentor-meta">Tiêu đề và nội dung bạn nhập sẽ hiển thị tại đây.</p>
+        }
+      </section>
+
+      <div class="mentor-notice" role="note">
+        <strong>Yêu cầu được xác nhận sau khi lưu vào hàng đợi.</strong>
+        <span>API #63 kiểm tra người nhận trong danh sách học viên thuộc phạm vi Mentor và ghi nhận trạng thái QUEUED. Điều này chưa xác nhận email hoặc thông báo đẩy đã được gửi.</span>
+      </div>
+
+      @if (submissionError()) {
+        <p class="mentor-alert" role="alert">{{ submissionError() }}</p>
+      }
+      @if (submissionUncertain()) {
+        <p class="mentor-meta" role="note">Không gửi lại trong phiên này vì API #63 không có khóa chống trùng và kết quả lần gửi chưa xác định.</p>
+      }
+      @if (acceptedOperationId()) {
+        <p class="mentor-success" role="status">Yêu cầu đã được tiếp nhận. Có thể mở trang theo dõi trạng thái.</p>
+        <a class="mentor-button mentor-button--light" [routerLink]="'/operations/' + acceptedOperationId()">Theo dõi trạng thái</a>
+      }
+
+      <div class="me14-recipient-list">
+        <h3>Người nhận</h3>
+        <ul>
+          @for (recipient of recipients(); track recipient.id) {
+            <li><span>{{ recipient.full_name }}</span><small class="mentor-meta">Student #{{ recipient.id }}</small></li>
+          }
+        </ul>
+      </div>
+
+      <div class="me14-actions">
+        <a class="mentor-button mentor-button--light" routerLink="/mentor/notifications/new/recipients">Sửa người nhận</a>
+        <button class="mentor-button" type="submit" [disabled]="!canSubmit()">
+          {{ isSubmitting() ? 'Đang gửi…' : 'Gửi thông báo' }}
+        </button>
+      </div>
+    </form>
+  }
+</main>

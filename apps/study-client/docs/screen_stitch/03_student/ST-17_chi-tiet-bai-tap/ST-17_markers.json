@@ -1,0 +1,508 @@
+{
+  "screen_id": "ST-17",
+  "source": {
+    "file": "screen.png",
+    "width": 667,
+    "height": 1600,
+    "sha256": "7ac187345ca89ef08462767a6269e91af888944d4a8b76494896596e1f6c7c86",
+    "canvas_offset_x": 96,
+    "canvas_offset_y": 0
+  },
+  "annotation_canvas": {
+    "width": 859,
+    "height": 1600,
+    "scale": 2
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST17-EL-01",
+      "label": "Header Study2Work logo and brand",
+      "x": 41,
+      "y": 22,
+      "badge_x": 15,
+      "badge_y": 22,
+      "side": "L"
+    },
+    {
+      "number": 2,
+      "element_id": "ST17-EL-02",
+      "label": "Primary navigation links",
+      "x": 374,
+      "y": 20,
+      "badge_x": 804,
+      "badge_y": 20,
+      "side": "R"
+    },
+    {
+      "number": 3,
+      "element_id": "ST17-EL-03",
+      "label": "Notifications control",
+      "x": 574,
+      "y": 17,
+      "badge_x": 778,
+      "badge_y": 17,
+      "side": "R"
+    },
+    {
+      "number": 4,
+      "element_id": "ST17-EL-04",
+      "label": "Student avatar and profile control",
+      "x": 618,
+      "y": 21,
+      "badge_x": 830,
+      "badge_y": 21,
+      "side": "R"
+    },
+    {
+      "number": 5,
+      "element_id": "ST17-EL-05",
+      "label": "Breadcrumb trail",
+      "x": 145,
+      "y": 50,
+      "badge_x": 15,
+      "badge_y": 50,
+      "side": "L"
+    },
+    {
+      "number": 6,
+      "element_id": "ST17-EL-06",
+      "label": "Assignment status, code and project-category chips",
+      "x": 155,
+      "y": 83,
+      "badge_x": 15,
+      "badge_y": 83,
+      "side": "L"
+    },
+    {
+      "number": 7,
+      "element_id": "ST17-EL-07",
+      "label": "Assignment title",
+      "x": 256,
+      "y": 105,
+      "badge_x": 41,
+      "badge_y": 105,
+      "side": "L"
+    },
+    {
+      "number": 8,
+      "element_id": "ST17-EL-08",
+      "label": "Assignment summary and description",
+      "x": 262,
+      "y": 149,
+      "badge_x": 15,
+      "badge_y": 149,
+      "side": "L"
+    },
+    {
+      "number": 9,
+      "element_id": "ST17-EL-09",
+      "label": "Progress and maximum-score summary",
+      "x": 570,
+      "y": 108,
+      "badge_x": 778,
+      "badge_y": 108,
+      "side": "R"
+    },
+    {
+      "number": 10,
+      "element_id": "ST17-EL-10",
+      "label": "Due-date summary",
+      "x": 87,
+      "y": 202,
+      "badge_x": 15,
+      "badge_y": 202,
+      "side": "L"
+    },
+    {
+      "number": 11,
+      "element_id": "ST17-EL-11",
+      "label": "Time-remaining summary",
+      "x": 226,
+      "y": 202,
+      "badge_x": 41,
+      "badge_y": 202,
+      "side": "L"
+    },
+    {
+      "number": 12,
+      "element_id": "ST17-EL-12",
+      "label": "Assigned mentor summary",
+      "x": 379,
+      "y": 202,
+      "badge_x": 778,
+      "badge_y": 202,
+      "side": "R"
+    },
+    {
+      "number": 13,
+      "element_id": "ST17-EL-13",
+      "label": "Grading SLA summary",
+      "x": 536,
+      "y": 202,
+      "badge_x": 804,
+      "badge_y": 202,
+      "side": "R"
+    },
+    {
+      "number": 14,
+      "element_id": "ST17-EL-14",
+      "label": "Video preview card",
+      "x": 223,
+      "y": 326,
+      "badge_x": 15,
+      "badge_y": 326,
+      "side": "L"
+    },
+    {
+      "number": 15,
+      "element_id": "ST17-EL-15",
+      "label": "Core objectives heading and introduction",
+      "x": 210,
+      "y": 443,
+      "badge_x": 15,
+      "badge_y": 443,
+      "side": "L"
+    },
+    {
+      "number": 16,
+      "element_id": "ST17-EL-16",
+      "label": "Objective card: Virtualization and Rendering",
+      "x": 119,
+      "y": 509,
+      "badge_x": 15,
+      "badge_y": 509,
+      "side": "L"
+    },
+    {
+      "number": 17,
+      "element_id": "ST17-EL-17",
+      "label": "Objective card: server-side filtering and debounce",
+      "x": 291,
+      "y": 509,
+      "badge_x": 41,
+      "badge_y": 509,
+      "side": "L"
+    },
+    {
+      "number": 18,
+      "element_id": "ST17-EL-18",
+      "label": "Objective card: dynamic RBAC",
+      "x": 119,
+      "y": 574,
+      "badge_x": 15,
+      "badge_y": 574,
+      "side": "L"
+    },
+    {
+      "number": 19,
+      "element_id": "ST17-EL-19",
+      "label": "Objective card: dynamic interface behavior",
+      "x": 291,
+      "y": 574,
+      "badge_x": 41,
+      "badge_y": 574,
+      "side": "L"
+    },
+    {
+      "number": 20,
+      "element_id": "ST17-EL-20",
+      "label": "Rubric heading and score summary",
+      "x": 225,
+      "y": 662,
+      "badge_x": 15,
+      "badge_y": 662,
+      "side": "L"
+    },
+    {
+      "number": 21,
+      "element_id": "ST17-EL-21",
+      "label": "Rubric criterion A: React architecture and TypeScript",
+      "x": 214,
+      "y": 725,
+      "badge_x": 15,
+      "badge_y": 725,
+      "side": "L"
+    },
+    {
+      "number": 22,
+      "element_id": "ST17-EL-22",
+      "label": "Rubric criterion B: state and query-cache engine",
+      "x": 212,
+      "y": 795,
+      "badge_x": 15,
+      "badge_y": 795,
+      "side": "L"
+    },
+    {
+      "number": 23,
+      "element_id": "ST17-EL-23",
+      "label": "Rubric criterion C: Lighthouse performance and Core Web Vitals",
+      "x": 214,
+      "y": 866,
+      "badge_x": 15,
+      "badge_y": 866,
+      "side": "L"
+    },
+    {
+      "number": 24,
+      "element_id": "ST17-EL-24",
+      "label": "Rubric criterion D: automated testing and Playwright E2E",
+      "x": 216,
+      "y": 936,
+      "badge_x": 15,
+      "badge_y": 936,
+      "side": "L"
+    },
+    {
+      "number": 25,
+      "element_id": "ST17-EL-25",
+      "label": "Attached resources heading and introduction",
+      "x": 208,
+      "y": 1008,
+      "badge_x": 15,
+      "badge_y": 1008,
+      "side": "L"
+    },
+    {
+      "number": 26,
+      "element_id": "ST17-EL-26",
+      "label": "Starter Kit resource and download action",
+      "x": 210,
+      "y": 1082,
+      "badge_x": 15,
+      "badge_y": 1082,
+      "side": "L"
+    },
+    {
+      "number": 27,
+      "element_id": "ST17-EL-27",
+      "label": "Figma specification resource and action",
+      "x": 210,
+      "y": 1142,
+      "badge_x": 15,
+      "badge_y": 1142,
+      "side": "L"
+    },
+    {
+      "number": 28,
+      "element_id": "ST17-EL-28",
+      "label": "API mock-data resource and action",
+      "x": 210,
+      "y": 1200,
+      "badge_x": 15,
+      "badge_y": 1200,
+      "side": "L"
+    },
+    {
+      "number": 29,
+      "element_id": "ST17-EL-29",
+      "label": "Submission requirements heading and introduction",
+      "x": 224,
+      "y": 1260,
+      "badge_x": 15,
+      "badge_y": 1260,
+      "side": "L"
+    },
+    {
+      "number": 30,
+      "element_id": "ST17-EL-30",
+      "label": "GitHub repository delivery requirement",
+      "x": 103,
+      "y": 1324,
+      "badge_x": 15,
+      "badge_y": 1324,
+      "side": "L"
+    },
+    {
+      "number": 31,
+      "element_id": "ST17-EL-31",
+      "label": "Vercel live-preview delivery requirement",
+      "x": 231,
+      "y": 1324,
+      "badge_x": 41,
+      "badge_y": 1324,
+      "side": "L"
+    },
+    {
+      "number": 32,
+      "element_id": "ST17-EL-32",
+      "label": "Technical PDF report delivery requirement",
+      "x": 367,
+      "y": 1324,
+      "badge_x": 778,
+      "badge_y": 1324,
+      "side": "R"
+    },
+    {
+      "number": 33,
+      "element_id": "ST17-EL-33",
+      "label": "Late-submission penalty notice",
+      "x": 215,
+      "y": 1407,
+      "badge_x": 15,
+      "badge_y": 1407,
+      "side": "L"
+    },
+    {
+      "number": 34,
+      "element_id": "ST17-EL-34",
+      "label": "Submission status card",
+      "x": 551,
+      "y": 274,
+      "badge_x": 778,
+      "badge_y": 274,
+      "side": "R"
+    },
+    {
+      "number": 35,
+      "element_id": "ST17-EL-35",
+      "label": "Deadline countdown and displayed deadline",
+      "x": 548,
+      "y": 335,
+      "badge_x": 778,
+      "badge_y": 335,
+      "side": "R"
+    },
+    {
+      "number": 36,
+      "element_id": "ST17-EL-36",
+      "label": "Compose and submit assignment action",
+      "x": 551,
+      "y": 405,
+      "badge_x": 778,
+      "badge_y": 405,
+      "side": "R"
+    },
+    {
+      "number": 37,
+      "element_id": "ST17-EL-37",
+      "label": "Pre-submit checklist heading and completion count",
+      "x": 550,
+      "y": 459,
+      "badge_x": 778,
+      "badge_y": 459,
+      "side": "R"
+    },
+    {
+      "number": 38,
+      "element_id": "ST17-EL-38",
+      "label": "Checklist item 1: responsive dashboard/report",
+      "x": 548,
+      "y": 481,
+      "badge_x": 804,
+      "badge_y": 481,
+      "side": "R"
+    },
+    {
+      "number": 39,
+      "element_id": "ST17-EL-39",
+      "label": "Checklist item 2: virtualization and test data",
+      "x": 548,
+      "y": 505,
+      "badge_x": 778,
+      "badge_y": 505,
+      "side": "R"
+    },
+    {
+      "number": 40,
+      "element_id": "ST17-EL-40",
+      "label": "Checklist item 3: Lighthouse score",
+      "x": 548,
+      "y": 529,
+      "badge_x": 804,
+      "badge_y": 529,
+      "side": "R"
+    },
+    {
+      "number": 41,
+      "element_id": "ST17-EL-41",
+      "label": "Checklist item 4: technical PDF",
+      "x": 548,
+      "y": 553,
+      "badge_x": 778,
+      "badge_y": 553,
+      "side": "R"
+    },
+    {
+      "number": 42,
+      "element_id": "ST17-EL-42",
+      "label": "Academic-integrity commitment note",
+      "x": 547,
+      "y": 592,
+      "badge_x": 778,
+      "badge_y": 592,
+      "side": "R"
+    },
+    {
+      "number": 43,
+      "element_id": "ST17-EL-43",
+      "label": "Mentor portrait, name and role",
+      "x": 541,
+      "y": 653,
+      "badge_x": 778,
+      "badge_y": 653,
+      "side": "R"
+    },
+    {
+      "number": 44,
+      "element_id": "ST17-EL-44",
+      "label": "Mentor biography",
+      "x": 542,
+      "y": 691,
+      "badge_x": 778,
+      "badge_y": 691,
+      "side": "R"
+    },
+    {
+      "number": 45,
+      "element_id": "ST17-EL-45",
+      "label": "Discord support action",
+      "x": 540,
+      "y": 729,
+      "badge_x": 778,
+      "badge_y": 729,
+      "side": "R"
+    },
+    {
+      "number": 46,
+      "element_id": "ST17-EL-46",
+      "label": "Office-hours scheduling action",
+      "x": 541,
+      "y": 758,
+      "badge_x": 778,
+      "badge_y": 758,
+      "side": "R"
+    },
+    {
+      "number": 47,
+      "element_id": "ST17-EL-47",
+      "label": "Submission history summary",
+      "x": 548,
+      "y": 796,
+      "badge_x": 778,
+      "badge_y": 796,
+      "side": "R"
+    },
+    {
+      "number": 48,
+      "element_id": "ST17-EL-48",
+      "label": "Footer brand, description and certifications",
+      "x": 125,
+      "y": 1511,
+      "badge_x": 15,
+      "badge_y": 1511,
+      "side": "L"
+    },
+    {
+      "number": 49,
+      "element_id": "ST17-EL-49",
+      "label": "Footer navigation and legal links",
+      "x": 502,
+      "y": 1510,
+      "badge_x": 778,
+      "badge_y": 1510,
+      "side": "R"
+    }
+  ]
+}

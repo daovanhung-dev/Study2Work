@@ -1,0 +1,108 @@
+<div class="checkout-screen" data-screen-id="ST-05">
+  <header class="checkout-header">
+    <div class="checkout-header__content">
+      <a class="checkout-brand" routerLink="/" aria-label="Study2Work — trang chủ">
+        <span class="checkout-brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="m2.5 8 9.5-5 9.5 5-9.5 5-9.5-5Z" />
+            <path d="M6.5 10.1v5.1c3.5 2.7 7.5 2.7 11 0v-5.1M21.5 8v6" />
+          </svg>
+        </span>
+        <span class="checkout-brand__text">
+          <strong>Study2Work</strong>
+          <small>LMS PLATFORM</small>
+        </span>
+      </a>
+
+      <nav class="checkout-navigation" aria-label="Điều hướng chính">
+        <a routerLink="/" routerLinkActive="checkout-navigation__link--active">Trang chủ</a>
+        <a
+          routerLink="/courses"
+          routerLinkActive="checkout-navigation__link--active"
+          aria-current="page"
+          >Khóa học</a
+        >
+        <span aria-disabled="true">Khóa học của tôi</span>
+        <a routerLink="/student/progress" routerLinkActive="checkout-navigation__link--active">
+          Tiến độ
+        </a>
+      </nav>
+
+      <div class="checkout-auth-links" aria-label="Tài khoản">
+        <a routerLink="/login">Đăng nhập</a>
+        <a class="checkout-auth-links__register" routerLink="/register">Đăng ký</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-main">
+    <div class="checkout-breadcrumb-bar">
+      <nav class="checkout-breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z" />
+          </svg>
+          <span>Trang chủ</span>
+        </a>
+        <span aria-hidden="true">›</span>
+        <a routerLink="/courses">Khóa học</a>
+        <span aria-hidden="true">›</span>
+        <a routerLink="/courses">Kiểm tra ghi danh</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Kiểm tra đơn hàng</span>
+      </nav>
+    </div>
+
+    <section class="checkout-status-card" role="status" aria-labelledby="checkout-title">
+      <div class="checkout-status-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M3 5h3l3.2 15.1a2 2 0 0 0 2 1.6h11.6a2 2 0 0 0 1.9-1.4L27 11H9" />
+          <path d="M19 7h7m-3-3 3 3-3 3M12 27h.1M23 27h.1" />
+        </svg>
+      </div>
+      @if (state() === 'loading') {
+        <h1 id="checkout-title">Kiểm tra đơn hàng</h1>
+        <p aria-live="polite">Đang kiểm tra thông tin khóa học…</p>
+      } @else if (state() === 'not-found') {
+        <h1 id="checkout-title">Không tìm thấy khóa học</h1>
+        <p>Khóa học không tồn tại hoặc hiện không được xuất bản.</p>
+      } @else if (state() === 'error') {
+        <h1 id="checkout-title">Chưa thể tải thông tin khóa học</h1>
+        <p>Đã xảy ra lỗi khi kiểm tra khóa học. Vui lòng quay lại danh sách khóa học.</p>
+      } @else {
+        <h1 id="checkout-title">Kiểm tra đơn hàng</h1>
+        <h2>Quy trình thanh toán chưa thể bắt đầu.</h2>
+        <p>
+          Hệ thống chưa thể khởi tạo thông tin đơn hàng tại thời điểm này. Vui lòng kiểm tra lại
+          điều kiện ghi danh.
+        </p>
+      }
+      <a class="checkout-return-button" routerLink="/courses">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
+        </svg>
+        Quay lại kiểm tra ghi danh
+      </a>
+    </section>
+  </main>
+
+  <footer class="checkout-footer">
+    <div class="checkout-footer__content">
+      <a class="checkout-footer__brand" routerLink="/" aria-label="Study2Work — trang chủ">
+        <span class="checkout-brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="m2.5 8 9.5-5 9.5 5-9.5 5-9.5-5Z" />
+            <path d="M6.5 10.1v5.1c3.5 2.7 7.5 2.7 11 0v-5.1M21.5 8v6" />
+          </svg>
+        </span>
+        <span>Study2Work</span>
+      </a>
+      <nav aria-label="Điều hướng cuối trang">
+        <a routerLink="/">Trang chủ</a>
+        <a routerLink="/courses">Khóa học</a>
+        <a routerLink="/login">Đăng nhập</a>
+        <a routerLink="/register">Đăng ký</a>
+      </nav>
+    </div>
+  </footer>
+</div>

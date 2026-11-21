@@ -1,0 +1,62 @@
+{
+  "screen_id": "GS-02",
+  "source_image": "screen.png",
+  "source_state": "loaded search results with mock filters and six visible cards",
+  "image_size": {
+    "width": 987,
+    "height": 1600
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2134,
+      "height": 3200
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {"number": 1, "element_id": "GS02-EL-01", "target": "Header brand and primary navigation group", "target_center_source_px": {"x": 340, "y": 25}, "side": "left", "y_source": 18, "marker_center_canvas_px": {"x": 28, "y": 36}, "leader_to_canvas_px": {"x": 80, "y": 36}},
+    {"number": 2, "element_id": "GS02-EL-02", "target": "Header global search input", "target_center_source_px": {"x": 720, "y": 25}, "side": "right", "y_source": 18, "marker_center_canvas_px": {"x": 2106, "y": 36}, "leader_to_canvas_px": {"x": 2054, "y": 36}},
+    {"number": 3, "element_id": "GS02-EL-03", "target": "Header notification and avatar utility group", "target_center_source_px": {"x": 945, "y": 25}, "side": "left", "y_source": 42, "marker_center_canvas_px": {"x": 28, "y": 84}, "leader_to_canvas_px": {"x": 80, "y": 84}},
+    {"number": 4, "element_id": "GS02-EL-04", "target": "Breadcrumb navigation", "target_center_source_px": {"x": 145, "y": 80}, "side": "right", "y_source": 79, "marker_center_canvas_px": {"x": 2106, "y": 158}, "leader_to_canvas_px": {"x": 2054, "y": 158}},
+    {"number": 5, "element_id": "GS02-EL-05", "target": "Main query form with input, clear affordance and submit", "target_center_source_px": {"x": 370, "y": 123}, "side": "left", "y_source": 120, "marker_center_canvas_px": {"x": 28, "y": 240}, "leader_to_canvas_px": {"x": 80, "y": 240}},
+    {"number": 6, "element_id": "GS02-EL-06", "target": "Popular keyword prompt and suggestion chips", "target_center_source_px": {"x": 330, "y": 163}, "side": "right", "y_source": 160, "marker_center_canvas_px": {"x": 2106, "y": 320}, "leader_to_canvas_px": {"x": 2054, "y": 320}},
+    {"number": 7, "element_id": "GS02-EL-07", "target": "Search query and result summary with count", "target_center_source_px": {"x": 195, "y": 221}, "side": "left", "y_source": 220, "marker_center_canvas_px": {"x": 28, "y": 440}, "leader_to_canvas_px": {"x": 80, "y": 440}},
+    {"number": 8, "element_id": "GS02-EL-08", "target": "Sort select", "target_center_source_px": {"x": 833, "y": 221}, "side": "right", "y_source": 220, "marker_center_canvas_px": {"x": 2106, "y": 440}, "leader_to_canvas_px": {"x": 2054, "y": 440}},
+    {"number": 9, "element_id": "GS02-EL-09", "target": "Grid and list view toggle group", "target_center_source_px": {"x": 950, "y": 221}, "side": "left", "y_source": 240, "marker_center_canvas_px": {"x": 28, "y": 480}, "leader_to_canvas_px": {"x": 80, "y": 480}},
+    {"number": 10, "element_id": "GS02-EL-10", "target": "Active filter chips and clear-all affordance", "target_center_source_px": {"x": 490, "y": 285}, "side": "right", "y_source": 284, "marker_center_canvas_px": {"x": 2106, "y": 568}, "leader_to_canvas_px": {"x": 2054, "y": 568}},
+    {"number": 11, "element_id": "GS02-EL-11", "target": "Filter sidebar heading and reset action", "target_center_source_px": {"x": 140, "y": 299}, "side": "left", "y_source": 299, "marker_center_canvas_px": {"x": 28, "y": 598}, "leader_to_canvas_px": {"x": 80, "y": 598}},
+    {"number": 12, "element_id": "GS02-EL-12", "target": "Six-card search results grid as reusable card instances", "target_center_source_px": {"x": 610, "y": 330}, "side": "right", "y_source": 325, "marker_center_canvas_px": {"x": 2106, "y": 650}, "leader_to_canvas_px": {"x": 2054, "y": 650}},
+    {"number": 13, "element_id": "GS02-EL-13", "target": "Training-field category checkbox group", "target_center_source_px": {"x": 136, "y": 388}, "side": "left", "y_source": 380, "marker_center_canvas_px": {"x": 28, "y": 760}, "leader_to_canvas_px": {"x": 80, "y": 760}},
+    {"number": 14, "element_id": "GS02-EL-14", "target": "Skill-level radio group", "target_center_source_px": {"x": 130, "y": 535}, "side": "right", "y_source": 515, "marker_center_canvas_px": {"x": 2106, "y": 1030}, "leader_to_canvas_px": {"x": 2054, "y": 1030}},
+    {"number": 15, "element_id": "GS02-EL-15", "target": "Duration radio group", "target_center_source_px": {"x": 130, "y": 636}, "side": "left", "y_source": 630, "marker_center_canvas_px": {"x": 28, "y": 1260}, "leader_to_canvas_px": {"x": 80, "y": 1260}},
+    {"number": 16, "element_id": "GS02-EL-16", "target": "Minimum-rating radio group", "target_center_source_px": {"x": 135, "y": 750}, "side": "right", "y_source": 745, "marker_center_canvas_px": {"x": 2106, "y": 1490}, "leader_to_canvas_px": {"x": 2054, "y": 1490}},
+    {"number": 17, "element_id": "GS02-EL-17", "target": "Tuition checkbox group", "target_center_source_px": {"x": 132, "y": 855}, "side": "left", "y_source": 860, "marker_center_canvas_px": {"x": 28, "y": 1720}, "leader_to_canvas_px": {"x": 80, "y": 1720}},
+    {"number": 18, "element_id": "GS02-EL-18", "target": "Apply-filters button", "target_center_source_px": {"x": 134, "y": 949}, "side": "right", "y_source": 950, "marker_center_canvas_px": {"x": 2106, "y": 1900}, "leader_to_canvas_px": {"x": 2054, "y": 1900}},
+    {"number": 19, "element_id": "GS02-EL-19", "target": "Career-path recommendation panel", "target_center_source_px": {"x": 610, "y": 1170}, "side": "left", "y_source": 1135, "marker_center_canvas_px": {"x": 28, "y": 2270}, "leader_to_canvas_px": {"x": 80, "y": 2270}},
+    {"number": 20, "element_id": "GS02-EL-20", "target": "Career-path view CTA", "target_center_source_px": {"x": 750, "y": 1170}, "side": "right", "y_source": 1170, "marker_center_canvas_px": {"x": 2106, "y": 2340}, "leader_to_canvas_px": {"x": 2054, "y": 2340}},
+    {"number": 21, "element_id": "GS02-EL-21", "target": "Tech advisor CTA", "target_center_source_px": {"x": 890, "y": 1170}, "side": "left", "y_source": 1170, "marker_center_canvas_px": {"x": 28, "y": 2340}, "leader_to_canvas_px": {"x": 80, "y": 2340}},
+    {"number": 22, "element_id": "GS02-EL-22", "target": "Displayed result range 1–6 of 12", "target_center_source_px": {"x": 360, "y": 1307}, "side": "right", "y_source": 1305, "marker_center_canvas_px": {"x": 2106, "y": 2610}, "leader_to_canvas_px": {"x": 2054, "y": 2610}},
+    {"number": 23, "element_id": "GS02-EL-23", "target": "Previous, page-number and next pagination group", "target_center_source_px": {"x": 845, "y": 1307}, "side": "left", "y_source": 1305, "marker_center_canvas_px": {"x": 28, "y": 2610}, "leader_to_canvas_px": {"x": 80, "y": 2610}},
+    {"number": 24, "element_id": "GS02-EL-24", "target": "Footer brand, description and accreditation badges", "target_center_source_px": {"x": 184, "y": 1462}, "side": "right", "y_source": 1460, "marker_center_canvas_px": {"x": 2106, "y": 2920}, "leader_to_canvas_px": {"x": 2054, "y": 2920}},
+    {"number": 25, "element_id": "GS02-EL-25", "target": "Footer navigation columns", "target_center_source_px": {"x": 625, "y": 1460}, "side": "left", "y_source": 1460, "marker_center_canvas_px": {"x": 28, "y": 2920}, "leader_to_canvas_px": {"x": 80, "y": 2920}},
+    {"number": 26, "element_id": "GS02-EL-26", "target": "Copyright and tagline", "target_center_source_px": {"x": 500, "y": 1572}, "side": "right", "y_source": 1570, "marker_center_canvas_px": {"x": 2106, "y": 3140}, "leader_to_canvas_px": {"x": 2054, "y": 3140}}
+  ]
+}

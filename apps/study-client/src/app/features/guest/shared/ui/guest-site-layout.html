@@ -1,0 +1,52 @@
+<div class="guest-site">
+  <header class="site-header">
+    <div class="header-content">
+      <a class="brand" routerLink="/courses" aria-label="Study2Work — Khóa học">
+        <span class="brand-mark"><study-icon name="book" /></span>
+        <span>Study2Work</span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Điều hướng chính">
+        <a
+          routerLink="/courses"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          Khóa học
+        </a>
+        <a routerLink="/courses/search" routerLinkActive="is-active">Tìm kiếm</a>
+      </nav>
+
+      @if (showSearch) {
+        <form class="header-search" role="search" (submit)="submitSearch($event)">
+          <label class="visually-hidden" for="guest-header-search">Tìm khóa học</label>
+          <study-icon name="search" />
+          <input
+            id="guest-header-search"
+            name="q"
+            type="search"
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+            placeholder="Tìm khóa học"
+          />
+          <button type="submit">Tìm</button>
+        </form>
+      }
+    </div>
+  </header>
+
+  <ng-content />
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <a class="brand footer-brand" routerLink="/courses" aria-label="Study2Work — Khóa học">
+        <span class="brand-mark"><study-icon name="book" /></span>
+        <span>Study2Work</span>
+      </a>
+      <nav aria-label="Điều hướng cuối trang">
+        <a routerLink="/courses">Khóa học</a>
+        <a routerLink="/courses/search">Tìm kiếm</a>
+      </nav>
+    </div>
+  </footer>
+</div>

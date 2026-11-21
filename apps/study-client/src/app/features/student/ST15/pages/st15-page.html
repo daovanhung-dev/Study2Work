@@ -1,0 +1,50 @@
+<main class="static-page api-screen st15-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student">Trang học tập</a><span>›</span><span>Nộp bài kiểm tra</span>
+  </nav>
+  <section class="submit-confirm-card api-card">
+    <div class="confirm-icon" aria-hidden="true">✓</div>
+    <p class="api-eyebrow">Xác nhận cuối</p>
+    <h1>Nộp bài kiểm tra?</h1>
+    <p class="api-muted">
+      Sau khi nộp, bạn sẽ không thể tiếp tục chỉnh sửa câu trả lời trong lượt làm này.
+    </p>
+    @if (error()) {
+      <p class="api-error" role="alert">{{ error() }}</p>
+    }
+    @if (outcomeUnknownAttemptId() === attemptId()) {
+      <p class="api-error" role="alert">
+        Chưa thể xác nhận bài đã được nộp. Hãy kiểm tra kết quả trước khi thử thao tác khác.
+      </p>
+    }
+    @if (resultCheckAttemptId() === attemptId() && outcomeUnknownAttemptId() !== attemptId()) {
+      <p class="api-message" role="status">
+        Bài kiểm tra đã được đóng. Bạn có thể xem kết quả.
+      </p>
+    }
+    <div class="api-actions">
+      <button class="api-button secondary" type="button" (click)="back()">
+        Quay lại bài làm
+      </button>
+      @if (resultCheckAttemptId() === attemptId() || submittedAttemptId() === attemptId()) {
+        <a class="api-button secondary" [routerLink]="['/student/attempts', attemptId(), 'result']">
+          Xem kết quả
+        </a>
+      }
+      <button
+        class="api-button"
+        type="button"
+        [disabled]="
+          busy() ||
+          !attemptId() ||
+          outcomeUnknownAttemptId() === attemptId() ||
+          resultCheckAttemptId() === attemptId() ||
+          submittedAttemptId() === attemptId()
+        "
+        (click)="submit()"
+      >
+        {{ busy() ? 'Đang nộp…' : 'Xác nhận nộp bài' }}
+      </button>
+    </div>
+  </section>
+</main>

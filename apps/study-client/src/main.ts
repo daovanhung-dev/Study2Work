@@ -1,9 +1,6 @@
-import { VueQueryPlugin } from "@tanstack/vue-query";
-import { createPinia } from "pinia";
-import { createApp } from "vue";
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { App } from './app/app';
 
-import App from "./App.vue";
-import { router } from "./app/router";
-import "./styles/main.css";
-
-createApp(App).use(createPinia()).use(VueQueryPlugin).use(router).mount("#app");
+bootstrapApplication(App, appConfig)
+  .catch((err) => console.error(err));

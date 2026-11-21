@@ -1,0 +1,233 @@
+{
+  "screen_id": "ME-07",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 1600,
+    "height": 1400
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 3200,
+    "height": 2800
+  },
+  "markers": [
+    {
+      "number": 1,
+      "id": "ME07-EL-01",
+      "label": "Logo Study2Work LMS Mentor",
+      "x": 245,
+      "y": 68
+    },
+    {
+      "number": 2,
+      "id": "ME07-EL-02",
+      "label": "Điều hướng Mentor toàn cục",
+      "x": 640,
+      "y": 68
+    },
+    {
+      "number": 3,
+      "id": "ME07-EL-03",
+      "label": "Thông báo Mentor",
+      "x": 1288,
+      "y": 68
+    },
+    {
+      "number": 4,
+      "id": "ME07-EL-04",
+      "label": "Danh tính và vai trò Mentor",
+      "x": 1560,
+      "y": 68
+    },
+    {
+      "number": 5,
+      "id": "ME07-EL-05",
+      "label": "Breadcrumb course và biên tập nội dung",
+      "x": 700,
+      "y": 119
+    },
+    {
+      "number": 6,
+      "id": "ME07-EL-06",
+      "label": "Icon và nhãn Hệ thống phân phối giáo trình số",
+      "x": 735,
+      "y": 179
+    },
+    {
+      "number": 7,
+      "id": "ME07-EL-07",
+      "label": "Tiêu đề Tạo và chỉnh sửa nội dung bài giảng",
+      "x": 740,
+      "y": 250
+    },
+    {
+      "number": 8,
+      "id": "ME07-EL-08",
+      "label": "Chế độ kiểm duyệt khóa học",
+      "x": 1284,
+      "y": 202
+    },
+    {
+      "number": 9,
+      "id": "ME07-EL-09",
+      "label": "Trường Tiêu đề nội dung",
+      "x": 987,
+      "y": 397
+    },
+    {
+      "number": 10,
+      "id": "ME07-EL-10",
+      "label": "Select Loại nội dung",
+      "x": 89,
+      "y": 531
+    },
+    {
+      "number": 11,
+      "id": "ME07-EL-11",
+      "label": "Input Thứ tự hiển thị",
+      "x": 990,
+      "y": 531
+    },
+    {
+      "number": 12,
+      "id": "ME07-EL-12",
+      "label": "Nhãn Nội dung chi tiết và trạng thái đồng bộ",
+      "x": 1019,
+      "y": 597
+    },
+    {
+      "number": 13,
+      "id": "ME07-EL-13",
+      "label": "Placeholder trình soạn thảo chuyên sâu",
+      "x": 991,
+      "y": 974
+    },
+    {
+      "number": 14,
+      "id": "ME07-EL-14",
+      "label": "Thông báo khóa nhập tài nguyên đa phương tiện",
+      "x": 1019,
+      "y": 919
+    },
+    {
+      "number": 15,
+      "id": "ME07-EL-15",
+      "label": "Hủy thay đổi",
+      "x": 280,
+      "y": 1086
+    },
+    {
+      "number": 16,
+      "id": "ME07-EL-16",
+      "label": "Nút Lưu bản nháp đang disabled",
+      "x": 991,
+      "y": 1095
+    },
+    {
+      "number": 17,
+      "id": "ME07-EL-17",
+      "label": "Tiêu đề panel Quy chuẩn dữ liệu",
+      "x": 1544,
+      "y": 322
+    },
+    {
+      "number": 18,
+      "id": "ME07-EL-18",
+      "label": "Ghi chú Bảo mật hệ thống",
+      "x": 1544,
+      "y": 474
+    },
+    {
+      "number": 19,
+      "id": "ME07-EL-19",
+      "label": "Hướng dẫn tiêu đề nội dung",
+      "x": 1544,
+      "y": 544
+    },
+    {
+      "number": 20,
+      "id": "ME07-EL-20",
+      "label": "Hướng dẫn loại tài nguyên",
+      "x": 1544,
+      "y": 594
+    },
+    {
+      "number": 21,
+      "id": "ME07-EL-21",
+      "label": "Hướng dẫn thứ tự hiển thị",
+      "x": 1544,
+      "y": 649
+    },
+    {
+      "number": 22,
+      "id": "ME07-EL-22",
+      "label": "Tiêu đề panel Trạng thái xác thực phiên",
+      "x": 1544,
+      "y": 739
+    },
+    {
+      "number": 23,
+      "id": "ME07-EL-23",
+      "label": "Badge trạng thái Đang đối soát",
+      "x": 1544,
+      "y": 776
+    },
+    {
+      "number": 24,
+      "id": "ME07-EL-24",
+      "label": "Thanh tiến độ xác thực phiên",
+      "x": 1544,
+      "y": 807
+    },
+    {
+      "number": 25,
+      "id": "ME07-EL-25",
+      "label": "Mô tả quyền lưu và đối soát",
+      "x": 1544,
+      "y": 898
+    },
+    {
+      "number": 26,
+      "id": "ME07-EL-26",
+      "label": "Ảnh minh họa không gian làm việc",
+      "x": 1544,
+      "y": 1162
+    },
+    {
+      "number": 27,
+      "id": "ME07-EL-27",
+      "label": "Caption Không gian sư phạm",
+      "x": 1544,
+      "y": 1267
+    },
+    {
+      "number": 28,
+      "id": "ME07-EL-28",
+      "label": "Footer brand và thông tin bản quyền",
+      "x": 42,
+      "y": 1323
+    },
+    {
+      "number": 29,
+      "id": "ME07-EL-29",
+      "label": "Footer Quy chế Giảng viên",
+      "x": 1242,
+      "y": 1323
+    },
+    {
+      "number": 30,
+      "id": "ME07-EL-30",
+      "label": "Footer Tiêu chuẩn đánh giá",
+      "x": 1430,
+      "y": 1323
+    },
+    {
+      "number": 31,
+      "id": "ME07-EL-31",
+      "label": "Footer Hỗ trợ kỹ thuật",
+      "x": 1575,
+      "y": 1323
+    }
+  ]
+}

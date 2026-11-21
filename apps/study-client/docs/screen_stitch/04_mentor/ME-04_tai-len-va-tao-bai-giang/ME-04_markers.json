@@ -1,0 +1,436 @@
+{
+  "screen_id": "ME-04",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 1175,
+    "height": 1600
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 2350,
+    "height": 3200
+  },
+  "markers": [
+    {
+      "number": 1,
+      "id": "ME04-EL-01",
+      "label": "Brand/logo Mentor Portal",
+      "x": 157,
+      "y": 22
+    },
+    {
+      "number": 2,
+      "id": "ME04-EL-02",
+      "label": "Điều hướng Mentor toàn cục",
+      "x": 700,
+      "y": 22
+    },
+    {
+      "number": 3,
+      "id": "ME04-EL-03",
+      "label": "Tìm kiếm header",
+      "x": 704,
+      "y": 50
+    },
+    {
+      "number": 4,
+      "id": "ME04-EL-04",
+      "label": "Notification button và badge",
+      "x": 969,
+      "y": 48
+    },
+    {
+      "number": 5,
+      "id": "ME04-EL-05",
+      "label": "Tài khoản Mentor hiện tại",
+      "x": 1161,
+      "y": 6
+    },
+    {
+      "number": 6,
+      "id": "ME04-EL-06",
+      "label": "Quay lại Workspace ME-03",
+      "x": 14,
+      "y": 58
+    },
+    {
+      "number": 7,
+      "id": "ME04-EL-07",
+      "label": "Breadcrumb course",
+      "x": 300,
+      "y": 58
+    },
+    {
+      "number": 8,
+      "id": "ME04-EL-08",
+      "label": "Course code mẫu trên breadcrumb",
+      "x": 650,
+      "y": 58
+    },
+    {
+      "number": 9,
+      "id": "ME04-EL-09",
+      "label": "Tiêu đề trang tạo bài giảng",
+      "x": 14,
+      "y": 118
+    },
+    {
+      "number": 10,
+      "id": "ME04-EL-10",
+      "label": "Badge “ME-04 Authoring”",
+      "x": 510,
+      "y": 119
+    },
+    {
+      "number": 11,
+      "id": "ME04-EL-11",
+      "label": "Nhãn auto-save mẫu",
+      "x": 847,
+      "y": 67
+    },
+    {
+      "number": 12,
+      "id": "ME04-EL-12",
+      "label": "CTA xem trước (Preview)",
+      "x": 1002,
+      "y": 95
+    },
+    {
+      "number": 13,
+      "id": "ME04-EL-13",
+      "label": "Header khối định vị lecture",
+      "x": 14,
+      "y": 164
+    },
+    {
+      "number": 14,
+      "id": "ME04-EL-14",
+      "label": "Select chương/module",
+      "x": 14,
+      "y": 236
+    },
+    {
+      "number": 15,
+      "id": "ME04-EL-15",
+      "label": "Badge Bloom-Tech level",
+      "x": 650,
+      "y": 206
+    },
+    {
+      "number": 16,
+      "id": "ME04-EL-16",
+      "label": "Select thứ tự/vị trí bài",
+      "x": 668,
+      "y": 236
+    },
+    {
+      "number": 17,
+      "id": "ME04-EL-17",
+      "label": "Input tiêu đề lecture",
+      "x": 14,
+      "y": 304
+    },
+    {
+      "number": 18,
+      "id": "ME04-EL-18",
+      "label": "Bộ đếm ký tự tiêu đề",
+      "x": 660,
+      "y": 277
+    },
+    {
+      "number": 19,
+      "id": "ME04-EL-19",
+      "label": "Input thời lượng ước tính",
+      "x": 14,
+      "y": 369
+    },
+    {
+      "number": 20,
+      "id": "ME04-EL-20",
+      "label": "Hiển thị khung độ khó",
+      "x": 668,
+      "y": 369
+    },
+    {
+      "number": 21,
+      "id": "ME04-EL-21",
+      "label": "Header khối media/video",
+      "x": 14,
+      "y": 443
+    },
+    {
+      "number": 22,
+      "id": "ME04-EL-22",
+      "label": "Chip API #34",
+      "x": 649,
+      "y": 451
+    },
+    {
+      "number": 23,
+      "id": "ME04-EL-23",
+      "label": "Card file video đã tải",
+      "x": 14,
+      "y": 520
+    },
+    {
+      "number": 24,
+      "id": "ME04-EL-24",
+      "label": "Thumbnail video",
+      "x": 44,
+      "y": 518
+    },
+    {
+      "number": 25,
+      "id": "ME04-EL-25",
+      "label": "Tên và metadata file",
+      "x": 648,
+      "y": 480
+    },
+    {
+      "number": 26,
+      "id": "ME04-EL-26",
+      "label": "Progress/status “100% Hoàn tất”",
+      "x": 665,
+      "y": 528
+    },
+    {
+      "number": 27,
+      "id": "ME04-EL-27",
+      "label": "Nút xem phát thử media",
+      "x": 552,
+      "y": 561
+    },
+    {
+      "number": 28,
+      "id": "ME04-EL-28",
+      "label": "Nút thay thế/retry media",
+      "x": 584,
+      "y": 561
+    },
+    {
+      "number": 29,
+      "id": "ME04-EL-29",
+      "label": "Nút xóa media khỏi danh sách",
+      "x": 616,
+      "y": 561
+    },
+    {
+      "number": 30,
+      "id": "ME04-EL-30",
+      "label": "Vùng kéo/thả/chọn tệp",
+      "x": 665,
+      "y": 620
+    },
+    {
+      "number": 31,
+      "id": "ME04-EL-31",
+      "label": "Hướng dẫn MIME/dung lượng mẫu",
+      "x": 665,
+      "y": 682
+    },
+    {
+      "number": 32,
+      "id": "ME04-EL-32",
+      "label": "Input URL stream HLS/Vimeo",
+      "x": 14,
+      "y": 725
+    },
+    {
+      "number": 33,
+      "id": "ME04-EL-33",
+      "label": "Header tóm tắt và code sample",
+      "x": 14,
+      "y": 807
+    },
+    {
+      "number": 34,
+      "id": "ME04-EL-34",
+      "label": "Chọn chế độ Markdown",
+      "x": 668,
+      "y": 808
+    },
+    {
+      "number": 35,
+      "id": "ME04-EL-35",
+      "label": "Chọn chế độ WYSIWYG",
+      "x": 668,
+      "y": 834
+    },
+    {
+      "number": 36,
+      "id": "ME04-EL-36",
+      "label": "Thanh công cụ định dạng: B/I/U/H2/H3/list/quote/code/image",
+      "x": 668,
+      "y": 863
+    },
+    {
+      "number": 37,
+      "id": "ME04-EL-37",
+      "label": "Vùng nội dung Markdown/WYSIWYG gồm văn bản và code mẫu",
+      "x": 14,
+      "y": 950
+    },
+    {
+      "number": 38,
+      "id": "ME04-EL-38",
+      "label": "Header attachments/source code",
+      "x": 14,
+      "y": 1262
+    },
+    {
+      "number": 39,
+      "id": "ME04-EL-39",
+      "label": "Nút thêm attachment",
+      "x": 668,
+      "y": 1263
+    },
+    {
+      "number": 40,
+      "id": "ME04-EL-40",
+      "label": "Card attachment PDF",
+      "x": 14,
+      "y": 1305
+    },
+    {
+      "number": 41,
+      "id": "ME04-EL-41",
+      "label": "Nút gỡ attachment PDF",
+      "x": 363,
+      "y": 1354
+    },
+    {
+      "number": 42,
+      "id": "ME04-EL-42",
+      "label": "Card attachment ZIP",
+      "x": 665,
+      "y": 1305
+    },
+    {
+      "number": 43,
+      "id": "ME04-EL-43",
+      "label": "Nút gỡ attachment ZIP",
+      "x": 623,
+      "y": 1354
+    },
+    {
+      "number": 44,
+      "id": "ME04-EL-44",
+      "label": "Header cấu hình phân phối/publish",
+      "x": 668,
+      "y": 168
+    },
+    {
+      "number": 45,
+      "id": "ME04-EL-45",
+      "label": "Radio Video bài giảng chính",
+      "x": 1000,
+      "y": 271
+    },
+    {
+      "number": 46,
+      "id": "ME04-EL-46",
+      "label": "Radio Bài đọc chuyên sâu",
+      "x": 1000,
+      "y": 322
+    },
+    {
+      "number": 47,
+      "id": "ME04-EL-47",
+      "label": "Radio Hướng dẫn thực hành Lab",
+      "x": 1000,
+      "y": 373
+    },
+    {
+      "number": 48,
+      "id": "ME04-EL-48",
+      "label": "Toggle Guest Preview",
+      "x": 1000,
+      "y": 410
+    },
+    {
+      "number": 49,
+      "id": "ME04-EL-49",
+      "label": "Toggle khóa điều kiện tiên quyết",
+      "x": 1000,
+      "y": 457
+    },
+    {
+      "number": 50,
+      "id": "ME04-EL-50",
+      "label": "Radio Lưu nháp",
+      "x": 668,
+      "y": 501
+    },
+    {
+      "number": 51,
+      "id": "ME04-EL-51",
+      "label": "Radio Gửi duyệt/Publish",
+      "x": 1000,
+      "y": 501
+    },
+    {
+      "number": 52,
+      "id": "ME04-EL-52",
+      "label": "Header kiểm định QA",
+      "x": 668,
+      "y": 576
+    },
+    {
+      "number": 53,
+      "id": "ME04-EL-53",
+      "label": "Badge điểm QA 100%",
+      "x": 1000,
+      "y": 570
+    },
+    {
+      "number": 54,
+      "id": "ME04-EL-54",
+      "label": "Giải thích QA",
+      "x": 1000,
+      "y": 625
+    },
+    {
+      "number": 55,
+      "id": "ME04-EL-55",
+      "label": "Danh sách checklist QA",
+      "x": 1000,
+      "y": 760
+    },
+    {
+      "number": 56,
+      "id": "ME04-EL-56",
+      "label": "CTA tạo bài giảng & gửi duyệt",
+      "x": 1000,
+      "y": 882
+    },
+    {
+      "number": 57,
+      "id": "ME04-EL-57",
+      "label": "CTA lưu bản nháp",
+      "x": 668,
+      "y": 920
+    },
+    {
+      "number": 58,
+      "id": "ME04-EL-58",
+      "label": "CTA hủy bỏ",
+      "x": 1000,
+      "y": 920
+    },
+    {
+      "number": 59,
+      "id": "ME04-EL-59",
+      "label": "Chú thích ISO/EduTrust/AC",
+      "x": 1000,
+      "y": 956
+    },
+    {
+      "number": 60,
+      "id": "ME04-EL-60",
+      "label": "Footer Study2Work và các nhóm liên kết",
+      "x": 14,
+      "y": 1474
+    }
+  ]
+}

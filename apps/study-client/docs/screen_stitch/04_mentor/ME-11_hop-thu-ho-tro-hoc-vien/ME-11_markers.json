@@ -1,0 +1,247 @@
+{
+  "screen_id": "ME-11",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 1600,
+    "height": 1425
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 3200,
+    "height": 2850
+  },
+  "markers": [
+    {
+      "number": 1,
+      "id": "ME11-EL-01",
+      "label": "Study2Work Mentor brand/logo link",
+      "x": 246,
+      "y": 16
+    },
+    {
+      "number": 2,
+      "id": "ME11-EL-02",
+      "label": "Header navigation: Tổng quan",
+      "x": 330,
+      "y": 16
+    },
+    {
+      "number": 3,
+      "id": "ME11-EL-03",
+      "label": "Header navigation: Khóa học phụ trách",
+      "x": 465,
+      "y": 16
+    },
+    {
+      "number": 4,
+      "id": "ME11-EL-04",
+      "label": "Header navigation: Chấm bài",
+      "x": 650,
+      "y": 16
+    },
+    {
+      "number": 5,
+      "id": "ME11-EL-05",
+      "label": "Active navigation: Hộp thư hỗ trợ",
+      "x": 805,
+      "y": 16
+    },
+    {
+      "number": 6,
+      "id": "ME11-EL-06",
+      "label": "Header navigation: Thông báo",
+      "x": 955,
+      "y": 16
+    },
+    {
+      "number": 7,
+      "id": "ME11-EL-07",
+      "label": "Notification bell and unread dot",
+      "x": 1276,
+      "y": 16
+    },
+    {
+      "number": 8,
+      "id": "ME11-EL-08",
+      "label": "Mentor sample name, role and avatar",
+      "x": 1524,
+      "y": 16
+    },
+    {
+      "number": 9,
+      "id": "ME11-EL-09",
+      "label": "Support eyebrow/icon",
+      "x": 20,
+      "y": 111
+    },
+    {
+      "number": 10,
+      "id": "ME11-EL-10",
+      "label": "Page title",
+      "x": 20,
+      "y": 173
+    },
+    {
+      "number": 11,
+      "id": "ME11-EL-11",
+      "label": "Page description",
+      "x": 20,
+      "y": 218
+    },
+    {
+      "number": 12,
+      "id": "ME11-EL-12",
+      "label": "SLA <4 giờ badge",
+      "x": 1118,
+      "y": 198
+    },
+    {
+      "number": 13,
+      "id": "ME11-EL-13",
+      "label": "“Vừa cập nhật tức thì” badge",
+      "x": 1530,
+      "y": 198
+    },
+    {
+      "number": 14,
+      "id": "ME11-EL-14",
+      "label": "Filter panel/surface",
+      "x": 48,
+      "y": 397
+    },
+    {
+      "number": 15,
+      "id": "ME11-EL-15",
+      "label": "“Tất cả” tab and sample count",
+      "x": 60,
+      "y": 307
+    },
+    {
+      "number": 16,
+      "id": "ME11-EL-16",
+      "label": "“Đang mở” tab and sample count",
+      "x": 229,
+      "y": 307
+    },
+    {
+      "number": 17,
+      "id": "ME11-EL-17",
+      "label": "“Đã giải quyết” tab and sample count",
+      "x": 402,
+      "y": 307
+    },
+    {
+      "number": 18,
+      "id": "ME11-EL-18",
+      "label": "Course filter label",
+      "x": 1040,
+      "y": 318
+    },
+    {
+      "number": 19,
+      "id": "ME11-EL-19",
+      "label": "Course filter select",
+      "x": 1530,
+      "y": 307
+    },
+    {
+      "number": 20,
+      "id": "ME11-EL-20",
+      "label": "Empty-state panel",
+      "x": 50,
+      "y": 455
+    },
+    {
+      "number": 21,
+      "id": "ME11-EL-21",
+      "label": "Empty-state mail illustration",
+      "x": 712,
+      "y": 540
+    },
+    {
+      "number": 22,
+      "id": "ME11-EL-22",
+      "label": "Empty-state heading",
+      "x": 518,
+      "y": 695
+    },
+    {
+      "number": 23,
+      "id": "ME11-EL-23",
+      "label": "Empty-state explanatory copy",
+      "x": 430,
+      "y": 750
+    },
+    {
+      "number": 24,
+      "id": "ME11-EL-24",
+      "label": "“Làm mới hộp thư” button",
+      "x": 652,
+      "y": 887
+    },
+    {
+      "number": 25,
+      "id": "ME11-EL-25",
+      "label": "Automatic notification/realtime claim",
+      "x": 509,
+      "y": 957
+    },
+    {
+      "number": 26,
+      "id": "ME11-EL-26",
+      "label": "SLA information card",
+      "x": 51,
+      "y": 1116
+    },
+    {
+      "number": 27,
+      "id": "ME11-EL-27",
+      "label": "Standard-answer information card",
+      "x": 567,
+      "y": 1116
+    },
+    {
+      "number": 28,
+      "id": "ME11-EL-28",
+      "label": "Direct meeting information card",
+      "x": 1084,
+      "y": 1116
+    },
+    {
+      "number": 29,
+      "id": "ME11-EL-29",
+      "label": "Footer logo",
+      "x": 20,
+      "y": 1365
+    },
+    {
+      "number": 30,
+      "id": "ME11-EL-30",
+      "label": "Footer copyright/WCAG copy",
+      "x": 88,
+      "y": 1345
+    },
+    {
+      "number": 31,
+      "id": "ME11-EL-31",
+      "label": "Footer link: Quy chế Giảng viên",
+      "x": 1078,
+      "y": 1345
+    },
+    {
+      "number": 32,
+      "id": "ME11-EL-32",
+      "label": "Footer link: Tiêu chuẩn đánh giá",
+      "x": 1265,
+      "y": 1345
+    },
+    {
+      "number": 33,
+      "id": "ME11-EL-33",
+      "label": "Footer link: Hỗ trợ kỹ thuật",
+      "x": 1450,
+      "y": 1345
+    }
+  ]
+}

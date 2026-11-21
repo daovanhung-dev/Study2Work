@@ -1,0 +1,64 @@
+<main class="static-page api-screen st12-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/courses">Khóa học của tôi</a><span>›</span
+    ><a [routerLink]="['/student/lessons', lessonId()]">{{ lesson()?.title || 'Bài học' }}</a
+    ><span>›</span><span>Tài liệu kèm bài học</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">Tài liệu học tập</p>
+      <h1>Tài liệu kèm bài học</h1>
+      <p>{{ lesson()?.title || 'Tài liệu kèm theo bài học' }}</p>
+    </div>
+    @if (lesson()) {
+      <span class="api-pill">{{ lesson()?.resources?.length || 0 }} tài liệu</span>
+    }
+  </header>
+  @if (loading()) {
+    <section class="api-message" role="status"><strong>Đang tải tài liệu…</strong></section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryResources()">
+        Tải lại tài liệu
+      </button>
+    </section>
+  }
+  @if (!loading() && !error() && lesson(); as item) {
+    @if (item.resources.length) {
+      <section class="api-card">
+        <ul class="api-list">
+          @for (resource of item.resources; track resource.id) {
+            <li>
+              <div class="resource-row">
+                <span class="resource-icon" aria-hidden="true">▤</span>
+                <div>
+                  <h2>{{ resource.name }}</h2>
+                  <p class="api-meta">Tài liệu đính kèm</p>
+                </div>
+                <a
+                  class="api-button secondary resource-open"
+                  [routerLink]="['/resources', resource.id]"
+                  [queryParams]="{ from: 'lesson', lessonId: lessonId() }"
+                >
+                  Mở tài liệu
+                </a>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    } @else {
+      <section class="api-message">
+        <div>
+          <strong>Chưa có tài liệu được gắn với bài học này.</strong>
+          <p>Tài liệu sẽ xuất hiện tại đây khi được thêm vào bài học.</p>
+        </div>
+      </section>
+    }
+    <div class="api-actions">
+      <a class="api-button" [routerLink]="['/student/lessons', lessonId()]">Quay lại bài học</a>
+    </div>
+  }
+</main>

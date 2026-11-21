@@ -24,12 +24,15 @@ uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 3003
   cấu hình riêng.
 - Dùng `Depends(get_db)` để nhận một SQLAlchemy `Session` theo request; view
   sở hữu `commit()` và `rollback()`.
-- Response mới dùng `success_response()` và `error_response()` trong
-  `app.core.responses`. Các helper `success_payload()` và `error_payload()`
-  vẫn được giữ để chuyển tiếp code cũ.
+- Success envelope dùng `success_response()`; lỗi dùng `error_response(...)`, hàm
+  trả trực tiếp `JSONResponse` với status, envelope và trace header.
+- Chuẩn hóa input dùng chung nằm trong `app/utils/validate.py`; helper
+  Bearer/JWT/token dùng chung nằm trong `app/utils/auth.py`. API có rule input
+  riêng đặt trong `validate.py`; API #4 dùng auth guard chung trực tiếp.
 - Password mới dùng Argon2id. Bcrypt chỉ được verify cho dữ liệu legacy.
-- Refresh token mới phải là opaque token; chỉ lưu hash bằng
-  `hash_refresh_token()`, không lưu raw token.
+- Refresh token mới phải là opaque token; app dùng `hash_refresh_token()` qua
+  `app/utils/auth.py` để lưu hash, không lưu raw token. Primitive HMAC nằm trong
+  `app/core/security/refresh_token.py`.
 
 ## Configuration
 

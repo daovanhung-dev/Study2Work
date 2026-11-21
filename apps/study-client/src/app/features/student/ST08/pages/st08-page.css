@@ -1,0 +1,290 @@
+study-st08-page {
+  display: block;
+  min-height: 100vh;
+}
+
+study-st08-page .my-courses {
+  display: grid;
+  max-width: 1120px;
+  gap: 22px;
+  margin: 0 auto;
+}
+
+study-st08-page .my-courses__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 0 17px;
+  border-bottom: 1px solid var(--border);
+}
+
+study-st08-page .my-courses__eyebrow {
+  margin: 0 0 6px;
+  color: var(--ocean-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+
+study-st08-page .my-courses__heading h1 {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 34px);
+  letter-spacing: -0.03em;
+}
+
+study-st08-page .my-courses__heading p:last-child {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+study-st08-page .my-courses__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+study-st08-page .my-courses__filters button {
+  min-width: 96px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-primary);
+  background: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+study-st08-page .my-courses__filters button.active {
+  border-color: var(--ocean-primary);
+  color: var(--surface);
+  background: var(--ocean-primary);
+}
+
+study-st08-page .my-courses__catalog-link,
+study-st08-page .my-courses__empty a,
+study-st08-page .my-courses__pagination button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--surface);
+  background: var(--ocean-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+study-st08-page .my-courses__empty {
+  display: flex;
+  min-height: 296px;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  padding: 26px;
+  text-align: center;
+}
+
+study-st08-page .my-courses__icon,
+study-st08-page .my-courses__book-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ocean-primary);
+  background: var(--ocean-soft);
+  font-size: 26px;
+}
+
+study-st08-page .my-courses__icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+study-st08-page .my-courses__book-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+study-st08-page .my-courses__empty h2,
+study-st08-page .my-courses__state h2 {
+  margin: 16px 0 7px;
+  font-size: 18px;
+}
+
+study-st08-page .my-courses__empty p,
+study-st08-page .my-courses__state p {
+  max-width: 55ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+study-st08-page .my-courses__empty a {
+  gap: 8px;
+  margin-top: 20px;
+}
+
+study-st08-page .my-courses__state {
+  display: grid;
+  min-height: 210px;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+study-st08-page .my-courses__state--error h2 {
+  color: var(--danger);
+}
+
+study-st08-page .my-courses__result-count {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+study-st08-page .my-courses__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 16px;
+}
+
+study-st08-page .my-courses__card {
+  display: flex;
+  min-height: 255px;
+  flex-direction: column;
+}
+
+study-st08-page .my-courses__card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+study-st08-page .my-courses__book-icon {
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+}
+
+study-st08-page .my-courses__status {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--ocean-deep);
+  background: var(--ocean-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+study-st08-page .my-courses__card h2 {
+  margin: 15px 0 6px;
+  font-size: 17px;
+}
+
+study-st08-page .my-courses__description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+study-st08-page dl {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+study-st08-page dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+}
+
+study-st08-page dt {
+  color: var(--text-muted);
+}
+
+study-st08-page dd {
+  margin: 0;
+  font-weight: 650;
+  text-align: right;
+}
+
+study-st08-page .my-courses__continue {
+  margin-top: auto;
+}
+
+study-st08-page .my-courses__unavailable {
+  margin-top: auto;
+  padding: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+study-st08-page .my-courses__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 20px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+study-st08-page .my-courses__pagination button {
+  color: var(--ocean-deep);
+  background: var(--ocean-soft);
+}
+
+study-st08-page button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+study-st08-page .my-courses__filters button:hover:not(.active) {
+  border-color: var(--ocean-primary);
+  color: var(--ocean-primary);
+}
+
+study-st08-page a:focus-visible,
+study-st08-page button:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  study-st08-page .my-courses__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  study-st08-page .my-courses__catalog-link,
+  study-st08-page .my-courses__empty a {
+    width: 100%;
+  }
+}

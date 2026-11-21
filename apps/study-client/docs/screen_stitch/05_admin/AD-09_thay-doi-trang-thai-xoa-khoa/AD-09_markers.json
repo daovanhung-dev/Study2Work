@@ -1,0 +1,230 @@
+[
+  {
+    "number": 1,
+    "x": 12,
+    "y": 31,
+    "label": "Study2Work LMS Admin brand"
+  },
+  {
+    "number": 2,
+    "x": 329,
+    "y": 12,
+    "label": "Admin navigation: Tổng quan"
+  },
+  {
+    "number": 3,
+    "x": 470,
+    "y": 12,
+    "label": "Admin navigation: Người dùng"
+  },
+  {
+    "number": 4,
+    "x": 643,
+    "y": 12,
+    "label": "Active Admin navigation: Khóa học & Nội dung"
+  },
+  {
+    "number": 5,
+    "x": 822,
+    "y": 12,
+    "label": "Admin navigation: Kiểm duyệt"
+  },
+  {
+    "number": 6,
+    "x": 947,
+    "y": 12,
+    "label": "Admin navigation: Báo cáo"
+  },
+  {
+    "number": 7,
+    "x": 1113,
+    "y": 12,
+    "label": "Static SYSTEM NORMAL badge"
+  },
+  {
+    "number": 8,
+    "x": 1234,
+    "y": 12,
+    "label": "Notifications button without handler"
+  },
+  {
+    "number": 9,
+    "x": 1427,
+    "y": 12,
+    "label": "Static Admin identity and avatar"
+  },
+  {
+    "number": 10,
+    "x": 16,
+    "y": 91,
+    "label": "Global breadcrumb trail"
+  },
+  {
+    "number": 11,
+    "x": 1508,
+    "y": 72,
+    "label": "Static RBAC assurance badge"
+  },
+  {
+    "number": 12,
+    "x": 14,
+    "y": 139,
+    "label": "Local course-management breadcrumb trail"
+  },
+  {
+    "number": 13,
+    "x": 544,
+    "y": 181,
+    "label": "Static API #74/#76/#77 gate-policy line"
+  },
+  {
+    "number": 14,
+    "x": 1491,
+    "y": 136,
+    "label": "Back-to-detail link; href targets course list"
+  },
+  {
+    "number": 15,
+    "x": 351,
+    "y": 272,
+    "label": "Static safety-shield icon"
+  },
+  {
+    "number": 16,
+    "x": 785,
+    "y": 256,
+    "label": "Status/delete coordination heading"
+  },
+  {
+    "number": 17,
+    "x": 1123,
+    "y": 269,
+    "label": "Static safe-protection gate badge"
+  },
+  {
+    "number": 18,
+    "x": 1133,
+    "y": 351,
+    "label": "Static action-page description"
+  },
+  {
+    "number": 19,
+    "x": 393,
+    "y": 386,
+    "label": "Target coordination information card heading"
+  },
+  {
+    "number": 20,
+    "x": 1129,
+    "y": 411,
+    "label": "Static automatic RBAC comparison badge"
+  },
+  {
+    "number": 21,
+    "x": 744,
+    "y": 476,
+    "label": "Target Course card; prototype says none selected"
+  },
+  {
+    "number": 22,
+    "x": 1136,
+    "y": 476,
+    "label": "Current status card; prototype says undetermined"
+  },
+  {
+    "number": 23,
+    "x": 1133,
+    "y": 571,
+    "label": "Static enrollment-constraint warning"
+  },
+  {
+    "number": 24,
+    "x": 1182,
+    "y": 657,
+    "label": "Action-selector legend and single-choice note"
+  },
+  {
+    "number": 25,
+    "x": 1179,
+    "y": 702,
+    "label": "Draft action radio option; default checked"
+  },
+  {
+    "number": 26,
+    "x": 1179,
+    "y": 795,
+    "label": "Archive action radio option"
+  },
+  {
+    "number": 27,
+    "x": 1179,
+    "y": 889,
+    "label": "Permanent-delete action radio option"
+  },
+  {
+    "number": 28,
+    "x": 390,
+    "y": 967,
+    "label": "Reason label, required cue and ISO claim"
+  },
+  {
+    "number": 29,
+    "x": 1139,
+    "y": 1111,
+    "label": "Disabled audit-reason textarea and lock"
+  },
+  {
+    "number": 30,
+    "x": 1135,
+    "y": 1148,
+    "label": "Static reason-disabled helper copy"
+  },
+  {
+    "number": 31,
+    "x": 392,
+    "y": 1173,
+    "label": "Static data-protection policy card"
+  },
+  {
+    "number": 32,
+    "x": 894,
+    "y": 1397,
+    "label": "Cancel and return link"
+  },
+  {
+    "number": 33,
+    "x": 1151,
+    "y": 1397,
+    "label": "Disabled Confirm action button"
+  },
+  {
+    "number": 34,
+    "x": 1152,
+    "y": 1462,
+    "label": "Static data-retention safeguard footer claim"
+  },
+  {
+    "number": 35,
+    "x": 353,
+    "y": 1548,
+    "label": "Footer copyright notice"
+  },
+  {
+    "number": 36,
+    "x": 1014,
+    "y": 1548,
+    "label": "Data privacy footer link"
+  },
+  {
+    "number": 37,
+    "x": 1222,
+    "y": 1548,
+    "label": "RBAC standards footer link"
+  },
+  {
+    "number": 38,
+    "x": 1484,
+    "y": 1548,
+    "label": "System technical support footer link"
+  }
+]

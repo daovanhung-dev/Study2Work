@@ -1,0 +1,368 @@
+[
+  {
+    "number": 1,
+    "x": 12,
+    "y": 31,
+    "label": "Study2Work LMS Admin brand"
+  },
+  {
+    "number": 2,
+    "x": 308,
+    "y": 13,
+    "label": "Admin navigation: Tổng quan"
+  },
+  {
+    "number": 3,
+    "x": 418,
+    "y": 13,
+    "label": "Admin navigation: Người dùng"
+  },
+  {
+    "number": 4,
+    "x": 578,
+    "y": 13,
+    "label": "Active Admin navigation: Khóa học & Nội dung"
+  },
+  {
+    "number": 5,
+    "x": 748,
+    "y": 13,
+    "label": "Admin navigation: Kiểm duyệt"
+  },
+  {
+    "number": 6,
+    "x": 866,
+    "y": 13,
+    "label": "Admin navigation: Báo cáo"
+  },
+  {
+    "number": 7,
+    "x": 1002,
+    "y": 13,
+    "label": "Static SYSTEM NORMAL badge"
+  },
+  {
+    "number": 8,
+    "x": 1111,
+    "y": 13,
+    "label": "Notifications button without handler"
+  },
+  {
+    "number": 9,
+    "x": 1282,
+    "y": 13,
+    "label": "Static Admin identity and avatar"
+  },
+  {
+    "number": 10,
+    "x": 15,
+    "y": 83,
+    "label": "Global breadcrumb trail"
+  },
+  {
+    "number": 11,
+    "x": 1364,
+    "y": 68,
+    "label": "Static RBAC assurance badge"
+  },
+  {
+    "number": 12,
+    "x": 112,
+    "y": 132,
+    "label": "Quản trị đào tạo breadcrumb"
+  },
+  {
+    "number": 13,
+    "x": 248,
+    "y": 132,
+    "label": "Danh sách khóa học breadcrumb"
+  },
+  {
+    "number": 14,
+    "x": 398,
+    "y": 132,
+    "label": "Current Chỉnh sửa khóa học breadcrumb"
+  },
+  {
+    "number": 15,
+    "x": 1198,
+    "y": 132,
+    "label": "Back-to-detail link; href targets course list"
+  },
+  {
+    "number": 16,
+    "x": 169,
+    "y": 215,
+    "label": "Read-only gate badge"
+  },
+  {
+    "number": 17,
+    "x": 397,
+    "y": 215,
+    "label": "Static API #74 and #75 badges"
+  },
+  {
+    "number": 18,
+    "x": 839,
+    "y": 278,
+    "label": "Page title: Chỉnh sửa thông tin khóa học quản trị"
+  },
+  {
+    "number": 19,
+    "x": 834,
+    "y": 333,
+    "label": "Static hero description"
+  },
+  {
+    "number": 20,
+    "x": 1035,
+    "y": 315,
+    "label": "Static batch reference code"
+  },
+  {
+    "number": 21,
+    "x": 49,
+    "y": 414,
+    "label": "Synchronization notice icon"
+  },
+  {
+    "number": 22,
+    "x": 1305,
+    "y": 430,
+    "label": "Static synchronization/upload/cache notice"
+  },
+  {
+    "number": 23,
+    "x": 64,
+    "y": 548,
+    "label": "Course properties form heading"
+  },
+  {
+    "number": 24,
+    "x": 866,
+    "y": 548,
+    "label": "All fields locked badge"
+  },
+  {
+    "number": 25,
+    "x": 49,
+    "y": 631,
+    "label": "Course title label and required cue"
+  },
+  {
+    "number": 26,
+    "x": 49,
+    "y": 672,
+    "label": "Disabled course title input"
+  },
+  {
+    "number": 27,
+    "x": 590,
+    "y": 708,
+    "label": "Course title helper text"
+  },
+  {
+    "number": 28,
+    "x": 601,
+    "y": 647,
+    "label": "Course code label and read-only cue"
+  },
+  {
+    "number": 29,
+    "x": 892,
+    "y": 672,
+    "label": "Disabled/read-only course code input"
+  },
+  {
+    "number": 30,
+    "x": 864,
+    "y": 708,
+    "label": "Course code helper claiming DB key"
+  },
+  {
+    "number": 31,
+    "x": 49,
+    "y": 756,
+    "label": "Mentor owner label"
+  },
+  {
+    "number": 32,
+    "x": 542,
+    "y": 793,
+    "label": "Disabled mentor select"
+  },
+  {
+    "number": 33,
+    "x": 532,
+    "y": 830,
+    "label": "Mentor responsibility helper text"
+  },
+  {
+    "number": 34,
+    "x": 885,
+    "y": 756,
+    "label": "Price label and static discount cue"
+  },
+  {
+    "number": 35,
+    "x": 890,
+    "y": 793,
+    "label": "Disabled price input"
+  },
+  {
+    "number": 36,
+    "x": 886,
+    "y": 830,
+    "label": "Static price helper text"
+  },
+  {
+    "number": 37,
+    "x": 891,
+    "y": 876,
+    "label": "Description label and character count"
+  },
+  {
+    "number": 38,
+    "x": 890,
+    "y": 1000,
+    "label": "Disabled course description textarea"
+  },
+  {
+    "number": 39,
+    "x": 49,
+    "y": 1068,
+    "label": "Thumbnail label and upload-disabled state"
+  },
+  {
+    "number": 40,
+    "x": 890,
+    "y": 1178,
+    "label": "Disabled thumbnail upload area"
+  },
+  {
+    "number": 41,
+    "x": 804,
+    "y": 1178,
+    "label": "Static image requirements and #75 text"
+  },
+  {
+    "number": 42,
+    "x": 600,
+    "y": 1273,
+    "label": "Cancel link to course list"
+  },
+  {
+    "number": 43,
+    "x": 864,
+    "y": 1273,
+    "label": "Disabled Save changes button"
+  },
+  {
+    "number": 44,
+    "x": 864,
+    "y": 1327,
+    "label": "Static Production Ready moderation claim"
+  },
+  {
+    "number": 45,
+    "x": 864,
+    "y": 1380,
+    "label": "Static schema version and last-updated time"
+  },
+  {
+    "number": 46,
+    "x": 1320,
+    "y": 540,
+    "label": "Preview card heading and Active badge"
+  },
+  {
+    "number": 47,
+    "x": 1337,
+    "y": 775,
+    "label": "Static preview thumbnail/banner"
+  },
+  {
+    "number": 48,
+    "x": 1337,
+    "y": 854,
+    "label": "Preview title and summary copy"
+  },
+  {
+    "number": 49,
+    "x": 1337,
+    "y": 937,
+    "label": "Static mentor preview card"
+  },
+  {
+    "number": 50,
+    "x": 939,
+    "y": 1015,
+    "label": "Static chapter count metric"
+  },
+  {
+    "number": 51,
+    "x": 1341,
+    "y": 1015,
+    "label": "Static enrolled learner metric"
+  },
+  {
+    "number": 52,
+    "x": 1332,
+    "y": 1117,
+    "label": "Connection status diagnostics heading"
+  },
+  {
+    "number": 53,
+    "x": 1337,
+    "y": 1176,
+    "label": "Static API #74 paused diagnostic"
+  },
+  {
+    "number": 54,
+    "x": 1337,
+    "y": 1240,
+    "label": "Static API #75 multipart locked diagnostic"
+  },
+  {
+    "number": 55,
+    "x": 1335,
+    "y": 1313,
+    "label": "Static System Admin RBAC claim"
+  },
+  {
+    "number": 56,
+    "x": 43,
+    "y": 1427,
+    "label": "Static data-integrity/audit/gateway guarantee banner"
+  },
+  {
+    "number": 57,
+    "x": 1341,
+    "y": 1457,
+    "label": "Technical support link without wired destination"
+  },
+  {
+    "number": 58,
+    "x": 171,
+    "y": 1557,
+    "label": "Footer copyright notice"
+  },
+  {
+    "number": 59,
+    "x": 837,
+    "y": 1557,
+    "label": "Data privacy footer link"
+  },
+  {
+    "number": 60,
+    "x": 1036,
+    "y": 1557,
+    "label": "RBAC standards footer link"
+  },
+  {
+    "number": 61,
+    "x": 1244,
+    "y": 1557,
+    "label": "System technical support footer link"
+  }
+]

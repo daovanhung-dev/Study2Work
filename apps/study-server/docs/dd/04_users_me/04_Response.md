@@ -27,19 +27,26 @@ format: markdown
 |  5.1 | `data.id`         | User ID        | `id`           | `int64`     |   `No` | `users`    | `id`                   | `4.1`             | BIGSERIAL serialized as int64                  | `N/A`                                 | ERD primary key                                     |
 |  5.2 | `data.full_name`  | Full name      | `full_name`    | `string`    |   `No` | `users`    | `full_name`            | `4.1`             | Direct mapping                                 | `N/A`                                 | ERD NOT NULL                                        |
 |  5.3 | `data.email`      | Email          | `email`        | `email`     |   `No` | `users`    | `email`                | `4.1`             | Direct mapping                                 | `N/A`                                 | ERD UNIQUE, NOT NULL                                |
-|  5.4 | `data.role`       | Role           | `role`         | `string`    |   `No` | `users`    | `role`                 | `4.1`             | Direct mapping                                 | `N/A`                                 | Role is checked before query response               |
-|  5.5 | `data.avatar_url` | Avatar URL     | `avatar_url`   | `uri`       |  `Yes` | `users`    | `avatar_url`           | `4.1`             | Direct mapping                                 | `TBD — null/omit rule`               | ERD NULL                                            |
-|  5.6 | `data.bio`        | Biography      | `bio`          | `string`    |  `Yes` | `N/A`      | `N/A — no ERD column` | `4.1`             | `DISCREPANCY/TBD`                            | `Omit when no source`                 | Optional contract field; no profile table confirmed |
-|  5.7 | `data.phone`      | Phone          | `phone`        | `string`    |  `Yes` | `users`    | `phone`                | `4.1`             | Direct mapping                                 | `TBD — null/omit rule`               | ERD NULL                                            |
-|  5.8 | `data.status`     | Account status | `status`       | `string`    |   `No` | `users`    | `status`               | `4.1`             | Direct mapping                                 | `N/A`                                 | ERD default ACTIVE                                  |
+|  5.4 | `data.role`       | Role           | `role`         | `UserRole`  |   `No` | `users`    | `role`                 | `4.1`             | Direct mapping                                 | `N/A`                                 | Catalog type is UserRole; current model accepts string; guard separately checks JWT roles |
+|  5.5 | `data.avatar_url` | Avatar URL     | `avatar_url`   | `uri`       |  `Yes` | `users`    | `avatar_url`           | `4.1`             | Direct mapping                                 | `NULL is serialized as JSON null`    | Candidate DDL permits NULL; current model is `str \| None` |
+|  5.6 | `data.bio`        | Biography      | `bio`          | `string`    |  `Yes` | `N/A`      | `N/A — current query/model omit it` | `4.1` | Not mapped | Omit when no source | Optional catalog field; no current `users.bio` source |
+|  5.7 | `data.phone`      | Phone          | `phone`        | `string`    |  `Yes` | `users`    | `phone`                | `4.1`             | Direct mapping                                 | `NULL is serialized as JSON null`    | Candidate DDL permits NULL; current model is `str \| None` |
+|  5.8 | `data.status`     | Account status | `status`       | `UserStatus`|   `No` | `users`    | `status`               | `4.1`             | Direct mapping                                 | Model requires non-null; NULL mapping returns 500 | Catalog type is UserStatus; current model accepts string; candidate DDL does not declare NOT NULL |
 |  5.9 | `data.created_at` | Created time   | `created_at`   | `date-time` |   `No` | `users`    | `created_at`           | `4.1`             | Direct mapping                                 | `N/A`                                 | ERD NOT NULL                                        |
 | 5.10 | `data.updated_at` | Updated time   | `updated_at`   | `date-time` |   `No` | `users`    | `updated_at`           | `4.1`             | Direct mapping                                 | `N/A`                                 | ERD NOT NULL                                        |
 |    6 | `meta`            | Metadata       | `meta`         | `object`    |   `No` | `N/A`      | `N/A`                  | `4.1/4.2/4.3/4.4` | `{}`                                         | `{}`                                  | No pagination/operation metadata                    |
-|    7 | `traceId`         | Trace ID       | `traceId`      | `uuid`      |   `No` | `N/A`      | `N/A`                  | `4.1/4.2/4.3/4.4` | Request correlation/generator                  | `TBD — exact generator`              | `ApiEnvelope` field                               |
+|    7 | `traceId`         | Trace ID       | `traceId`      | `uuid`      |   `No` | `N/A`      | `N/A`                  | `4.1/4.2/4.3/4.4` | Validated `X-Trace-Id` or UUID4 fallback        | `N/A`                                 | `ApiEnvelope` field; also returned in response header |
 
 > Error response dùng cùng các field `success`, `businessCode`, `message`, `data`, `meta`, `traceId` của `ApiEnvelope`; không tạo `error_code` hoặc `error_message_id` riêng.
 >
 > `HTTPStatus` trong bảng là protocol status, không phải property JSON.
+
+## Current-source response mapping
+
+Current view trả HTTP `200 DESIGN_RESOURCE_RETRIEVED` qua `success_response` với `data` do `UserProfile.model_dump(mode="json")` tạo. Query/model chỉ có các profile fields trong bảng từ `id` tới `updated_at`; `avatar_url` và `phone` có thể serialized thành `null`. `bio` bị omit vì không có trong query/model. Response không có permissions, access token, password hash hoặc field ngoài model.
+
+`data.role` lấy từ `users.role`; quyền truy cập Student được quyết định riêng từ JWT `roles`. Source hiện không đối chiếu hai giá trị hoặc lọc `users.status`; xem [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md).
+Current messages lần lượt là `Profile retrieved.`, `Authentication required.`, `Access denied.`, và `Profile could not be retrieved.`; contract không khóa nội dung message.
 
 ## Ví dụ thành công — HTTP 200
 
@@ -47,7 +54,7 @@ format: markdown
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Profile retrieved",
+  "message": "Profile retrieved.",
   "data": {
     "id": 1001,
     "full_name": "Nguyen Van A",
@@ -70,7 +77,7 @@ format: markdown
 {
   "success": false,
   "businessCode": "DESIGN_AUTHENTICATION_REQUIRED",
-  "message": "Authentication required",
+  "message": "Authentication required.",
   "data": {},
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000002"
@@ -83,7 +90,7 @@ format: markdown
 {
   "success": false,
   "businessCode": "DESIGN_ACCESS_DENIED",
-  "message": "Access denied",
+  "message": "Access denied.",
   "data": {},
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000003"
@@ -96,7 +103,7 @@ format: markdown
 {
   "success": false,
   "businessCode": "DESIGN_INTERNAL_ERROR",
-  "message": "Profile could not be retrieved",
+  "message": "Profile could not be retrieved.",
   "data": {},
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000004"

@@ -1,0 +1,33 @@
+"""Kiểm tra path resource_id của API #12 trước khi truy cập database."""
+
+from __future__ import annotations
+
+from app.core.responses import error_response
+from app.utils.validate import parse_integer
+from starlette.responses import JSONResponse
+
+MAX_INT64 = 9_223_372_036_854_775_807
+MIN_INT64 = -(MAX_INT64 + 1)
+
+
+def validate_resource_id(resource_id: str, *, trace_id: str) -> int | JSONResponse:
+    """Parse signed int64 hoặc trả lỗi 404 thống nhất mà không query database."""
+
+    parsed_resource_id = parse_integer(resource_id)
+    if parsed_resource_id is None:
+        return resource_not_found(trace_id)
+
+    if parsed_resource_id < MIN_INT64 or parsed_resource_id > MAX_INT64:
+        return resource_not_found(trace_id)
+    return parsed_resource_id
+
+
+def resource_not_found(trace_id: str) -> JSONResponse:
+    """Tạo response 404 an toàn dùng chung cho path và resource không được expose."""
+
+    return error_response(
+        status_code=404,
+        business_code="DESIGN_RESOURCE_NOT_FOUND",
+        message="Resource not found",
+        trace_id=trace_id,
+    )

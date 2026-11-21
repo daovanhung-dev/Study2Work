@@ -1,0 +1,76 @@
+<main class="mentor-page me08-page">
+  <study-mentor-page-header
+    title="Kiểm soát xuất bản và gỡ bỏ nội dung"
+    description="Xem trạng thái nội dung trong course. Các thay đổi vòng đời đang được giữ khóa."
+    apiLabel="#49 · #52 · #53"
+  />
+
+  @if (invalidRoute()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Thiếu hoặc sai thông tin nội dung</h2>
+      <p>Hãy mở thao tác từ cây nội dung để có Content ID và course context hợp lệ.</p>
+      <a class="mentor-button" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (loading()) {
+    <section class="mentor-card mentor-state" role="status" aria-live="polite">
+      Đang tải trạng thái Content…
+    </section>
+  } @else if (notFound()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không tìm thấy Content</h2>
+      <p>Content không còn trong danh sách đang hoạt động của course hiện tại.</p>
+      <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId(), 'content']">Quay lại cây nội dung</a>
+    </section>
+  } @else if (forbidden()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không có quyền truy cập</h2>
+      <p>API #49 chỉ trả nội dung của khóa học Mentor trực tiếp sở hữu.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (error()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Chưa thể tải trạng thái nội dung</h2>
+      <p>{{ error() }}</p>
+      <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử tải lại</button>
+      <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId(), 'content']">Quay lại cây nội dung</a>
+    </section>
+  } @else {
+    @if (content(); as item) {
+      <section class="mentor-card me08-detail">
+      <div class="mentor-meta">Course #{{ courseId() }} · Content #{{ item.id }}</div>
+      <h2>{{ item.title }}</h2>
+      <div class="me08-current">
+        <span class="mentor-meta">Loại</span><strong>{{ item.content_type }}</strong>
+        <span class="mentor-meta">Trạng thái hiện tại</span><strong class="mentor-status">{{ item.status }}</strong>
+      </div>
+
+      <div class="mentor-notice" role="note">
+        <strong>Thao tác đang bị khóa</strong>
+        <span>#52/#53 có source server, nhưng lifecycle, xác nhận và chính sách phụ thuộc chưa được duyệt cho màn hình này.</span>
+      </div>
+
+      <div class="me08-actions" role="group" aria-label="Các thao tác nội dung">
+        @if (item.status === 'APPROVED') {
+          <button class="mentor-button" type="button" disabled aria-disabled="true">Xuất bản</button>
+        } @else if (item.status === 'PUBLISHED') {
+          <button class="mentor-button mentor-button--light" type="button" disabled aria-disabled="true">Đưa về APPROVED</button>
+        } @else {
+          <button class="mentor-button" type="button" disabled>Không có chuyển trạng thái từ {{ item.status }}</button>
+        }
+        <button
+          class="mentor-button mentor-button--danger"
+          type="button"
+          disabled
+          aria-disabled="true"
+          [attr.title]="hasChildren() ? 'Có nội dung con đang hoạt động; chính sách gỡ vẫn cần được duyệt.' : 'Chính sách gỡ và xác nhận chưa được duyệt.'"
+        >Gỡ nội dung</button>
+        <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId(), 'content']">Quay lại cây nội dung</a>
+      </div>
+
+      @if (hasChildren()) {
+        <p class="mentor-meta">Course có nội dung con đang hoạt động. API #53 cũng kiểm tra điều kiện này; màn hình không gửi yêu cầu gỡ.</p>
+      }
+      </section>
+    }
+  }
+</main>

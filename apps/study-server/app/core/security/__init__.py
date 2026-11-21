@@ -1,4 +1,4 @@
-"""Application security helpers."""
+"""Đánh dấu package chứa các helper bảo mật dùng chung của ứng dụng."""
 
 from app.core.security.access_token import (
     create_access_token,

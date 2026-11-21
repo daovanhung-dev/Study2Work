@@ -21,14 +21,18 @@ agent đi từ router tới context page, source, contract, test và worklog.
 ```text
 [AGENTS.md]
   → [.agents/AGENTS.md]
-  → [.agents/context-map.md]
-  → classify primary_task_type + project_scopes
+  → classify primary_task_type
+  → [.agents/project/agent-control.md] (mandatory target and safety rules)
+  → [.agents/context-map.md] before final scope/subcontext selection
+  → choose project_scopes
+  → create/update the active target in [.agents/target.md]
   → worklog preflight: select/read up to 3 same-type worklogs
   → [.agents/project/INDEX.md] when cross-scope/boundary context is needed
   → [.agents/<scope>/AGENTS.md]
   → [.agents/<scope>/INDEX.md] or subcontext/INDEX.md
   → page đúng task
   → exact source + contract/config/test
+  → update target only when verified progress changes; log its evidence
   → update context/worklog
   → focused verification + context validator
 ```
@@ -45,8 +49,10 @@ Study2Work/
 │   ├── AGENTS.md
 │   ├── context-map.md                         ← this map
 │   ├── context-manifest.json                  ← machine-readable registry
+│   ├── target.md                               ← active targets and live progress only
 │   ├── project/
 │   │   ├── INDEX.md
+│   │   ├── agent-control.md
 │   │   ├── architecture.md
 │   │   ├── business-code.md
 │   │   ├── conventions.md
@@ -58,6 +64,7 @@ Study2Work/
 │   │   └── workflows.md
 │   ├── skills/
 │   │   ├── INDEX.md
+│   │   ├── code-review/                        ← read-only review skill pack
 │   │   ├── create-dd-mobile/                   ← Mobile DD skill pack
 │   │   └── create_dd_api/                      ← Web/API DD skill pack
 │   ├── worklog/
@@ -67,8 +74,14 @@ Study2Work/
 │   ├── server-study/
 │   ├── server-work/
 │   ├── server-ai/
+│   ├── web-study/
+│   │   ├── design.md                           ← mandatory Study Web visual and interaction guide
+│   │   └── frontend-rules.md                   ← mandatory Study Web layer and dependency rules
 │   ├── web-work/
 │   │   └── study/                              ← Study Web subcontext
+│   │       ├── AGENTS.md
+│   │       ├── INDEX.md
+│   │       └── workflows/screen-implementation.md
 │   ├── mobile-work/
 │   └── db-admin/
 └── scripts/
@@ -82,6 +95,11 @@ Study2Work/
   routing, expected/current behavior rules and mandatory verification.
 - [`.agents/AGENTS.md`](AGENTS.md) ⇢ global context index, status vocabulary,
   maintenance rules and canonical page graph boundary.
+- [`.agents/project/agent-control.md`](project/agent-control.md) ⇢ mandatory
+  all-scope target tracking, silent execution, source evidence and safety rules.
+- [`.agents/target.md`](target.md) ⇢ sole live tracker; exact columns are `STT`,
+  `Tên target`, `Tiến độ hoàn thiện`; completed rows are removed after evidence
+  is recorded in the worklog.
 - [`.agents/context-manifest.json`](context-manifest.json) ⇢ machine registry
   for project pages, scopes, subcontexts, skills, workflows, contracts and
   worklog preflight.
@@ -115,6 +133,8 @@ Study2Work/
     consumer and status of shared/local contracts.
   - [`.agents/project/workflows.md`](project/workflows.md) — workflow registry
     and verification order.
+  - [`.agents/project/agent-control.md`](project/agent-control.md) — target
+    tracking, evidence, execution and safety rules for every scope.
 
 ## Scope context trees
 
@@ -187,16 +207,27 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/`
-- Status: `SOURCE_BACKED_SKELETON`
+- Source root: `apps/study-client/` (Angular 22 standalone SPA with root readiness; SH-02 presentation at /login, SH-03 registration via #01 at /register, and SH-04 static information at /register/verification (no #02 caller or handoff), Guest GS-01–GS-03 at `/courses`, `/courses/search` and `/courses/:courseId` with #05–#08 callers; GS03 mounts the GS04 curriculum tab at `?tab=curriculum` and calls #09 after #08 succeeds; Student ST-11–ST-26 and Admin AD-01–AD-25 route groups; selected Admin GET callers; 103 typed API descriptors plus source-only R-X01; other Guest behavior and Mentor routes/callers remain absent)
+- Current GS-07 slice: `/resources/:resourceId` mounts a contract-blocked gate only; no route ID is consumed and no API #12 caller/actions are wired. Full access/URL policy and runtime remain unresolved.
+- Status: `VERIFIED_WITH_UNWIRED_COMPONENTS`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
-- Stack: Vue 3 + Vite + Vue Router + Pinia + Vue Query + Zod.
 - Pages:
-  - [`.agents/web-work/study/architecture.md`](web-work/study/architecture.md)
-  - [`.agents/web-work/study/api.md`](web-work/study/api.md)
-  - [`.agents/web-work/study/tests.md`](web-work/study/tests.md)
-  - [`.agents/web-work/study/workflows/README.md`](web-work/study/workflows/README.md)
+  - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
+    visual, interaction and accessibility target.
+  - [`.agents/web-study/frontend-rules.md`](web-study/frontend-rules.md) —
+    mandatory screen groups, four-folder layout, routes/layouts and frontend
+    layer rules.
+  - [`.agents/web-work/study/workflows/screen-implementation.md`](web-work/study/workflows/screen-implementation.md) — registered DD/image analysis, coding, test/demo and fixture-cleanup workflow.
+
+The generic HTTP transport lives in `apps/study-client/src/app/core/http/`;
+selected Admin screen callers use `AdminApiService`. `API_009` is registered
+`WIRED`; `GS03Page` calls #08 and owns `?tab=curriculum`, where its GS03-local data-access calls #09 only after #08 succeeds. The panel renders title/order only; focused GS03 tests cover direct entry and #09 states. Browser/live API/DB runtime and deployment remain unverified. A descriptor does not establish a deployed feature runtime. Load the frontend rules for Study Web
+implementation and architecture work. Do not infer feature behavior from
+design documents. Recheck `apps/study-client/` when a task depends on
+implementation details. The former readiness component remains in source but
+is not routed: `/` is Shared SH-01. Shared has explicit SH-06 `/not-found`; the app root wildcard routes unknown paths there, and GS-03 #08 detail 404 uses the same generic state while preserving separate 500 and #09 curriculum-error handling. Shared also has gate-only SH-07 `/operations/:operationId`; SH-07 does not call API #18 and
+generic tracking remains contract-blocked.
 
 #### `web-work/work-web` subcontext
 
@@ -205,7 +236,7 @@ Study2Work/
 - Entry/index/pages reuse the parent Web graph:
   [`.agents/web-work/AGENTS.md`](web-work/AGENTS.md),
   [`.agents/web-work/INDEX.md`](web-work/INDEX.md), and the parent pages above.
-- Stack: React + React Query + Zod; do not apply Study Vue patterns.
+- Stack: React + React Query + Zod; do not apply Study Angular patterns.
 
 ### `mobile-work`
 
@@ -261,19 +292,28 @@ Study2Work/
   - Workflows ⇢ `docs-dd`, `cross-scope-contract`.
   - Template resource: [`.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD`](skills/create_dd_api/docs/dd/DD_API_Template_MD).
   - Example resources: [`.agents/skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo`](skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo), [`.agents/skills/create_dd_api/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart`](skills/create_dd_api/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart).
+- `code-review`
+  - Entry: [`.agents/skills/code-review/SKILL.md`](skills/code-review/SKILL.md)
+  - Scope ⇢ `mobile-work`, `web-work`, `server-work`, `server-study`, `server-ai`, `db-admin`.
+  - Workflow ⇢ `code-review`; explicit user requests only, read-only, with no test execution.
+  - Resources: [review checklist](skills/code-review/references/review-checklist.md) and [report format](skills/code-review/references/report-format.md).
 - Web UI-only DD has no canonical skill.
 
 ## Workflow graph
 
-All workflow keys below are registered in the manifest. Their implementation
-entry is [`.agents/project/workflows.md`](project/workflows.md), except the
-worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/README.md).
+All workflow keys below are registered in the manifest. Common workflow entries
+are in [`.agents/project/workflows.md`](project/workflows.md); the Study Web
+screen workflow has its subcontext entry, and the worklog contract is
+implemented by [`.agents/worklog/README.md`](worklog/README.md).
 
 | Workflow key | Trigger/boundary | Entry | Main result |
 |---|---|---|---|
+| `agent-control` | every task, all scopes | `project/agent-control.md` | silent execution and target progress tracking |
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
+| `study-web-screen-coding` | implement/fix/test/demo an individual Study Web screen | `web-work/study/workflows/screen-implementation.md` | DD-backed screen, tested local demo and verified fixture cleanup |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |
 | `test` | test/verification | `project/workflows.md` | focused then scope verification |
+| `code-review` | explicit code review request | `project/workflows.md` | read-only, evidence-backed review and findings report |
 | `docs-dd` | Web/API DD | `project/workflows.md` | source-backed API DD validation |
 | `docs-dd-mobile` | Mobile DD | `project/workflows.md` | Mobile DD validator + context validation |
 | `cross-scope-contract` | shared API/event boundary | `project/workflows.md` | producer/consumer/status verification |
@@ -282,8 +322,9 @@ worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/R
 Scope workflow pages refine the common workflow and side effects:
 
 - Mobile: [`mobile-work/workflows/README.md`](mobile-work/workflows/README.md)
-- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md) and
-  [`web-work/study/workflows/README.md`](web-work/study/workflows/README.md)
+- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md) covers the
+  parent Web scope; Study Web screen work uses its dedicated registered
+  [`web-work/study/workflows/screen-implementation.md`](web-work/study/workflows/screen-implementation.md).
 - Work Server: [`server-work/workflows/README.md`](server-work/workflows/README.md)
 - Study Server: [`server-study/workflows/README.md`](server-study/workflows/README.md)
 - AI Server: [`server-ai/workflows/README.md`](server-ai/workflows/README.md)

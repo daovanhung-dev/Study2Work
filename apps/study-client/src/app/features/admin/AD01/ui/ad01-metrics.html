@@ -1,0 +1,20 @@
+<section class="metrics-section" aria-labelledby="metrics-title">
+  <h2 id="metrics-title" class="visually-hidden">Các chỉ số tổng quan</h2>
+
+  <div class="metrics-grid">
+    @for (metric of metrics; track metric.title) {
+      <article class="metric-card" [attr.aria-label]="metric.title + ': chưa khả dụng'">
+        <div class="metric-card-top">
+          <h3>{{ metric.title }}</h3>
+          <span class="metric-icon"><study-ad01-icon [name]="metric.icon" /></span>
+        </div>
+        <p class="metric-value" aria-label="Chưa khả dụng">— —</p>
+        <p class="metric-description">{{ metric.description }}</p>
+        <div class="metric-availability">
+          <study-ad01-icon name="info" />
+          <span>Chưa có dữ liệu tích hợp</span>
+        </div>
+      </article>
+    }
+  </div>
+</section>

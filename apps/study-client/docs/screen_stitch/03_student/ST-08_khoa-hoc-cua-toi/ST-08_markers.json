@@ -1,0 +1,218 @@
+{
+  "screen_id": "ST-08",
+  "source_image": "screen_rendered.png",
+  "original_image": "screen.png",
+  "source_html": "code.html",
+  "source_state": "Static Firefox render of code.html used because source screen.png omits the HTML header and has a large black band below the footer. Not a runtime capture.",
+  "render_provenance": {
+    "command": "firefox --headless --no-remote --profile <temporary-profile> --window-size=1280,1024 --screenshot=<temporary-output> file://<absolute-path>/code.html",
+    "output": "screen_rendered.png",
+    "viewport": "1280x1024",
+    "runtime_claim": false
+  },
+  "source_image_sha256": "95d1f7bacd0ff05ebf9db81f970fc775afbdece30eb10d7374ecf2f551d12ab9",
+  "original_image_sha256": "665e39c4c1de2cbe417ce092b269aaaa4adc807fc0bb534c2714ab9f2213c21a",
+  "source_html_sha256": "7b8effee5a5ee1dfd7a0ebb5a051af5710785ac0f0c452863fb2b9e057c2298f",
+  "image_size": {
+    "width": 1280,
+    "height": 1024
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2720,
+      "height": 2048
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST08-EL-01",
+      "name": "Header brand link",
+      "target": "Study2Work text link to /student",
+      "target_center_source_px": {
+        "x": 96,
+        "y": 32
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 64
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 64
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST08-EL-02",
+      "name": "Primary navigation group",
+      "target": "Tổng quan, Khóa học của tôi (active), Tiến độ",
+      "target_center_source_px": {
+        "x": 350,
+        "y": 32
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 64
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 64
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST08-EL-03",
+      "name": "Page title",
+      "target": "Khóa học của tôi heading",
+      "target_center_source_px": {
+        "x": 146,
+        "y": 114
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 228
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 228
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST08-EL-04",
+      "name": "Empty-state card and illustration",
+      "target": "White empty-state surface with local_library icon",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 248
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 492
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 492
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST08-EL-05",
+      "name": "Empty-state heading",
+      "target": "Chưa có khóa học để hiển thị.",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 311
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 620
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 620
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST08-EL-06",
+      "name": "Empty-state explanatory copy",
+      "target": "No enrolled course or data not updated copy",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 351
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 704
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 704
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST08-EL-07",
+      "name": "Progress CTA",
+      "target": "Xem tiến độ học tập link to /student/progress",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 422
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 844
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 844
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST08-EL-08",
+      "name": "Footer brand",
+      "target": "Static Study2Work wordmark in footer",
+      "target_center_source_px": {
+        "x": 86,
+        "y": 838
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1676
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1676
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST08-EL-09",
+      "name": "Footer navigation group",
+      "target": "Tổng quan, Khóa học của tôi, Tiến độ links",
+      "target_center_source_px": {
+        "x": 1126,
+        "y": 838
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 1676
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 1676
+      }
+    }
+  ]
+}

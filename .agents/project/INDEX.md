@@ -28,12 +28,15 @@ AGENTS.md
 | Snapshot/status/discrepancy | `source-status.md` |
 | Shared/local contracts | `contracts.md` |
 | Workflow routing | `workflows.md` |
+| Global agent behavior and target progress | `agent-control.md` and `../target.md` |
 
 ## Mandatory task artifacts
 
 - Context map: `../context-map.md` (human-readable load and relationship graph).
 - Skill registry: `../skills/INDEX.md`.
 - Worklog contract: `../worklog/README.md` and `../worklog/TEMPLATE.md`.
+- Agent Control: `agent-control.md`; mandatory for every task and tool call.
+- Active target progress: `../target.md`; only the three-column live target table.
 - Expected/current behavior must remain separate; conflicts are recorded as
   `DISCREPANCY` rather than silently resolved.
 

@@ -1,0 +1,323 @@
+{
+  "screen_id": "ME-13",
+  "source_image": {
+    "path": "screen.png",
+    "width": 1600,
+    "height": 1546,
+    "sha256": "2764685b871d5e2340942fded53ed9c67a392cd9d65dd4239c007d282ecf45ed"
+  },
+  "coordinate_system": "source_image_pixels_top_left_origin",
+  "annotated_image": {
+    "path": "screen_annotated.png",
+    "scale": 2,
+    "width": 3200,
+    "height": 3092
+  },
+  "marker_style": {
+    "shape": "circle",
+    "radius": 12.5,
+    "fill": "#1456D9",
+    "stroke": "#FFFFFF",
+    "stroke_width": 2.4,
+    "text_fill": "#FFFFFF",
+    "font_family": "Arial",
+    "font_weight": "bold",
+    "font_size": 14
+  },
+  "markers": [
+    {
+      "id": 1,
+      "element": "Study2Work Mentor brand lockup",
+      "x": 28,
+      "y": 40
+    },
+    {
+      "id": 2,
+      "element": "Tổng quan header navigation",
+      "x": 292,
+      "y": 39
+    },
+    {
+      "id": 3,
+      "element": "Khóa học phụ trách header navigation",
+      "x": 420,
+      "y": 39
+    },
+    {
+      "id": 4,
+      "element": "Chấm bài header navigation",
+      "x": 628,
+      "y": 39
+    },
+    {
+      "id": 5,
+      "element": "Hộp thư hỗ trợ header navigation",
+      "x": 753,
+      "y": 39
+    },
+    {
+      "id": 6,
+      "element": "Thông báo header navigation",
+      "x": 910,
+      "y": 39
+    },
+    {
+      "id": 7,
+      "element": "Notification bell and unread dot",
+      "x": 1244,
+      "y": 67
+    },
+    {
+      "id": 8,
+      "element": "Mentor name, role and profile action",
+      "x": 1571,
+      "y": 69
+    },
+    {
+      "id": 9,
+      "element": "Breadcrumb Thông báo",
+      "x": 44,
+      "y": 111
+    },
+    {
+      "id": 10,
+      "element": "Breadcrumb Soạn thông báo mới",
+      "x": 170,
+      "y": 111
+    },
+    {
+      "id": 11,
+      "element": "Current breadcrumb Bước 1: Chọn người nhận",
+      "x": 341,
+      "y": 111
+    },
+    {
+      "id": 12,
+      "element": "Hệ thống thông báo học vụ badge",
+      "x": 31,
+      "y": 158
+    },
+    {
+      "id": 13,
+      "element": "ME-13 process code",
+      "x": 304,
+      "y": 176
+    },
+    {
+      "id": 14,
+      "element": "Screen title",
+      "x": 645,
+      "y": 248
+    },
+    {
+      "id": 15,
+      "element": "Permission claim chip",
+      "x": 1575,
+      "y": 214
+    },
+    {
+      "id": 16,
+      "element": "Current step number 1",
+      "x": 52,
+      "y": 324
+    },
+    {
+      "id": 17,
+      "element": "Current step label and title",
+      "x": 430,
+      "y": 356
+    },
+    {
+      "id": 18,
+      "element": "Step progress indicator",
+      "x": 548,
+      "y": 326
+    },
+    {
+      "id": 19,
+      "element": "Next step number 2",
+      "x": 1080,
+      "y": 321
+    },
+    {
+      "id": 20,
+      "element": "Next step ME-14 label and title",
+      "x": 1515,
+      "y": 300
+    },
+    {
+      "id": 21,
+      "element": "Thiết lập phạm vi gửi card heading",
+      "x": 44,
+      "y": 453
+    },
+    {
+      "id": 22,
+      "element": "Required indicator",
+      "x": 632,
+      "y": 437
+    },
+    {
+      "id": 23,
+      "element": "Course field label",
+      "x": 43,
+      "y": 520
+    },
+    {
+      "id": 24,
+      "element": "Học kỳ hiện tại copy",
+      "x": 645,
+      "y": 522
+    },
+    {
+      "id": 25,
+      "element": "Course select control",
+      "x": 638,
+      "y": 569
+    },
+    {
+      "id": 26,
+      "element": "Course helper copy",
+      "x": 48,
+      "y": 631
+    },
+    {
+      "id": 27,
+      "element": "Recipient scope field label",
+      "x": 43,
+      "y": 720
+    },
+    {
+      "id": 28,
+      "element": "All students radio card",
+      "x": 51,
+      "y": 779
+    },
+    {
+      "id": 29,
+      "element": "Support-needed radio card",
+      "x": 51,
+      "y": 901
+    },
+    {
+      "id": 30,
+      "element": "Specific students radio card",
+      "x": 51,
+      "y": 1021
+    },
+    {
+      "id": 31,
+      "element": "Notification policy card",
+      "x": 50,
+      "y": 1154
+    },
+    {
+      "id": 32,
+      "element": "Target student list card heading",
+      "x": 697,
+      "y": 459
+    },
+    {
+      "id": 33,
+      "element": "Selected recipient count badge",
+      "x": 1130,
+      "y": 470
+    },
+    {
+      "id": 34,
+      "element": "Anonymity mode chip",
+      "x": 1537,
+      "y": 478
+    },
+    {
+      "id": 35,
+      "element": "Empty-state illustration",
+      "x": 1062,
+      "y": 565
+    },
+    {
+      "id": 36,
+      "element": "Empty-state title",
+      "x": 865,
+      "y": 729
+    },
+    {
+      "id": 37,
+      "element": "Empty-state explanatory copy",
+      "x": 790,
+      "y": 847
+    },
+    {
+      "id": 38,
+      "element": "Source-not-synced badge",
+      "x": 874,
+      "y": 884
+    },
+    {
+      "id": 39,
+      "element": "WCAG AA badge",
+      "x": 1372,
+      "y": 884
+    },
+    {
+      "id": 40,
+      "element": "Estimated recipient count row",
+      "x": 703,
+      "y": 1005
+    },
+    {
+      "id": 41,
+      "element": "Inactive status label",
+      "x": 1542,
+      "y": 1008
+    },
+    {
+      "id": 42,
+      "element": "Cancel action",
+      "x": 53,
+      "y": 1359
+    },
+    {
+      "id": 43,
+      "element": "Course-required helper note",
+      "x": 785,
+      "y": 1358
+    },
+    {
+      "id": 44,
+      "element": "Continue to ME-14 disabled action",
+      "x": 1151,
+      "y": 1313
+    },
+    {
+      "id": 45,
+      "element": "Footer brand icon",
+      "x": 31,
+      "y": 1470
+    },
+    {
+      "id": 46,
+      "element": "Copyright and compliance text",
+      "x": 789,
+      "y": 1470
+    },
+    {
+      "id": 47,
+      "element": "Footer Mentor rules link",
+      "x": 1050,
+      "y": 1470
+    },
+    {
+      "id": 48,
+      "element": "Footer assessment standards link",
+      "x": 1244,
+      "y": 1470
+    },
+    {
+      "id": 49,
+      "element": "Footer technical support link",
+      "x": 1424,
+      "y": 1470
+    }
+  ]
+}

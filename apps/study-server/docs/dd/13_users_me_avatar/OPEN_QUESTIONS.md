@@ -1,82 +1,55 @@
 # OPEN_QUESTIONS
 
-## Q-13-01 — Image transport và encoding
+## Q-13-01 — Image transport và encoding — Resolved
 
 **Bằng chứng**
 
 - `list_api.md`: `body{image:string!}`.
 - AC-11 diagram: validate MIME/size trước khi lưu.
 
-**Vấn đề**
+**Quyết định đã duyệt**
 
-- Chưa có source xác nhận media type, encoding, data URI/base64/URL, MIME allowlist hoặc size limit.
+- JSON body giữ field `image` dạng Data URL Base64.
+- Chỉ nhận `image/png`, `image/jpeg` và `image/webp`; signature phải khớp MIME.
+- Giới hạn payload là 5 MiB sau giải mã; field ngoài contract bị từ chối.
+- Không nhận multipart hoặc URL đầu vào.
 
-**Ảnh hưởng**
-
-- Request parser, validation, Object Storage payload và 422 conditions.
-
-**Quyết định tạm thời**
-
-- Giữ `image` là `string`.
-- Ghi các policy còn thiếu là `TBD`/`SOURCE_REQUIRED`.
-- Không chuyển contract sang multipart.
-
-## Q-13-02 — Object Storage mapping
+## Q-13-02 — Object Storage mapping — Resolved
 
 **Bằng chứng**
 
 - AC-11 diagram chỉ ghi `Object Storage lưu avatar`.
 
-**Vấn đề**
+**Quyết định đã duyệt**
 
-- Chưa có adapter/interface, object key namespace, output URL/asset field, timeout, retry hoặc provider error mapping.
+- Dùng S3-compatible provider với environment variables được ghi trong `PLAN_RESULT.md`.
+- Object key là `avatars/{user_id}`; URL ghép từ public base URL.
+- Timeout kết nối 5 giây, đọc 30 giây; một attempt, không retry.
+- Provider/configuration failure trả `500 DESIGN_INTERNAL_ERROR` bằng message an toàn.
 
-**Ảnh hưởng**
-
-- Data Mapping step `3`, response `data.avatar_url`, security và 500 behavior.
-
-**Quyết định tạm thời**
-
-- Không tự tạo storage key hoặc URL rule.
-- Ghi external operation là `SOURCE_REQUIRED`.
-
-## Q-13-03 — UserProfile response source
+## Q-13-03 — UserProfile response source — Resolved
 
 **Bằng chứng**
 
 - `list_api.md`: response là `ApiEnvelope<UserProfile>`.
 - AC-11: API #13 upload avatar, sau đó API #14 cập nhật profile.
 
-**Vấn đề**
+**Quyết định đã duyệt**
 
-- Flow upload-only không có profile reload hoặc DB update được phép để tạo đầy đủ `UserProfile`.
+- Thêm response schema `AvatarUploadResult` chỉ chứa `avatar_url`.
+- Success response là `ApiEnvelope<AvatarUploadResult>`.
+- API #13 chỉ upload; API #14 vẫn cập nhật profile.
+- API #13 không query hoặc mutation database.
 
-**Ảnh hưởng**
-
-- Response Source Matrix và khả năng implementation của HTTP 201 response.
-
-**Quyết định tạm thời**
-
-- Giữ nguyên response contract.
-- Đánh dấu profile fields chưa có source là `SOURCE_REQUIRED`.
-- Không tự gọi API #4, không tự gọi API #14 và không tự update `users.avatar_url`.
-
-## Q-13-04 — External side-effect cleanup và idempotency
+## Q-13-04 — External side-effect cleanup và idempotency — Resolved
 
 **Bằng chứng**
 
 - API #13 có Object Storage side effect.
 - Không có transaction hoặc cleanup rule trong contract/diagram.
 
-**Vấn đề**
+**Quyết định đã duyệt**
 
-- Chưa biết xử lý object đã upload nếu response mapping thất bại, request retry hoặc client gửi lại cùng avatar.
-
-**Ảnh hưởng**
-
-- Orphan object, duplicate asset, retry semantics và observability.
-
-**Quyết định tạm thời**
-
-- Không tự thêm retry, cleanup, deduplication hoặc idempotency key.
-- Giữ API ở `Draft — Needs Confirmation`.
+- Upload mới của cùng user ghi đè object tại key cố định.
+- Không thêm retry, cleanup riêng, deduplication hoặc idempotency key.
+- Không kiểm tra storage/credentials từ xa trong task triển khai.

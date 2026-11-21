@@ -1,0 +1,300 @@
+{
+  "screen_id": "AD-19",
+  "source_image": "screen.png",
+  "coordinate_space": {
+    "width": 1600,
+    "height": 1411,
+    "origin": "top-left",
+    "units": "source pixels"
+  },
+  "markers": [
+    {
+      "id": 1,
+      "label": "Brand / LMS header",
+      "x": 12,
+      "y": 65
+    },
+    {
+      "id": 2,
+      "label": "Shell navigation — Tổng quan",
+      "x": 356,
+      "y": 65
+    },
+    {
+      "id": 3,
+      "label": "Shell navigation — Người dùng",
+      "x": 491,
+      "y": 65
+    },
+    {
+      "id": 4,
+      "label": "Shell navigation — Khóa học & Nội dung",
+      "x": 660,
+      "y": 65
+    },
+    {
+      "id": 5,
+      "label": "Shell navigation — Kiểm duyệt",
+      "x": 856,
+      "y": 65
+    },
+    {
+      "id": 6,
+      "label": "Shell navigation — Báo cáo",
+      "x": 982,
+      "y": 65
+    },
+    {
+      "id": 7,
+      "label": "System Normal status copy (static)",
+      "x": 1154,
+      "y": 65
+    },
+    {
+      "id": 8,
+      "label": "Header notifications icon (no handler)",
+      "x": 1281,
+      "y": 65
+    },
+    {
+      "id": 9,
+      "label": "Admin identity and avatar (static)",
+      "x": 1460,
+      "y": 65
+    },
+    {
+      "id": 10,
+      "label": "Global breadcrumb",
+      "x": 20,
+      "y": 110
+    },
+    {
+      "id": 11,
+      "label": "RBAC assurance badge/copy (static)",
+      "x": 1580,
+      "y": 110
+    },
+    {
+      "id": 12,
+      "label": "Local breadcrumb — Quản trị thông báo",
+      "x": 390,
+      "y": 151
+    },
+    {
+      "id": 13,
+      "label": "Screen title",
+      "x": 720,
+      "y": 174
+    },
+    {
+      "id": 14,
+      "label": "Screen description",
+      "x": 872,
+      "y": 266
+    },
+    {
+      "id": 15,
+      "label": "Create notification CTA — AD-20 candidate",
+      "x": 1543,
+      "y": 194
+    },
+    {
+      "id": 16,
+      "label": "Metric card — total notifications",
+      "x": 392,
+      "y": 301
+    },
+    {
+      "id": 17,
+      "label": "Metric card — published",
+      "x": 777,
+      "y": 301
+    },
+    {
+      "id": 18,
+      "label": "Metric card — scheduled",
+      "x": 1162,
+      "y": 301
+    },
+    {
+      "id": 19,
+      "label": "Metric card — drafts",
+      "x": 1545,
+      "y": 301
+    },
+    {
+      "id": 20,
+      "label": "Title search input (no handler)",
+      "x": 879,
+      "y": 489
+    },
+    {
+      "id": 21,
+      "label": "Channel select",
+      "x": 925,
+      "y": 459
+    },
+    {
+      "id": 22,
+      "label": "Status select",
+      "x": 1198,
+      "y": 459
+    },
+    {
+      "id": 23,
+      "label": "Reset filters button",
+      "x": 1421,
+      "y": 459
+    },
+    {
+      "id": 24,
+      "label": "Table column — notification ID",
+      "x": 78,
+      "y": 568
+    },
+    {
+      "id": 25,
+      "label": "Table column — title",
+      "x": 270,
+      "y": 568
+    },
+    {
+      "id": 26,
+      "label": "Table column — recipient",
+      "x": 610,
+      "y": 568
+    },
+    {
+      "id": 27,
+      "label": "Table column — delivery channel",
+      "x": 858,
+      "y": 568
+    },
+    {
+      "id": 28,
+      "label": "Table column — send time",
+      "x": 1076,
+      "y": 568
+    },
+    {
+      "id": 29,
+      "label": "Table column — status",
+      "x": 1282,
+      "y": 568
+    },
+    {
+      "id": 30,
+      "label": "Table column — actions",
+      "x": 1485,
+      "y": 568
+    },
+    {
+      "id": 31,
+      "label": "Empty-state illustration",
+      "x": 861,
+      "y": 724
+    },
+    {
+      "id": 32,
+      "label": "Empty-state title",
+      "x": 555,
+      "y": 837
+    },
+    {
+      "id": 33,
+      "label": "Empty-state explanatory copy",
+      "x": 1086,
+      "y": 875
+    },
+    {
+      "id": 34,
+      "label": "Refresh list button (timer only)",
+      "x": 633,
+      "y": 965
+    },
+    {
+      "id": 35,
+      "label": "Result count summary",
+      "x": 291,
+      "y": 1110
+    },
+    {
+      "id": 36,
+      "label": "Pagination — first page (disabled)",
+      "x": 1277,
+      "y": 1114
+    },
+    {
+      "id": 37,
+      "label": "Pagination — previous page (disabled)",
+      "x": 1329,
+      "y": 1114
+    },
+    {
+      "id": 38,
+      "label": "Pagination — current/total display",
+      "x": 1394,
+      "y": 1114
+    },
+    {
+      "id": 39,
+      "label": "Pagination — next page (disabled)",
+      "x": 1456,
+      "y": 1114
+    },
+    {
+      "id": 40,
+      "label": "Pagination — last page (disabled)",
+      "x": 1508,
+      "y": 1114
+    },
+    {
+      "id": 41,
+      "label": "Policy banner information icon",
+      "x": 74,
+      "y": 1234
+    },
+    {
+      "id": 42,
+      "label": "Policy banner title",
+      "x": 567,
+      "y": 1234
+    },
+    {
+      "id": 43,
+      "label": "Policy banner description (static 30-minute claim)",
+      "x": 1189,
+      "y": 1234
+    },
+    {
+      "id": 44,
+      "label": "Policy / guideline link (unmapped target)",
+      "x": 1532,
+      "y": 1234
+    },
+    {
+      "id": 45,
+      "label": "Footer copyright and system label",
+      "x": 64,
+      "y": 1352
+    },
+    {
+      "id": 46,
+      "label": "Footer privacy link (href #)",
+      "x": 1020,
+      "y": 1352
+    },
+    {
+      "id": 47,
+      "label": "Footer RBAC standards link (href #)",
+      "x": 1221,
+      "y": 1352
+    },
+    {
+      "id": 48,
+      "label": "Footer technical support link (href #)",
+      "x": 1430,
+      "y": 1352
+    }
+  ]
+}

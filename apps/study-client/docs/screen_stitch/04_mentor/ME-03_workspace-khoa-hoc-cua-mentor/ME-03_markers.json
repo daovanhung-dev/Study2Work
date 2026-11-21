@@ -1,0 +1,387 @@
+{
+  "screen_id": "ME-03",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 1234,
+    "height": 1600
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 2468,
+    "height": 3200
+  },
+  "markers": [
+    {
+      "number": 1,
+      "id": "ME03-EL-01",
+      "label": "Brand/logo Mentor Portal",
+      "x": 14,
+      "y": 22
+    },
+    {
+      "number": 2,
+      "id": "ME03-EL-02",
+      "label": "Điều hướng Mentor toàn cục",
+      "x": 245,
+      "y": 46
+    },
+    {
+      "number": 3,
+      "id": "ME03-EL-03",
+      "label": "Header search học viên/bài tập",
+      "x": 733,
+      "y": 15
+    },
+    {
+      "number": 4,
+      "id": "ME03-EL-04",
+      "label": "Notification button và badge",
+      "x": 997,
+      "y": 18
+    },
+    {
+      "number": 5,
+      "id": "ME03-EL-05",
+      "label": "Mentor avatar/tên/chức danh mẫu",
+      "x": 1210,
+      "y": 52
+    },
+    {
+      "number": 6,
+      "id": "ME03-EL-06",
+      "label": "Breadcrumb quay về ME-02",
+      "x": 15,
+      "y": 56
+    },
+    {
+      "number": 7,
+      "id": "ME03-EL-07",
+      "label": "Nhãn API synchronized và cohort",
+      "x": 1090,
+      "y": 87
+    },
+    {
+      "number": 8,
+      "id": "ME03-EL-08",
+      "label": "Mã course, status, lần cập nhật",
+      "x": 33,
+      "y": 122
+    },
+    {
+      "number": 9,
+      "id": "ME03-EL-09",
+      "label": "Course title",
+      "x": 745,
+      "y": 181
+    },
+    {
+      "number": 10,
+      "id": "ME03-EL-10",
+      "label": "Mentor, số học viên, chuẩn học thuật",
+      "x": 790,
+      "y": 212
+    },
+    {
+      "number": 11,
+      "id": "ME03-EL-11",
+      "label": "Average progress và chênh cohort",
+      "x": 1018,
+      "y": 223
+    },
+    {
+      "number": 12,
+      "id": "ME03-EL-12",
+      "label": "CTA tạo bài giảng ME-04",
+      "x": 40,
+      "y": 245
+    },
+    {
+      "number": 13,
+      "id": "ME03-EL-13",
+      "label": "CTA cây nội dung ME-06",
+      "x": 252,
+      "y": 245
+    },
+    {
+      "number": 14,
+      "id": "ME03-EL-14",
+      "label": "CTA bảng chấm bài ME-09",
+      "x": 470,
+      "y": 245
+    },
+    {
+      "number": 15,
+      "id": "ME03-EL-15",
+      "label": "CTA gửi thông báo ME-14",
+      "x": 687,
+      "y": 245
+    },
+    {
+      "number": 16,
+      "id": "ME03-EL-16",
+      "label": "CTA báo cáo tiến độ ME-16",
+      "x": 890,
+      "y": 245
+    },
+    {
+      "number": 17,
+      "id": "ME03-EL-17",
+      "label": "Làm mới số liệu",
+      "x": 973,
+      "y": 293
+    },
+    {
+      "number": 18,
+      "id": "ME03-EL-18",
+      "label": "Xuất dữ liệu Excel",
+      "x": 1010,
+      "y": 293
+    },
+    {
+      "number": 19,
+      "id": "ME03-EL-19",
+      "label": "Heading tổng quan cấu trúc chương trình",
+      "x": 16,
+      "y": 344
+    },
+    {
+      "number": 20,
+      "id": "ME03-EL-20",
+      "label": "Tile số chương học",
+      "x": 210,
+      "y": 405
+    },
+    {
+      "number": 21,
+      "id": "ME03-EL-21",
+      "label": "Tile bài giảng đã duyệt",
+      "x": 400,
+      "y": 405
+    },
+    {
+      "number": 22,
+      "id": "ME03-EL-22",
+      "label": "Tile bản nháp đang sửa",
+      "x": 576,
+      "y": 405
+    },
+    {
+      "number": 23,
+      "id": "ME03-EL-23",
+      "label": "Heading phân bố tiến độ theo module",
+      "x": 16,
+      "y": 548
+    },
+    {
+      "number": 24,
+      "id": "ME03-EL-24",
+      "label": "Module 1 card/progress",
+      "x": 590,
+      "y": 617
+    },
+    {
+      "number": 25,
+      "id": "ME03-EL-25",
+      "label": "Module 2 card/progress",
+      "x": 590,
+      "y": 708
+    },
+    {
+      "number": 26,
+      "id": "ME03-EL-26",
+      "label": "Module 3 card/progress",
+      "x": 590,
+      "y": 802
+    },
+    {
+      "number": 27,
+      "id": "ME03-EL-27",
+      "label": "Module 4/Capstone card",
+      "x": 590,
+      "y": 897
+    },
+    {
+      "number": 28,
+      "id": "ME03-EL-28",
+      "label": "Weekly learning-velocity metric",
+      "x": 16,
+      "y": 976
+    },
+    {
+      "number": 29,
+      "id": "ME03-EL-29",
+      "label": "Weekly activity line chart",
+      "x": 592,
+      "y": 1062
+    },
+    {
+      "number": 30,
+      "id": "ME03-EL-30",
+      "label": "Heading hoạt động học vụ gần nhất",
+      "x": 16,
+      "y": 1118
+    },
+    {
+      "number": 31,
+      "id": "ME03-EL-31",
+      "label": "Ba dòng activity sample",
+      "x": 590,
+      "y": 1301
+    },
+    {
+      "number": 32,
+      "id": "ME03-EL-32",
+      "label": "CTA xem toàn bộ hoạt động",
+      "x": 541,
+      "y": 1098
+    },
+    {
+      "number": 33,
+      "id": "ME03-EL-33",
+      "label": "Heading danh sách cần quan tâm",
+      "x": 1016,
+      "y": 343
+    },
+    {
+      "number": 34,
+      "id": "ME03-EL-34",
+      "label": "Risk threshold/count summary",
+      "x": 1040,
+      "y": 381
+    },
+    {
+      "number": 35,
+      "id": "ME03-EL-35",
+      "label": "At-risk Student row 1",
+      "x": 1043,
+      "y": 415
+    },
+    {
+      "number": 36,
+      "id": "ME03-EL-36",
+      "label": "At-risk Student row 2",
+      "x": 1043,
+      "y": 516
+    },
+    {
+      "number": 37,
+      "id": "ME03-EL-37",
+      "label": "At-risk Student row 3",
+      "x": 1043,
+      "y": 608
+    },
+    {
+      "number": 38,
+      "id": "ME03-EL-38",
+      "label": "CTA xem toàn bộ at-risk learners",
+      "x": 1028,
+      "y": 674
+    },
+    {
+      "number": 39,
+      "id": "ME03-EL-39",
+      "label": "Heading chất lượng bài giảng",
+      "x": 1016,
+      "y": 748
+    },
+    {
+      "number": 40,
+      "id": "ME03-EL-40",
+      "label": "Satisfaction rating/reviews tile",
+      "x": 1045,
+      "y": 827
+    },
+    {
+      "number": 41,
+      "id": "ME03-EL-41",
+      "label": "Chapter drop-off tile",
+      "x": 1045,
+      "y": 874
+    },
+    {
+      "number": 42,
+      "id": "ME03-EL-42",
+      "label": "Materials satisfaction progress",
+      "x": 1045,
+      "y": 923
+    },
+    {
+      "number": 43,
+      "id": "ME03-EL-43",
+      "label": "Code-review response KPI",
+      "x": 1045,
+      "y": 966
+    },
+    {
+      "number": 44,
+      "id": "ME03-EL-44",
+      "label": "Heading kho tài nguyên/repository",
+      "x": 1016,
+      "y": 1025
+    },
+    {
+      "number": 45,
+      "id": "ME03-EL-45",
+      "label": "Repository item Git",
+      "x": 1035,
+      "y": 1072
+    },
+    {
+      "number": 46,
+      "id": "ME03-EL-46",
+      "label": "Repository item Figma",
+      "x": 1035,
+      "y": 1131
+    },
+    {
+      "number": 47,
+      "id": "ME03-EL-47",
+      "label": "Repository item Sandbox",
+      "x": 1035,
+      "y": 1193
+    },
+    {
+      "number": 48,
+      "id": "ME03-EL-48",
+      "label": "AI Mentor Copilot callout",
+      "x": 1040,
+      "y": 1281
+    },
+    {
+      "number": 49,
+      "id": "ME03-EL-49",
+      "label": "Footer brand/introduction",
+      "x": 20,
+      "y": 1377
+    },
+    {
+      "number": 50,
+      "id": "ME03-EL-50",
+      "label": "Footer academic standards",
+      "x": 395,
+      "y": 1378
+    },
+    {
+      "number": 51,
+      "id": "ME03-EL-51",
+      "label": "Footer partner network",
+      "x": 650,
+      "y": 1378
+    },
+    {
+      "number": 52,
+      "id": "ME03-EL-52",
+      "label": "Footer Mentor support",
+      "x": 900,
+      "y": 1378
+    },
+    {
+      "number": 53,
+      "id": "ME03-EL-53",
+      "label": "Copyright/certification/policy links",
+      "x": 1215,
+      "y": 1585
+    }
+  ]
+}

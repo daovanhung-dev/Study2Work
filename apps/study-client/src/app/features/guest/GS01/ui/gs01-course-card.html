@@ -1,0 +1,27 @@
+<article class="course-card">
+  <a
+    class="course-link"
+    [routerLink]="['/courses', course.id]"
+    [attr.aria-label]="'Xem chi tiết khóa học: ' + course.title"
+  >
+    @if (course.thumbnail_url) {
+      <img class="course-cover" [src]="course.thumbnail_url" alt="" loading="lazy" />
+    } @else {
+      <span class="course-cover course-cover--empty" aria-hidden="true">
+        <study-icon name="book" />
+      </span>
+    }
+
+    <span class="course-copy">
+      <span class="course-title">{{ course.title }}</span>
+      @if (course.description) {
+        <span class="course-description">{{ course.description }}</span>
+      }
+      <span class="course-mentor">
+        <study-icon name="person" />
+        <span>Giảng viên: {{ course.mentor.full_name }}</span>
+      </span>
+      <span class="course-action">Xem chi tiết <study-icon name="arrow" /></span>
+    </span>
+  </a>
+</article>

@@ -1,0 +1,114 @@
+<main class="community-report page-width" data-screen-id="AD24">
+  <div class="report-breadcrumbs">
+    <nav aria-label="Đường dẫn báo cáo cộng đồng">
+      <ol>
+        <li><a routerLink="/admin">Quản trị</a></li>
+        <li aria-hidden="true">›</li>
+        <li>Báo cáo &amp; Thống kê</li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Tác động cộng đồng</li>
+      </ol>
+    </nav>
+    @if (exportAction; as action) {
+      <div class="export-action">
+        <button type="button" disabled>{{ action.label }}</button>
+        <span>{{ action.reason }}</span>
+      </div>
+    }
+  </div>
+
+  <header class="report-heading">
+    <div>
+      <p class="report-eyebrow">AD-24 · COMMUNITY IMPACT</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+    <span class="source-badge">API #101/#102 · unavailable</span>
+  </header>
+
+  <section class="filter-panel" aria-labelledby="filter-heading">
+    <h2 id="filter-heading" class="visually-hidden">Bộ lọc báo cáo</h2>
+    <p id="report-filter-note" class="filter-note">
+      Bộ lọc đang khóa cho tới khi Study Server công bố contract ngày và phân khúc.
+    </p>
+    <fieldset disabled aria-describedby="report-filter-note">
+      <legend class="visually-hidden">Khoảng ngày và phân khúc học viên</legend>
+      <div class="filter-field">
+        <label for="report-from">Từ ngày</label>
+        <input id="report-from" type="date" value="" />
+      </div>
+      <div class="filter-field">
+        <label for="report-to">Đến ngày</label>
+        <input id="report-to" type="date" value="" />
+      </div>
+      <div class="filter-field">
+        <label for="report-segment">Phân khúc cộng đồng</label>
+        <select id="report-segment"><option value="">Chưa có taxonomy được xác nhận</option></select>
+      </div>
+    </fieldset>
+    <div class="filter-actions">
+      @for (action of filterActions; track action.label) {
+        <div class="filter-action">
+          <button type="button" disabled>{{ action.label }}</button>
+          <span>{{ action.reason }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="kpi-grid" aria-labelledby="kpi-heading">
+    <h2 id="kpi-heading" class="visually-hidden">Chỉ số dự kiến trong mẫu thiết kế</h2>
+    @for (metric of metricPlaceholders; track metric.label) {
+      <article class="metric-card">
+        <div class="metric-heading">
+          <h3>{{ metric.label }}</h3>
+          <span class="metric-status">Chưa xác nhận</span>
+        </div>
+        <p class="metric-value">
+          <span aria-hidden="true">—</span><span class="metric-unit">{{ metric.unit }}</span>
+        </p>
+        <p class="metric-note">Chờ xác nhận định nghĩa, công thức và nguồn dữ liệu.</p>
+      </article>
+    }
+  </section>
+
+  <section class="report-state" role="status" aria-labelledby="report-state-heading">
+    <span class="state-icon"><study-icon name="info" /></span>
+    <p class="report-eyebrow">CHƯA CÓ NGUỒN BÁO CÁO</p>
+    <h2 id="report-state-heading">Báo cáo chưa khả dụng</h2>
+    <p>Study Server chưa có route/query/model cho API #101 hoặc #102. Các thẻ phía trên không có giá trị KPI; trang chưa có chuỗi dữ liệu hay phân khúc để dựng báo cáo theo contract đã xác nhận.</p>
+    <div class="chart-unavailable">Không có chuỗi dữ liệu để dựng biểu đồ.</div>
+  </section>
+
+  <section class="planned-metrics" aria-labelledby="planned-metrics-heading">
+    <div class="planned-heading">
+      <div>
+        <p class="report-eyebrow">ĐỀ XUẤT TỪ MẪU THIẾT KẾ</p>
+        <h2 id="planned-metrics-heading">Danh mục chỉ tiêu dự kiến</h2>
+        <p class="planned-note">Các mô tả dưới đây chưa phải định nghĩa được duyệt và không được dùng làm số liệu báo cáo.</p>
+      </div>
+      <span class="planned-count">4 mục chờ xác nhận</span>
+    </div>
+    <div class="planned-grid">
+      @for (metric of proposedMetrics; track metric.title; let index = $index) {
+        <article class="planned-card">
+          <h3>{{ index + 1 }}. {{ metric.title }}</h3>
+          <p>{{ metric.description }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <aside class="contract-boundary" aria-labelledby="contract-heading">
+    <span class="boundary-icon"><study-icon name="shield" /></span>
+    <div>
+      <strong id="contract-heading">Các điều kiện còn mở</strong>
+      <p>Công thức và quần thể KPI, kiểu/default/validation ngày, taxonomy phân khúc, quyền báo cáo, schema và quy tắc truyền filter sang AD-25 chưa có contract đã xác nhận.</p>
+    </div>
+  </aside>
+
+  <div class="report-footer">
+    <a class="return-link" routerLink="/admin"><study-icon name="chevron" /> Quay về quản trị</a>
+    <span class="source-note"><study-icon name="database" /> Không phát sinh request báo cáo</span>
+  </div>
+</main>

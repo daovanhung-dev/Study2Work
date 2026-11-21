@@ -1,8 +1,16 @@
 # Agent worklog contract
 
-Every coding, fix, docs, or test task creates or updates a worklog entry under
-`.agents/worklog/YYYY-MM-DD/<task-id>.md`. The worklog is an audit trail; source
-code, tests and contracts remain the source of truth for behavior.
+Every agent task, including read-only and information-only tasks, creates or
+updates a worklog entry under
+`.agents/worklog/YYYY-MM-DD/<task-id>.md`. The worklog is an audit trail;
+source code, tests and contracts remain the source of truth for behavior.
+
+Live target names and progress are kept only in [`.agents/target.md`](../target.md),
+which contains the active three-column table. Do not duplicate its current
+progress in chat or in a milestone table. Each worklog records evidence for
+`TARGET_UPDATES` (initial target, verified progress changes, and completion
+evidence). Completed target rows are removed from `target.md` after their
+completion evidence is recorded. Historical worklogs remain unchanged.
 
 ## Mandatory preflight
 
@@ -36,7 +44,9 @@ entry is the evidence record.
 5. Trace caller → callee → database/external side effect → response → tests.
 6. Record every `DISCREPANCY`, `UNWIRED`, `NOT_FOUND` and
    `DECLARED_NOT_RUNNABLE` result.
-7. After changes, record files changed, focused/full verification, context
+7. Update `.agents/target.md` when verified progress changes; record the reason
+   and evidence in `TARGET_UPDATES`.
+8. After changes, record files changed, focused/full verification, context
    pages updated and remaining blockers.
 
 Use `TEMPLATE.md`; do not mark a command `VERIFIED` when it was not run.

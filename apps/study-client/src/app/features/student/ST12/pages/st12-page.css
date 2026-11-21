@@ -1,0 +1,30 @@
+.st12-page {
+  padding-bottom: 24px;
+}
+
+.resource-row {
+  align-items: center;
+}
+
+.resource-open {
+  min-height: 44px;
+  justify-self: start;
+  text-decoration: none;
+}
+
+.resource-open:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .resource-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .resource-row .resource-open {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+}

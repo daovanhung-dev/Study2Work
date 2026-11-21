@@ -1,0 +1,126 @@
+<main class="verification-shell" data-screen-id="SH-04">
+  <div class="verification-page">
+    <header class="verification-header">
+      <a class="verification-brand" routerLink="/" aria-label="Study2Work LMS — trang chủ">
+        <span class="verification-brand__mark" aria-hidden="true">S2W</span>
+        <span>Study2Work LMS</span>
+      </a>
+      <p class="verification-route"><span>SH-04</span> · Xác minh email</p>
+    </header>
+
+    <div class="verification-layout">
+      <section class="verification-card" aria-labelledby="verification-title">
+        <p class="verification-card__eyebrow">Bàn giao xác minh</p>
+
+        @if (state(); as currentState) {
+          @if (currentState.status === 'missing-handoff') {
+            <span class="verification-status verification-status--blocked">Chưa có yêu cầu</span>
+            <h1 id="verification-title">Chưa thể gửi yêu cầu xác minh</h1>
+            <p class="verification-card__message" role="status">
+              Màn hình chưa nhận được thông tin đăng ký cần thiết. Chưa có yêu cầu nào được gửi.
+            </p>
+            <p class="verification-card__detail">
+              Hãy quay lại đăng nhập. Giao diện không yêu cầu bạn nhập lại mã tài khoản hoặc email tại đây.
+            </p>
+          } @else if (currentState.status === 'ready') {
+            <span class="verification-status verification-status--ready">Chưa gửi yêu cầu</span>
+            <h1 id="verification-title">Yêu cầu xác minh email</h1>
+            <p class="verification-card__message">
+              Địa chỉ đăng ký: <strong>{{ currentState.email }}</strong>
+            </p>
+            <p class="verification-card__detail">
+              Khi bạn chọn nút bên dưới, Study sẽ gửi một yêu cầu tới bộ gửi email thử nghiệm.
+              Việc này không xác minh địa chỉ email.
+            </p>
+            <button class="verification-action" type="button" (click)="sendRequest()">
+              Gửi yêu cầu xác minh
+            </button>
+          } @else if (currentState.status === 'submitting') {
+            <span class="verification-status verification-status--pending">Đang xử lý</span>
+            <h1 id="verification-title">Đang gửi yêu cầu</h1>
+            <p class="verification-card__message" role="status" aria-live="polite">
+              Đang gửi yêu cầu cho <strong>{{ currentState.email }}</strong>.
+            </p>
+            <p class="verification-card__detail">
+              Không đóng trang trong lúc chờ phản hồi. Hệ thống không tự gửi lại yêu cầu.
+            </p>
+          } @else if (currentState.status === 'accepted') {
+            <span class="verification-status verification-status--accepted">202 · Accepted</span>
+            <h1 id="verification-title">Bộ thử nghiệm đã tiếp nhận yêu cầu</h1>
+            <p class="verification-card__message" role="status" aria-live="polite">
+              Yêu cầu cho <strong>{{ currentState.email }}</strong> đã được API #02 chấp nhận.
+            </p>
+            <p class="verification-card__detail">
+              Email chưa được gửi thật và địa chỉ chưa được xác minh. Chưa có mã OTP, đường dẫn xác nhận hoặc API xác nhận.
+            </p>
+          } @else if (currentState.status === 'provider-status-unknown') {
+            <span class="verification-status verification-status--blocked">Trạng thái chưa ánh xạ</span>
+            <h1 id="verification-title">Chưa thể xác nhận trạng thái yêu cầu</h1>
+            <p class="verification-card__message" role="alert">
+              Bộ gửi email trả về trạng thái chưa được giao diện nhận diện. Không gửi lại tự động.
+            </p>
+          } @else if (currentState.status === 'invalid-request') {
+            <span class="verification-status verification-status--blocked">Dữ liệu không hợp lệ</span>
+            <h1 id="verification-title">Không thể gửi yêu cầu</h1>
+            <p class="verification-card__message" role="alert">
+              Study Server không chấp nhận dữ liệu đăng ký. Không ghi nhận yêu cầu đã được tiếp nhận.
+            </p>
+          } @else if (currentState.status === 'request-error') {
+            <span class="verification-status verification-status--blocked">Không thành công</span>
+            <h1 id="verification-title">Không thể xác nhận yêu cầu</h1>
+            <p class="verification-card__message" role="alert">
+              Dịch vụ không thể xử lý yêu cầu. Giao diện không gửi lại để tránh tạo yêu cầu trùng.
+            </p>
+          } @else {
+            <span class="verification-status verification-status--blocked">Kết quả chưa rõ</span>
+            <h1 id="verification-title">Chưa xác định được kết quả</h1>
+            <p class="verification-card__message" role="alert">
+              Không nhận được phản hồi đầy đủ. Yêu cầu có thể đã được bộ thử nghiệm tiếp nhận; không gửi lại tự động.
+            </p>
+          }
+        }
+
+        <a class="verification-action verification-action--secondary" routerLink="/login">
+          Quay lại đăng nhập
+        </a>
+      </section>
+
+      <aside class="verification-contract" aria-labelledby="verification-contract-title">
+        <header class="verification-contract__heading">
+          <span class="verification-contract__icon" aria-hidden="true">#</span>
+          <div>
+            <p>Hợp đồng bàn giao</p>
+            <h2 id="verification-contract-title">API #02</h2>
+          </div>
+        </header>
+
+        <dl class="verification-contract__list">
+          <div>
+            <dt>Phương thức</dt>
+            <dd><code>POST /auth/verify-email/send</code></dd>
+          </div>
+          <div>
+            <dt>HTTP chấp nhận</dt>
+            <dd>202 · bộ thử nghiệm</dd>
+          </div>
+          <div>
+            <dt>Gửi thư thật</dt>
+            <dd>Chưa được xác nhận</dd>
+          </div>
+          <div>
+            <dt>OTP / liên kết</dt>
+            <dd>Chưa được tạo</dd>
+          </div>
+          <div>
+            <dt>API xác nhận</dt>
+            <dd>Chưa có trong nguồn hiện tại</dd>
+          </div>
+        </dl>
+
+        <p class="verification-contract__note">
+          Mã tài khoản và email chỉ được chuyển trong bộ nhớ của ứng dụng từ SH-03; chúng không xuất hiện trong URL hoặc bộ nhớ bền vững của trình duyệt.
+        </p>
+      </aside>
+    </div>
+  </div>
+</main>

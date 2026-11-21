@@ -1,0 +1,79 @@
+<study-student-public-frame>
+  <main class="lesson-entitlement api-screen" data-screen-id="ST-10">
+    <nav class="lesson-entitlement__crumbs crumbs" aria-label="Breadcrumb">
+      <a routerLink="/student">Tổng quan</a>
+      <span aria-hidden="true">›</span>
+      <a routerLink="/student/courses">Khóa học của tôi</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Bài học</span>
+    </nav>
+
+    <section class="lesson-entitlement__main api-card" aria-labelledby="lesson-entitlement-title">
+      <header class="lesson-entitlement__heading">
+        <div class="lesson-entitlement__heading-icon" aria-hidden="true">▣</div>
+        <div>
+          <p>BÀI HỌC</p>
+          <h1 id="lesson-entitlement-title">Bắt đầu học</h1>
+        </div>
+        @if (accessLoading()) {
+          <span class="lesson-entitlement__badge">ĐANG KIỂM TRA</span>
+        } @else if (lesson()?.status === 'PUBLISHED') {
+          <span class="lesson-entitlement__badge lesson-entitlement__badge--ready">SẴN SÀNG</span>
+        } @else {
+          <span class="lesson-entitlement__badge">CHƯA SẴN SÀNG</span>
+        }
+      </header>
+
+      @if (accessLoading()) {
+        <section class="lesson-entitlement__protected api-message" role="status">
+          <div class="lesson-entitlement__protected-icon" aria-hidden="true">↻</div>
+          <h2>Đang kiểm tra quyền truy cập</h2>
+          <p>Nội dung bài học sẽ mở sau khi kiểm tra hoàn tất.</p>
+        </section>
+      }
+
+      @if (accessError()) {
+        <section class="lesson-entitlement__failure api-error" role="alert">
+          <h2>Chưa thể mở bài học</h2>
+          <p>{{ accessError() }}</p>
+          <button class="api-button" type="button" (click)="checkAccess()">Thử lại</button>
+        </section>
+      }
+
+      @if (lesson(); as lessonInfo) {
+        @if (lessonInfo.status === 'PUBLISHED') {
+          <section class="lesson-entitlement__protected api-message" aria-labelledby="lesson-protected-title">
+            <div class="lesson-entitlement__protected-icon" aria-hidden="true">▰</div>
+            <h2 id="lesson-protected-title">{{ lessonInfo.title }}</h2>
+            <p>Khóa học đang hoạt động. Bắt đầu để mở nội dung bài học.</p>
+          </section>
+        } @else {
+          <section class="lesson-entitlement__protected api-message" role="status">
+            <div class="lesson-entitlement__protected-icon" aria-hidden="true">▰</div>
+            <h2>Bài học chưa sẵn sàng</h2>
+            <p>Hiện chưa thể bắt đầu bài học này.</p>
+          </section>
+        }
+      }
+
+      @if (startError()) {
+        <section class="lesson-entitlement__failure api-error" role="alert">
+          <h2>Chưa thể bắt đầu bài học</h2>
+          <p>{{ startError() }}</p>
+        </section>
+      }
+
+      <div class="lesson-entitlement__actions api-actions">
+        <a class="api-button secondary" routerLink="/student/courses">Quay lại khóa học của tôi</a>
+        <button class="api-button" type="button" [disabled]="!canStart()" (click)="startLesson()">
+          {{ starting() ? 'Đang bắt đầu…' : started() ? 'Đã bắt đầu' : 'Bắt đầu học' }}
+        </button>
+        @if (started()) {
+          <a class="api-button secondary" [routerLink]="['/student/lessons', lessonId]">Mở bài học</a>
+        } @else if (!canStart() && !accessLoading() && !accessError()) {
+          <span id="lesson-start-reason">Bài học sẽ sẵn sàng khi được công bố.</span>
+        }
+      </div>
+    </section>
+  </main>
+</study-student-public-frame>

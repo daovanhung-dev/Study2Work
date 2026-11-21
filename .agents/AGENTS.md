@@ -24,6 +24,11 @@ choosing a scope or subcontext.
 
 Global index: `project/INDEX.md`.
 
+**Agent Control bắt buộc cho mọi scope:** đọc và áp dụng
+[`project/agent-control.md`](project/agent-control.md) cho mọi task. Tiến độ
+đang hoạt động chỉ được ghi trong [`.agents/target.md`](target.md), theo đúng
+ba cột đã định nghĩa. Worklog lưu bằng chứng, không thay thế target tracker.
+
 - `project/design.md`: nguồn chuẩn design system và UX cho Work Web/Mobile.
 - `project/source-status.md`: source/DD/schema/context status và blocker.
 - `project/architecture.md`: ownership/deployable boundaries.
@@ -33,13 +38,34 @@ Global index: `project/INDEX.md`.
 - `project/business-code.md`: cách tra business code/HTTP mapping.
 - `project/contracts.md`: producer/consumer/status của shared và local contracts.
 - `project/workflows.md`: workflow chung và verification order.
+- `project/agent-control.md`: quy tắc target, thực thi im lặng, bằng chứng và
+  an toàn áp dụng cho mọi scope.
 - `skills/INDEX.md`: skill registry và resource của `create-dd-from-bd-mobile`
-  (Mobile module DD) và `createDD-markdown` (Web/API DD).
+  (Mobile module DD), `createDD-markdown` (Web/API DD), và `code-review`
+  (read-only review across all code scopes).
 - `worklog/README.md`: worklog contract và preflight đọc các worklog cùng type bắt buộc cho mọi task.
 - `db-admin/AGENTS.md`: ownership, API safety boundary và verified commands của Neon DB Admin.
 
 Mỗi scope có `INDEX.md` làm page graph. Không tạo context agent trong `apps/`;
 root router luôn trỏ về các entry dưới `.agents/`.
+
+## Quy tắc target và giao tiếp (mọi task)
+
+- `.agents/target.md` là nguồn tiến độ duy nhất cho target đang hoạt động. File
+  chỉ chứa bảng `STT | Tên target | Tiến độ hoàn thiện`; không thêm mô tả,
+  milestone, lịch sử hay cột khác.
+- Mỗi target độc lập, rõ nghĩa, bắt đầu ở `0%`; cập nhật phần trăm khi bằng
+  chứng xác minh làm thay đổi tiến độ. Giữ nguyên tiến độ đã xác minh khi bị
+  chặn. Khi hoàn thành, ghi bằng chứng vào worklog rồi xóa hàng `100%`.
+- Worklog ghi phân loại, nguồn đã đọc, thay đổi, xác minh và `TARGET_UPDATES`;
+  không lưu bảng `MILESTONES` hoặc bản sao tiến độ.
+- Không tự gửi tiến độ, Event receipt, milestone, tổng kết đọc/thao tác hoặc
+  báo cáo hoàn tất vào chat. Chỉ phản hồi câu hỏi của người dùng, yêu cầu làm
+  rõ blocker, hoặc yêu cầu bắt buộc từ quy tắc cấp cao hơn.
+
+Quy tắc này không thể ghi đè system/developer, bảo mật, quyền hạn hoặc giới
+hạn công cụ. `.agents/project/workflows.md` và
+`.agents/worklog/README.md` quy định luồng thực hiện và bằng chứng.
 
 ## Nhãn trạng thái
 

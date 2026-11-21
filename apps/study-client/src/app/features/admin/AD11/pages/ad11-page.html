@@ -1,0 +1,77 @@
+<main class="page-width review-page" data-screen-id="AD11">
+  <div class="review-toolbar">
+    <nav aria-label="Đường dẫn kiểm duyệt">
+      <ol><li>Kiểm duyệt</li><li aria-hidden="true">›</li><li>Hàng đợi chờ duyệt</li><li aria-hidden="true">›</li><li aria-current="page">Thẩm định nội dung</li></ol>
+    </nav>
+    <a class="back-link" routerLink="/admin/content/pending"><study-icon name="chevron" /> Quay lại hàng chờ (AD-10)</a>
+  </div>
+
+  <header class="review-hero">
+    <div>
+      <p class="eyebrow">● CỔNG KIỂM ĐỊNH CHẤT LƯỢNG ĐÀO TẠO · AD-11</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }} Nội dung xem trước được tải qua API #79.</p>
+    </div>
+    <span class="review-lock"><study-icon name="lock" /> API #79 · Chi tiết nội dung</span>
+  </header>
+
+  @if (viewState().status === 'loading') {
+    <p class="review-state" role="status">Đang tải nội dung từ Study Server…</p>
+  } @else if (viewState().status === 'error') {
+    <p class="review-state review-state--error" role="alert">{{ viewState().message }}</p>
+  }
+
+  <div class="review-grid">
+    <div class="review-main-column">
+      <section class="review-panel preview-panel" aria-labelledby="preview-heading">
+        <header class="review-panel-heading"><h2 id="preview-heading"><study-icon name="file" /> Xem trước nội dung bài giảng</h2><span>API #79</span></header>
+        @if (viewState().status === 'loaded') {
+          <div class="payload-preview">
+            <strong>{{ contentTitle }}</strong>
+            @if (payloadPreview) {
+              <pre>{{ payloadPreview }}</pre>
+            } @else {
+              <p>API không trả payload xem trước cho nội dung này.</p>
+            }
+          </div>
+        } @else {
+          <div class="preview-empty">
+            <span class="preview-icon"><study-icon name="file" /></span>
+            <h3>Chưa có nội dung thẩm định được tải</h3>
+            <p>Chọn một mục từ hàng chờ AD-10 để mở hồ sơ nội dung. API #79 chỉ trả dữ liệu chi tiết; nguồn phát video hoặc giải mã tài liệu chưa được xác nhận.</p>
+          </div>
+        }
+      </section>
+
+      <section class="review-panel metadata-panel" aria-labelledby="metadata-heading">
+        <header class="review-panel-heading"><h2 id="metadata-heading"><study-icon name="checklist" /> Thông tin nội dung</h2><span>METADATA</span></header>
+        @if (viewState().status === 'loaded') {
+          <dl class="metadata-grid">
+            @for (field of metadataFields; track field.label) {
+              <div class="metadata-item"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div>
+            }
+          </dl>
+        } @else {
+          <p class="metadata-unavailable">Thông tin sẽ hiển thị sau khi nội dung được tải.</p>
+        }
+      </section>
+    </div>
+
+    <aside class="review-side-column">
+      <section class="review-panel decision-panel" aria-labelledby="decision-heading">
+        <header class="review-panel-heading"><h2 id="decision-heading"><study-icon name="shield" /> Quyết định kiểm duyệt</h2><span class="locked-badge">KHÓA</span></header>
+        <label for="decision-reason">Lý do từ chối hoặc nhận xét (nếu có)</label>
+        <textarea id="decision-reason" rows="4" placeholder="Nhập nhận xét chi tiết gửi cho giảng viên nếu từ chối hoặc yêu cầu sửa đổi..." disabled></textarea>
+        <p class="decision-note" role="status">API #79 chỉ đọc. Quy tắc duyệt #80/#81, quyền kiểm duyệt và yêu cầu reason còn cần xác nhận; trường này đang bị khóa.</p>
+        <button class="decision-button" type="button" disabled><study-icon name="checklist" /> Phê duyệt nội dung (Approve)</button>
+        <button class="decision-button decision-button--danger" type="button" disabled>Từ chối / Yêu cầu chỉnh sửa</button>
+        <p class="policy-note">Không có quyết định nào được gửi từ màn hình này.</p>
+      </section>
+
+      <section class="review-panel rubric-panel" aria-labelledby="rubric-heading">
+        <header class="review-panel-heading"><h2 id="rubric-heading"><study-icon name="checklist" /> Tiêu chí đánh giá</h2><span>CHƯA CÓ NGUỒN</span></header>
+        <div class="rubric-empty"><span class="rubric-mark"><study-icon name="info" /></span><strong>Chưa có rubric trong API #79</strong><p>Tiêu chí và phiên bản đánh giá ở bản thiết kế chưa có nguồn dữ liệu xác nhận.</p></div>
+      </section>
+    </aside>
+  </div>
+</main>

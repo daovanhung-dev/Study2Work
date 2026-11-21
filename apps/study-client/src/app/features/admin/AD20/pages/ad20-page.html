@@ -1,0 +1,178 @@
+<main class="notification-compose page-width" data-screen-id="AD20">
+  <div class="compose-breadcrumbs">
+    <nav aria-label="Đường dẫn soạn thông báo">
+      <ol>
+        <li>Quản trị truyền thông</li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/admin/notifications">Thông báo hệ thống</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Soạn thông báo mới</li>
+      </ol>
+    </nav>
+    <a class="back-link" routerLink="/admin/notifications"><study-icon name="chevron" /> Danh sách thông báo</a>
+  </div>
+
+  <header class="compose-heading">
+    <p class="compose-eyebrow">AD-20 · NOTIFICATION COMPOSER</p>
+    <h1>{{ definition.title }}</h1>
+    <p>{{ definition.description }}</p>
+  </header>
+
+  <aside class="accepted-note" aria-labelledby="accepted-note-heading">
+    <span class="note-icon"><study-icon name="info" /></span>
+    <div>
+      <strong id="accepted-note-heading">Tiếp nhận yêu cầu không đồng nghĩa đã giao thông báo</strong>
+      <p>API #93 ghi notification và delivery row ở trạng thái QUEUED rồi trả 202. Provider hoặc worker gửi thông báo không nằm trong xử lý hiện tại.</p>
+    </div>
+  </aside>
+
+  <div class="compose-layout">
+    <form class="compose-form-panel" aria-labelledby="compose-form-heading" (submit)="submitNotification($event)">
+      <h2 id="compose-form-heading" class="visually-hidden">Nội dung thông báo</h2>
+
+      <div class="form-field">
+        <label for="notice-title">Tiêu đề thông báo <span aria-hidden="true">*</span></label>
+        <input
+          id="notice-title"
+          type="text"
+          maxlength="200"
+          required
+          [value]="title()"
+          (input)="updateTitle($event)"
+          [disabled]="isFormLocked()"
+          aria-describedby="title-help"
+          placeholder="Nhập tiêu đề thông báo"
+        />
+        <p id="title-help">{{ title().length }} / 200 ký tự</p>
+      </div>
+
+      <fieldset class="recipient-field" aria-describedby="recipient-help" [disabled]="isFormLocked()">
+        <legend>Người nhận <span aria-hidden="true">*</span></legend>
+        <p class="field-intro">Chọn rõ từng tài khoản từ danh sách quản trị. Màn hình không tự suy ra phân khúc người nhận.</p>
+        <p id="recipient-help" class="selection-count">Đã chọn {{ selectedRecipientCount() }} người nhận</p>
+
+        @if (selectedRecipients().length > 0) {
+          <ul class="selected-recipient-list" aria-label="Người nhận đã chọn">
+            @for (recipient of selectedRecipients(); track recipient.id) {
+              <li>
+                <span>{{ recipient.full_name }} <small>{{ recipient.email }}</small></span>
+                <button type="button" (click)="removeRecipient(recipient.id)" [attr.aria-label]="'Bỏ chọn ' + recipient.full_name">Bỏ chọn</button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (recipientsLoading()) {
+          <p class="recipient-message" role="status">Đang tải người dùng…</p>
+        } @else if (recipientsError()) {
+          <p class="form-error" role="alert">{{ recipientsError() }}</p>
+          <button class="secondary-button" type="button" (click)="loadRecipients(pagination()?.page ?? 1)">Thử tải lại</button>
+        } @else if (recipients().length === 0) {
+          <p class="recipient-message">Không có người dùng trong trang này.</p>
+        } @else {
+          <ul class="recipient-results" aria-label="Danh sách người dùng">
+            @for (recipient of recipients(); track $index) {
+              <li>
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(recipient.id)"
+                    [disabled]="recipient.id === null"
+                    (change)="toggleRecipient(recipient, $any($event.target).checked)"
+                  />
+                  <span class="recipient-copy">
+                    <strong>{{ recipient.full_name }}</strong>
+                    <small>{{ recipient.email }} · {{ recipient.role }} · {{ recipient.status }}</small>
+                  </span>
+                </label>
+                @if (recipient.id === null) { <small class="id-warning">ID không thể chọn an toàn</small> }
+              </li>
+            }
+          </ul>
+        }
+
+        @if (pagination(); as page) {
+          <div class="pagination-controls" aria-label="Phân trang người nhận">
+            <span>Trang {{ page.page }} / {{ page.total_pages }} · {{ page.total }} tài khoản</span>
+            <div>
+              <button type="button" class="secondary-button" [disabled]="page.page <= 1 || recipientsLoading()" (click)="loadRecipients(page.page - 1)">Trước</button>
+              <button type="button" class="secondary-button" [disabled]="page.page >= page.total_pages || recipientsLoading()" (click)="loadRecipients(page.page + 1)">Sau</button>
+            </div>
+          </div>
+        }
+      </fieldset>
+
+      <fieldset class="channel-field" [disabled]="isFormLocked()">
+        <legend>Kênh gửi <span aria-hidden="true">*</span></legend>
+        <p class="field-intro">Chọn ít nhất một kênh có trong API #93.</p>
+        <div class="channel-options">
+          <label><input type="checkbox" value="PUSH" (change)="toggleChannel('PUSH', $any($event.target).checked)" /><span><strong>PUSH</strong><small>Thông báo đẩy</small></span></label>
+          <label><input type="checkbox" value="EMAIL" (change)="toggleChannel('EMAIL', $any($event.target).checked)" /><span><strong>EMAIL</strong><small>Email</small></span></label>
+        </div>
+      </fieldset>
+
+      <div class="form-field content-field">
+        <label for="notice-content">Nội dung chi tiết <span aria-hidden="true">*</span></label>
+        <textarea
+          id="notice-content"
+          rows="8"
+          required
+          [value]="content()"
+          (input)="updateContent($event)"
+          [disabled]="isFormLocked()"
+          aria-describedby="content-help"
+          placeholder="Nhập nội dung thông báo"
+        ></textarea>
+        <p id="content-help">Nội dung được gửi dưới dạng văn bản thuần.</p>
+      </div>
+
+      @if (submissionError()) { <p class="form-error" role="alert">{{ submissionError() }}</p> }
+      @if (submissionUnconfirmed()) {
+        <a class="return-link" routerLink="/admin/notifications">Kiểm tra danh sách thông báo</a>
+      }
+      @if (acceptedOperationId()) {
+        <p class="form-success" role="status">Yêu cầu đã được tiếp nhận và xếp hàng. Chưa có xác nhận giao thông báo.</p>
+        <a class="primary-link" [routerLink]="'/operations/' + acceptedOperationId()">Theo dõi trạng thái</a>
+      }
+
+      <div class="compose-actions">
+        <button class="primary-button" type="submit" [disabled]="!canSubmit()">
+          {{ isSubmitting() ? 'Đang gửi…' : 'Gửi thông báo' }}
+        </button>
+      </div>
+    </form>
+
+    <aside class="preview-column">
+      <section class="preview-panel" aria-labelledby="preview-heading">
+        <div class="side-heading">
+          <h2 id="preview-heading"><study-icon name="info" /> Xem trước</h2>
+          <span class="local-badge">Bản nháp</span>
+        </div>
+        <article class="notification-preview">
+          <p class="preview-source">● STUDY2WORK · THÔNG BÁO</p>
+          <h3>{{ previewTitle() }}</h3>
+          <p class="preview-content">{{ previewContent() }}</p>
+          <span class="preview-meta">Xem trước tại chỗ · chưa gửi</span>
+        </article>
+        <p class="preview-help">Người nhận đã chọn: {{ selectedRecipientCount() }} · Kênh: {{ channels().join(', ') || 'chưa chọn' }}</p>
+      </section>
+
+      <section class="workflow-panel" aria-labelledby="workflow-heading">
+        <div class="side-heading">
+          <h2 id="workflow-heading">Trạng thái xử lý</h2>
+          <span class="source-badge">API #93</span>
+        </div>
+        <ol class="workflow-list">
+          <li><span class="step-index">1</span><div><strong>Chọn người nhận</strong><p>API #68 cung cấp danh sách phân trang; mỗi người nhận được chọn tường minh.</p></div></li>
+          <li><span class="step-index">2</span><div><strong>Đã xếp hàng</strong><p>HTTP 202 chỉ xác nhận dữ liệu QUEUED đã được ghi.</p></div></li>
+          <li><span class="step-index">3</span><div><strong>Theo dõi</strong><p>API #18 trả trạng thái notification của chủ tài khoản; trang tải khi mở và khi bấm làm mới.</p></div></li>
+        </ol>
+      </section>
+    </aside>
+  </div>
+
+  <div class="compose-footer">
+    <a class="return-link" routerLink="/admin/notifications"><study-icon name="chevron" /> Quay lại danh sách thông báo</a>
+    <span class="source-note"><study-icon name="database" /> #68 chọn người nhận · #93 tạo yêu cầu · #18 theo dõi</span>
+  </div>
+</main>

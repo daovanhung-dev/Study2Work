@@ -1,1 +1,1 @@
-"""Public course-discovery module."""
+"""Đánh dấu package cung cấp danh sách khóa học công khai."""

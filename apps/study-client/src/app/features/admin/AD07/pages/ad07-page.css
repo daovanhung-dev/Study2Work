@@ -1,0 +1,43 @@
+:host { display: block; }
+:host .admin-detail-page { width: min(calc(100% - 64px), 1120px); gap: 24px; padding-block: 24px 40px; }
+:host .detail-toolbar { color: var(--text-muted); font-size: 14px; }
+:host .detail-toolbar nav a { display: inline-flex; min-height: 44px; align-items: center; }
+:host .detail-toolbar a { color: var(--ocean-primary); text-decoration: none; }
+:host .detail-toolbar a:hover { color: var(--ocean-hover); text-decoration: underline; text-underline-offset: 3px; }
+:host .back-link { border-color: var(--border); color: var(--ocean-primary); box-shadow: none; }
+:host .back-link:hover { border-color: var(--ocean-primary); background: var(--ocean-soft); text-decoration: none; }
+:host .detail-hero, :host .panel { border-color: var(--border); box-shadow: none; }
+:host .detail-hero { padding: 24px; border-radius: 16px; background: var(--surface); }
+:host .hero-tags span, :host .panel-badge { border: 1px solid var(--border); border-radius: 8px; color: var(--ocean-primary); background: var(--ocean-soft); font-size: 12px; letter-spacing: 0; }
+:host .panel-badge--muted { color: var(--text-muted); background: var(--page-background); }
+:host .detail-hero h1, :host .heading-title h2 { color: var(--ocean-deep); }
+:host .sync-status { border-color: var(--border); color: var(--text-primary); background: var(--page-background); box-shadow: none; }
+:host .status-dot { background: var(--ocean-primary); }
+:host .heading-icon { width: 44px; height: 44px; color: var(--ocean-primary); background: var(--ocean-soft); }
+:host .field-card { border: 1px solid var(--border); border-radius: 12px; background: var(--page-background); }
+:host .field-card dt { color: var(--text-muted); font-size: 13px; letter-spacing: 0; text-transform: none; }
+:host .field-card dd { color: var(--text-primary); }
+:host .field-card dd.status-value { border: 1px solid var(--border); color: var(--ocean-deep); background: var(--ocean-soft); }
+:host .state-notice, :host .panel-note { border: 1px solid var(--border); color: var(--ocean-deep); background: var(--ocean-soft); }
+:host .state-notice--error { border-color: var(--danger); color: var(--danger); background: var(--surface); }
+:host .empty-state, :host .unavailable-panel, :host .coverage-item { border: 1px solid var(--border); background: var(--page-background); }
+:host .empty-icon { color: var(--ocean-primary); background: var(--ocean-soft); }
+:host .empty-state strong, :host .unavailable-panel strong, :host .coverage-item strong { color: var(--text-primary); }
+:host .empty-state p, :host .unavailable-panel p, :host .coverage-item p { color: var(--text-muted); line-height: 1.55; }
+:host .primary-link { min-height: 44px; justify-content: center; background: var(--ocean-primary); }
+:host .primary-link:hover { background: var(--ocean-hover); text-decoration: none; }
+:host .action-list button { min-height: 48px; border: 1px solid var(--border); color: var(--text-muted); background: var(--page-background); }
+:host .action-list button:disabled { cursor: not-allowed; opacity: 1; }
+:host .coverage-mark { border: 1px solid var(--border); color: var(--text-muted); background: var(--surface); }
+:host .coverage-mark--available { border-color: var(--success); color: var(--success); }
+:host a:focus-visible, :host button:focus-visible { outline: 3px solid var(--ocean-primary); outline-offset: 3px; }
+@media (min-width: 768px) and (max-width: 1023px) { :host .admin-detail-page { width: calc(100% - 48px); } }
+@media (max-width: 767px) {
+  :host .admin-detail-page { width: calc(100% - 32px); gap: 16px; padding-block: 20px 32px; }
+  :host .detail-hero { align-items: flex-start; flex-direction: column; padding: 20px; }
+  :host .sync-status { align-self: stretch; }
+  :host .panel-heading { align-items: flex-start; flex-direction: column; padding-inline: 18px; }
+  :host .field-grid { grid-template-columns: minmax(0, 1fr); padding-inline: 18px; }
+  :host .empty-state, :host .unavailable-panel { align-items: flex-start; flex-direction: column; margin-inline: 18px; }
+  :host .primary-link { width: 100%; }
+}

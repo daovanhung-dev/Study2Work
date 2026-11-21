@@ -1,55 +1,66 @@
 from typing import Any
 
 import pytest
-from app.core.responses import ApiError
-from app.utils.validate import (
+from app.core.responses import ErrorDetail
+from app.utils.auth import (
     extract_bearer_token,
+    validate_access_claims,
+    validate_refresh_token,
+)
+from app.utils.validate import (
     normalize_login_email,
+    parse_integer,
     reject_blank_password,
     reject_blank_value,
     strip_email,
-    validate_access_claims,
     validate_login_password,
-    validate_refresh_token,
 )
 
 
 def test_strip_email_trims_only_string_values() -> None:
+    """Kiểm tra strip_email trim chuỗi email và trả nguyên kiểu dữ liệu không phải chuỗi."""
     assert strip_email(" student@example.com ") == "student@example.com"
     assert strip_email(123) == 123
 
 
 @pytest.mark.parametrize("validator", [reject_blank_password, reject_blank_value])
 def test_blank_value_validators_reject_whitespace(validator) -> None:
-    with pytest.raises(ValueError):
-        validator("   ")
+    """Kiểm tra helper trả ErrorDetail cho password, token và giá trị chỉ có khoảng trắng."""
+    result = validator("   ")
+    assert isinstance(result, ErrorDetail)
+    assert result.code == "VALUE_ERROR"
 
 
 def test_blank_value_validators_preserve_non_blank_values() -> None:
+    """Kiểm tra các validator giữ nguyên password và giá trị không rỗng hợp lệ."""
     assert reject_blank_password("password") == "password"
     assert reject_blank_value("refresh-token") == "refresh-token"
 
 
 def test_login_email_validator_reuses_shared_email_normalization() -> None:
+    """Kiểm tra validator email đăng nhập dùng lại helper chuẩn hóa email chung."""
     assert normalize_login_email(" student@example.com ") == "student@example.com"
 
 
 def test_login_password_validator_rejects_blank_password() -> None:
-    with pytest.raises(ValueError):
-        validate_login_password("   ")
+    """Kiểm tra validator password trả lỗi dữ liệu cho chuỗi trắng."""
+    error = validate_login_password("   ")
+    assert isinstance(error, ErrorDetail)
 
     assert validate_login_password("password") == "password"
 
 
 def test_refresh_token_validator_rejects_blank_token() -> None:
-    with pytest.raises(ValueError):
-        validate_refresh_token("   ")
+    """Kiểm tra validator refresh token chấp nhận và giữ nguyên token không rỗng."""
+    error = validate_refresh_token("   ")
+    assert isinstance(error, ErrorDetail)
 
     assert validate_refresh_token("refresh-token") == "refresh-token"
 
 
 @pytest.mark.parametrize("authorization", ["Bearer token", "bearer token", "BEARER token"])
 def test_extract_bearer_token_accepts_bearer_scheme(authorization: str) -> None:
+    """Kiểm tra helper tách token đúng với scheme Bearer không phân biệt hoa thường."""
     assert extract_bearer_token(authorization) == "token"
 
 
@@ -58,12 +69,12 @@ def test_extract_bearer_token_accepts_bearer_scheme(authorization: str) -> None:
     [None, "", "Basic token", "Bearer", "Bearer one two"],
 )
 def test_extract_bearer_token_rejects_malformed_header(authorization: str | None) -> None:
-    with pytest.raises(ApiError) as error:
-        extract_bearer_token(authorization)
-    assert error.value.status_code == 401
+    """Kiểm tra Authorization header sai cú pháp bị chuyển thành lỗi xác thực 401."""
+    assert extract_bearer_token(authorization) is None
 
 
 def test_validate_access_claims_normalizes_subject_and_roles() -> None:
+    """Kiểm tra claims đổi subject thành ID số và chuẩn hóa role thành chữ hoa."""
     assert validate_access_claims(
         {"sub": "1001", "roles": ["student", " Mentor "]},
     ) == (1001, ["STUDENT", "MENTOR"])
@@ -83,6 +94,14 @@ def test_validate_access_claims_normalizes_subject_and_roles() -> None:
     ],
 )
 def test_validate_access_claims_rejects_invalid_claims(claims: dict[str, Any]) -> None:
-    with pytest.raises(ApiError) as error:
-        validate_access_claims(claims)
-    assert error.value.status_code == 401
+    """Kiểm tra claims sai trả sentinel để API validator ánh xạ thành 401."""
+    assert validate_access_claims(claims) is None
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("12", 12), (" +1_001 ", 1001), ("-1", -1), ("", None), ("1.5", None), (True, None)],
+)
+def test_parse_integer_returns_value_or_none(value: object, expected: int | None) -> None:
+    """Kiểm tra parser số nguyên chấp nhận cú pháp Python an toàn và không ném lỗi input."""
+    assert parse_integer(value) == expected

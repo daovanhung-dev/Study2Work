@@ -1,0 +1,24 @@
+.me12-back { display:inline-flex; min-height:44px; align-items:center; margin:-8px 0 16px; color:#0b668f; font-size:12px; font-weight:750; text-decoration:none; }
+.me12-thread,.me12-reply { padding:20px; }
+.me12-thread-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+.me12-thread-head h2 { margin:10px 0 5px; color:#17324b; font-size:20px; }
+.me12-messages { display:grid; gap:12px; list-style:none; padding:18px 0 0; margin:18px 0 0; border-top:1px solid #e7edf3; }
+.me12-messages>li { padding:16px; border:1px solid #e4ebf1; border-radius:10px; background:#fbfcfd; }
+.me12-message-head { display:flex; justify-content:space-between; gap:12px; }
+.me12-message-head strong { color:#2c4660; font-size:12px; }
+.me12-messages p { margin:12px 0 0; color:#465e76; font-size:13px; line-height:1.65; white-space:pre-wrap; }
+.me12-attachments { list-style:none; padding:10px 0 0; margin:12px 0 0; border-top:1px solid #e8eef4; }
+.me12-attachments li { display:flex; align-items:center; gap:10px; padding:6px 0; }
+.me12-attachments strong { color:#2c4660; font-size:12px; }
+.me12-attachments li>span:last-child { color:#60758d; }
+.me12-action-feedback { display:block; margin:12px 0 0; }
+.me12-action-feedback p { margin:0; }
+.me12-action-feedback .mentor-button { margin-top:10px; }
+.me12-reply { display:grid; gap:10px; margin-top:16px; }
+.me12-reply label { color:#36516b; font-size:12px; font-weight:750; }
+.me12-reply textarea { width:100%; min-height:110px; padding:12px; border:1px solid #d1dce7; border-radius:8px; resize:vertical; font:inherit; }
+.me12-reply .mentor-button { justify-self:end; }
+.me12-resolve-gate { display:grid; justify-items:start; gap:8px; max-width:260px; }
+.me12-resolve-gate .mentor-button { opacity:.65; }
+.me12-reply h3 { margin:0; color:#36516b; font-size:15px; }
+@media(max-width:620px){.me12-thread,.me12-reply{padding:16px}.me12-thread-head{flex-direction:column}.me12-reply .mentor-button{width:100%}.me12-message-head,.me12-attachments li{align-items:flex-start;flex-direction:column}}

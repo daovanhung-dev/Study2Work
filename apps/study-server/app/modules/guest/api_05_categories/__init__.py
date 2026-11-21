@@ -1,1 +1,1 @@
-"""Category discovery module for the public Study API."""
+"""Đánh dấu package cung cấp danh mục công khai của Study API."""

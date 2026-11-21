@@ -1,0 +1,539 @@
+{
+  "screen_id": "ST-12",
+  "source_image": "screen.png",
+  "source_html": "code.html",
+  "source_image_sha256": "4cb94079bee1cc251b8be5efa6f6a7a59af3e1b41f5a689a0475b36e5486861f",
+  "source_html_sha256": "69be5a1f8ed26c9636b32103499d1149a497c7edc7924bd1572e9eec5e928587",
+  "image_size": {
+    "width": 1600,
+    "height": 1504
+  },
+  "annotation": {
+    "canvas_size": {
+      "width": 3200,
+      "height": 3008
+    },
+    "source_offset_px": {
+      "x": 0,
+      "y": 0
+    },
+    "scale": 2,
+    "marker_count": 27,
+    "source_text_obscured": false
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST12-EL-01",
+      "name": "Header brand and primary navigation",
+      "target": "Study2Work LMS brand and the primary navigation in the top header",
+      "target_center_source_px": {
+        "x": 250,
+        "y": 40
+      },
+      "marker_center_canvas_px": {
+        "x": 602,
+        "y": 80
+      },
+      "placement": "right of wordmark",
+      "leader_to_canvas_px": {
+        "x": 560,
+        "y": 80
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST12-EL-02",
+      "name": "Learner identity summary",
+      "target": "Hard-coded learner name, role label and avatar at the top-right",
+      "target_center_source_px": {
+        "x": 1460,
+        "y": 40
+      },
+      "marker_center_canvas_px": {
+        "x": 3140,
+        "y": 192
+      },
+      "placement": "below the avatar in the header-to-breadcrumb gap",
+      "leader_to_canvas_px": {
+        "x": 3120,
+        "y": 160
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST12-EL-03",
+      "name": "Breadcrumb trail",
+      "target": "Breadcrumb from home through learner courses and ST-11 to the current screen",
+      "target_center_source_px": {
+        "x": 450,
+        "y": 125
+      },
+      "marker_center_canvas_px": {
+        "x": 1400,
+        "y": 250
+      },
+      "placement": "immediately to the right of the breadcrumb text",
+      "leader_to_canvas_px": {
+        "x": 1340,
+        "y": 250
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST12-EL-04",
+      "name": "Route badge",
+      "target": "Proposed route label at the right side of the breadcrumb row",
+      "target_center_source_px": {
+        "x": 1340,
+        "y": 125
+      },
+      "marker_center_canvas_px": {
+        "x": 3150,
+        "y": 300
+      },
+      "placement": "at the right edge of the breadcrumb row",
+      "leader_to_canvas_px": {
+        "x": 3156,
+        "y": 300
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST12-EL-05",
+      "name": "Screen identity and design status",
+      "target": "ST-12 Resource Panel and DESIGN_ONLY badges in the hero",
+      "target_center_source_px": {
+        "x": 260,
+        "y": 220
+      },
+      "marker_center_canvas_px": {
+        "x": 180,
+        "y": 370
+      },
+      "placement": "left edge of the hero panel",
+      "leader_to_canvas_px": {
+        "x": 160,
+        "y": 440
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST12-EL-06",
+      "name": "Screen title and description",
+      "target": "Tài liệu kèm bài học heading and the explanatory subtitle",
+      "target_center_source_px": {
+        "x": 500,
+        "y": 290
+      },
+      "marker_center_canvas_px": {
+        "x": 2060,
+        "y": 666
+      },
+      "placement": "open space at the lower-right of the hero text",
+      "leader_to_canvas_px": {
+        "x": 1920,
+        "y": 600
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST12-EL-07",
+      "name": "Data infrastructure status card",
+      "target": "Zero Information Disclosure Enforced status card in the hero",
+      "target_center_source_px": {
+        "x": 1320,
+        "y": 263
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 666
+      },
+      "placement": "below the status card inside the hero right margin",
+      "leader_to_canvas_px": {
+        "x": 2900,
+        "y": 600
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST12-EL-08",
+      "name": "Empty-state folder icon",
+      "target": "Folder icon above the unavailable-resource message",
+      "target_center_source_px": {
+        "x": 540,
+        "y": 496
+      },
+      "marker_center_canvas_px": {
+        "x": 360,
+        "y": 980
+      },
+      "placement": "left whitespace inside the main panel",
+      "leader_to_canvas_px": {
+        "x": 860,
+        "y": 992
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST12-EL-09",
+      "name": "Central access policy badge",
+      "target": "Centralized access-control badge above the empty-state heading",
+      "target_center_source_px": {
+        "x": 540,
+        "y": 590
+      },
+      "marker_center_canvas_px": {
+        "x": 1800,
+        "y": 1170
+      },
+      "placement": "right of the badge",
+      "leader_to_canvas_px": {
+        "x": 1480,
+        "y": 1180
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST12-EL-10",
+      "name": "Unavailable message and explanation",
+      "target": "Empty/unavailable heading and privacy explanation in the main panel",
+      "target_center_source_px": {
+        "x": 540,
+        "y": 690
+      },
+      "marker_center_canvas_px": {
+        "x": 290,
+        "y": 1400
+      },
+      "placement": "left whitespace aligned with the message",
+      "leader_to_canvas_px": {
+        "x": 392,
+        "y": 1380
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "ST12-EL-11",
+      "name": "Return to lesson CTA",
+      "target": "Button-style link labelled Quay lại trình học bài (ST-11)",
+      "target_center_source_px": {
+        "x": 540,
+        "y": 866
+      },
+      "marker_center_canvas_px": {
+        "x": 1680,
+        "y": 1720
+      },
+      "placement": "right of the CTA",
+      "leader_to_canvas_px": {
+        "x": 1420,
+        "y": 1732
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "ST12-EL-12",
+      "name": "Security assurance strip",
+      "target": "Static E2E, no-public-metadata and one-time-token claims below the CTA",
+      "target_center_source_px": {
+        "x": 540,
+        "y": 972
+      },
+      "marker_center_canvas_px": {
+        "x": 160,
+        "y": 2060
+      },
+      "placement": "left of the assurance strip near the panel bottom",
+      "leader_to_canvas_px": {
+        "x": 200,
+        "y": 2000
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "ST12-EL-13",
+      "name": "Connectivity status section title",
+      "target": "Heading for the connection capability status panel",
+      "target_center_source_px": {
+        "x": 300,
+        "y": 1128
+      },
+      "marker_center_canvas_px": {
+        "x": 1000,
+        "y": 2190
+      },
+      "placement": "right side of the section heading row",
+      "leader_to_canvas_px": {
+        "x": 1000,
+        "y": 2228
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "ST12-EL-14",
+      "name": "Thirty-second refresh badge",
+      "target": "Static label claiming automatic refresh every 30 seconds",
+      "target_center_source_px": {
+        "x": 915,
+        "y": 1128
+      },
+      "marker_center_canvas_px": {
+        "x": 2050,
+        "y": 2190
+      },
+      "placement": "above the panel heading at its right edge",
+      "leader_to_canvas_px": {
+        "x": 2028,
+        "y": 2236
+      }
+    },
+    {
+      "number": 15,
+      "element_id": "ST12-EL-15",
+      "name": "API #26 status card",
+      "target": "Schema mismatch and Type: Lesson status tile in the left column",
+      "target_center_source_px": {
+        "x": 300,
+        "y": 1240
+      },
+      "marker_center_canvas_px": {
+        "x": 1000,
+        "y": 2656
+      },
+      "placement": "below the left status tile, within the outer panel",
+      "leader_to_canvas_px": {
+        "x": 900,
+        "y": 2620
+      }
+    },
+    {
+      "number": 16,
+      "element_id": "ST12-EL-16",
+      "name": "API #12 status card",
+      "target": "Design Only and Pending Auth status tile in the right column",
+      "target_center_source_px": {
+        "x": 780,
+        "y": 1240
+      },
+      "marker_center_canvas_px": {
+        "x": 1960,
+        "y": 2656
+      },
+      "placement": "below the right status tile, within the outer panel",
+      "leader_to_canvas_px": {
+        "x": 1880,
+        "y": 2636
+      }
+    },
+    {
+      "number": 17,
+      "element_id": "ST12-EL-17",
+      "name": "Technical hand-off panel heading",
+      "target": "Hand-off Technical Notes heading and frontend-engine subtitle",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 435
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 870
+      },
+      "placement": "right margin of the panel heading",
+      "leader_to_canvas_px": {
+        "x": 3024,
+        "y": 870
+      }
+    },
+    {
+      "number": 18,
+      "element_id": "ST12-EL-18",
+      "name": "External URL warning note",
+      "target": "Warning not to open URLs outside an approved security policy",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 540
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 1120
+      },
+      "placement": "right edge of the first note card",
+      "leader_to_canvas_px": {
+        "x": 3044,
+        "y": 1120
+      }
+    },
+    {
+      "number": 19,
+      "element_id": "ST12-EL-19",
+      "name": "No fabricated resource metadata note",
+      "target": "Warning not to invent file names, extensions, sizes or URLs",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 680
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 1420
+      },
+      "placement": "right edge of the second note card",
+      "leader_to_canvas_px": {
+        "x": 3044,
+        "y": 1420
+      }
+    },
+    {
+      "number": 20,
+      "element_id": "ST12-EL-20",
+      "name": "WCAG accessibility note",
+      "target": "Note about WCAG 2.1 AA and visible keyboard focus",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 815
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 1690
+      },
+      "placement": "right edge of the third note card",
+      "leader_to_canvas_px": {
+        "x": 3044,
+        "y": 1690
+      }
+    },
+    {
+      "number": 21,
+      "element_id": "ST12-EL-21",
+      "name": "Ocean brand note",
+      "target": "Note naming the Ocean brand color #0B5F8A",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 910
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 1880
+      },
+      "placement": "right edge of the fourth note card",
+      "leader_to_canvas_px": {
+        "x": 3044,
+        "y": 1880
+      }
+    },
+    {
+      "number": 22,
+      "element_id": "ST12-EL-22",
+      "name": "Technical spec version and validity badge",
+      "target": "ST-12 v2.4 and static Valid Spec label at the bottom of hand-off panel",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 980
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 2014
+      },
+      "placement": "right side of the version row",
+      "leader_to_canvas_px": {
+        "x": 3044,
+        "y": 2014
+      }
+    },
+    {
+      "number": 23,
+      "element_id": "ST12-EL-23",
+      "name": "Help card",
+      "target": "Help title and copy about contacting the instructor or teaching assistant",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 1140
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 2160
+      },
+      "placement": "top-right whitespace of the help card",
+      "leader_to_canvas_px": {
+        "x": 3044,
+        "y": 2160
+      }
+    },
+    {
+      "number": 24,
+      "element_id": "ST12-EL-24",
+      "name": "Discussion forum link",
+      "target": "Link inviting the learner to visit the discussion forum",
+      "target_center_source_px": {
+        "x": 1220,
+        "y": 1220
+      },
+      "marker_center_canvas_px": {
+        "x": 3080,
+        "y": 2480
+      },
+      "placement": "right margin of the help card",
+      "leader_to_canvas_px": {
+        "x": 3040,
+        "y": 2480
+      }
+    },
+    {
+      "number": 25,
+      "element_id": "ST12-EL-25",
+      "name": "Footer copyright",
+      "target": "Static Study2Work LMS copyright text at lower-left",
+      "target_center_source_px": {
+        "x": 230,
+        "y": 1460
+      },
+      "marker_center_canvas_px": {
+        "x": 160,
+        "y": 2980
+      },
+      "placement": "below the copyright text in footer whitespace",
+      "leader_to_canvas_px": {
+        "x": 160,
+        "y": 2980
+      }
+    },
+    {
+      "number": 26,
+      "element_id": "ST12-EL-26",
+      "name": "Footer WCAG badge",
+      "target": "Static WCAG 2.1 AA Compliant badge in the footer",
+      "target_center_source_px": {
+        "x": 520,
+        "y": 1460
+      },
+      "marker_center_canvas_px": {
+        "x": 1340,
+        "y": 2980
+      },
+      "placement": "below the badge in footer whitespace",
+      "leader_to_canvas_px": {
+        "x": 1340,
+        "y": 2980
+      }
+    },
+    {
+      "number": 27,
+      "element_id": "ST12-EL-27",
+      "name": "Footer legal and help links",
+      "target": "Terms, privacy and help anchors at lower-right",
+      "target_center_source_px": {
+        "x": 1375,
+        "y": 1460
+      },
+      "marker_center_canvas_px": {
+        "x": 3150,
+        "y": 2870
+      },
+      "placement": "right edge above the footer links",
+      "leader_to_canvas_px": {
+        "x": 3110,
+        "y": 2880
+      }
+    }
+  ]
+}

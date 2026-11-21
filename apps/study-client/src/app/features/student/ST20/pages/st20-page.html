@@ -1,0 +1,66 @@
+<main class="static-page api-screen st20-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student">Trang chủ</a><span>›</span><span>Tổng quan tiến độ</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">Tiến độ học tập</p>
+      <h1>Tổng quan tiến độ</h1>
+      <p>Theo dõi các khóa học và thành tích đã được ghi nhận.</p>
+    </div>
+  </header>
+  <section class="api-card progress-api-gate">
+    <p class="api-eyebrow">Tổng quan tiến độ</p>
+    <h2>Chưa có dữ liệu tiến độ</h2>
+    <p>Tiến độ tổng hợp hiện chưa khả dụng.</p>
+    <a class="api-button secondary" routerLink="/student/courses">Khóa học của tôi</a>
+  </section>
+  <section class="api-card achievements-summary">
+    <div class="api-heading">
+      <div>
+        <p class="api-eyebrow">Thành tích</p>
+        <h2>Thành tích đã được hệ thống ghi nhận</h2>
+      </div>
+      <a routerLink="/student/achievements">Xem danh sách</a>
+    </div>
+    @if (loading()) {
+      <section class="api-message" role="status"><strong>Đang tải thành tích…</strong></section>
+    }
+    @if (error()) {
+      <section class="api-error" role="alert">
+        <p>{{ error() }}</p>
+        <button class="api-button secondary" type="button" (click)="retryAchievements()">
+          Tải lại thành tích
+        </button>
+      </section>
+    }
+    @if (!loading() && !error() && snapshotMismatch()) {
+      <section class="api-message" role="status">
+        <p>Số lượng tổng và bản ghi thành tích chưa khớp ở lần tải này.</p>
+        <button class="api-button secondary" type="button" (click)="retryAchievements()">
+          Tải lại thành tích
+        </button>
+      </section>
+    }
+    @if (!loading() && !error() && !snapshotMismatch() && achievements().length === 0) {
+      <section class="api-message">
+        <div>
+          <strong>Chưa có thành tích được ghi nhận.</strong>
+          <p>Các thành tích mới sẽ xuất hiện tại đây.</p>
+        </div>
+      </section>
+    }
+    @if (!loading() && achievements().length) {
+      <ul class="api-list">
+        @for (achievement of achievements(); track achievement.id) {
+          <li>
+            <strong>{{ achievement.title }}</strong>
+            <p class="api-meta">
+              {{ achievement.awarded_at | date: 'medium' }}
+            </p>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</main>

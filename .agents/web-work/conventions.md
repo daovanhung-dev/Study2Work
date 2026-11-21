@@ -9,7 +9,7 @@ the configured defaults are 15-second stale time and one retry. Requests use the
 relative `/api/v1` base, an optional `Authorization: Bearer <JWT>` header and
 `credentials: omit`. The only browser-persisted auth value is `access_token`;
 cookies and query-string tokens are not used. Forms render server validation and
-mutation error states. Do not mix Vue patterns from Study web into Work web.
+mutation error states. Do not mix Study Angular patterns into Work web.
 
 Presentation follows `.agents/project/design.md`: consume the semantic Cobalt
 tokens and shared UI primitives instead of adding local primary colors,

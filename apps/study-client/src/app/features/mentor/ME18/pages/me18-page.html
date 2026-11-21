@@ -1,0 +1,52 @@
+<main class="mentor-page me18-page">
+  <study-mentor-page-header
+    title="Analytics khóa học"
+    description="API #66 trả snapshot proxy từ lượt truy cập lesson, không có chuỗi thời gian."
+    apiLabel="#66 · GET"
+  />
+
+  @if (invalidId()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">Course ID trên đường dẫn không hợp lệ.</section>
+  } @else {
+    <div class="me18-toolbar">
+      <span class="mentor-status">Course #{{ courseId() }}</span>
+      <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId()]">Về workspace</a>
+      <button class="mentor-button" type="button" [disabled]="loading()" (click)="load()">Kiểm tra đồng bộ lại</button>
+    </div>
+
+    @if (loading()) {
+      <section class="mentor-card mentor-state" role="status" aria-live="polite" aria-busy="true">Đang tải analytics…</section>
+    } @else if (error()) {
+      <section class="mentor-card mentor-state mentor-state--error" role="alert">
+        <p>{{ error() }}</p>
+        <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử lại</button>
+      </section>
+    } @else if (analytics(); as item) {
+      <section class="me18-metrics" aria-label="Tóm tắt lượt truy cập lesson">
+        <article class="mentor-card">
+          <span class="mentor-meta">Tracked lesson accesses</span>
+          <strong>{{ item.tracked_lesson_accesses }}</strong>
+          <p>Số cặp Student/lesson có timestamp truy cập trong dữ liệu API #66.</p>
+        </article>
+        <article class="mentor-card">
+          <span class="mentor-meta">Students có hoạt động</span>
+          <strong>{{ item.students_with_activity }}</strong>
+          <p>Số Student distinct có ít nhất một timestamp truy cập.</p>
+        </article>
+        <article class="mentor-card">
+          <span class="mentor-meta">Hoạt động gần nhất</span>
+          <strong class="me18-date">{{ item.last_activity_at ? (item.last_activity_at | date:'medium') : 'Chưa có timestamp' }}</strong>
+          <p>Timestamp mới nhất được API #66 trả về.</p>
+        </article>
+      </section>
+      <section class="mentor-card me18-limitation">
+        <h2>Phạm vi dữ liệu</h2>
+        @if (!item.tracked_lesson_accesses) {
+          <p>API #66 chưa có cặp Student/lesson kèm timestamp truy cập cho khóa học này.</p>
+        } @else {
+          <p>API #66 không nhận khoảng thời gian và không trả event history, completion rate, rating, drop-off hoặc tệp CSV. Các biểu đồ đó chưa thể được dựng từ response hiện tại.</p>
+        }
+      </section>
+    }
+  }
+</main>

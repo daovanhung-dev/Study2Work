@@ -1,0 +1,503 @@
+{
+  "screen_id": "ME-15",
+  "source_image": "screen.png",
+  "image_width": 1563,
+  "image_height": 1600,
+  "coordinate_system": "pixel centers from top-left of screen.png",
+  "marker_style": {
+    "shape": "circle",
+    "radius": 15,
+    "fill": "#C2410C",
+    "stroke": "#FFFFFF",
+    "stroke_width": 2,
+    "text": "white bold sans-serif"
+  },
+  "elements": [
+    {
+      "id": 1,
+      "marker": "#1",
+      "name": "Brand and LMS mentor mark",
+      "type": "Anchor / brand",
+      "group": "Header",
+      "x": 27,
+      "y": 17
+    },
+    {
+      "id": 2,
+      "marker": "#2",
+      "name": "Brand-to-navigation divider",
+      "type": "Decorative divider",
+      "group": "Header",
+      "x": 262,
+      "y": 16
+    },
+    {
+      "id": 3,
+      "marker": "#3",
+      "name": "Tổng quan navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 309,
+      "y": 16
+    },
+    {
+      "id": 4,
+      "marker": "#4",
+      "name": "Khóa học phụ trách navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 431,
+      "y": 16
+    },
+    {
+      "id": 5,
+      "marker": "#5",
+      "name": "Chấm bài navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 599,
+      "y": 16
+    },
+    {
+      "id": 6,
+      "marker": "#6",
+      "name": "Hộp thư hỗ trợ navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 744,
+      "y": 16
+    },
+    {
+      "id": 7,
+      "marker": "#7",
+      "name": "Thông báo navigation hiện hành",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 891,
+      "y": 16
+    },
+    {
+      "id": 8,
+      "marker": "#8",
+      "name": "Notification bell and unread dot",
+      "type": "Anchor / notification affordance",
+      "group": "Header",
+      "x": 1216,
+      "y": 15
+    },
+    {
+      "id": 9,
+      "marker": "#9",
+      "name": "Mentor name and role",
+      "type": "Static profile identity",
+      "group": "Header",
+      "x": 1296,
+      "y": 15
+    },
+    {
+      "id": 10,
+      "marker": "#10",
+      "name": "Profile avatar",
+      "type": "Static avatar",
+      "group": "Header",
+      "x": 1538,
+      "y": 37
+    },
+    {
+      "id": 11,
+      "marker": "#11",
+      "name": "Breadcrumb link: Thông báo",
+      "type": "Anchor / breadcrumb",
+      "group": "Breadcrumb",
+      "x": 49,
+      "y": 100
+    },
+    {
+      "id": 12,
+      "marker": "#12",
+      "name": "Breadcrumb separator",
+      "type": "Decorative chevron",
+      "group": "Breadcrumb",
+      "x": 153,
+      "y": 100
+    },
+    {
+      "id": 13,
+      "marker": "#13",
+      "name": "Current breadcrumb: Trạng thái phát hành thông báo",
+      "type": "Current-page label",
+      "group": "Breadcrumb",
+      "x": 207,
+      "y": 100
+    },
+    {
+      "id": 14,
+      "marker": "#14",
+      "name": "Giám sát phân phối eyebrow",
+      "type": "Static label",
+      "group": "Hero",
+      "x": 61,
+      "y": 160
+    },
+    {
+      "id": 15,
+      "marker": "#15",
+      "name": "Máy chủ đang lắng nghe badge",
+      "type": "Static status badge",
+      "group": "Hero",
+      "x": 321,
+      "y": 160
+    },
+    {
+      "id": 16,
+      "marker": "#16",
+      "name": "Theo dõi tiến trình gửi thông báo title",
+      "type": "Heading h1",
+      "group": "Hero",
+      "x": 591,
+      "y": 204
+    },
+    {
+      "id": 17,
+      "marker": "#17",
+      "name": "Queue and delivery description",
+      "type": "Static supporting text",
+      "group": "Hero",
+      "x": 974,
+      "y": 320
+    },
+    {
+      "id": 18,
+      "marker": "#18",
+      "name": "Quay về hộp thông báo",
+      "type": "Anchor / back action",
+      "group": "Hero",
+      "x": 994,
+      "y": 236
+    },
+    {
+      "id": 19,
+      "marker": "#19",
+      "name": "Tải lại trạng thái",
+      "type": "Button",
+      "group": "Hero",
+      "x": 1293,
+      "y": 236
+    },
+    {
+      "id": 20,
+      "marker": "#20",
+      "name": "Mã định danh hệ thống label",
+      "type": "Static label",
+      "group": "Queue summary",
+      "x": 59,
+      "y": 400
+    },
+    {
+      "id": 21,
+      "marker": "#21",
+      "name": "System ID placeholder: Đang đồng bộ…",
+      "type": "Static value placeholder",
+      "group": "Queue summary",
+      "x": 81,
+      "y": 457
+    },
+    {
+      "id": 22,
+      "marker": "#22",
+      "name": "Trạng thái label",
+      "type": "Static label",
+      "group": "Queue summary",
+      "x": 565,
+      "y": 408
+    },
+    {
+      "id": 23,
+      "marker": "#23",
+      "name": "Đã tiếp nhận vào hàng đợi xử lý chip",
+      "type": "Static status chip",
+      "group": "Queue summary",
+      "x": 988,
+      "y": 410
+    },
+    {
+      "id": 24,
+      "marker": "#24",
+      "name": "Progress icon",
+      "type": "Decorative icon",
+      "group": "Progress card",
+      "x": 91,
+      "y": 514
+    },
+    {
+      "id": 25,
+      "marker": "#25",
+      "name": "Tiến trình truyền tải luồng thông điệp heading",
+      "type": "Heading",
+      "group": "Progress card",
+      "x": 160,
+      "y": 528
+    },
+    {
+      "id": 26,
+      "marker": "#26",
+      "name": "Progress explanation",
+      "type": "Static supporting text",
+      "group": "Progress card",
+      "x": 160,
+      "y": 576
+    },
+    {
+      "id": 27,
+      "marker": "#27",
+      "name": "ACK notice icon",
+      "type": "Decorative icon",
+      "group": "Progress card",
+      "x": 91,
+      "y": 670
+    },
+    {
+      "id": 28,
+      "marker": "#28",
+      "name": "ACK-dependent update notice",
+      "type": "Static note",
+      "group": "Progress card",
+      "x": 918,
+      "y": 639
+    },
+    {
+      "id": 29,
+      "marker": "#29",
+      "name": "Quy trình điều phối dịch vụ heading",
+      "type": "Section heading",
+      "group": "Progress card",
+      "x": 56,
+      "y": 788
+    },
+    {
+      "id": 30,
+      "marker": "#30",
+      "name": "Step 1: Ghi nhận thông điệp",
+      "type": "Process step card",
+      "group": "Progress card",
+      "x": 346,
+      "y": 847
+    },
+    {
+      "id": 31,
+      "marker": "#31",
+      "name": "Step 2: Phân giải danh sách nhận",
+      "type": "Process step card",
+      "group": "Progress card",
+      "x": 657,
+      "y": 847
+    },
+    {
+      "id": 32,
+      "marker": "#32",
+      "name": "Step 3: Phát hành đa kênh",
+      "type": "Process step card",
+      "group": "Progress card",
+      "x": 966,
+      "y": 847
+    },
+    {
+      "id": 33,
+      "marker": "#33",
+      "name": "Báo cáo phân phối chi tiết heading",
+      "type": "Section heading",
+      "group": "Delivery report",
+      "x": 56,
+      "y": 1057
+    },
+    {
+      "id": 34,
+      "marker": "#34",
+      "name": "Dữ liệu gốc badge",
+      "type": "Static badge",
+      "group": "Delivery report",
+      "x": 976,
+      "y": 1048
+    },
+    {
+      "id": 35,
+      "marker": "#35",
+      "name": "Empty report icon",
+      "type": "Decorative icon",
+      "group": "Delivery report",
+      "x": 583,
+      "y": 1219
+    },
+    {
+      "id": 36,
+      "marker": "#36",
+      "name": "No detailed recipient report message",
+      "type": "Empty-state heading",
+      "group": "Delivery report",
+      "x": 894,
+      "y": 1267
+    },
+    {
+      "id": 37,
+      "marker": "#37",
+      "name": "Empty-state explanation",
+      "type": "Empty-state supporting text",
+      "group": "Delivery report",
+      "x": 894,
+      "y": 1326
+    },
+    {
+      "id": 38,
+      "marker": "#38",
+      "name": "Kênh tiếp nhận đăng ký heading",
+      "type": "Section heading",
+      "group": "Channel panel",
+      "x": 1066,
+      "y": 384
+    },
+    {
+      "id": 39,
+      "marker": "#39",
+      "name": "LMS Portal channel row",
+      "type": "Channel row / static status",
+      "group": "Channel panel",
+      "x": 1067,
+      "y": 447
+    },
+    {
+      "id": 40,
+      "marker": "#40",
+      "name": "Email channel row",
+      "type": "Channel row / static status",
+      "group": "Channel panel",
+      "x": 1067,
+      "y": 521
+    },
+    {
+      "id": 41,
+      "marker": "#41",
+      "name": "Course discussion channel row",
+      "type": "Channel row / static status",
+      "group": "Channel panel",
+      "x": 1067,
+      "y": 594
+    },
+    {
+      "id": 42,
+      "marker": "#42",
+      "name": "Transparency icon",
+      "type": "Decorative icon",
+      "group": "Transparency panel",
+      "x": 1068,
+      "y": 747
+    },
+    {
+      "id": 43,
+      "marker": "#43",
+      "name": "Nguyên tắc hiển thị trung thực heading",
+      "type": "Section heading",
+      "group": "Transparency panel",
+      "x": 1468,
+      "y": 753
+    },
+    {
+      "id": 44,
+      "marker": "#44",
+      "name": "Transparency and no-fake-status copy",
+      "type": "Static supporting text",
+      "group": "Transparency panel",
+      "x": 1504,
+      "y": 942
+    },
+    {
+      "id": 45,
+      "marker": "#45",
+      "name": "SyncEngine version string",
+      "type": "Static version label",
+      "group": "Transparency panel",
+      "x": 1067,
+      "y": 953
+    },
+    {
+      "id": 46,
+      "marker": "#46",
+      "name": "Technical-support card/background",
+      "type": "Static support card",
+      "group": "Support panel",
+      "x": 1067,
+      "y": 1060
+    },
+    {
+      "id": 47,
+      "marker": "#47",
+      "name": "Hỗ trợ kỹ thuật đào tạo eyebrow",
+      "type": "Static label",
+      "group": "Support panel",
+      "x": 1487,
+      "y": 1072
+    },
+    {
+      "id": 48,
+      "marker": "#48",
+      "name": "Urgent queue support prompt",
+      "type": "Static supporting text",
+      "group": "Support panel",
+      "x": 1487,
+      "y": 1145
+    },
+    {
+      "id": 49,
+      "marker": "#49",
+      "name": "Liên hệ quản trị hệ thống",
+      "type": "Anchor / support action",
+      "group": "Support panel",
+      "x": 1487,
+      "y": 1201
+    },
+    {
+      "id": 50,
+      "marker": "#50",
+      "name": "Footer brand mark",
+      "type": "Decorative brand mark",
+      "group": "Footer",
+      "x": 53,
+      "y": 1525
+    },
+    {
+      "id": 51,
+      "marker": "#51",
+      "name": "Copyright, WCAG and portal claim",
+      "type": "Footer copy",
+      "group": "Footer",
+      "x": 797,
+      "y": 1527
+    },
+    {
+      "id": 52,
+      "marker": "#52",
+      "name": "Quy chế Giảng viên",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 1037,
+      "y": 1527
+    },
+    {
+      "id": 53,
+      "marker": "#53",
+      "name": "Tiêu chuẩn đánh giá",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 1220,
+      "y": 1527
+    },
+    {
+      "id": 54,
+      "marker": "#54",
+      "name": "Hỗ trợ kỹ thuật",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 1398,
+      "y": 1527
+    }
+  ]
+}

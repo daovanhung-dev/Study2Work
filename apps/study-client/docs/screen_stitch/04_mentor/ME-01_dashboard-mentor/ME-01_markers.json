@@ -1,0 +1,54 @@
+{
+  "screen_id": "ME-01",
+  "source_image": "screen.png",
+  "original_image": "screen.png",
+  "source_state": "Static mentor dashboard design sample; displayed profile, course, submission, support, rating, schedule and announcement values are not runtime data.",
+  "image_size": {
+    "width": 1086,
+    "height": 1600
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2172,
+      "height": 3200
+    },
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "radius_source_px": 12,
+      "font_size_source_px": 14,
+      "font_weight": 700
+    }
+  },
+  "markers": [
+    {"number": 1, "element_id": "ME01-EL-01", "target": "Study2Work brand and Mentor Portal label", "target_center_source_px": {"x": 12, "y": 20}},
+    {"number": 2, "element_id": "ME01-EL-02", "target": "Primary navigation links", "target_center_source_px": {"x": 142, "y": 23}},
+    {"number": 3, "element_id": "ME01-EL-03", "target": "Global learner/submission search input", "target_center_source_px": {"x": 648, "y": 23}},
+    {"number": 4, "element_id": "ME01-EL-04", "target": "Notification bell and unread-count badge", "target_center_source_px": {"x": 853, "y": 23}},
+    {"number": 5, "element_id": "ME01-EL-05", "target": "Current Mentor avatar and identity block", "target_center_source_px": {"x": 934, "y": 23}},
+    {"number": 6, "element_id": "ME01-EL-06", "target": "Welcome greeting and online/helping status banner", "target_center_source_px": {"x": 12, "y": 77}},
+    {"number": 7, "element_id": "ME01-EL-07", "target": "Duty/on-call schedule card and change-shift action", "target_center_source_px": {"x": 625, "y": 108}},
+    {"number": 8, "element_id": "ME01-EL-08", "target": "Owned-course KPI card", "target_center_source_px": {"x": 13, "y": 222}},
+    {"number": 9, "element_id": "ME01-EL-09", "target": "Pending-grading KPI card", "target_center_source_px": {"x": 248, "y": 222}},
+    {"number": 10, "element_id": "ME01-EL-10", "target": "Support-ticket KPI card", "target_center_source_px": {"x": 474, "y": 222}},
+    {"number": 11, "element_id": "ME01-EL-11", "target": "Mentor-rating KPI card", "target_center_source_px": {"x": 699, "y": 222}},
+    {"number": 12, "element_id": "ME01-EL-12", "target": "Submission panel title, API note and view-all link", "target_center_source_px": {"x": 30, "y": 374}},
+    {"number": 13, "element_id": "ME01-EL-13", "target": "Repeated submission preview cards and grade actions", "target_center_source_px": {"x": 30, "y": 434}},
+    {"number": 14, "element_id": "ME01-EL-14", "target": "Course panel title, API note and view-all link", "target_center_source_px": {"x": 30, "y": 875}},
+    {"number": 15, "element_id": "ME01-EL-15", "target": "Repeated owned-course cards and workspace/content actions", "target_center_source_px": {"x": 30, "y": 943}},
+    {"number": 16, "element_id": "ME01-EL-16", "target": "Support inbox title and pending-count badge", "target_center_source_px": {"x": 617, "y": 375}},
+    {"number": 17, "element_id": "ME01-EL-17", "target": "Repeated support-request previews and reply actions", "target_center_source_px": {"x": 617, "y": 448}},
+    {"number": 18, "element_id": "ME01-EL-18", "target": "Open support workspace link", "target_center_source_px": {"x": 617, "y": 786}},
+    {"number": 19, "element_id": "ME01-EL-19", "target": "Mentorship calendar heading and session count", "target_center_source_px": {"x": 617, "y": 857}},
+    {"number": 20, "element_id": "ME01-EL-20", "target": "Repeated appointment cards, join-Meet and details actions", "target_center_source_px": {"x": 617, "y": 918}},
+    {"number": 21, "element_id": "ME01-EL-21", "target": "Academic notices heading and term label", "target_center_source_px": {"x": 617, "y": 1154}},
+    {"number": 22, "element_id": "ME01-EL-22", "target": "Academic announcement list", "target_center_source_px": {"x": 617, "y": 1204}},
+    {"number": 23, "element_id": "ME01-EL-23", "target": "Footer brand, policies, institutional links and Mentor support", "target_center_source_px": {"x": 13, "y": 1410}}
+  ]
+}

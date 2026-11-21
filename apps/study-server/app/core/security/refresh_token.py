@@ -1,4 +1,5 @@
-"""Opaque refresh-token helpers."""
+"""Tạo refresh token ngẫu nhiên, băm token bằng HMAC và so sánh hash theo cách an toàn trước
+tấn công thời gian."""
 
 from __future__ import annotations
 
@@ -7,20 +8,26 @@ import hmac
 import secrets
 from typing import Any
 
+from starlette.responses import JSONResponse
+
 from app.core.config import get_settings
-from app.core.responses import ApiError
+from app.core.responses import error_response
 
 
 def generate_refresh_token() -> str:
-    """Generate a cryptographically secure refresh token."""
+    """Sinh refresh token opaque bằng secrets.token_urlsafe với 48 byte ngẫu nhiên. Trả về chuỗi
+    URL-safe để cấp cho client; token gốc không được lưu tại database."""
 
     return secrets.token_urlsafe(48)
 
 
-def hash_refresh_token(token: str) -> str:
-    """Hash a refresh token before storing it in the database."""
+def hash_refresh_token(token: str) -> str | JSONResponse:
+    """Băm refresh token bằng HMAC-SHA256 với pepper cấu hình trước khi lưu database. Trả về digest
+    dạng hex hoặc trả error_response an toàn nếu thiếu pepper."""
 
     pepper = _get_refresh_token_pepper()
+    if isinstance(pepper, JSONResponse):
+        return pepper
 
     return hmac.new(
         pepper.encode("utf-8"),
@@ -32,10 +39,13 @@ def hash_refresh_token(token: str) -> str:
 def compare_refresh_token(
     token: str,
     stored_hash: str,
-) -> bool:
-    """Check whether a refresh token matches its stored hash."""
+) -> bool | JSONResponse:
+    """Băm lại token nhận được rồi so sánh digest với hash đã lưu bằng hmac.compare_digest. Cách so
+    sánh này giảm rò rỉ thông tin qua thời gian xử lý và trả về kết quả đúng/sai."""
 
     token_hash = hash_refresh_token(token)
+    if isinstance(token_hash, JSONResponse):
+        return token_hash
 
     return hmac.compare_digest(
         token_hash,
@@ -43,7 +53,9 @@ def compare_refresh_token(
     )
 
 
-def _get_refresh_token_pepper() -> str:
+def _get_refresh_token_pepper() -> str | JSONResponse:
+    """Đọc pepper refresh token từ Settings và mở SecretStr nếu cần. Nếu pepper chưa được cấu hình,
+    trả error_response mặc định để không băm token bằng khóa rỗng."""
     settings = get_settings()
 
     pepper = _secret_value(
@@ -51,12 +63,14 @@ def _get_refresh_token_pepper() -> str:
     )
 
     if not pepper:
-        raise ApiError.internal()
+        return error_response()
 
     return pepper
 
 
 def _secret_value(value: Any) -> str | None:
+    """Lấy giá trị chuỗi từ cấu hình có thể là SecretStr. Trả None khi đầu vào vắng mặt, mở
+    get_secret_value khi có phương thức đó và chuyển kiểu khác thành str."""
     if value is None:
         return None
 

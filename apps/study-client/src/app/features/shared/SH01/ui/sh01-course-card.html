@@ -1,0 +1,42 @@
+<article class="course-card">
+  @if (hasThumbnail()) {
+    <img
+      class="course-thumbnail"
+      [src]="course().thumbnail_url"
+      [alt]="course().title"
+      loading="lazy"
+      referrerpolicy="no-referrer"
+      (error)="onThumbnailError()"
+    />
+  } @else {
+    <div class="course-thumbnail course-thumbnail--empty" aria-hidden="true"></div>
+  }
+
+  <div class="course-content">
+    <h3>{{ course().title }}</h3>
+    @if (course().description) {
+      <p class="course-description">{{ course().description }}</p>
+    }
+  </div>
+
+  <footer class="course-mentor">
+    @if (hasMentorAvatar()) {
+      <img
+        class="mentor-avatar"
+        [src]="course().mentor.avatar_url ?? ''"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        (error)="onMentorAvatarError()"
+      />
+    } @else {
+      <span class="mentor-avatar mentor-avatar--empty" aria-hidden="true"></span>
+    }
+
+    <div class="mentor-details">
+      <span class="mentor-label">Người hướng dẫn</span>
+      <strong>{{ course().mentor.full_name }}</strong>
+    </div>
+  </footer>
+</article>

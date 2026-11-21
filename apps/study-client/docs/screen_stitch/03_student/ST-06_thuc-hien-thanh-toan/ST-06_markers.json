@@ -1,0 +1,378 @@
+{
+  "screen_id": "ST-06",
+  "source_image": "screen_rendered_from_html.png",
+  "original_image": "screen.png",
+  "source_html": "code.html",
+  "source_image_sha256": "e85a80b20fbf23451ada56ce78ce8b2146ae3816eec308c46e9d14a7944c6a4e",
+  "source_html_sha256": "c74f162474fdaed4708d6a5f049b47e0552fa8da04a5e9748416abd1bbdc3c2b",
+  "render_provenance": "Chrome headless via CDP, file://code.html, viewport 1280x1024 CSS px, deviceScaleFactor=2; screenshot captured after document ready and document.fonts.ready (fonts loaded, Tailwind CDN present).",
+  "image_size": {
+    "width": 2560,
+    "height": 2048
+  },
+  "viewport_css_px": {
+    "width": 1280,
+    "height": 1024
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2560,
+      "height": 2048
+    },
+    "coordinate_space": "CSS px; raster coordinates are CSS coordinates multiplied by 2",
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#C2412D",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_css_px": 26,
+      "font_size_css_px": 14,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#C2412D",
+      "stroke_width_css_px": 2,
+      "understroke": "#FFFFFF",
+      "understroke_width_css_px": 4
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST06-EL-01",
+      "name": "Header brand link",
+      "target": "Study2Work brand link (href=\"/\")",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 14,
+        "width": 149.281,
+        "height": 36
+      },
+      "marker_center_css_px": {
+        "x": 18,
+        "y": 60
+      },
+      "leader_end_css_px": {
+        "x": 32,
+        "y": 50
+      },
+      "marker_center_image_px": {
+        "x": 36,
+        "y": 120
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST06-EL-02",
+      "name": "Header primary navigation group",
+      "target": "Trang chủ, Khóa học, Khóa học của tôi, Tiến độ",
+      "target_bounds_css_px": {
+        "x": 213.281,
+        "y": 18,
+        "width": 364.75,
+        "height": 28
+      },
+      "marker_center_css_px": {
+        "x": 194,
+        "y": 60
+      },
+      "leader_end_css_px": {
+        "x": 213,
+        "y": 46
+      },
+      "marker_center_image_px": {
+        "x": 388,
+        "y": 120
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST06-EL-03",
+      "name": "Sign In link",
+      "target": "Đăng nhập link (href=\"/login\")",
+      "target_bounds_css_px": {
+        "x": 1047.516,
+        "y": 12,
+        "width": 105.375,
+        "height": 40
+      },
+      "marker_center_css_px": {
+        "x": 1032,
+        "y": 68
+      },
+      "leader_end_css_px": {
+        "x": 1048,
+        "y": 52
+      },
+      "marker_center_image_px": {
+        "x": 2064,
+        "y": 136
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST06-EL-04",
+      "name": "Sign Up link",
+      "target": "Đăng ký link (href=\"/register\")",
+      "target_bounds_css_px": {
+        "x": 1160.891,
+        "y": 12,
+        "width": 87.109,
+        "height": 40
+      },
+      "marker_center_css_px": {
+        "x": 1262,
+        "y": 68
+      },
+      "leader_end_css_px": {
+        "x": 1248,
+        "y": 52
+      },
+      "marker_center_image_px": {
+        "x": 2524,
+        "y": 136
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST06-EL-05",
+      "name": "Breadcrumb group",
+      "target": "Trang chủ, Khóa học, Kiểm tra đơn hàng, Thực hiện thanh toán",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 96,
+        "width": 1216,
+        "height": 16
+      },
+      "marker_center_css_px": {
+        "x": 18,
+        "y": 124
+      },
+      "leader_end_css_px": {
+        "x": 32,
+        "y": 112
+      },
+      "marker_center_image_px": {
+        "x": 36,
+        "y": 248
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST06-EL-06",
+      "name": "Page-title header group",
+      "target": "H1 Thực hiện thanh toán and its bottom separator",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 136,
+        "width": 1216,
+        "height": 55
+      },
+      "marker_center_css_px": {
+        "x": 1262,
+        "y": 206
+      },
+      "leader_end_css_px": {
+        "x": 1248,
+        "y": 191
+      },
+      "marker_center_image_px": {
+        "x": 2524,
+        "y": 412
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST06-EL-07",
+      "name": "Payment status card surface",
+      "target": "Centered white status card container",
+      "target_bounds_css_px": {
+        "x": 384,
+        "y": 327.375,
+        "width": 512,
+        "height": 328.25
+      },
+      "marker_center_css_px": {
+        "x": 366,
+        "y": 343
+      },
+      "leader_end_css_px": {
+        "x": 384,
+        "y": 343
+      },
+      "marker_center_image_px": {
+        "x": 732,
+        "y": 686
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST06-EL-08",
+      "name": "Credit-card/payment icon",
+      "target": "credit_card icon",
+      "target_bounds_css_px": {
+        "x": 624,
+        "y": 375.375,
+        "width": 32,
+        "height": 32
+      },
+      "marker_center_css_px": {
+        "x": 600,
+        "y": 364
+      },
+      "leader_end_css_px": {
+        "x": 624,
+        "y": 375
+      },
+      "marker_center_image_px": {
+        "x": 1200,
+        "y": 728
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST06-EL-09",
+      "name": "Card title",
+      "target": "H2 Thực hiện thanh toán",
+      "target_bounds_css_px": {
+        "x": 550.969,
+        "y": 443.375,
+        "width": 178.063,
+        "height": 26
+      },
+      "marker_center_css_px": {
+        "x": 531,
+        "y": 456
+      },
+      "leader_end_css_px": {
+        "x": 551,
+        "y": 456
+      },
+      "marker_center_image_px": {
+        "x": 1062,
+        "y": 912
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST06-EL-10",
+      "name": "Payment status headline",
+      "target": "Chưa có thông tin thanh toán để hiển thị.",
+      "target_bounds_css_px": {
+        "x": 416,
+        "y": 485.375,
+        "width": 448,
+        "height": 24
+      },
+      "marker_center_css_px": {
+        "x": 398,
+        "y": 497
+      },
+      "leader_end_css_px": {
+        "x": 416,
+        "y": 497
+      },
+      "marker_center_image_px": {
+        "x": 796,
+        "y": 994
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "ST06-EL-11",
+      "name": "Supporting explanation",
+      "target": "Static copy about unavailable or ended payment transaction",
+      "target_bounds_css_px": {
+        "x": 416,
+        "y": 513.375,
+        "width": 448,
+        "height": 42.25
+      },
+      "marker_center_css_px": {
+        "x": 398,
+        "y": 535
+      },
+      "leader_end_css_px": {
+        "x": 416,
+        "y": 535
+      },
+      "marker_center_image_px": {
+        "x": 796,
+        "y": 1070
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "ST06-EL-12",
+      "name": "Return-to-order CTA",
+      "target": "Quay lại kiểm tra đơn hàng anchor (href=\"/student/checkout/:courseId\")",
+      "target_bounds_css_px": {
+        "x": 504.281,
+        "y": 579.625,
+        "width": 271.438,
+        "height": 44
+      },
+      "marker_center_css_px": {
+        "x": 484,
+        "y": 602
+      },
+      "leader_end_css_px": {
+        "x": 504,
+        "y": 602
+      },
+      "marker_center_image_px": {
+        "x": 968,
+        "y": 1204
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "ST06-EL-13",
+      "name": "Footer brand",
+      "target": "Study2Work footer brand",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 968,
+        "width": 148.875,
+        "height": 32
+      },
+      "marker_center_css_px": {
+        "x": 18,
+        "y": 952
+      },
+      "leader_end_css_px": {
+        "x": 32,
+        "y": 968
+      },
+      "marker_center_image_px": {
+        "x": 36,
+        "y": 1904
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "ST06-EL-14",
+      "name": "Footer navigation group",
+      "target": "Trang chủ, Khóa học, Đăng nhập, Đăng ký",
+      "target_bounds_css_px": {
+        "x": 950.484,
+        "y": 976,
+        "width": 297.516,
+        "height": 16
+      },
+      "marker_center_css_px": {
+        "x": 1262,
+        "y": 958
+      },
+      "leader_end_css_px": {
+        "x": 1248,
+        "y": 976
+      },
+      "marker_center_image_px": {
+        "x": 2524,
+        "y": 1916
+      }
+    }
+  ]
+}

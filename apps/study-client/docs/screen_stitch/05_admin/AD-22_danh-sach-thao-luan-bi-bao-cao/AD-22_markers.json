@@ -1,0 +1,348 @@
+{
+  "screen_id": "AD-22",
+  "source_image": "screen.png",
+  "coordinate_space": {
+    "width": 1280,
+    "height": 1148,
+    "origin": "top-left",
+    "units": "source pixels"
+  },
+  "markers": [
+    {
+      "id": 1,
+      "element_id": "AD22-EL-01",
+      "label": "Study2Work brand / portal mark",
+      "x": 12,
+      "y": 28
+    },
+    {
+      "id": 2,
+      "element_id": "AD22-EL-02",
+      "label": "Navigation — Tổng quan",
+      "x": 239,
+      "y": 28
+    },
+    {
+      "id": 3,
+      "element_id": "AD22-EL-03",
+      "label": "Navigation — Người dùng",
+      "x": 345,
+      "y": 28
+    },
+    {
+      "id": 4,
+      "element_id": "AD22-EL-04",
+      "label": "Navigation — Khóa học & Nội dung",
+      "x": 454,
+      "y": 28
+    },
+    {
+      "id": 5,
+      "element_id": "AD22-EL-05",
+      "label": "Navigation — Kiểm duyệt",
+      "x": 632,
+      "y": 28
+    },
+    {
+      "id": 6,
+      "element_id": "AD22-EL-06",
+      "label": "Navigation — Báo cáo",
+      "x": 753,
+      "y": 28
+    },
+    {
+      "id": 7,
+      "element_id": "AD22-EL-07",
+      "label": "System Normal status badge",
+      "x": 848,
+      "y": 28
+    },
+    {
+      "id": 8,
+      "element_id": "AD22-EL-08",
+      "label": "Notifications bell",
+      "x": 1007,
+      "y": 28
+    },
+    {
+      "id": 9,
+      "element_id": "AD22-EL-09",
+      "label": "Admin identity / avatar",
+      "x": 1071,
+      "y": 28
+    },
+    {
+      "id": 10,
+      "element_id": "AD22-EL-10",
+      "label": "Global breadcrumb",
+      "x": 12,
+      "y": 75
+    },
+    {
+      "id": 11,
+      "element_id": "AD22-EL-11",
+      "label": "RBAC verification badge",
+      "x": 1096,
+      "y": 75
+    },
+    {
+      "id": 12,
+      "element_id": "AD22-EL-12",
+      "label": "Local moderation breadcrumb",
+      "x": 18,
+      "y": 136
+    },
+    {
+      "id": 13,
+      "element_id": "AD22-EL-13",
+      "label": "Page title",
+      "x": 18,
+      "y": 176
+    },
+    {
+      "id": 14,
+      "element_id": "AD22-EL-14",
+      "label": "SẠCH VI PHẠM status badge",
+      "x": 846,
+      "y": 174
+    },
+    {
+      "id": 15,
+      "element_id": "AD22-EL-15",
+      "label": "Supporting description",
+      "x": 18,
+      "y": 222
+    },
+    {
+      "id": 16,
+      "element_id": "AD22-EL-16",
+      "label": "Outstanding queue metric",
+      "x": 961,
+      "y": 188
+    },
+    {
+      "id": 17,
+      "element_id": "AD22-EL-17",
+      "label": "Approved in 24h metric",
+      "x": 1103,
+      "y": 188
+    },
+    {
+      "id": 18,
+      "element_id": "AD22-EL-18",
+      "label": "Search input",
+      "x": 48,
+      "y": 272
+    },
+    {
+      "id": 19,
+      "element_id": "AD22-EL-19",
+      "label": "Severity filter",
+      "x": 548,
+      "y": 272
+    },
+    {
+      "id": 20,
+      "element_id": "AD22-EL-20",
+      "label": "Reason filter",
+      "x": 728,
+      "y": 272
+    },
+    {
+      "id": 21,
+      "element_id": "AD22-EL-21",
+      "label": "Status filter",
+      "x": 952,
+      "y": 272
+    },
+    {
+      "id": 22,
+      "element_id": "AD22-EL-22",
+      "label": "Toolbar refresh button",
+      "x": 1120,
+      "y": 272
+    },
+    {
+      "id": 23,
+      "element_id": "AD22-EL-23",
+      "label": "Table column — Discussion ID",
+      "x": 46,
+      "y": 354
+    },
+    {
+      "id": 24,
+      "element_id": "AD22-EL-24",
+      "label": "Table column — Topic title",
+      "x": 179,
+      "y": 354
+    },
+    {
+      "id": 25,
+      "element_id": "AD22-EL-25",
+      "label": "Table column — Creator",
+      "x": 452,
+      "y": 354
+    },
+    {
+      "id": 26,
+      "element_id": "AD22-EL-26",
+      "label": "Table column — Report count",
+      "x": 625,
+      "y": 354
+    },
+    {
+      "id": 27,
+      "element_id": "AD22-EL-27",
+      "label": "Table column — Flag reason",
+      "x": 770,
+      "y": 354
+    },
+    {
+      "id": 28,
+      "element_id": "AD22-EL-28",
+      "label": "Table column — Reported time",
+      "x": 944,
+      "y": 354
+    },
+    {
+      "id": 29,
+      "element_id": "AD22-EL-29",
+      "label": "Table column — Action",
+      "x": 1160,
+      "y": 354
+    },
+    {
+      "id": 30,
+      "element_id": "AD22-EL-30",
+      "label": "Empty-state shield icon",
+      "x": 702,
+      "y": 550
+    },
+    {
+      "id": 31,
+      "element_id": "AD22-EL-31",
+      "label": "Empty-state title",
+      "x": 900,
+      "y": 626
+    },
+    {
+      "id": 32,
+      "element_id": "AD22-EL-32",
+      "label": "Empty-state explanatory copy",
+      "x": 900,
+      "y": 680
+    },
+    {
+      "id": 33,
+      "element_id": "AD22-EL-33",
+      "label": "Empty-state refresh button",
+      "x": 778,
+      "y": 740
+    },
+    {
+      "id": 34,
+      "element_id": "AD22-EL-34",
+      "label": "Static “60 giây” analysis claim",
+      "x": 810,
+      "y": 793
+    },
+    {
+      "id": 35,
+      "element_id": "AD22-EL-35",
+      "label": "Pagination result summary",
+      "x": 300,
+      "y": 908
+    },
+    {
+      "id": 36,
+      "element_id": "AD22-EL-36",
+      "label": "Current page summary",
+      "x": 370,
+      "y": 908
+    },
+    {
+      "id": 37,
+      "element_id": "AD22-EL-37",
+      "label": "First-page control",
+      "x": 880,
+      "y": 878
+    },
+    {
+      "id": 38,
+      "element_id": "AD22-EL-38",
+      "label": "Previous-page control",
+      "x": 972,
+      "y": 878
+    },
+    {
+      "id": 39,
+      "element_id": "AD22-EL-39",
+      "label": "Current page button",
+      "x": 1042,
+      "y": 878
+    },
+    {
+      "id": 40,
+      "element_id": "AD22-EL-40",
+      "label": "Next-page control",
+      "x": 1096,
+      "y": 878
+    },
+    {
+      "id": 41,
+      "element_id": "AD22-EL-41",
+      "label": "Last-page control",
+      "x": 1188,
+      "y": 878
+    },
+    {
+      "id": 42,
+      "element_id": "AD22-EL-42",
+      "label": "Strict-processing policy card",
+      "x": 200,
+      "y": 943
+    },
+    {
+      "id": 43,
+      "element_id": "AD22-EL-43",
+      "label": "Response-SLA policy card",
+      "x": 640,
+      "y": 943
+    },
+    {
+      "id": 44,
+      "element_id": "AD22-EL-44",
+      "label": "Audit-trail policy card",
+      "x": 1080,
+      "y": 943
+    },
+    {
+      "id": 45,
+      "element_id": "AD22-EL-45",
+      "label": "Footer copyright text",
+      "x": 250,
+      "y": 1080
+    },
+    {
+      "id": 46,
+      "element_id": "AD22-EL-46",
+      "label": "Footer privacy link",
+      "x": 786,
+      "y": 1080
+    },
+    {
+      "id": 47,
+      "element_id": "AD22-EL-47",
+      "label": "Footer RBAC link",
+      "x": 954,
+      "y": 1080
+    },
+    {
+      "id": 48,
+      "element_id": "AD22-EL-48",
+      "label": "Footer support link",
+      "x": 1160,
+      "y": 1080
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1376" height="916" viewBox="0 0 1376 916">
+<title>ST-21 numbered element markers adjacent to the static HTML empty-state groups</title>
+<path d="M 31.5 40.0 L 80 40" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="1: Study2Work brand and home link" transform="translate(20 40)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">1</text></g>
+<path d="M 603.5 40.0 L 603 40" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="2: Primary navigation group: overview, my courses, active progress" transform="translate(615 40)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">2</text></g>
+<path d="M 380.5 97.0 L 379 97" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="3: Breadcrumb trail" transform="translate(392 97)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">3</text></g>
+<path d="M 384.5 163.0 L 384 163" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="4: Page title “Tiến độ theo khóa học”" transform="translate(396 163)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">4</text></g>
+<path d="M 601.5 201.0 L 601 201" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="5: Page summary description" transform="translate(613 201)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">5</text></g>
+<path d="M 728.5 394.0 L 729 394" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="6: Empty-state progress icon" transform="translate(740 394)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">6</text></g>
+<path d="M 902.5 469.0 L 904 469" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="7: Empty-state heading" transform="translate(914 469)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">7</text></g>
+<path d="M 905.5 507.0 L 905 507" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="8: Empty-state explanatory copy" transform="translate(917 507)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">8</text></g>
+<path d="M 830.5 588.0 L 824 588" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="9: Return-to-overview button" transform="translate(842 588)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">9</text></g>
+<path d="M 276.5 852.0 L 264 852" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="10: Footer brand and LMS name" transform="translate(288 852)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">10</text></g>
+<path d="M 1313.5 852.0 L 1298 852" fill="none" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="11: Footer policy and support links group" transform="translate(1325 852)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">11</text></g>
+</svg>

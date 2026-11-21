@@ -40,7 +40,7 @@ Cập nhật hồ sơ
 - [`AC_02_STUDENT_LEARNING.drawio`](../../../docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — AC-11 sequence: validate profile, update profile và reload profile.
 - [`00_AC_API_INDEX.md`](../../../docs/diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-11 actor, precondition, postcondition và API mapping.
 - [`DB.sql`](../../../../../infra/postgres/study-server/DB.sql) — current checked-in Study schema evidence.
-- [`API #4 current-user source`](../../../app/modules/guest/api_04_users_me/query.py) — safe profile projection và current JWT user lookup pattern.
+- [`API #4 current-user source`](../../../app/modules/student/api_04_users_me/query.py) — safe profile projection và current JWT user lookup pattern.
 - [`createDD-markdown skill`](../../../../../.agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md) — template, traceability và quality gates.
 
 > Tài liệu này là design-only. API #14 chưa được đăng ký trong current Study router, chưa có module runtime và chưa có test runtime.

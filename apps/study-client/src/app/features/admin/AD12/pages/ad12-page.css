@@ -1,0 +1,622 @@
+study-ad12-page {
+  display: block;
+  color: var(--text-primary);
+}
+
+study-admin-layout study-ad12-page main.page-width {
+  width: min(calc(100% - 64px), 1120px);
+}
+
+study-ad12-page .lesson-catalog {
+  display: grid;
+  gap: 24px;
+  margin-inline: auto;
+  padding-block: 24px 48px;
+}
+
+study-ad12-page .catalog-breadcrumbs,
+study-ad12-page .catalog-breadcrumbs ol {
+  display: flex;
+  align-items: center;
+}
+
+study-ad12-page .catalog-breadcrumbs {
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+study-ad12-page .catalog-breadcrumbs ol {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+study-ad12-page .catalog-breadcrumbs li[aria-current='page'] {
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+study-ad12-page .api-badge,
+study-ad12-page .source-badge {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--ocean-deep);
+  background: var(--ocean-soft);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+study-ad12-page .catalog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+study-ad12-page .catalog-heading > div {
+  min-width: 0;
+}
+
+study-ad12-page .catalog-heading h1 {
+  margin: 0;
+  color: var(--ocean-deep);
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+study-ad12-page .catalog-heading p {
+  max-width: 72ch;
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+study-ad12-page button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--ocean-primary);
+  background: var(--surface);
+  font: inherit;
+  font-weight: 650;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+study-ad12-page button:not(:disabled) {
+  cursor: pointer;
+}
+
+study-ad12-page button:not(:disabled):hover,
+study-ad12-page .row-action:hover {
+  border-color: var(--ocean-primary);
+  color: var(--ocean-deep);
+  background: var(--ocean-soft);
+}
+
+study-ad12-page button:disabled {
+  cursor: not-allowed;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--page-background) 72%, var(--surface));
+}
+
+study-ad12-page .add-lesson-button {
+  flex: 0 0 auto;
+}
+
+study-ad12-page .control-note {
+  display: flex;
+  max-width: 100%;
+  align-items: flex-start;
+  justify-self: end;
+  gap: 8px;
+  margin: -12px 0 0;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--warning) 22%, var(--border));
+  border-radius: 10px;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 6%, var(--surface));
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+study-ad12-page .control-note study-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+study-ad12-page .filter-panel,
+study-ad12-page .lesson-table-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--ocean-deep) 4%, transparent);
+}
+
+study-ad12-page .filter-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 20px 0;
+}
+
+study-ad12-page .filter-panel-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ocean-deep);
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+study-ad12-page .filter-panel-heading study-icon {
+  color: var(--ocean-primary);
+}
+
+study-ad12-page .filter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+study-ad12-page .filter-grid label {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+study-ad12-page .filter-grid input,
+study-ad12-page .filter-grid select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  background: var(--surface);
+  font: inherit;
+  font-size: 14px;
+}
+
+study-ad12-page .filter-grid input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+study-ad12-page .filter-grid input:disabled,
+study-ad12-page .filter-grid select:disabled {
+  color: var(--text-muted);
+  background: var(--page-background);
+  cursor: not-allowed;
+}
+
+study-ad12-page .filter-grid input:not(:disabled):focus-visible {
+  border-color: var(--ocean-primary);
+}
+
+study-ad12-page .filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+
+study-ad12-page .input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+study-ad12-page .input-wrap study-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+}
+
+study-ad12-page .input-wrap input {
+  padding-left: 40px;
+}
+
+study-ad12-page .filter-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 5%, var(--surface));
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+study-ad12-page .filter-notice study-icon {
+  flex: 0 0 auto;
+}
+
+study-ad12-page .filter-notice span {
+  flex: 1 1 auto;
+}
+
+study-ad12-page .filter-notice button {
+  flex: 0 0 auto;
+}
+
+study-ad12-page .table-scroll {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+study-ad12-page table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+study-ad12-page thead {
+  background: color-mix(in srgb, var(--ocean-soft) 70%, var(--surface));
+}
+
+study-ad12-page th {
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+study-ad12-page td {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+study-ad12-page tbody tr:hover {
+  background: color-mix(in srgb, var(--ocean-soft) 34%, var(--surface));
+}
+
+study-ad12-page .lesson-id {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+study-ad12-page .lesson-title {
+  min-width: 220px;
+}
+
+study-ad12-page .lesson-title strong {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+study-ad12-page .status-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-primary);
+  background: var(--page-background);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+study-ad12-page .row-action {
+  display: inline-flex;
+  min-width: 88px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--ocean-primary);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+study-ad12-page .row-action study-icon {
+  transform: rotate(180deg);
+}
+
+study-ad12-page .row-action:disabled {
+  color: var(--text-muted);
+  background: var(--page-background);
+}
+
+study-ad12-page .table-state {
+  height: 272px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+study-ad12-page .table-state > * {
+  display: block;
+  margin-inline: auto;
+}
+
+study-ad12-page .table-state > button {
+  display: inline-flex;
+  margin-top: 20px;
+}
+
+study-ad12-page .state-mark {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 12px;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--ocean-primary);
+  background: var(--ocean-soft);
+}
+
+study-ad12-page .table-state strong {
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 650;
+}
+
+study-ad12-page .table-state > span:last-of-type {
+  max-width: 60ch;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+study-ad12-page .table-state--error strong {
+  color: var(--danger);
+}
+
+study-ad12-page .table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--page-background);
+}
+
+study-ad12-page .table-footer p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+study-ad12-page .table-footer p strong {
+  color: var(--text-primary);
+}
+
+study-ad12-page .pagination-note,
+study-ad12-page .source-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+study-ad12-page .pagination-note study-icon {
+  flex: 0 0 auto;
+  color: var(--ocean-primary);
+}
+
+study-ad12-page .source-note {
+  justify-content: center;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  line-height: 1.5;
+}
+
+study-ad12-page .source-note study-icon {
+  flex: 0 0 auto;
+  color: var(--ocean-primary);
+}
+
+study-ad12-page .data-boundary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--ocean-primary) 18%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ocean-soft) 64%, var(--surface));
+}
+
+study-ad12-page .boundary-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--ocean-primary);
+  background: var(--surface);
+}
+
+study-ad12-page .data-boundary > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+study-ad12-page .data-boundary strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+study-ad12-page .data-boundary p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+study-ad12-page :is(a, button, input, select):focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 2px;
+}
+
+study-ad12-page .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 1023px) {
+  study-admin-layout study-ad12-page main.page-width {
+    width: min(calc(100% - 48px), 960px);
+  }
+
+  study-ad12-page .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  study-ad12-page .filter-actions {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 767px) {
+  study-admin-layout study-ad12-page main.page-width {
+    width: calc(100% - 32px);
+  }
+
+  study-ad12-page .lesson-catalog {
+    gap: 16px;
+    padding-block: 20px 32px;
+  }
+
+  study-ad12-page .catalog-breadcrumbs {
+    align-items: flex-start;
+  }
+
+  study-ad12-page .catalog-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  study-ad12-page .catalog-heading > button {
+    justify-content: center;
+  }
+
+  study-ad12-page .control-note {
+    justify-self: stretch;
+    margin-top: -6px;
+  }
+
+  study-ad12-page .filter-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-inline: 16px;
+  }
+
+  study-ad12-page .filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  study-ad12-page .filter-actions {
+    justify-self: stretch;
+  }
+
+  study-ad12-page .filter-actions button {
+    flex: 1 1 128px;
+  }
+
+  study-ad12-page .filter-notice {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding-inline: 16px;
+  }
+
+  study-ad12-page .filter-notice span {
+    flex-basis: calc(100% - 32px);
+  }
+
+  study-ad12-page .filter-notice button {
+    margin-left: 28px;
+  }
+
+  study-ad12-page th,
+  study-ad12-page td {
+    padding-inline: 12px;
+  }
+
+  study-ad12-page .table-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding-inline: 16px;
+  }
+
+  study-ad12-page .source-note {
+    justify-content: flex-start;
+    padding-inline: 16px;
+  }
+
+  study-ad12-page .data-boundary {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+    padding: 14px;
+  }
+
+  study-ad12-page .data-boundary > .source-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  study-ad12-page .table-state {
+    height: 232px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  study-ad12-page button {
+    transition: none;
+  }
+}

@@ -1,0 +1,42 @@
+@if (session.isAuthenticated()) {
+  <div class="mentor-shell">
+    <header class="mentor-header">
+      <a class="mentor-brand" routerLink="/mentor" aria-label="Study2Work Mentor Portal">
+        <span class="mentor-mark" aria-hidden="true">S</span>
+        <span><strong>Study2Work</strong><small>MENTOR PORTAL</small></span>
+      </a>
+      <nav class="mentor-nav" aria-label="Điều hướng Mentor">
+        <a routerLink="/mentor" routerLinkActive="is-current" [routerLinkActiveOptions]="{ exact: true }">Tổng quan</a>
+        <a routerLink="/mentor/courses" routerLinkActive="is-current">Khóa học</a>
+        <a routerLink="/mentor/submissions" routerLinkActive="is-current">Chấm bài</a>
+        <a routerLink="/mentor/support" routerLinkActive="is-current">Hỗ trợ học viên</a>
+        <a routerLink="/mentor/notifications/new/recipients" routerLinkActive="is-current">Thông báo</a>
+      </nav>
+      <div class="mentor-account">
+        <span class="mentor-avatar" aria-hidden="true">{{ session.profile()?.full_name?.slice(0, 1) }}</span>
+        <span class="mentor-identity"><strong>{{ session.profile()?.full_name }}</strong><small>Mentor</small></span>
+        <button class="mentor-signout" type="button" (click)="signOut()">Thoát</button>
+      </div>
+    </header>
+    <main class="mentor-main"><router-outlet /></main>
+    <footer class="mentor-footer">Study2Work LMS <span aria-hidden="true">·</span> Không gian Mentor</footer>
+  </div>
+} @else {
+  <main class="mentor-access-shell">
+    <section class="mentor-access-card" aria-labelledby="mentor-access-title">
+      <a class="mentor-access-brand" routerLink="/" aria-label="Study2Work">S</a>
+      <p class="mentor-eyebrow">Study2Work · Mentor Portal</p>
+      <h1 id="mentor-access-title">Đăng nhập Mentor</h1>
+      <p class="mentor-access-copy">Dùng tài khoản Mentor để mở không gian giảng dạy.</p>
+      <form class="mentor-access-form" (submit)="signIn($event, mentorEmail.value, mentorPassword.value)">
+        <label for="mentor-email">Email</label>
+        <input #mentorEmail id="mentor-email" type="email" autocomplete="username" required [disabled]="isSigningIn()" />
+        <label for="mentor-password">Mật khẩu</label>
+        <input #mentorPassword id="mentor-password" type="password" autocomplete="current-password" required [disabled]="isSigningIn()" />
+        @if (signInError()) { <p class="mentor-access-error" role="alert">{{ signInError() }}</p> }
+        <button type="submit" [disabled]="isSigningIn()">{{ isSigningIn() ? 'Đang xác thực…' : 'Đăng nhập' }}</button>
+      </form>
+      <p class="mentor-session-note">Phiên được giữ trong bộ nhớ tab và kiểm tra role tại Study Server.</p>
+    </section>
+  </main>
+}

@@ -1,0 +1,532 @@
+{
+  "screen_id": "ST-03",
+  "source_image": "screen.png",
+  "original_image": "screen.png",
+  "source_html": "code.html",
+  "source_image_sha256": "acd143a1a7d5dae4936f9bc8a3d51d015ba1fb501998a5434e96b57942d77fdc",
+  "image_size": {
+    "width": 1418,
+    "height": 1600
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2996,
+      "height": 3200
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST03-EL-01",
+      "name": "Header brand/logo link",
+      "target": "Study2Work LMS brand in header",
+      "target_center_source_px": {
+        "x": 135,
+        "y": 36
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 72
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 72
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST03-EL-02",
+      "name": "Primary navigation group",
+      "target": "Trang chủ, Khóa học của tôi, Tiến độ, Thảo luận, Thông báo",
+      "target_center_source_px": {
+        "x": 570,
+        "y": 36
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 132
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 132
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST03-EL-03",
+      "name": "Account identity and avatar",
+      "target": "Static sample identity Nguyễn Văn A / Học viên and user icon",
+      "target_center_source_px": {
+        "x": 1307,
+        "y": 36
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 72
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 72
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST03-EL-04",
+      "name": "Breadcrumb trail",
+      "target": "Hệ thống > Hồ sơ cá nhân (ST-02) > Chỉnh sửa hồ sơ (ST-03)",
+      "target_center_source_px": {
+        "x": 254,
+        "y": 110
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 224
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 224
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST03-EL-05",
+      "name": "Gate G-03 status pill",
+      "target": "Blocked (Schema Conflict) status pill",
+      "target_center_source_px": {
+        "x": 1212,
+        "y": 110
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 224
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 224
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST03-EL-06",
+      "name": "Gate G-03 warning banner",
+      "target": "Technical gate title and explanatory copy for APIs #13 and #14",
+      "target_center_source_px": {
+        "x": 496,
+        "y": 188
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 380
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 380
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST03-EL-07",
+      "name": "Banner return link",
+      "target": "Quay lại Hồ sơ cá nhân (ST-02)",
+      "target_center_source_px": {
+        "x": 1220,
+        "y": 190
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 384
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 384
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST03-EL-08",
+      "name": "Avatar preview and lock overlay",
+      "target": "Avatar placeholder, lock icon and gated/upload unavailable overlay",
+      "target_center_source_px": {
+        "x": 252,
+        "y": 358
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 712
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 712
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST03-EL-09",
+      "name": "Account/source label",
+      "target": "Tài khoản Sinh viên and API #04 data-source caption",
+      "target_center_source_px": {
+        "x": 254,
+        "y": 476
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 948
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 948
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST03-EL-10",
+      "name": "Avatar Asset Pipeline diagnostic",
+      "target": "Static no-file-support and API #13 halted diagnostic card",
+      "target_center_source_px": {
+        "x": 251,
+        "y": 565
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1140
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1140
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "ST03-EL-11",
+      "name": "Disabled avatar upload button",
+      "target": "Tải ảnh lên (Vô hiệu hóa)",
+      "target_center_source_px": {
+        "x": 252,
+        "y": 654
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1320
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1320
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "ST03-EL-12",
+      "name": "Safe-mode notice",
+      "target": "Chế độ an toàn ST-03 card",
+      "target_center_source_px": {
+        "x": 251,
+        "y": 820
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1648
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1648
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "ST03-EL-13",
+      "name": "Profile form surface and heading",
+      "target": "Thông tin hồ sơ học viên card, description and form container",
+      "target_center_source_px": {
+        "x": 930,
+        "y": 300
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 604
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 604
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "ST03-EL-14",
+      "name": "Full-name field",
+      "target": "Required full-name input, help text and API #04 badge",
+      "target_center_source_px": {
+        "x": 938,
+        "y": 411
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 828
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 828
+      }
+    },
+    {
+      "number": 15,
+      "element_id": "ST03-EL-15",
+      "name": "Email field",
+      "target": "Read-only email field, lock icon and help text",
+      "target_center_source_px": {
+        "x": 938,
+        "y": 545
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 1052
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 1052
+      }
+    },
+    {
+      "number": 16,
+      "element_id": "ST03-EL-16",
+      "name": "Phone field and schema warning",
+      "target": "Disabled phone field, nullable-conflict badge and warning",
+      "target_center_source_px": {
+        "x": 938,
+        "y": 678
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 1340
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 1340
+      }
+    },
+    {
+      "number": 17,
+      "element_id": "ST03-EL-17",
+      "name": "Bio field and schema warning",
+      "target": "Disabled bio textarea, missing-schema badge and warning",
+      "target_center_source_px": {
+        "x": 938,
+        "y": 820
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 1636
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 1636
+      }
+    },
+    {
+      "number": 18,
+      "element_id": "ST03-EL-18",
+      "name": "Form return link",
+      "target": "Quay lại Hồ sơ cá nhân (ST-02) below fields",
+      "target_center_source_px": {
+        "x": 686,
+        "y": 960
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1928
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1928
+      }
+    },
+    {
+      "number": 19,
+      "element_id": "ST03-EL-19",
+      "name": "Disabled save button",
+      "target": "Lưu thay đổi (Disabled)",
+      "target_center_source_px": {
+        "x": 1207,
+        "y": 960
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 1928
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 1928
+      }
+    },
+    {
+      "number": 20,
+      "element_id": "ST03-EL-20",
+      "name": "API #14 mapping note",
+      "target": "Static note that API #14 body mapping is unresolved",
+      "target_center_source_px": {
+        "x": 1070,
+        "y": 1045
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 2096
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 2096
+      }
+    },
+    {
+      "number": 21,
+      "element_id": "ST03-EL-21",
+      "name": "Developer hand-off heading and route context",
+      "target": "Developer Hand-off Diagnostic title and proposed route context",
+      "target_center_source_px": {
+        "x": 815,
+        "y": 1153
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2312
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2312
+      }
+    },
+    {
+      "number": 22,
+      "element_id": "ST03-EL-22",
+      "name": "API #13 diagnostic card",
+      "target": "Asset mismatch / multipart and DDL diagnostic text",
+      "target_center_source_px": {
+        "x": 724,
+        "y": 1288
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2580
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2580
+      }
+    },
+    {
+      "number": 23,
+      "element_id": "ST03-EL-23",
+      "name": "API #14 diagnostic card",
+      "target": "Missing bio / nullable phone diagnostic text",
+      "target_center_source_px": {
+        "x": 1153,
+        "y": 1288
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 2580
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 2580
+      }
+    },
+    {
+      "number": 24,
+      "element_id": "ST03-EL-24",
+      "name": "Proposed next-step notice",
+      "target": "Wait for DDL and API contract alignment before release",
+      "target_center_source_px": {
+        "x": 941,
+        "y": 1405
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 2816
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 2816
+      }
+    },
+    {
+      "number": 25,
+      "element_id": "ST03-EL-25",
+      "name": "Copyright and accessibility badge",
+      "target": "Footer copyright and static WCAG 2.1 AA badge",
+      "target_center_source_px": {
+        "x": 300,
+        "y": 1560
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 3120
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 3120
+      }
+    },
+    {
+      "number": 26,
+      "element_id": "ST03-EL-26",
+      "name": "Footer navigation group",
+      "target": "Terms, privacy policy and help anchors",
+      "target_center_source_px": {
+        "x": 1192,
+        "y": 1560
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2968,
+        "y": 3120
+      },
+      "leader_to_canvas_px": {
+        "x": 2916,
+        "y": 3120
+      }
+    }
+  ]
+}

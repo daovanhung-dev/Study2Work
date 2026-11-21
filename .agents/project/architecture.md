@@ -4,7 +4,7 @@
 
 | Area | Path | Stack/role |
 |---|---|---|
-| Study web | `apps/study-client/` | Vue 3 + TypeScript + Vite |
+| Study Web | `apps/study-client/` | Angular 22 standalone SPA with root readiness, SH-02/SH-03 presentation routes, Student ST-11–ST-26 and Admin AD-01–AD-25 route groups. Selected Admin GET callers use `AdminApiService`; Guest/Mentor route groups are absent. Study production routing/deployment remains unverified. |
 | Study API | `apps/study-server/` | FastAPI + Python + sync SQLAlchemy core; current composition import được |
 | Work mobile | `apps/work-client/mobile/` | Hai Flutter app độc lập; direct Neon SQL + SQLite cache |
 | Work web | `apps/work-client/web/` | React + TypeScript + Vite |
@@ -29,7 +29,7 @@ business module chéo app.
 | Study server | `127.0.0.1:3003` |
 | DB Admin client | `127.0.0.2:3000` |
 | Work client | `127.0.0.2:3001` |
-| Study client | `127.0.0.2:3002` |
+| Study client | `http://localhost:4200` (Angular CLI development server; deployment address unverified) |
 
 These are local application endpoints. PostgreSQL, Redis, Ollama and test
 fixture addresses are separate dependencies and retain their existing values.
@@ -37,7 +37,8 @@ fixture addresses are separate dependencies and retain their existing values.
 ## Boundary chính
 
 ```text
-Study web  -> Study API (contract chưa có OpenAPI hiện hành)
+Study web  -> generic `StudyApiService` -> relative `/api/v1` -> Study API
+             (local Angular dev proxy targets `127.0.0.1:3003`; selected Admin GET callers use Bearer `AdminApiService`; Guest/Mentor groups and their callers are absent; Study OpenAPI placeholder; production routing unverified)
 Work web   -> relative `/api/v1` -> Work Express JSON API
 Work mobile -> Neon PostgreSQL qua `postgres` + local SQLite cache
 Work mobile -> Gemini HTTP API cho `AIService`

@@ -9,14 +9,28 @@ format: markdown
 
 ## Flow xử lý data
 
-## Request Usage Matrix
+### Expected behavior theo catalog và AC-02
+
+Catalog định nghĩa request login public và response `ApiEnvelope<UserProfile>`; không đặc tả bảng hay persistence. AC-02 mô tả kiểm tra credential/status, cấp token/session, rồi client gọi API #04 để đọc profile và điều hướng theo role. Status/error khác catalog được giữ thành discrepancy.
+
+### Current source — chỉ riêng POST /auth/login
+
+1. Chuẩn hóa email (trim, validate, max 255) và từ chối password chỉ có whitespace.
+2. Đọc `users` theo email, gồm password hash và profile/status fields.
+3. Email không tồn tại hoặc password sai trả 401; mọi status khác `ACTIVE` trả 403.
+4. Auth utility phát hành access JWT cùng opaque refresh token; source ghi HMAC-SHA256 hash của refresh token và expiry vào `refresh_tokens`, rồi commit.
+5. Trả HTTP 200 `DESIGN_RESOURCE_RETRIEVED` với profile allowlist cộng năm token fields.
+
+Đây là source behavior, không thay thế contract catalog. `POST /auth/refresh` là route riêng hiện có trong cùng module; không gộp mutation/response của route đó vào luồng login bên trên.
+
+## Request Usage Matrix — current source
 
 | Request field | Source                  | Validate                  | Query usage                           | Response usage                                         | Gap                       |
 | ------------- | ----------------------- | ------------------------- | ------------------------------------- | ------------------------------------------------------ | ------------------------- |
 | `email`     | `request["email"]`    | Required;`email` format | `users.email` lookup                | Không map từ request trực tiếp; map profile từ DB | N/A                       |
 | `password`  | `request["password"]` | Required;`string`       | Verify against`users.password_hash` | Không map vào response                               | Hash algorithm/policy TBD |
 
-## Query Matrix
+## Query Matrix — current source
 
 | Query ID  | Mục đích       | Type       | Base table     | Column get          | WHERE               | Result variable   | Branch                   |
 | --------- | ----------------- | ---------- | -------------- | ------------------- | ------------------- | ----------------- | ------------------------ |
@@ -31,19 +45,29 @@ format: markdown
 | `Q1.9`  | Lookup account    | `SELECT` | `users AS u` | `u.created_at`    | `u.email = email` | `existing_user` | Found → profile source  |
 | `Q1.10` | Lookup account    | `SELECT` | `users AS u` | `u.updated_at`    | `u.email = email` | `existing_user` | Found → profile source  |
 
-## Mutation Matrix
+## Expected persistence boundary — catalog
 
 | Mutation ID | Operation            | Target table | Record condition | Fields  | Value sources | Mapping file                | Transaction | Failure behavior                    |
 | ----------- | -------------------- | ------------ | ---------------- | ------- | ------------- | --------------------------- | ----------- | ----------------------------------- |
-| `M1`      | `N/A — READ ONLY` | `N/A`      | `N/A`          | `N/A` | `N/A`       | [07_table.md](./07_table.md) | `N/A`     | Không tạo/update/delete DB record |
+| `M1`      | `UNSPECIFIED` | `N/A`      | `N/A`          | `N/A` | `N/A`       | [07_table.md](./07_table.md) | `UNSPECIFIED` | Catalog không đặc tả persistence; không suy ra read-only |
 
-## Side Effect Matrix
+## Current-source mutation matrix — POST /auth/login
+
+| Mutation ID | Operation | Target table | Record condition | Fields written | Value source | Mapping file | Transaction | Failure behavior |
+|---|---|---|---|---|---|---|---|---|
+| `M1` | `INSERT` | `refresh_tokens` | Sau khi credential hợp lệ và token pair được phát hành | `user_id`, `token_hash`, `expires_at`, `created_at` | User ID; HMAC hash và expiry từ auth utility; `CURRENT_TIMESTAMP` | [07_table.md](./07_table.md) | Commit sau insert | SQLAlchemy error rollback, log trace ID và trả 500 |
+
+## Expected side effect matrix — AC-02
 
 | Side effect ID | Operation                  | Target                     | Inputs                          | Data Mapping step | Contract gap                                     |
 | -------------- | -------------------------- | -------------------------- | ------------------------------- | ----------------- | ------------------------------------------------ |
-| `S1`         | `ISSUE_TOKEN_OR_SESSION` | `Auth/session subsystem` | Authenticated`users` identity | `5.1`           | Token type, field, transport và persistence TBD |
+| `S1`         | `ISSUE_TOKEN_OR_SESSION` | `Auth/session subsystem` | Authenticated`users` identity | `5.1`           | AC-02 yêu cầu token/session; transport/persistence chưa có trong contract |
 
-## Response Source Matrix
+### Current-source side effect
+
+Source gọi auth utility để phát hành token pair, trả token cho client và ghi refresh-token hash vào `refresh_tokens`. Hash sử dụng HMAC-SHA256 với pepper cấu hình; token/pepper không được ghi vào DD. Thời hạn lấy từ config. Đây không xác nhận schema live hoặc quyết định retention policy.
+
+## Expected profile contract mapping — catalog
 
 | Response field      | Type          | Source type           | Table/column hoặc generator | Data Mapping step | Transform                     | Null/empty rule      | Gap                       |
 | ------------------- | ------------- | --------------------- | ---------------------------- | ----------------- | ----------------------------- | -------------------- | ------------------------- |
@@ -63,11 +87,22 @@ format: markdown
 | `meta`            | `object`    | Envelope default      | `N/A`                      | `6.1/6.2/6.3`   | `{}`                        | `{}`               | No operation metadata     |
 | `traceId`         | `uuid`      | Correlation generator | `N/A`                      | `6.1/6.2/6.3`   | None                          | `TBD`              | Generator TBD             |
 
-## 0. Check quyền
+## Current-source response matrix
+
+| Response field | Source | Mapping |
+|---|---|---|
+| `data.id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at` | `users` query result | Allowlist được dựng bởi `build_auth_payload`. |
+| `data.access_token` | Auth utility | Access JWT. |
+| `data.refresh_token` | Auth utility | Opaque token trả client; chỉ HMAC hash được persist. |
+| `data.token_type`, `expires_in`, `refresh_expires_in` | Auth utility/config | Token metadata hiện tại. |
+| `data.bio` | Không có trong query/result builder | Không được trả; catalog field chưa có source mapping. |
+| `data.password_hash` | `users.password_hash` chỉ dùng để verify | Không được trả. |
+
+## 0. Check quyền — expected và current
 
 ### 0.1. Public endpoint
 
-- API là public theo list và AC-02; không đọc hoặc decode Bearer token.
+- API public theo catalog, AC-02 và current route; không đọc hoặc decode Bearer token.
 - Không có authorization query hoặc role check trước login.
 
 ## 1. Get request data
@@ -83,17 +118,17 @@ format: markdown
 - `password`: lấy từ `request["password"]`.
 - Không nhận token, access_token, session_id hoặc profile fields.
 
-## 2. Validate data input
+## 2. Validate data input — contract boundary
 
 ### 2.1. Validate email
 
-- Nếu `email` thiếu/blank hoặc không đúng type `email`: trả `422 DESIGN_VALIDATION_ERROR`, xem [06_Error.md](./06_Error.md#error-cases).
-- Không tự đặt min/max hoặc canonicalization ngoài type `email`.
+- Expected: nếu `email` thiếu/blank hoặc không đúng type `email`, trả `422 DESIGN_VALIDATION_ERROR`; xem [06_Error.md](./06_Error.md#error-cases).
+- Expected contract không đặt min/max hoặc canonicalization. Current source trim và giới hạn 255 ký tự; policy đó chưa được duyệt thành normative contract.
 
 ### 2.2. Validate password
 
-- Nếu `password` thiếu/blank hoặc không phải `string`: trả `422 DESIGN_VALIDATION_ERROR`, xem [06_Error.md](./06_Error.md#error-cases).
-- Không tự đặt min/max hoặc character policy.
+- Expected: nếu `password` thiếu/blank hoặc không phải `string`, trả `422 DESIGN_VALIDATION_ERROR`; xem [06_Error.md](./06_Error.md#error-cases).
+- Expected contract không đặt min/max hoặc character policy. Current source từ chối password chỉ gồm whitespace; chưa nâng điều kiện đó thành normative policy.
 
 ## 3. Query account
 
@@ -105,29 +140,30 @@ format: markdown
 
 ### 3.2. Check query result
 
-- Nếu không có record: AC-02 mô tả `401 DESIGN_AUTHENTICATION_REQUIRED`; list_api.md không khai báo code này. Giữ nhánh là `DISCREPANCY/TBD`, không thêm normative error row.
+- Nếu không có record: AC-02 và current source trả `401 DESIGN_AUTHENTICATION_REQUIRED`; catalog không khai báo code này. Giữ nhánh là `DISCREPANCY/TBD`, không thêm normative error row.
 - Nếu có record: đi tới xử lý `4`.
 
 ## 4. Verify credentials and status
 
 ### 4.1. Verify password
 
-- So sánh plaintext `password` từ request với `users.password_hash` bằng cơ chế hash verify được phê duyệt.
+- Current source gọi `app.core.security.verify_password` để so sánh plaintext `password` với `users.password_hash`; catalog không chỉ định thuật toán.
 - Không lưu, log hoặc trả plaintext password/password_hash.
-- Nếu sai password: AC-02 mô tả `401`; list_api.md không khai báo code này. Giữ nhánh là `DISCREPANCY/TBD`, không tự map sang code khác.
+- Nếu sai password: AC-02 và current source trả `401`; catalog không khai báo code này. Giữ nhánh là `DISCREPANCY/TBD`, không tự map sang code khác.
 
 ### 4.2. Check account status
 
 - Kiểm tra `users.status` trước khi map profile.
-- Nếu account bị khóa: AC-02 mô tả `403 DESIGN_ACCESS_DENIED`; list_api.md không khai báo code này. Giữ nhánh là `DISCREPANCY/TBD`, không tự map sang code khác.
+- AC-02 mô tả account bị khóa; current source từ chối mọi status khác `ACTIVE` bằng `403 DESIGN_ACCESS_DENIED`. Catalog không khai báo code này; giữ là `DISCREPANCY/TBD`.
 - Nếu credential và status hợp lệ: đi tới xử lý `5`.
 
 ## 5. Token/session side effect
 
 ### 5.1. Issue token or session
 
-- Sau khi credential/status hợp lệ, kích hoạt token/session issuance theo AC-02.
-- Token type, claims, transport, expiry, persistence và response field chưa có source xác nhận; không tự thêm vào DD response.
+- Expected theo AC-02: phát hành access/refresh token hoặc session; claim mô tả ở mức `user_id`, `role`, expiry. Persistence nếu server-managed chưa được chốt.
+- Current source: tạo access JWT với claims `sub`, `type=access`, `roles`, `jti`, `iat`, `exp`, `iss`, `aud`; tạo opaque refresh token và HMAC-SHA256 hash bằng pepper config; expiry lấy từ config.
+- Current login ghi `user_id`, `token_hash`, `expires_at`, `created_at` vào `refresh_tokens` rồi commit. SQL error rollback; lỗi phát hành token được xử lý an toàn.
 - Nếu side effect nội bộ thất bại và flow không thể hoàn tất: đi tới `6.3`.
 
 ## 6. Map response
@@ -141,7 +177,7 @@ format: markdown
 - `data.bio`: giữ `DISCREPANCY/TBD` vì không có column ERD.
 - `meta = {}`.
 - `traceId`: request correlation/generator; exact source TBD.
-- Token/session không xuất hiện trong response schema V1.
+- Theo contract catalog, token/session không xuất hiện trong `UserProfile`; current source lại trả thêm năm token fields, xem `6.4`.
 - Chi tiết: [04_Response.md](./04_Response.md).
 
 ### 6.2. Validation error
@@ -160,6 +196,13 @@ format: markdown
 - `data = {}`.
 - Không trả raw DB/hash/session detail.
 - Chi tiết: [06_Error.md](./06_Error.md#error-cases).
+
+### 6.4. Current-source success response
+
+- HTTP `200`, `businessCode = "DESIGN_RESOURCE_RETRIEVED"`.
+- `data` gồm profile allowlist và `access_token`, `refresh_token`, `token_type`, `expires_in`, `refresh_expires_in`.
+- Đây là source discrepancy với catalog success `201 DESIGN_RESOURCE_CREATED` và `ApiEnvelope<UserProfile>`; không thay thế contract ở `6.1`.
+- Source không trả `password_hash` hoặc `bio`.
 
 ---
 

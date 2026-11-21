@@ -1,0 +1,126 @@
+<study-student-public-frame>
+  <main class="course-overview api-screen" data-screen-id="ST-09">
+    <nav class="course-overview__crumbs crumbs" aria-label="Breadcrumb">
+      <a routerLink="/student">Tổng quan</a><span aria-hidden="true">›</span>
+      <a routerLink="/student/courses">Khóa học của tôi</a><span aria-hidden="true">›</span>
+      <span aria-current="page">Tổng quan khóa học</span>
+    </nav>
+
+    <header class="course-overview__banner api-card">
+      <div>
+        <div class="course-overview__badges">
+          @if (course()) {
+            <span class="course-overview__verified">Đang học</span>
+          }
+        </div>
+        <h1>Tổng quan khóa đang học</h1>
+        @if (course()) {
+          <p>{{ course()?.name }}</p>
+        } @else {
+          <p>Tiến độ và nội dung khóa học.</p>
+        }
+      </div>
+    </header>
+
+    @if (enrollmentLoading()) {
+      <section class="course-overview__state api-message" role="status">Đang kiểm tra khóa học…</section>
+    }
+
+    @if (error()) {
+      <section class="course-overview__error api-error" role="alert">
+        <strong>Không thể hoàn tất yêu cầu.</strong>
+        <p>{{ error() }}</p>
+        <button class="api-button" type="button" (click)="retry()">Thử lại</button>
+      </section>
+    }
+
+    @if (snapshotMismatch()) {
+      <section class="course-overview__state api-message" role="status">
+        <strong>Danh sách ghi danh vừa thay đổi</strong>
+        @if (course()) {
+          <p>Tiến độ đã tải. Hãy tải lại để đồng bộ danh sách khóa học.</p>
+        } @else {
+          <p>Chưa thể xác nhận khóa học đang hoạt động. Tiến độ chưa được tải.</p>
+        }
+        <button class="api-button secondary" type="button" (click)="retry()">
+          Tải lại trạng thái khóa học
+        </button>
+      </section>
+    }
+
+    @if (notEnrolled()) {
+      <section class="course-overview__gate api-card" role="status" aria-labelledby="course-gate-title">
+        <div class="course-overview__gate-icon" aria-hidden="true">↻</div>
+        <p class="course-overview__warning">Khóa học chưa sẵn sàng</p>
+        <h2 id="course-gate-title">Không tìm thấy khóa học trong danh sách đang học</h2>
+        <p class="course-overview__description">
+          Tiến độ và nội dung bài học chưa được tải. Hãy kiểm tra danh sách khóa học của bạn.
+        </p>
+        <div class="course-overview__actions">
+          <a class="secondary" routerLink="/student/courses">Quay lại Khóa học của tôi</a>
+        </div>
+      </section>
+    }
+
+    @if (course(); as activeCourse) {
+      <section class="course-overview__content" aria-label="Tiến độ khóa học">
+        <article class="course-overview__progress-card api-card">
+          <div class="course-overview__section-heading">
+            <div>
+              <p class="course-overview__eyebrow">Tiến độ học tập</p>
+              <h2>Tiến độ học tập</h2>
+            </div>
+            <span class="course-overview__status">Đang hoạt động</span>
+          </div>
+
+          @if (progressLoading()) {
+              <p class="course-overview__state api-message" role="status">Đang tải tiến độ…</p>
+          }
+          @if (progress(); as courseProgress) {
+            @if (courseProgress.has_content) {
+              <div class="course-overview__progress-summary">
+                <strong>{{ courseProgress.progress_percent }}%</strong>
+                <span>{{ courseProgress.completed_lessons }} / {{ courseProgress.total_lessons }} bài học hoàn thành</span>
+              </div>
+              <div
+                class="course-overview__progress-track"
+                role="progressbar"
+                aria-label="Tiến độ khóa học"
+                [attr.aria-valuenow]="courseProgress.progress_percent"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <span [style.width.%]="progressWidth()"></span>
+              </div>
+            } @else {
+              <div class="course-overview__empty-progress api-message" role="status">
+                <strong>Chưa có bài học xuất bản để tính tiến độ.</strong>
+                <p>Tiến độ sẽ xuất hiện khi có bài học được công bố.</p>
+              </div>
+            }
+          }
+
+          @if (!progressLoading() && !progress() && !error()) {
+            <p class="course-overview__empty-progress api-message">Chưa thể tải tiến độ khóa học.</p>
+          }
+
+          <a class="course-overview__detail-link" [routerLink]="['/student/progress', courseId()]">
+            Xem trang tiến độ khóa học <span aria-hidden="true">→</span>
+          </a>
+        </article>
+
+        <article class="course-overview__gate-card api-card" aria-labelledby="course-content-title">
+          <div class="course-overview__gate-icon" aria-hidden="true">▣</div>
+          <p class="course-overview__warning">Nội dung khóa học</p>
+          <h2 id="course-content-title">Danh sách bài học hiện chưa khả dụng</h2>
+          <p class="course-overview__description">
+            Bạn có thể quay lại danh sách khóa học để chọn khóa học khác.
+          </p>
+          <div class="course-overview__actions">
+            <a class="secondary api-button" routerLink="/student/courses">Khóa học của tôi</a>
+          </div>
+        </article>
+      </section>
+    }
+  </main>
+</study-student-public-frame>

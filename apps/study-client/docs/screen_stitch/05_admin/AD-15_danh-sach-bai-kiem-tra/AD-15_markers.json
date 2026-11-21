@@ -1,0 +1,302 @@
+[
+  {
+    "number": 1,
+    "x": 15,
+    "y": 22,
+    "label": "Study2Work Admin brand block"
+  },
+  {
+    "number": 2,
+    "x": 350,
+    "y": 64,
+    "label": "Admin navigation: Tổng quan"
+  },
+  {
+    "number": 3,
+    "x": 475,
+    "y": 64,
+    "label": "Admin navigation: Người dùng"
+  },
+  {
+    "number": 4,
+    "x": 675,
+    "y": 64,
+    "label": "Admin navigation: Khóa học và Nội dung"
+  },
+  {
+    "number": 5,
+    "x": 850,
+    "y": 64,
+    "label": "Admin navigation: Kiểm duyệt"
+  },
+  {
+    "number": 6,
+    "x": 1000,
+    "y": 64,
+    "label": "Admin navigation: Báo cáo"
+  },
+  {
+    "number": 7,
+    "x": 1155,
+    "y": 64,
+    "label": "Static SYSTEM NORMAL badge"
+  },
+  {
+    "number": 8,
+    "x": 1285,
+    "y": 64,
+    "label": "Notifications button without handler"
+  },
+  {
+    "number": 9,
+    "x": 1550,
+    "y": 64,
+    "label": "Static Admin identity and avatar"
+  },
+  {
+    "number": 10,
+    "x": 45,
+    "y": 118,
+    "label": "Global breadcrumb: Hệ thống"
+  },
+  {
+    "number": 11,
+    "x": 205,
+    "y": 118,
+    "label": "Global breadcrumb: Quản trị trung tâm"
+  },
+  {
+    "number": 12,
+    "x": 380,
+    "y": 118,
+    "label": "Global breadcrumb: Không gian làm việc"
+  },
+  {
+    "number": 13,
+    "x": 1535,
+    "y": 118,
+    "label": "Static RBAC assurance copy"
+  },
+  {
+    "number": 14,
+    "x": 65,
+    "y": 197,
+    "label": "Local breadcrumb: Quản trị khảo thí"
+  },
+  {
+    "number": 15,
+    "x": 285,
+    "y": 197,
+    "label": "Current breadcrumb: Danh sách bài kiểm tra"
+  },
+  {
+    "number": 16,
+    "x": 1440,
+    "y": 197,
+    "label": "Static scoring-engine readiness badge"
+  },
+  {
+    "number": 17,
+    "x": 125,
+    "y": 255,
+    "label": "Static KHẢO THÍ & ĐÁNH GIÁ category badge"
+  },
+  {
+    "number": 18,
+    "x": 235,
+    "y": 255,
+    "label": "Static screen ID AD-15"
+  },
+  {
+    "number": 19,
+    "x": 610,
+    "y": 284,
+    "label": "Page title: Quản lý ngân hàng bài kiểm tra"
+  },
+  {
+    "number": 20,
+    "x": 890,
+    "y": 320,
+    "label": "Page subtitle"
+  },
+  {
+    "number": 21,
+    "x": 1535,
+    "y": 340,
+    "label": "Disabled create quiz CTA to AD-16"
+  },
+  {
+    "number": 22,
+    "x": 300,
+    "y": 450,
+    "label": "Quiz name/code search input with decorative icon"
+  },
+  {
+    "number": 23,
+    "x": 770,
+    "y": 450,
+    "label": "Course filter select with decorative icon"
+  },
+  {
+    "number": 24,
+    "x": 1085,
+    "y": 450,
+    "label": "Status filter select with decorative icon"
+  },
+  {
+    "number": 25,
+    "x": 1285,
+    "y": 450,
+    "label": "Toolbar refresh button"
+  },
+  {
+    "number": 26,
+    "x": 1470,
+    "y": 450,
+    "label": "Disabled advanced-filter button"
+  },
+  {
+    "number": 27,
+    "x": 115,
+    "y": 491,
+    "label": "Table header: Mã bài thi"
+  },
+  {
+    "number": 28,
+    "x": 365,
+    "y": 491,
+    "label": "Table header: Tiêu đề bài kiểm tra"
+  },
+  {
+    "number": 29,
+    "x": 740,
+    "y": 491,
+    "label": "Table header: Khóa học"
+  },
+  {
+    "number": 30,
+    "x": 1035,
+    "y": 491,
+    "label": "Table header: Số câu hỏi"
+  },
+  {
+    "number": 31,
+    "x": 1180,
+    "y": 491,
+    "label": "Table header: Thời lượng"
+  },
+  {
+    "number": 32,
+    "x": 1350,
+    "y": 491,
+    "label": "Table header: Trạng thái"
+  },
+  {
+    "number": 33,
+    "x": 1510,
+    "y": 491,
+    "label": "Table header: Thao tác"
+  },
+  {
+    "number": 34,
+    "x": 862,
+    "y": 707,
+    "label": "Empty-state quiz icon"
+  },
+  {
+    "number": 35,
+    "x": 1028,
+    "y": 790,
+    "label": "Empty-state heading"
+  },
+  {
+    "number": 36,
+    "x": 1110,
+    "y": 844,
+    "label": "Empty-state explanatory copy"
+  },
+  {
+    "number": 37,
+    "x": 975,
+    "y": 930,
+    "label": "Empty-state refresh button"
+  },
+  {
+    "number": 38,
+    "x": 340,
+    "y": 1110,
+    "label": "Result-count summary: 0 of 0 quizzes"
+  },
+  {
+    "number": 39,
+    "x": 1080,
+    "y": 1045,
+    "label": "Page indicator: 0 / 0"
+  },
+  {
+    "number": 40,
+    "x": 1300,
+    "y": 1166,
+    "label": "Disabled previous-page button"
+  },
+  {
+    "number": 41,
+    "x": 1460,
+    "y": 1166,
+    "label": "Disabled next-page button"
+  },
+  {
+    "number": 42,
+    "x": 46,
+    "y": 1200,
+    "label": "Digital-assessment policy information icon"
+  },
+  {
+    "number": 43,
+    "x": 340,
+    "y": 1200,
+    "label": "Digital-assessment policy heading"
+  },
+  {
+    "number": 44,
+    "x": 1145,
+    "y": 1270,
+    "label": "Static question-bank and activation rule copy"
+  },
+  {
+    "number": 45,
+    "x": 1450,
+    "y": 1200,
+    "label": "Static exam-security V3 badge"
+  },
+  {
+    "number": 46,
+    "x": 125,
+    "y": 1312,
+    "label": "Footer copyright"
+  },
+  {
+    "number": 47,
+    "x": 370,
+    "y": 1312,
+    "label": "Footer system descriptor"
+  },
+  {
+    "number": 48,
+    "x": 950,
+    "y": 1312,
+    "label": "Footer privacy link without route handler"
+  },
+  {
+    "number": 49,
+    "x": 1220,
+    "y": 1312,
+    "label": "Footer RBAC standards link without route handler"
+  },
+  {
+    "number": 50,
+    "x": 1480,
+    "y": 1312,
+    "label": "Footer technical-support link without route handler"
+  }
+]

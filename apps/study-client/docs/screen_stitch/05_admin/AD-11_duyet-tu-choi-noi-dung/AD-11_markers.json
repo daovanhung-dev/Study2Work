@@ -1,0 +1,290 @@
+[
+  {
+    "number": 1,
+    "x": 55,
+    "y": 35,
+    "label": "Study2Work Admin brand"
+  },
+  {
+    "number": 2,
+    "x": 350,
+    "y": 57,
+    "label": "Admin navigation: Tổng quan"
+  },
+  {
+    "number": 3,
+    "x": 480,
+    "y": 57,
+    "label": "Admin navigation: Người dùng"
+  },
+  {
+    "number": 4,
+    "x": 648,
+    "y": 57,
+    "label": "Admin navigation: Khóa học và Nội dung"
+  },
+  {
+    "number": 5,
+    "x": 828,
+    "y": 57,
+    "label": "Active navigation: Kiểm duyệt"
+  },
+  {
+    "number": 6,
+    "x": 945,
+    "y": 57,
+    "label": "Admin navigation: Báo cáo"
+  },
+  {
+    "number": 7,
+    "x": 1135,
+    "y": 57,
+    "label": "Static SYSTEM NORMAL badge"
+  },
+  {
+    "number": 8,
+    "x": 1255,
+    "y": 35,
+    "label": "Notification button without handler"
+  },
+  {
+    "number": 9,
+    "x": 1520,
+    "y": 35,
+    "label": "Static Admin identity and avatar"
+  },
+  {
+    "number": 10,
+    "x": 510,
+    "y": 92,
+    "label": "Global breadcrumb trail"
+  },
+  {
+    "number": 11,
+    "x": 1338,
+    "y": 92,
+    "label": "Static RBAC assurance badge"
+  },
+  {
+    "number": 12,
+    "x": 80,
+    "y": 195,
+    "label": "Moderation breadcrumb"
+  },
+  {
+    "number": 13,
+    "x": 690,
+    "y": 172,
+    "label": "Pending queue breadcrumb"
+  },
+  {
+    "number": 14,
+    "x": 550,
+    "y": 195,
+    "label": "Current detail breadcrumb"
+  },
+  {
+    "number": 15,
+    "x": 1548,
+    "y": 172,
+    "label": "Back to AD-10 link with href hash"
+  },
+  {
+    "number": 16,
+    "x": 365,
+    "y": 238,
+    "label": "Static quality-review portal kicker"
+  },
+  {
+    "number": 17,
+    "x": 790,
+    "y": 276,
+    "label": "Review and approval page title"
+  },
+  {
+    "number": 18,
+    "x": 970,
+    "y": 319,
+    "label": "Static review-page subtitle"
+  },
+  {
+    "number": 19,
+    "x": 1165,
+    "y": 301,
+    "label": "Static control-lock icon"
+  },
+  {
+    "number": 20,
+    "x": 1510,
+    "y": 321,
+    "label": "Static approval-gate status citing APIs 79 and 80"
+  },
+  {
+    "number": 21,
+    "x": 520,
+    "y": 403,
+    "label": "Content preview card header"
+  },
+  {
+    "number": 22,
+    "x": 1000,
+    "y": 403,
+    "label": "Preview status: no Content ID linked"
+  },
+  {
+    "number": 23,
+    "x": 610,
+    "y": 580,
+    "label": "Static empty preview video/document icon"
+  },
+  {
+    "number": 24,
+    "x": 770,
+    "y": 677,
+    "label": "Empty preview heading"
+  },
+  {
+    "number": 25,
+    "x": 850,
+    "y": 722,
+    "label": "Instruction to choose an item from AD-10"
+  },
+  {
+    "number": 26,
+    "x": 930,
+    "y": 800,
+    "label": "Static secure player and SCORM/PDF decoder claim"
+  },
+  {
+    "number": 27,
+    "x": 750,
+    "y": 967,
+    "label": "Publishing and copyright metadata card heading"
+  },
+  {
+    "number": 28,
+    "x": 475,
+    "y": 1080,
+    "label": "Content title placeholder"
+  },
+  {
+    "number": 29,
+    "x": 985,
+    "y": 1080,
+    "label": "Author or lecturer placeholder"
+  },
+  {
+    "number": 30,
+    "x": 475,
+    "y": 1164,
+    "label": "Course placeholder"
+  },
+  {
+    "number": 31,
+    "x": 985,
+    "y": 1164,
+    "label": "Submission date placeholder"
+  },
+  {
+    "number": 32,
+    "x": 550,
+    "y": 1238,
+    "label": "Content ID NULL placeholder"
+  },
+  {
+    "number": 33,
+    "x": 1000,
+    "y": 1250,
+    "label": "Review version N/A placeholder"
+  },
+  {
+    "number": 34,
+    "x": 1395,
+    "y": 403,
+    "label": "Review decision card heading"
+  },
+  {
+    "number": 35,
+    "x": 1508,
+    "y": 420,
+    "label": "Locked decision badge"
+  },
+  {
+    "number": 36,
+    "x": 1068,
+    "y": 481,
+    "label": "Rejection reason or comment label marked optional"
+  },
+  {
+    "number": 37,
+    "x": 1508,
+    "y": 560,
+    "label": "Disabled rejection reason textarea"
+  },
+  {
+    "number": 38,
+    "x": 1508,
+    "y": 702,
+    "label": "Static warning about ownership policy"
+  },
+  {
+    "number": 39,
+    "x": 1508,
+    "y": 811,
+    "label": "Disabled approve-publish button"
+  },
+  {
+    "number": 40,
+    "x": 1508,
+    "y": 876,
+    "label": "Disabled reject-or-request-changes button"
+  },
+  {
+    "number": 41,
+    "x": 1508,
+    "y": 936,
+    "label": "Static three-step process claim citing API 81"
+  },
+  {
+    "number": 42,
+    "x": 1390,
+    "y": 1054,
+    "label": "Standard evaluation criteria card heading"
+  },
+  {
+    "number": 43,
+    "x": 1508,
+    "y": 1054,
+    "label": "Static Rubric v2 badge"
+  },
+  {
+    "number": 44,
+    "x": 1067,
+    "y": 1150,
+    "label": "Checked copyright criterion"
+  },
+  {
+    "number": 45,
+    "x": 1067,
+    "y": 1275,
+    "label": "Checked video resolution criterion"
+  },
+  {
+    "number": 46,
+    "x": 1067,
+    "y": 1380,
+    "label": "Checked practice-material criterion"
+  },
+  {
+    "number": 47,
+    "x": 1508,
+    "y": 1457,
+    "label": "Contradictory 0-of-3 criteria loaded progress"
+  },
+  {
+    "number": 48,
+    "x": 1548,
+    "y": 1550,
+    "label": "Footer copyright, privacy, RBAC, and support links"
+  }
+]

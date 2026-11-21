@@ -1,0 +1,303 @@
+<main class="mentor-page me04-page">
+  <study-mentor-page-header
+    title="Thêm bài giảng mới"
+    description="Tạo lecture bằng nội dung Markdown và các file đã tải lên cho khóa học Mentor sở hữu."
+    apiLabel="#46 · #34 · #47 · #48"
+  />
+
+  <div class="mentor-breadcrumb">
+    <a routerLink="/mentor/courses">Khóa học</a>
+    <span aria-hidden="true">/</span>
+    <a [routerLink]="['/mentor/courses', courseId()]">Workspace</a>
+    <span aria-hidden="true">/</span>
+    <span>Thêm bài giảng</span>
+  </div>
+
+  @if (invalidId()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      Course ID trên đường dẫn không phải số nguyên dương int64.
+    </section>
+  } @else if (loading()) {
+    <section class="mentor-card mentor-state" role="status">Đang tải khóa học…</section>
+  } @else if (error()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      {{ error() }}
+      <button class="mentor-button mentor-button--light" type="button" (click)="load()">
+        Tải lại
+      </button>
+    </section>
+  } @else {
+    <form #lectureForm="ngForm" class="me04-form" (ngSubmit)="createLecture()">
+      <section class="mentor-card me04-form-card">
+        <div class="me04-section-heading">
+          <div>
+            <p class="mentor-api-label">Course #{{ courseId() }} · API #46</p>
+            <h2>Thông tin bài giảng</h2>
+          </div>
+          <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId()]">
+            Về workspace
+          </a>
+        </div>
+
+        <label for="me04-course">Khóa học</label>
+        <select
+          id="me04-course"
+          name="course"
+          [ngModel]="courseId()"
+          (change)="selectCourse($event)"
+          [disabled]="creating() || uploadingKey() !== null || !!createdLectureId()"
+        >
+          @if (!courseListed()) {
+            <option [value]="courseId()">Course #{{ courseId() }} · không nằm trong trang đầu #46</option>
+          }
+          @for (course of courses(); track course.id) {
+            <option [value]="course.id">{{ course.title }} · {{ course.status }}</option>
+          }
+        </select>
+        @if (!courseListed()) {
+          <p class="mentor-meta">
+            Danh sách #46 hiện chỉ tải trang đầu. API #34/#47 sẽ tự xác thực quyền sở hữu trước khi ghi.
+          </p>
+        }
+
+        <label for="me04-title">Tiêu đề bài giảng</label>
+        <input
+          id="me04-title"
+          name="title"
+          type="text"
+          maxlength="200"
+          required
+          [ngModel]="title()"
+          (ngModelChange)="title.set($event)"
+          [disabled]="creating() || !!createdLectureId()"
+          autocomplete="off"
+        />
+
+        <label for="me04-content">Nội dung Markdown</label>
+        <div class="me04-markdown-tools" role="group" aria-label="Chèn định dạng Markdown">
+          <span>Markdown</span>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="In đậm vùng chọn"
+            title="In đậm"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyInlineMarkdown('**', '**', 'văn bản in đậm')"
+          ><strong>B</strong></button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="In nghiêng vùng chọn"
+            title="In nghiêng"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyInlineMarkdown('*', '*', 'văn bản in nghiêng')"
+          ><em>I</em></button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="Định dạng dòng thành tiêu đề cấp 2"
+            title="Tiêu đề cấp 2"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyMarkdownLinePrefix('## ', 'Tiêu đề')"
+          >H2</button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="Định dạng dòng thành tiêu đề cấp 3"
+            title="Tiêu đề cấp 3"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyMarkdownLinePrefix('### ', 'Tiêu đề')"
+          >H3</button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="Tạo danh sách dấu đầu dòng"
+            title="Danh sách dấu đầu dòng"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyMarkdownLinePrefix('- ', 'Mục danh sách')"
+          >•</button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="Tạo danh sách có thứ tự"
+            title="Danh sách có thứ tự"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyMarkdownLinePrefix('1. ', 'Mục danh sách')"
+          >1.</button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="Trích dẫn dòng"
+            title="Trích dẫn"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyMarkdownLinePrefix('> ', 'Nội dung trích dẫn')"
+          >“ ”</button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="Chèn mã nội tuyến"
+            title="Mã nội tuyến"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyInlineMarkdown('`', '`', 'mã')"
+          >&lt;/&gt;</button>
+          <button
+            class="mentor-button mentor-button--light me04-markdown-tool"
+            type="button"
+            aria-label="Chèn khối mã"
+            title="Khối mã"
+            [disabled]="creating() || !!createdLectureId()"
+            (click)="applyInlineMarkdown('```\n', '\n```', 'mã nguồn')"
+          >&#123; &#125;</button>
+        </div>
+        <textarea
+          #contentEditor
+          id="me04-content"
+          name="content"
+          rows="10"
+          required
+          [ngModel]="content()"
+          (ngModelChange)="content.set($event)"
+          [disabled]="creating() || !!createdLectureId()"
+          aria-describedby="me04-content-note me04-markdown-note"
+        ></textarea>
+        <p id="me04-content-note" class="mentor-meta">
+          Nội dung được gửi nguyên văn trong trường <code>content</code> của API #47.
+        </p>
+        <p id="me04-markdown-note" class="mentor-meta">
+          Các nút chèn cú pháp Markdown vào dòng hoặc vùng chọn. Nội dung chưa có chế độ xem trước hay lưu tự động.
+        </p>
+
+        <label for="me04-order">Thứ tự</label>
+        <input
+          id="me04-order"
+          name="order"
+          type="number"
+          step="1"
+          required
+          [ngModel]="order()"
+          (ngModelChange)="setOrder($event)"
+          [disabled]="creating() || !!createdLectureId()"
+        />
+      </section>
+
+      <section class="mentor-card me04-form-card me04-upload-card">
+        <div class="me04-section-heading">
+          <div>
+            <p class="mentor-api-label">API #34 · purpose=LECTURE</p>
+            <h2>Tệp đính kèm</h2>
+          </div>
+        </div>
+        <p class="mentor-meta">
+          Mỗi tệp được tải riêng. API #34 trả ID; API #47 liên kết các ID theo thứ tự bên dưới.
+        </p>
+        <label class="me04-file-picker" for="me04-files">
+          <span class="me04-upload-icon" aria-hidden="true">↑</span>
+          <strong>Chọn tệp từ thiết bị</strong>
+          <span>Chưa áp đặt giới hạn loại hoặc dung lượng ở giao diện.</span>
+        </label>
+        <input
+          class="me04-file-input"
+          id="me04-files"
+          type="file"
+          multiple
+          (change)="addFiles($event)"
+          [disabled]="creating() || !!createdLectureId()"
+          aria-describedby="me04-upload-note"
+        />
+        <p id="me04-upload-note" class="mentor-meta">
+          Upload đã hoàn tất vẫn được lưu trên máy chủ nếu bạn bỏ tệp khỏi lecture hoặc rời trang.
+        </p>
+
+        @if (selectedFiles().length === 0) {
+          <p class="mentor-state me04-no-files">Chưa chọn tệp đính kèm.</p>
+        } @else {
+          <ul class="me04-file-list" aria-label="Tệp đính kèm đã chọn">
+            @for (item of selectedFiles(); track item.key) {
+              <li>
+                <div class="me04-file-copy">
+                  <strong>{{ item.file.name }}</strong>
+                  <span class="mentor-meta">{{ item.file.size }} bytes · {{ item.file.type || 'Không có MIME type' }}</span>
+                  @if (item.asset) {
+                    <span class="me04-uploaded" role="status">Đã tải lên · Asset #{{ item.asset.id }}</span>
+                  } @else if (uploadingKey() === item.key) {
+                    <span class="mentor-meta" role="status">Đang tải tệp lên…</span>
+                  } @else if (item.error) {
+                    <span class="mentor-alert" role="alert">{{ item.error }}</span>
+                    @if (item.retryBlocked) {
+                      <span class="mentor-meta">Kết quả chưa xác định; không tự gửi lại để tránh tạo thêm asset.</span>
+                    }
+                  } @else {
+                    <span class="mentor-meta">Chưa tải lên</span>
+                  }
+                </div>
+                <div class="me04-file-actions">
+                  @if (!item.asset && !item.retryBlocked) {
+                    <button
+                      class="mentor-button mentor-button--small"
+                      type="button"
+                      (click)="uploadFile(item.key)"
+                      [disabled]="uploadingKey() !== null || creating() || !!createdLectureId()"
+                    >
+                      {{ item.error ? 'Thử tải lại' : 'Tải lên' }}
+                    </button>
+                  }
+                  <button
+                    class="mentor-button mentor-button--small mentor-button--light"
+                    type="button"
+                    (click)="removeFile(item.key)"
+                    [disabled]="uploadingKey() === item.key || creating() || !!createdLectureId()"
+                    [attr.aria-label]="'Bỏ ' + item.file.name + ' khỏi lecture mới'"
+                  >
+                    Bỏ khỏi danh sách
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <aside class="mentor-card me04-submit-card" aria-label="Gửi bài giảng">
+        <div class="mentor-notice" role="note">
+          <strong>API #47 xuất bản lecture ngay khi tạo.</strong>
+          <span>Không có lựa chọn lưu nháp hoặc guest preview trong body hiện tại; các chức năng đó chưa được bật.</span>
+        </div>
+        @if (formError()) {
+          <p class="mentor-alert" role="alert">{{ formError() }}</p>
+        }
+        @if (createError()) {
+          <p class="mentor-alert" role="alert">{{ createError() }}</p>
+        }
+        @if (createMessage()) {
+          <p class="me04-success" role="status">{{ createMessage() }}</p>
+        }
+        @if (navigationError() && createdLectureId(); as lectureId) {
+          <p class="mentor-meta">Tạo thành công nhưng chưa chuyển được trang.</p>
+          <a class="mentor-button" [routerLink]="['/mentor/lectures', lectureId]">Mở bài giảng #{{ lectureId }}</a>
+        }
+        @if (createOutcomeUnknown()) {
+          <p class="mentor-alert" role="alert">
+            Kết quả gửi chưa xác định. Không gửi lại yêu cầu để tránh tạo lecture trùng.
+          </p>
+        }
+        <div class="me04-actions">
+          <button
+            class="mentor-button mentor-button--light"
+            type="button"
+            (click)="backToWorkspace()"
+            [disabled]="creating() || uploadingKey() !== null"
+          >
+            Quay lại workspace
+          </button>
+          <button
+            class="mentor-button"
+            type="submit"
+            [disabled]="lectureForm.invalid || creating() || uploadingKey() !== null || createOutcomeUnknown() || !!createdLectureId()"
+          >
+            {{ creating() ? 'Đang tạo…' : 'Tạo bài giảng & mở ME-05' }}
+          </button>
+        </div>
+      </aside>
+    </form>
+  }
+</main>

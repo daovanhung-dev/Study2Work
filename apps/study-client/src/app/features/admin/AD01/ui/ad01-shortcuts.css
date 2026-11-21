@@ -1,0 +1,113 @@
+.shortcuts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 3px;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.section-heading h2 {
+  margin: 0;
+  color: var(--ocean-deep);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.section-heading p {
+  display: none;
+}
+.section-heading > span {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 19px;
+}
+.shortcut-card {
+  display: flex;
+  min-width: 0;
+  min-height: 132px;
+  align-items: center;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text-primary);
+  background: var(--surface);
+  text-align: left;
+  box-shadow: 0 2px 8px rgb(7 59 87 / 3%);
+  text-decoration: none;
+}
+.shortcut-card:hover {
+  border-color: var(--ocean-primary);
+  background: var(--ocean-soft);
+}
+.shortcut-card:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
+}
+.shortcut-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--ocean-primary);
+  background: var(--ocean-soft);
+}
+.shortcut-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+}
+.shortcut-copy strong {
+  color: var(--ocean-deep);
+  font-size: 16px;
+}
+.shortcut-copy > span {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+@media (max-width: 767px) {
+  .shortcuts-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .shortcuts-section {
+    margin-top: 0;
+  }
+  .section-heading {
+    align-items: flex-start;
+  }
+  .section-heading h2 {
+    font-size: 19px;
+  }
+  .section-heading > span {
+    font-size: 12px;
+  }
+  .shortcut-card {
+    min-height: 100px;
+    padding: 14px;
+  }
+  .shortcut-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .shortcut-copy strong {
+    font-size: 14px;
+  }
+  .shortcut-copy > span {
+    font-size: 12px;
+  }
+}

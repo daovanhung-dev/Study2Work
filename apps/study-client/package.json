@@ -1,29 +1,32 @@
 {
-  "name": "study-web",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
+  "name": "study-client",
+  "version": "0.0.0",
   "scripts": {
-    "build": "vue-tsc --noEmit && vite build",
-    "dev": "vite --host 127.0.0.2 --port 3002",
-    "lint": "vue-tsc --noEmit",
-    "test": "vitest run",
-    "typecheck": "vue-tsc --noEmit"
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test --watch=false",
+    "watch": "ng build --watch --configuration development"
   },
+  "private": true,
+  "packageManager": "npm@10.9.9",
   "dependencies": {
-    "@tanstack/vue-query": "^5.62.8",
-    "axios": "^1.7.9",
-    "pinia": "^2.3.0",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0",
-    "zod": "^3.24.1"
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.1",
-    "@vue/tsconfig": "^0.7.0",
-    "typescript": "^5.7.3",
-    "vite": "^6.0.7",
-    "vitest": "^2.1.8",
-    "vue-tsc": "^2.2.0"
+    "@angular/build": "^22.2.6",
+    "@angular/cli": "^22.2.6",
+    "@angular/compiler-cli": "^22.2.0",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.12"
   }
 }

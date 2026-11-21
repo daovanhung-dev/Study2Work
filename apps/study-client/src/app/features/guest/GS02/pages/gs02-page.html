@@ -1,0 +1,110 @@
+<main class="search-page" data-screen-id="GS02">
+  <header class="page-heading">
+    <p class="eyebrow">Khóa học</p>
+    <h1>Tìm kiếm khóa học</h1>
+    <p class="page-intro">Nhập từ khóa để tìm các khóa học đã xuất bản.</p>
+  </header>
+
+  <form class="search-form" role="search" (submit)="submitSearch($event)">
+    <label for="gs02-query">Từ khóa khóa học</label>
+    <div class="search-controls">
+      <div class="query-control">
+        <study-icon name="search" />
+        <input
+          id="gs02-query"
+          name="q"
+          type="search"
+          [value]="queryInput()"
+          (input)="onQueryInput($event)"
+          placeholder="Nhập từ khóa khóa học"
+          aria-describedby="gs02-query-help"
+        />
+      </div>
+      <button class="search-button" type="submit">Tìm khóa học</button>
+    </div>
+    <p id="gs02-query-help" class="query-help">Tìm kiếm theo tên khóa học.</p>
+  </form>
+
+  @let viewState = state();
+  @if (viewState.status === 'prompt') {
+    <section class="state-panel" aria-live="polite">
+      <span class="state-icon" aria-hidden="true"><study-icon name="search" /></span>
+      <h2>Nhập từ khóa để xem kết quả</h2>
+      <p>Kết quả tìm kiếm chỉ hiển thị các khóa học đã xuất bản.</p>
+    </section>
+  } @else if (viewState.status === 'loading') {
+    <p class="state-message" role="status" aria-live="polite">Đang tìm khóa học…</p>
+  } @else if (viewState.status === 'error') {
+    <section class="state-message state-message--error" role="alert">
+      <p>Không thể tải kết quả tìm kiếm lúc này.</p>
+      <button class="search-button retry-button" type="button" (click)="retrySearch()">
+        Thử lại
+      </button>
+    </section>
+  } @else if (viewState.status === 'no-results') {
+    <section class="state-panel" aria-live="polite">
+      <span class="state-icon" aria-hidden="true"><study-icon name="search" /></span>
+      <h2>Không tìm thấy khóa học phù hợp</h2>
+      <p>Không có khóa học đã xuất bản khớp với “{{ viewState.query }}”.</p>
+    </section>
+  } @else if (viewState.status === 'out-of-range') {
+    <section class="state-message" role="status" aria-live="polite">
+      <p>
+        Trang {{ viewState.page }} không có khóa học. Tổng số kết quả: {{ viewState.total }}
+        ({{ viewState.totalPages }} trang).
+      </p>
+      <button class="search-button retry-button" type="button" (click)="retrySearch()">
+        Tìm lại từ trang đầu
+      </button>
+    </section>
+  } @else if (viewState.status === 'ready') {
+    <section class="results" aria-labelledby="gs02-results-heading">
+      @if (snapshotMismatch()) {
+        <div class="state-panel" role="status" aria-live="polite">
+          <h3>Số kết quả và danh sách trang chưa đồng nhất</h3>
+          <p>Các khóa học trả về vẫn được giữ lại; hãy tải lại trước khi dùng phân trang.</p>
+          <button class="primary-button" type="button" (click)="retrySearch()">
+            Tải lại kết quả
+          </button>
+        </div>
+      }
+      <div class="results-heading">
+        <div>
+          <h2 id="gs02-results-heading">Kết quả cho “{{ viewState.query }}”</h2>
+          @if (!snapshotMismatch()) {
+            <p>{{ viewState.result.pagination.total }} khóa học</p>
+          }
+        </div>
+      </div>
+
+      <div class="course-grid">
+        @for (course of viewState.result.items; track course.id) {
+          <study-gs02-course-card [course]="course" />
+        }
+      </div>
+
+      @if (viewState.result.pagination.total_pages > 1 && !snapshotMismatch()) {
+        <nav class="pagination" aria-label="Phân trang kết quả">
+          <button
+            type="button"
+            [disabled]="viewState.result.pagination.page <= 1"
+            (click)="goToPage(viewState.result.pagination.page - 1)"
+          >
+            Trang trước
+          </button>
+          <span aria-current="page">
+            Trang {{ viewState.result.pagination.page }} /
+            {{ viewState.result.pagination.total_pages }}
+          </span>
+          <button
+            type="button"
+            [disabled]="viewState.result.pagination.page >= viewState.result.pagination.total_pages"
+            (click)="goToPage(viewState.result.pagination.page + 1)"
+          >
+            Trang sau
+          </button>
+        </nav>
+      }
+    </section>
+  }
+</main>

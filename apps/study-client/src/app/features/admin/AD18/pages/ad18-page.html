@@ -1,0 +1,77 @@
+<main class="quiz-delete page-width" data-screen-id="AD18">
+  <div class="delete-breadcrumbs">
+    <nav aria-label="Đường dẫn xóa bài kiểm tra">
+      <ol>
+        <li>Quản lý khảo thí</li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/admin/quizzes">Danh sách bài kiểm tra</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Xóa bài kiểm tra</li>
+      </ol>
+    </nav>
+    <a class="back-link" routerLink="/admin/quizzes"><study-icon name="chevron" /> Quay lại danh sách bài kiểm tra (AD-15)</a>
+  </div>
+
+  <article class="delete-panel" aria-labelledby="delete-heading">
+    <header class="warning-heading">
+      <span class="warning-icon"><study-icon name="info" /></span>
+      <div>
+        <p class="warning-eyebrow">THAO TÁC CÓ THỂ TÁC ĐỘNG DỮ LIỆU HỌC TẬP</p>
+        <h1 id="delete-heading">Xác nhận xóa bài kiểm tra</h1>
+        <p>{{ definition.description }}</p>
+      </div>
+    </header>
+
+    <div class="delete-panel-content">
+      <section class="target-card" aria-labelledby="target-heading">
+        <div class="section-heading">
+          <div>
+            <p class="delete-eyebrow">THÔNG TIN BẢN GHI MỤC TIÊU</p>
+            <h2 id="target-heading">Mã bài kiểm tra <span>{{ quizId() }}</span></h2>
+          </div>
+          <span class="status-badge">{{ isQuizIdValid() ? 'Chưa tải dữ liệu Quiz' : 'Mã Quiz không hợp lệ' }}</span>
+        </div>
+        <dl class="target-grid">
+          <div><dt>Tên bài thi</dt><dd>Chưa có dữ liệu xem trước.</dd></div>
+          <div><dt>Mã định danh khảo thí</dt><dd>{{ quizId() }}</dd></div>
+          <div><dt>Khóa học liên kết</dt><dd>Chưa có dữ liệu xem trước.</dd></div>
+        </dl>
+        @if (!isQuizIdValid()) {
+          <p class="route-validation" role="alert">Mã Quiz phải là số nguyên dương trong giới hạn signed 64-bit. Không có yêu cầu xóa nào được gửi.</p>
+        }
+      </section>
+
+      <aside class="policy-card" aria-labelledby="policy-heading">
+        <span class="policy-icon"><study-icon name="shield" /></span>
+        <div>
+          <h2 id="policy-heading">Chính sách bảo toàn kết quả</h2>
+          <p>Chưa có nguồn dữ liệu để xác định lượt làm bài và câu trả lời liên quan đến Quiz này. Quy tắc xử lý lịch sử và quyền quản lý quiz cần được xác nhận trước khi bật thao tác xóa.</p>
+        </div>
+      </aside>
+
+      <div class="reason-field">
+        <label for="audit-reason">
+          <span>Lý do kiểm toán</span>
+          <span>Chưa có contract lưu lý do</span>
+        </label>
+        <textarea id="audit-reason" disabled aria-describedby="audit-reason-help" placeholder="Chưa thể nhập hoặc gửi lý do từ màn hình này."></textarea>
+        <p id="audit-reason-help">Yêu cầu xóa hiện chỉ nhận ID Quiz, chưa có trường để gửi lý do.</p>
+      </div>
+
+      <div class="delete-actions">
+        <a class="cancel-link" routerLink="/admin/quizzes"><study-icon name="chevron" /> Quay lại an toàn</a>
+        @for (action of definition.actions ?? []; track action.label) {
+          <div class="confirm-action">
+            <button type="button" disabled aria-disabled="true" aria-describedby="delete-action-reason">{{ action.label }}</button>
+            <p id="delete-action-reason">{{ action.reason }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <footer class="source-boundary" role="status">
+      <span class="boundary-icon"><study-icon name="info" /></span>
+      <div><strong>Thao tác hiện đang bị khóa</strong><p>Chưa có yêu cầu xóa nào được gửi từ màn hình này.</p></div>
+    </footer>
+  </article>
+</main>

@@ -1,0 +1,19 @@
+<article class="course-card">
+  <a class="course-card__link" [routerLink]="['/courses', course.id]">
+    @if (course.thumbnail_url) {
+      <img class="course-cover" [src]="course.thumbnail_url" alt="" loading="lazy" />
+    } @else {
+      <div class="course-cover course-cover--empty" aria-hidden="true">
+        <study-icon name="book" />
+      </div>
+    }
+
+    <div class="course-copy">
+      <h2>{{ course.title }}</h2>
+      @if (course.description) {
+        <p class="course-description">{{ course.description }}</p>
+      }
+      <p class="course-mentor">Giảng viên: {{ course.mentor.full_name }}</p>
+    </div>
+  </a>
+</article>

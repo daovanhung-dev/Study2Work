@@ -1,0 +1,123 @@
+<study-student-public-frame>
+  <main class="my-courses api-screen" data-screen-id="ST-08">
+    <header class="my-courses__heading api-heading">
+      <div>
+        <p class="my-courses__eyebrow">KHÔNG GIAN HỌC TẬP</p>
+        <h1>Khóa học của tôi</h1>
+        <p>Tiếp tục học các khóa đã đăng ký.</p>
+      </div>
+      <a class="my-courses__catalog-link api-button secondary" routerLink="/courses">Khám phá khóa học</a>
+    </header>
+
+    <nav class="my-courses__filters" aria-label="Lọc khóa học">
+      <button
+        type="button"
+        [class.active]="filter() === 'all'"
+        [attr.aria-pressed]="filter() === 'all'"
+        (click)="changeFilter('all')"
+      >
+        Tất cả
+      </button>
+      <button
+        type="button"
+        [class.active]="filter() === 'active'"
+        [attr.aria-pressed]="filter() === 'active'"
+        (click)="changeFilter('active')"
+      >
+        Đang học
+      </button>
+    </nav>
+
+    @if (loading()) {
+      <section class="my-courses__state api-card api-message" role="status">
+        <strong>Đang tải khóa học…</strong>
+      </section>
+    }
+
+    @if (error()) {
+      <section class="my-courses__state my-courses__state--error api-error" role="alert">
+        <h2>Không thể tải danh sách khóa học</h2>
+        <p>{{ error() }}</p>
+        <button class="api-button" type="button" (click)="load()">Thử tải lại</button>
+      </section>
+    }
+
+    @if (!loading() && !error() && snapshotMismatch()) {
+      <section class="my-courses__state api-message" role="status">
+        <strong>Tổng số và danh sách khóa học chưa đồng nhất.</strong>
+        <p>Dữ liệu có thể đã thay đổi trong lúc tải. Hãy tải lại để xác nhận danh sách hiện tại.</p>
+        <button class="api-button secondary" type="button" (click)="load()">Tải lại khóa học</button>
+      </section>
+    }
+
+    @if (!loading() && !error() && !snapshotMismatch() && courses().length === 0) {
+      <section class="my-courses__empty api-card" role="status" aria-labelledby="my-courses-empty-title">
+        <div class="my-courses__icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" focusable="false">
+            <path d="M10 9h22a5 5 0 0 1 5 5v25H15a5 5 0 0 1-5-5V9Z" />
+            <path d="M10 34a5 5 0 0 1 5-5h22M18 17h12M18 22h9" />
+          </svg>
+        </div>
+        <h2 id="my-courses-empty-title">{{ filter() === 'active' ? 'Chưa có khóa học đang học.' : 'Bạn chưa đăng ký khóa học nào.' }}</h2>
+        <p>Các khóa học của bạn sẽ xuất hiện tại đây.</p>
+        <a class="api-button" routerLink="/courses">Khám phá khóa học</a>
+      </section>
+    }
+
+    @if (!loading() && !error() && courses().length > 0) {
+      <section class="my-courses__results" aria-label="Danh sách khóa học đã ghi danh">
+        @if (!snapshotMismatch()) {
+          <p class="my-courses__result-count">{{ pagination()?.total }} khóa học trong danh sách</p>
+        }
+        <div class="my-courses__grid">
+          @for (course of courses(); track course.course_id) {
+            <article class="my-courses__card api-card" [attr.data-course-id]="course.course_id">
+              <div class="my-courses__card-top">
+                <span class="my-courses__book-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" focusable="false">
+                    <path d="M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3V4.5Z" />
+                    <path d="M5 17a3 3 0 0 1 3-3h11M9 9h6" />
+                  </svg>
+                </span>
+                <span class="my-courses__status">{{ enrollmentStatusLabel(course.enrollment_status) }}</span>
+              </div>
+              <h2>{{ course.name }}</h2>
+              @if (course.description) {
+                <p class="my-courses__description">{{ course.description }}</p>
+              }
+              <dl>
+                <div><dt>Trạng thái khóa</dt><dd>{{ courseStatusLabel(course.course_status) }}</dd></div>
+                <div><dt>Ngày ghi danh</dt><dd>{{ course.enrolled_at | date: 'mediumDate' }}</dd></div>
+              </dl>
+              @if (course.enrollment_status === 'ACTIVE' && safeCourseId(course.course_id); as courseId) {
+                <a class="my-courses__continue api-button" [routerLink]="['/student/courses', courseId]">
+                  Xem tổng quan khóa học <span aria-hidden="true">→</span>
+                </a>
+              } @else {
+                <span class="my-courses__unavailable">Chưa thể tiếp tục khóa học này</span>
+              }
+            </article>
+          }
+        </div>
+
+        @if (pagination(); as pageInfo) {
+          @if (pageInfo.total_pages > 1 && !snapshotMismatch()) {
+            <nav class="my-courses__pagination" aria-label="Phân trang khóa học">
+              <button type="button" [disabled]="page() <= 1 || loading()" (click)="changePage(-1)">
+                Trang trước
+              </button>
+              <span>Trang {{ pageInfo.page }} / {{ pageInfo.total_pages }}</span>
+              <button
+                type="button"
+                [disabled]="page() >= pageInfo.total_pages || loading()"
+                (click)="changePage(1)"
+              >
+                Trang sau
+              </button>
+            </nav>
+          }
+        }
+      </section>
+    }
+  </main>
+</study-student-public-frame>

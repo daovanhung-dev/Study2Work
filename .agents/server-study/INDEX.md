@@ -23,6 +23,7 @@ Source root: `apps/study-server/`
 | Register/module business flow | `modules/README.md`, `modules/register-account.md` |
 | Ollama/external service | `services/ai.md` |
 | Test/fix/regression | `tests.md`, `workflows/README.md` |
+| Code review | `code-review` skill from the global skill registry |
 
 ## Page graph
 

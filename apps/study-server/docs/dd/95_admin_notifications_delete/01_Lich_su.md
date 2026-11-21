@@ -1,0 +1,86 @@
+---
+title: "Lịch sử"
+order: 1
+dd_id: "95"
+api_name: "Admin xóa hoặc hủy notification"
+source_sheet: "Lịch sử"
+status: "Draft — Needs Confirmation"
+---
+
+# Lịch sử update
+
+## Metadata
+
+| Thuộc tính | Giá trị |
+|---|---|
+| API ID | #95 |
+| Tài liệu | Admin xóa hoặc hủy notification |
+| Trạng thái | Draft — Needs Confirmation |
+| Ngày tạo | 2026-10-24 |
+| Nguồn chính | docs/lists/list_api.md, AC-36 và Study server source hiện tại |
+
+## Lịch sử thay đổi
+
+| Phiên bản | Ngày | Người thay đổi | Nội dung | Trạng thái |
+|---|---|---|---|---|
+| 0.1 | 2026-10-24 | Codex | Tạo DD #95; phân tách contract DeleteResult khỏi đề xuất draft removal/scheduled cancellation; persistence còn SOURCE_REQUIRED. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-26 | Codex | Wire API #95 theo local fallback: khóa notification và delivery, chỉ hard-delete khi mọi delivery đang QUEUED; DB trả deleted_at; ghi rõ cascade và scheduler boundary. | Draft — Needs Confirmation |
+
+## Ranh giới thay đổi
+
+- Không sửa API catalog, AC-36 diagram hoặc database schema; API #95 Study runtime/tests được thêm.
+- Giữ nguyên path-only request, DeleteResult response và đúng error codes.
+- Chỉ xóa path-selected recipient-level row; không xóa các notification khác cùng `operation_id`.
+- `QUEUED`-only eligibility và cascade là fallback `DERIVED`; lifecycle approval và external scheduler cancellation chưa được xác nhận.
+
+## Phụ lục đối chiếu nguồn Excel
+- Workbook nguồn: `DD_API_Template(1).xlsx`
+- Sheet nguồn: `Lịch sử`
+- Dimension: `A1:F19`
+- Trạng thái: `visible`
+- Số ô có dữ liệu/công thức: `13`
+- Số vùng merge: `17`
+
+<details>
+<summary>Danh sách vùng merge</summary>
+
+- `E14:F14`
+- `E15:F15`
+- `E16:F16`
+- `E17:F17`
+- `E19:F19`
+- `E18:F18`
+- `E10:F10`
+- `E11:F11`
+- `E12:F12`
+- `E13:F13`
+- `E3:F3`
+- `E4:F4`
+- `E9:F9`
+- `E7:F7`
+- `E8:F8`
+- `E5:F5`
+- `E6:F6`
+
+</details>
+
+<details>
+<summary>Bản ghi từng ô có dữ liệu hoặc công thức</summary>
+
+| Hàng | Ô | Giá trị nguồn | Công thức nguồn |
+|---:|---|---|---|
+| 1 | `A1` | Lịch sử update |  |
+| 1 | `E1` | Ngày tạo |  |
+| 1 | `F1` | Ngày update cuối cùng |  |
+| 2 | `E2` | yyyy/mm/dd |  |
+| 2 | `F2` | yyyy/mm/dd |  |
+| 3 | `A3` | Version |  |
+| 3 | `B3` | Ngày update |  |
+| 3 | `C3` | Người update |  |
+| 3 | `D3` | Nội dung update |  |
+| 3 | `E3` | Remarks |  |
+| 4 | `A4` | 1.0 |  |
+| 4 | `B4` | yyyy/mm/dd |  |
+| 4 | `D4` | Create new |  |
+
+</details>

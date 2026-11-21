@@ -15,6 +15,7 @@ Source root: `apps/work-client/mobile/` (one Flutter project, Android flavors
 | Feature/module ownership | `modules/README.md` |
 | Workflow/tests | `workflows/README.md` |
 | Mobile DD từ BD/BRD | `create-dd-from-bd-mobile` trong `context-manifest.json` |
+| Code review | `code-review` skill from the global skill registry |
 
 The two flavors share one package and core infrastructure. Read only the
 affected role feature and tests unless a shared boundary is involved.

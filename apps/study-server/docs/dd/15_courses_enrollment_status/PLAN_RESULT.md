@@ -11,7 +11,7 @@
 | Decision status | NEEDS USER DECISION |
 | Output folder | apps/study-server/docs/dd/15_courses_enrollment_status/ |
 | Basis | DIRECT — approved design contract + AC-12 + checked-in schema evidence |
-| Runtime status | UNWIRED / NOT_FOUND — chưa có route/module/query/test API #15 |
+| Runtime status | SOURCE_WIRED / LIVE_UNVERIFIED — route/module/query/model source exists; existing tests are stale against the current Student-only lookup |
 | Tables read | courses, enrollments |
 | Tables write | N/A — read-only |
 | Business code delta | N/A — dùng DESIGN_RESOURCE_RETRIEVED, DESIGN_RESOURCE_NOT_FOUND và DESIGN_INTERNAL_ERROR |
@@ -51,3 +51,10 @@
 - Request Usage, Query, Mutation và Response Source matrices được ghi.
 - Expected/current discrepancy và runtime UNWIRED / NOT_FOUND được ghi.
 - Static Markdown/JSON/link/template checks được cập nhật trong VERIFICATION_REPORT.md.
+
+## Current source addendum — T004
+
+- `app/api/v1.py` registers API #15; `api_15_courses_enrollment_status` validates a Student Bearer identity before any course/enrollment lookup.
+- Missing or invalid identity returns the declared generic 404. The query now selects only that user's latest row for the course (`ORDER BY e.id DESC LIMIT 1`); the course-wide fallback has been removed.
+- The Study Web API descriptor and ST-04 caller are WIRED. The canonical catalog still says Public/no-Bearer; this is a contract discrepancy, not a canonical contract update.
+- Focused test source still exercises anonymous behavior; tests were not changed or run under the current user instruction. Local database/deployment behavior is unverified.

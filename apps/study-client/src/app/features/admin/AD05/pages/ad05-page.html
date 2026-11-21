@@ -1,0 +1,125 @@
+<main class="user-actions page-width" data-screen-id="AD05">
+  @let state = pageState();
+
+  <nav class="actions-toolbar" aria-label="Đường dẫn thao tác tài khoản">
+    <ol>
+      <li>Quản trị người dùng</li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/admin/users">Danh sách tài khoản</a></li>
+      <li aria-hidden="true">›</li>
+      <li aria-current="page">Thao tác tài khoản</li>
+    </ol>
+    <a class="back-link" [routerLink]="isUserIdValid() ? ['/admin/users', userId()] : '/admin/users'">
+      <study-icon name="chevron" />
+      @if (isUserIdValid()) { Quay lại hồ sơ (AD-03) } @else { Quay lại danh sách tài khoản }
+    </a>
+  </nav>
+
+  <header class="actions-hero">
+    <div>
+      <span class="eyebrow"><study-icon name="users" /> QUẢN TRỊ NGƯỜI DÙNG · API #69 / #71 / #72</span>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+      <p class="route-id">User ID từ đường dẫn: <code>{{ userId() || '—' }}</code></p>
+    </div>
+    <span class="locked-badge">ACTIONS ĐANG KHÓA</span>
+  </header>
+
+  <aside class="source-notice" aria-labelledby="source-notice-title">
+    <span class="notice-icon"><study-icon name="info" /></span>
+    <div>
+      <strong>Chưa gửi thao tác trạng thái hoặc xóa</strong>
+      <p>#69 chỉ đọc hồ sơ. Body/status của #71 và lifecycle/retention của #72 còn cần owner approval; policy phiên, audit và quyền quản lý user cũng chưa được xác nhận.</p>
+    </div>
+  </aside>
+
+  @if (state.status === 'loading') {
+    <section class="user-state" role="status" aria-live="polite">
+      <span class="state-icon"><study-icon name="refresh" /></span>
+      <strong>Đang tải tài khoản</strong>
+      <span>Đang chờ phản hồi từ Study Server API #69.</span>
+    </section>
+  } @else if (state.status === 'error') {
+    <section class="user-state user-state--error" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <strong>Không thể tải tài khoản</strong>
+      <span>{{ state.message }}</span>
+      @if (state.invalidRouteId) {
+        <a routerLink="/admin/users">Quay lại danh sách tài khoản (AD-02)</a>
+      } @else {
+        <a [routerLink]="['/admin/users', userId()]">Quay lại chi tiết người dùng (AD-03)</a>
+      }
+    </section>
+  } @else {
+    @let user = state.user;
+    <section class="account-summary" aria-labelledby="account-summary-heading">
+      <div class="summary-heading">
+        <div>
+          <span class="avatar-placeholder" aria-hidden="true">{{ user.full_name.slice(0, 1) || '?' }}</span>
+          <div>
+            <p class="section-kicker">TÀI KHOẢN ĐƯỢC CHỌN</p>
+            <h2 id="account-summary-heading">{{ user.full_name }}</h2>
+            <p class="email-line">{{ user.email }}</p>
+          </div>
+        </div>
+        <span class="status-chip"><span aria-hidden="true">●</span> {{ statusLabel(user.status) }}</span>
+      </div>
+      <div class="summary-meta">
+        <div><span>User ID từ đường dẫn</span><strong>{{ userId() }}</strong></div>
+        <div><span>Vai trò trả về</span><strong>{{ user.role }}</strong></div>
+      </div>
+      <p class="summary-note">Vai trò giữ nguyên như response #69. Nhãn trạng thái chỉ để dễ đọc; trang không suy ra quyền truy cập hoặc hiệu lực phiên.</p>
+    </section>
+
+    <div class="action-grid">
+      <section class="action-card" aria-labelledby="status-actions-heading">
+        <header class="card-heading">
+          <span class="card-icon card-icon--blue" aria-hidden="true">↻</span>
+          <div>
+            <p class="section-kicker">ACCOUNT STATUS</p>
+            <h2 id="status-actions-heading">Khóa hoặc mở khóa</h2>
+          </div>
+        </header>
+        <p class="card-copy">#71 có candidate body <code>&#123;status: ACTIVE|SUSPENDED&#125;</code> trong local source. Body, transition matrix và ánh xạ sang thao tác khóa/mở khóa chưa được duyệt.</p>
+        <div class="contract-note" id="status-policy">
+          <strong>Ảnh hưởng phiên chưa được xác nhận</strong>
+          <span>Local suspend thu hồi refresh token còn hiệu lực; access JWT đã cấp có thể còn dùng đến hết hạn. Activate không khôi phục refresh token đã thu hồi.</span>
+        </div>
+        <div class="button-row">
+          <button class="action-button action-button--quiet" type="button" disabled aria-describedby="status-policy">Khóa tài khoản</button>
+          <button class="action-button action-button--primary" type="button" disabled aria-describedby="status-policy">Mở khóa tài khoản</button>
+        </div>
+      </section>
+
+      <section class="action-card action-card--danger" aria-labelledby="delete-action-heading">
+        <header class="card-heading">
+          <span class="card-icon card-icon--red" aria-hidden="true">⌫</span>
+          <div>
+            <p class="section-kicker">ACCOUNT LIFECYCLE</p>
+            <h2 id="delete-action-heading">Đánh dấu xóa tài khoản</h2>
+          </div>
+        </header>
+        <p class="card-copy">#72 hiện là bodyless DELETE; local SQL đổi status thành `DELETED` và giữ nguyên profile cùng các hàng phụ thuộc.</p>
+        <div class="contract-note contract-note--danger" id="delete-policy">
+          <strong>Không có xác nhận retention hoặc audit</strong>
+          <span>Local #72 không anonymize dữ liệu, kiểm tra dependency, ghi audit hay thu hồi refresh token. #68/#69 hiện vẫn trả user có status `DELETED`.</span>
+        </div>
+        <button class="action-button action-button--danger" type="button" disabled aria-describedby="delete-policy">Đánh dấu xóa</button>
+      </section>
+    </div>
+
+    <section class="reason-card" aria-labelledby="reason-heading">
+      <div>
+        <p class="section-kicker">AUDIT REASON</p>
+        <h2 id="reason-heading">Lý do thao tác</h2>
+        <p>#71 candidate body chỉ có status và #72 không nhận body; chưa có nơi lưu reason.</p>
+      </div>
+      <textarea aria-label="Lý do thao tác chưa khả dụng" rows="3" disabled placeholder="Chưa có persistence contract cho audit reason"></textarea>
+    </section>
+  }
+
+  <footer class="actions-footer">
+    <a class="footer-link" routerLink="/admin/users">Danh sách người dùng (AD-02)</a>
+    <span><study-icon name="database" /> Nguồn đọc: GET /api/v1/admin/users/&#123;user_id&#125; · API #69</span>
+  </footer>
+</main>

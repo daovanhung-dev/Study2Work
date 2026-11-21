@@ -1,0 +1,288 @@
+{
+  "screen_id": "ST-11",
+  "source_image": "screen.png",
+  "source_html": "code.html",
+  "source_image_sha256": "a7548e9f2523f9b6f4b8b71f986a1a199eb36e0654ed5bafdd454ccc8d37de33",
+  "source_html_sha256": "237ab57e4700a87b98e387f8a99554f4524ff7b6467d79a58b7f8d4e2c1d80e4",
+  "image_size": {
+    "width": 1280,
+    "height": 1024
+  },
+  "annotation": {
+    "canvas_size": {
+      "width": 2820,
+      "height": 2048
+    },
+    "source_offset_px": {
+      "x": 130,
+      "y": 0
+    },
+    "scale": 2,
+    "marker_count": 14,
+    "source_text_obscured": false
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST11-EL-01",
+      "name": "Header brand link",
+      "target": "Study2Work wordmark in the top-left header",
+      "target_center_source_px": {
+        "x": 90,
+        "y": 34
+      },
+      "marker_center_canvas_px": {
+        "x": 465,
+        "y": 68
+      },
+      "placement": "right of wordmark",
+      "leader_to_canvas_px": {
+        "x": 430,
+        "y": 68
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST11-EL-02",
+      "name": "Header return link",
+      "target": "Top-right “Quay lại khóa học của tôi” anchor",
+      "target_center_source_px": {
+        "x": 1135,
+        "y": 33
+      },
+      "marker_center_canvas_px": {
+        "x": 2760,
+        "y": 68
+      },
+      "placement": "right gutter aligned with link",
+      "leader_to_canvas_px": {
+        "x": 2626,
+        "y": 68
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST11-EL-03",
+      "name": "Breadcrumb course-list link",
+      "target": "“Khóa học của tôi” breadcrumb anchor",
+      "target_center_source_px": {
+        "x": 86,
+        "y": 154
+      },
+      "marker_center_canvas_px": {
+        "x": 248,
+        "y": 242
+      },
+      "placement": "whitespace above link",
+      "leader_to_canvas_px": {
+        "x": 302,
+        "y": 296
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST11-EL-04",
+      "name": "Breadcrumb current location",
+      "target": "Chevron and current “Bài học” location",
+      "target_center_source_px": {
+        "x": 199,
+        "y": 154
+      },
+      "marker_center_canvas_px": {
+        "x": 530,
+        "y": 242
+      },
+      "placement": "whitespace above current label",
+      "leader_to_canvas_px": {
+        "x": 528,
+        "y": 296
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST11-EL-05",
+      "name": "Fallback card container",
+      "target": "Centered unavailable-content card surface",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 555
+      },
+      "marker_center_canvas_px": {
+        "x": 930,
+        "y": 750
+      },
+      "placement": "near card upper-left border"
+    },
+    {
+      "number": 6,
+      "element_id": "ST11-EL-06",
+      "name": "Lesson icon",
+      "target": "Decorative `play_lesson` icon in fallback card",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 441
+      },
+      "marker_center_canvas_px": {
+        "x": 1305,
+        "y": 770
+      },
+      "placement": "whitespace above-left of icon",
+      "leader_to_canvas_px": {
+        "x": 1410,
+        "y": 818
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST11-EL-07",
+      "name": "Page heading",
+      "target": "H1 “Bài học”",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 515
+      },
+      "marker_center_canvas_px": {
+        "x": 1250,
+        "y": 1030
+      },
+      "placement": "whitespace immediately left of heading",
+      "leader_to_canvas_px": {
+        "x": 1324,
+        "y": 1010
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST11-EL-08",
+      "name": "Unavailable status message",
+      "target": "Bold “Nội dung bài học hiện chưa sẵn sàng.”",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 554
+      },
+      "marker_center_canvas_px": {
+        "x": 1075,
+        "y": 1110
+      },
+      "placement": "whitespace immediately left of message",
+      "leader_to_canvas_px": {
+        "x": 1132,
+        "y": 1094
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST11-EL-09",
+      "name": "Fallback explanation",
+      "target": "Supporting text asking the learner to check later or return to courses",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 598
+      },
+      "marker_center_canvas_px": {
+        "x": 985,
+        "y": 1200
+      },
+      "placement": "whitespace immediately left of copy",
+      "leader_to_canvas_px": {
+        "x": 1038,
+        "y": 1195
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST11-EL-10",
+      "name": "Main return CTA",
+      "target": "“Quay lại khóa học của tôi” primary anchor inside the card",
+      "target_center_source_px": {
+        "x": 640,
+        "y": 675
+      },
+      "marker_center_canvas_px": {
+        "x": 1090,
+        "y": 1350
+      },
+      "placement": "whitespace immediately left of CTA",
+      "leader_to_canvas_px": {
+        "x": 1168,
+        "y": 1300
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "ST11-EL-11",
+      "name": "Footer brand",
+      "target": "Study2Work footer wordmark",
+      "target_center_source_px": {
+        "x": 82,
+        "y": 973
+      },
+      "marker_center_canvas_px": {
+        "x": 435,
+        "y": 1940
+      },
+      "placement": "right of wordmark",
+      "leader_to_canvas_px": {
+        "x": 390,
+        "y": 1946
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "ST11-EL-12",
+      "name": "Footer overview link",
+      "target": "“Tổng quan” footer anchor",
+      "target_center_source_px": {
+        "x": 1002,
+        "y": 973
+      },
+      "marker_center_canvas_px": {
+        "x": 2040,
+        "y": 1888
+      },
+      "placement": "whitespace above link",
+      "leader_to_canvas_px": {
+        "x": 2070,
+        "y": 1932
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "ST11-EL-13",
+      "name": "Footer courses link",
+      "target": "“Khóa học của tôi” footer anchor",
+      "target_center_source_px": {
+        "x": 1118,
+        "y": 973
+      },
+      "marker_center_canvas_px": {
+        "x": 2268,
+        "y": 1888
+      },
+      "placement": "whitespace above link",
+      "leader_to_canvas_px": {
+        "x": 2260,
+        "y": 1932
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "ST11-EL-14",
+      "name": "Footer progress link",
+      "target": "“Tiến độ” footer anchor",
+      "target_center_source_px": {
+        "x": 1222,
+        "y": 973
+      },
+      "marker_center_canvas_px": {
+        "x": 2480,
+        "y": 1888
+      },
+      "placement": "whitespace above link",
+      "leader_to_canvas_px": {
+        "x": 2530,
+        "y": 1932
+      }
+    }
+  ]
+}

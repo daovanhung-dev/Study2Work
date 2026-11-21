@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="2048" viewBox="0 0 1280 1024" role="img" aria-label="ST-04 element marker overlay">
+<g id="ST04-EL-01" aria-label="#1 Header brand link">
+<line x1="18" y1="60" x2="32" y2="46" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="18" y1="60" x2="32" y2="46" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="18" cy="60" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="18" y="60.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">1</text>
+</g>
+<g id="ST04-EL-02" aria-label="#2 Header primary navigation group">
+<line x1="164" y1="60" x2="181" y2="46" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="164" y1="60" x2="181" y2="46" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="164" cy="60" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="164" y="60.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">2</text>
+</g>
+<g id="ST04-EL-03" aria-label="#3 Sign In link">
+<line x1="1016" y1="60" x2="1047.516" y2="50" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="1016" y1="60" x2="1047.516" y2="50" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="1016" cy="60" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1016" y="60.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">3</text>
+</g>
+<g id="ST04-EL-04" aria-label="#4 Sign Up link">
+<line x1="1262" y1="60" x2="1248" y2="50" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="1262" y1="60" x2="1248" y2="50" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="1262" cy="60" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1262" y="60.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">4</text>
+</g>
+<g id="ST04-EL-05" aria-label="#5 Breadcrumb group">
+<line x1="18" y1="112" x2="32" y2="88" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="18" y1="112" x2="32" y2="88" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="18" cy="112" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="18" y="112.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">5</text>
+</g>
+<g id="ST04-EL-06" aria-label="#6 Enrollment verification icon">
+<line x1="586" y1="232" x2="608" y2="232" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="586" y1="232" x2="608" y2="232" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="586" cy="232" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="586" y="232.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">6</text>
+</g>
+<g id="ST04-EL-07" aria-label="#7 Status card surface">
+<line x1="340" y1="168" x2="352" y2="168" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="340" y1="168" x2="352" y2="168" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="340" cy="168" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="340" y="168.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">7</text>
+</g>
+<g id="ST04-EL-08" aria-label="#8 Screen title">
+<line x1="532" y1="295" x2="550.531" y2="295" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="532" y1="295" x2="550.531" y2="295" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="532" cy="295" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="532" y="295.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">8</text>
+</g>
+<g id="ST04-EL-09" aria-label="#9 Status headline">
+<line x1="462" y1="327" x2="481.219" y2="327" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="462" y1="327" x2="481.219" y2="327" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="462" cy="327" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="462" y="327.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">9</text>
+</g>
+<g id="ST04-EL-10" aria-label="#10 Supporting explanation">
+<line x1="397" y1="366" x2="416" y2="366" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="397" y1="366" x2="416" y2="366" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="397" cy="366" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="397" y="366.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">10</text>
+</g>
+<g id="ST04-EL-11" aria-label="#11 Return to course list CTA">
+<line x1="484" y1="444" x2="504.906" y2="444" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="484" y1="444" x2="504.906" y2="444" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="484" cy="444" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="484" y="444.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">11</text>
+</g>
+<g id="ST04-EL-12" aria-label="#12 Footer brand">
+<line x1="18" y1="950" x2="32" y2="972" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="18" y1="950" x2="32" y2="972" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="18" cy="950" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="18" y="950.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">12</text>
+</g>
+<g id="ST04-EL-13" aria-label="#13 Footer navigation group">
+<line x1="930" y1="956" x2="950.484" y2="978" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<line x1="930" y1="956" x2="950.484" y2="978" stroke="#C2412D" stroke-width="2" stroke-linecap="round"/>
+<circle cx="930" cy="956" r="13" fill="#C2412D" stroke="#FFFFFF" stroke-width="2"/>
+<text x="930" y="956.5" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">13</text>
+</g>
+</svg>

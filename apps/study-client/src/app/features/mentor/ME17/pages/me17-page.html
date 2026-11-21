@@ -1,0 +1,63 @@
+<main class="mentor-page me17-page">
+  <study-mentor-page-header
+    title="Snapshot tiến độ học viên"
+    description="API #67 trả trạng thái hiện tại của lesson đã xuất bản, không phải lịch sử sự kiện."
+    apiLabel="#67 · GET"
+  />
+
+  @if (invalidRoute()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">Course ID hoặc Student ID trên đường dẫn không hợp lệ.</section>
+  } @else {
+    <a class="me17-back" [routerLink]="['/mentor/courses', courseId(), 'progress']">← Quay lại tiến độ toàn khóa</a>
+
+    @if (loading()) {
+      <section class="mentor-card mentor-state" role="status" aria-live="polite" aria-busy="true">Đang tải snapshot…</section>
+    } @else if (error()) {
+      <section class="mentor-card mentor-state mentor-state--error" role="alert">
+        <p>{{ error() }}</p>
+        <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử lại</button>
+      </section>
+    } @else if (progress(); as item) {
+      <section class="mentor-card me17-summary" aria-labelledby="me17-student-heading">
+        <div class="me17-student">
+          <span class="me17-avatar" aria-hidden="true">
+            @if (studentAvatarUrl(item); as avatarUrl) {
+              <img
+                [src]="avatarUrl"
+                alt=""
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                (error)="markStudentAvatarFailed()"
+              />
+            }
+            <span>{{ studentInitials(item.student.full_name) }}</span>
+          </span>
+          <div><h2 id="me17-student-heading">{{ item.student.full_name }}</h2><span class="mentor-meta">Student #{{ item.student.id }} · Course #{{ item.course_id }}</span></div>
+        </div>
+        <div class="me17-metrics">
+          <div><strong>{{ item.summary.progress_percent }}%</strong><span>Tiến độ theo API #67</span></div>
+          <div><strong>{{ item.summary.completed_lessons }} / {{ item.summary.total_lessons }}</strong><span>Lesson hoàn thành</span></div>
+        </div>
+        <h3>Trạng thái lesson đã xuất bản</h3>
+        @if (!item.lessons.length) {
+          <p class="mentor-state">API #67 không trả lesson đã xuất bản trong snapshot này.</p>
+        } @else {
+          <ol class="me17-lessons">
+            @for (lesson of item.lessons; track safeLessonId(lesson.lesson_id)) {
+              <li>
+                <div class="me17-lesson-order">{{ lesson.order }}</div>
+                <div class="me17-lesson-title"><strong>{{ lesson.title }}</strong><span class="mentor-meta">Lesson #{{ lesson.lesson_id }}</span></div>
+                <span class="mentor-status">{{ lesson.progress_status }}</span>
+                <div class="me17-progress" role="progressbar" [attr.aria-valuenow]="lesson.progress_percent" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="lesson.progress_percent"></span></div>
+                <strong>{{ lesson.progress_percent }}%</strong>
+                <time class="mentor-meta" [attr.datetime]="lesson.last_accessed_at">{{ lesson.last_accessed_at ? (lesson.last_accessed_at | date:'medium') : 'Chưa có lần truy cập' }}</time>
+              </li>
+            }
+          </ol>
+        }
+        <div class="mentor-notice" role="note">Snapshot này không bao gồm bài tập, quiz, thời gian tự học hoặc event timeline.</div>
+        <button class="mentor-button mentor-button--light" type="button" [disabled]="loading()" (click)="load()">Tải lại snapshot</button>
+      </section>
+    }
+  }
+</main>

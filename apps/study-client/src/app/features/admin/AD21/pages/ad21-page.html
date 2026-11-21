@@ -1,0 +1,158 @@
+<main class="notification-detail page-width" data-screen-id="AD21">
+  <div class="detail-breadcrumbs">
+    <nav aria-label="Đường dẫn thông báo">
+      <ol><li>Quản trị trung tâm</li><li aria-hidden="true">›</li><li><a routerLink="/admin/notifications">Thông báo hệ thống</a></li><li aria-hidden="true">›</li><li aria-current="page">Chi tiết</li></ol>
+    </nav>
+    <span class="api-badge">API #96</span>
+  </div>
+
+  <header class="detail-heading">
+    <div>
+      <p class="detail-eyebrow">NOTIFICATION STATUS</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+    <a class="back-link" routerLink="/admin/notifications"><study-icon name="chevron" /> Danh sách thông báo</a>
+  </header>
+
+  @if (viewState().status === 'loading') {
+    <section class="detail-state" role="status" aria-live="polite">
+      <span class="state-icon"><study-icon name="refresh" /></span>
+      <strong>Đang tải trạng thái thông báo…</strong>
+      <span>Đang chờ phản hồi từ Study Server.</span>
+    </section>
+  } @else if (viewState().status === 'error') {
+    <section class="detail-state detail-state--error" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <strong>Không thể tải trạng thái thông báo</strong>
+      <span>{{ viewState().message }}</span>
+      <a routerLink="/admin/notifications">Quay về danh sách</a>
+    </section>
+  } @else {
+    <section class="identity-panel" aria-labelledby="notification-identity-heading">
+      <div class="panel-heading">
+        <span class="panel-icon"><study-icon name="shield" /></span>
+        <div>
+          <h2 id="notification-identity-heading">Đối chiếu dữ liệu thông báo</h2>
+          <p>Định danh và trạng thái được trả về từ API #96</p>
+        </div>
+        <span class="data-source-badge">API #96</span>
+      </div>
+
+      <dl class="identity-grid">
+        <div class="identity-item">
+          <dt>Mã thông báo</dt>
+          <dd>{{ valueFor('Mã thông báo') }}</dd>
+          <small>ID của tài nguyên đang xem</small>
+        </div>
+        <div class="identity-item">
+          <dt>Operation ID</dt>
+          <dd class="unavailable-value">Chưa liên kết</dd>
+          <small>API #96 không trả Operation ID</small>
+        </div>
+        <div class="identity-item">
+          <dt>Trạng thái tổng hợp</dt>
+          <dd>
+            <span class="status-badge" [attr.data-status]="valueFor('Trạng thái tổng hợp')">
+              <span class="status-dot" aria-hidden="true"></span>{{ valueFor('Trạng thái tổng hợp') }}
+            </span>
+          </dd>
+          <small>Giữ nguyên giá trị từ API</small>
+        </div>
+      </dl>
+    </section>
+
+    <aside class="data-boundary" aria-label="Giới hạn dữ liệu API #96">
+      <span class="boundary-icon"><study-icon name="info" /></span>
+      <div>
+        <strong>Giới hạn dữ liệu từ API #96</strong>
+        <p>Response có mã, tiêu đề, nội dung, kênh, trạng thái tổng hợp và ngày tạo. API không trả người nhận, lịch gửi, trạng thái hoặc số lượng từng kênh, hay Operation ID.</p>
+      </div>
+      <span class="source-badge">Chỉ đọc</span>
+    </aside>
+
+    <section class="notification-workspace" aria-label="Nội dung và trạng thái phân phối">
+      <article class="content-panel" aria-labelledby="notification-content-heading">
+        <div class="panel-heading">
+          <span class="panel-icon"><study-icon name="layers" /></span>
+          <div>
+            <h2 id="notification-content-heading">Nội dung bản tin</h2>
+            <p>Thông tin đọc được từ response API #96</p>
+          </div>
+          <span class="mode-badge">Chỉ đọc</span>
+        </div>
+
+        <dl class="notification-fields">
+          <div class="notification-field">
+            <dt>Tiêu đề thông báo</dt>
+            <dd>{{ valueFor('Tiêu đề') }}</dd>
+          </div>
+          <div class="notification-field">
+            <dt>Kênh có delivery</dt>
+            <dd>{{ valueFor('Kênh') }}</dd>
+          </div>
+          <div class="notification-field notification-field--content">
+            <dt>Nội dung chi tiết</dt>
+            <dd>{{ valueFor('Nội dung') }}</dd>
+          </div>
+          <div class="notification-field">
+            <dt>Đối tượng người nhận</dt>
+            <dd class="unavailable-value">Không có trong response API #96</dd>
+          </div>
+          <div class="notification-field">
+            <dt>Ngày tạo</dt>
+            <dd>{{ valueFor('Ngày tạo') }}</dd>
+          </div>
+        </dl>
+
+        <div class="notification-action-row">
+          <button class="notification-action notification-action--update" type="button" disabled>
+            Cập nhật bản nháp
+          </button>
+        </div>
+      </article>
+
+      <div class="monitoring-column">
+        <article class="pipeline-panel" aria-labelledby="delivery-status-heading">
+          <div class="panel-heading">
+            <span class="panel-icon"><study-icon name="activity" /></span>
+            <div>
+              <h2 id="delivery-status-heading">Tiến trình phân phối kênh</h2>
+              <p>Trạng thái aggregate do API #96 cung cấp</p>
+            </div>
+          </div>
+
+          <div class="aggregate-status">
+            <span>Trạng thái tổng hợp</span>
+            <span class="status-badge" [attr.data-status]="valueFor('Trạng thái tổng hợp')">
+              <span class="status-dot" aria-hidden="true"></span>{{ valueFor('Trạng thái tổng hợp') }}
+            </span>
+          </div>
+          <p class="unavailable-note">API #96 không có trạng thái riêng, số lượng hoặc tiến độ cho từng kênh.</p>
+
+          <div class="notification-action-block">
+            <button class="notification-action notification-action--cancel" type="button" disabled>
+              Hủy bỏ phát hành
+            </button>
+            <p>Thao tác vẫn khóa; API #95 không xác nhận việc dừng tiến trình gửi bên ngoài.</p>
+          </div>
+        </article>
+
+        <article class="operation-panel" aria-labelledby="operation-heading">
+          <div class="panel-heading">
+            <span class="panel-icon"><study-icon name="lock" /></span>
+            <div>
+              <h2 id="operation-heading">Cổng theo dõi tác vụ bất đồng bộ</h2>
+              <p>Handoff SH-07 phụ thuộc Operation ID do backend cấp</p>
+            </div>
+          </div>
+          <p class="operation-note">API #96 không trả Operation ID; API #18 backend route đã có nhưng client chưa wired handoff/poller cho SH-07.</p>
+          <button class="notification-action notification-action--operation" type="button" disabled>
+            <span class="operation-label"><study-icon name="lock" />Theo dõi qua cổng tác vụ bất đồng bộ (SH-07)</span>
+            <span class="operation-status">Đang khóa</span>
+          </button>
+        </article>
+      </div>
+    </section>
+  }
+</main>

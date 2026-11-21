@@ -1,0 +1,133 @@
+<main class="mentor-page me13-page">
+  <study-mentor-page-header
+    title="Chọn người nhận thông báo"
+    description="Chọn khóa học do bạn phụ trách và học viên có ghi danh ACTIVE."
+    apiLabel="#46 · #62"
+  />
+
+  @if (error()) {
+    <div class="mentor-alert" role="alert">
+      <p>{{ error() }}</p>
+      <button type="button" class="mentor-button mentor-button--light" (click)="loadCourses()">Tải lại khóa học</button>
+    </div>
+  }
+
+  <section class="mentor-card me13-course-select" aria-labelledby="me13-course-heading">
+    <h2 id="me13-course-heading">Khóa học phụ trách</h2>
+    <label for="me13-course">Khóa học</label>
+    <select
+      id="me13-course"
+      #course
+      [disabled]="coursesLoading() || !courses().length"
+      [value]="courseId()"
+      (change)="chooseCourse(course.value)"
+    >
+      <option value="">Chọn khóa học</option>
+      @for (item of courses(); track safeId(item.id)) {
+        @if (safeId(item.id); as id) {
+          <option [value]="id">{{ item.title }} · {{ item.status }}</option>
+        }
+      }
+    </select>
+
+    @if (coursesLoading()) {
+      <p class="mentor-state" role="status" aria-live="polite">Đang tải khóa học…</p>
+    } @else if (!error() && !courses().length) {
+      <p class="mentor-state">API #46 chưa trả khóa học nào do bạn sở hữu.</p>
+      <button type="button" class="mentor-button mentor-button--light" (click)="loadCourses()">Tải lại</button>
+    } @else if (courses().length) {
+      <div class="mentor-pagination" aria-label="Phân trang khóa học">
+        <button
+          type="button"
+          class="mentor-button mentor-button--light"
+          [disabled]="coursePage() <= 1 || coursesLoading()"
+          (click)="loadCourses(coursePage() - 1)"
+        >Trang trước</button>
+        <span>Trang {{ coursePage() }} / {{ courseTotalPages() }}</span>
+        <button
+          type="button"
+          class="mentor-button mentor-button--light"
+          [disabled]="coursePage() >= courseTotalPages() || coursesLoading()"
+          (click)="loadCourses(coursePage() + 1)"
+        >Trang sau</button>
+      </div>
+    }
+  </section>
+
+  <section class="mentor-card me13-roster" aria-labelledby="me13-roster-heading">
+    <div class="me13-roster-head">
+      <div>
+        <h2 id="me13-roster-heading">Danh sách học viên</h2>
+        <p class="mentor-meta">API #62 chỉ trả học viên có enrollment ACTIVE trong khóa đã chọn.</p>
+      </div>
+      @if (students().length) {
+        <label class="me13-select-all">
+          <input
+            type="checkbox"
+            [checked]="selectedIds().size === students().length"
+            (change)="selectAll($any($event.target).checked)"
+          />
+          Chọn tất cả
+        </label>
+      }
+    </div>
+
+    @if (!courseId()) {
+      <p class="mentor-state">Chọn khóa học để tải roster.</p>
+    } @else if (studentsLoading()) {
+      <p class="mentor-state" role="status" aria-live="polite">Đang tải danh sách học viên…</p>
+    } @else if (studentForbidden()) {
+      <p class="mentor-state mentor-state--error" role="alert">Bạn không có quyền xem roster của khóa học này.</p>
+    } @else if (studentError()) {
+      <div class="mentor-state mentor-state--error" role="alert">
+        <p>{{ studentError() }}</p>
+        <button type="button" class="mentor-button mentor-button--light" (click)="loadStudents()">Tải lại danh sách</button>
+      </div>
+    } @else if (!students().length) {
+      <p class="mentor-state">API #62 chưa trả học viên có ghi danh ACTIVE cho khóa học này.</p>
+    } @else {
+      <ul class="me13-students">
+        @for (student of students(); track safeId(student.id)) {
+          @if (safeId(student.id); as id) {
+            <li>
+              <label [for]="'me13-student-' + id">
+                <input
+                  [id]="'me13-student-' + id"
+                  type="checkbox"
+                  [checked]="selectedIds().has(id)"
+                  (change)="toggleStudent(id, $any($event.target).checked)"
+                />
+                <span class="me13-student-avatar" aria-hidden="true">
+                  @if (studentAvatarUrl(student); as avatarUrl) {
+                    <img
+                      [src]="avatarUrl"
+                      alt=""
+                      loading="lazy"
+                      referrerpolicy="no-referrer"
+                      (error)="markStudentAvatarFailed(id)"
+                    />
+                  }
+                  <span>{{ studentInitials(student) }}</span>
+                </span>
+                <span>
+                  <strong>{{ student.full_name }}</strong>
+                  <small class="mentor-meta">Student #{{ id }}</small>
+                </span>
+              </label>
+            </li>
+          }
+        }
+      </ul>
+    }
+  </section>
+
+  <div class="me13-footer">
+    <span class="mentor-meta">Đã chọn {{ selectedIds().size }} học viên · mã người nhận được giữ trong trạng thái điều hướng tạm thời.</span>
+    <button
+      class="mentor-button"
+      type="button"
+      [disabled]="!canContinue()"
+      (click)="continueToCompose()"
+    >Tiếp tục soạn nội dung →</button>
+  </div>
+</main>

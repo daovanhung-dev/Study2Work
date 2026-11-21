@@ -1,8 +1,8 @@
 # Work Web architecture
 
-`CONTEXT_STATUS: VERIFIED_REACT_EXPRESS_SPLIT`
+`CONTEXT_STATUS: WORK_WEB_VERIFIED_REACT_EXPRESS_SPLIT; STUDY_WEB_SEPARATE_ANGULAR_22_SKELETON`
 
-- Study: `apps/study-client/`, Vue 3/TypeScript/Vite đã được package xác nhận.
+- Study: `apps/study-client/`, Angular 22 standalone SPA; current source has only the scaffold, with business routes, auth and feature API calls unwired.
 - Work: `apps/work-client/web/`, React/TypeScript/Vite đã được package xác nhận.
 - `apps/work-client/web/src/app/router.tsx` owns public routes plus duplicated
   lower/upper-case student and business paths, with role guards.

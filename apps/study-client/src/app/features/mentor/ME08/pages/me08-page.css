@@ -1,0 +1,10 @@
+.me08-context,.me08-detail { padding:24px; }
+.me08-context { display:grid; justify-items:start; gap:12px; }
+.me08-context h2,.me08-detail h2 { margin:0; color:#17324b; font-size:20px; }
+.me08-context p { max-width:60ch; color:#627890; line-height:1.6; }
+.me08-detail>h2 { margin:10px 0 20px; }
+.me08-current { display:grid; grid-template-columns:160px 1fr; align-items:center; gap:12px; padding:16px; border-radius:10px; background:#f7fafc; }
+.me08-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:9px; margin-top:22px; }
+.me08-error-state { display:grid; justify-items:start; gap:10px; }
+.mentor-button--danger { border-color:#a9323a; background:#a9323a; }
+@media(max-width:560px){.me08-detail{padding:18px}.me08-actions>*{width:100%}.me08-current{grid-template-columns:1fr;gap:6px}}

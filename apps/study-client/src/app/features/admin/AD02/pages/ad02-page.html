@@ -1,0 +1,293 @@
+<main class="page-width user-page" [attr.data-screen-id]="screenModel.id">
+  <div class="screen-context">
+    <nav aria-label="Đường dẫn danh sách người dùng">
+      <ol class="breadcrumbs">
+        <li>Quản trị người dùng</li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Danh sách tài khoản</li>
+      </ol>
+    </nav>
+    <span class="source-badge">API #68</span>
+  </div>
+
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Quản trị người dùng</p>
+      <h1>Quản lý tài khoản người dùng</h1>
+      <p class="page-description">Tra cứu tài khoản theo họ tên hoặc email, vai trò và trạng thái.</p>
+    </div>
+    <div class="page-actions" role="group" aria-label="Thao tác danh sách">
+      <button
+        class="page-action page-action--secondary"
+        type="button"
+        disabled
+        aria-describedby="user-export-unavailable"
+      >
+        Xuất báo cáo
+      </button>
+      <button
+        class="page-action page-action--primary"
+        type="button"
+        disabled
+        aria-describedby="user-create-unavailable"
+      >
+        Thêm người dùng
+      </button>
+      <p class="page-actions-note" id="user-export-unavailable">
+        Tạo người dùng và xuất danh sách hiện chưa khả dụng.
+      </p>
+      <span class="visually-hidden" id="user-create-unavailable">
+        Tạo người dùng chưa khả dụng.
+      </span>
+    </div>
+  </header>
+
+  <section class="filter-panel" aria-label="Bộ lọc danh sách người dùng">
+    <form class="filters" aria-label="Bộ lọc danh sách người dùng" (submit)="applyFilters($event)">
+      <div class="filter-field search-field">
+        <label for="user-search">Tìm kiếm</label>
+        <div class="input-wrap">
+          <study-icon name="search" />
+          <input
+            id="user-search"
+            type="search"
+            placeholder="Họ tên hoặc email"
+            [value]="filters().keyword"
+            (input)="setFilter('keyword', $any($event.target).value)"
+            [disabled]="viewState().status === 'loading'"
+          />
+        </div>
+      </div>
+
+      <div class="filter-field">
+        <label for="role-filter">Vai trò</label>
+        <input
+          id="role-filter"
+          type="text"
+          placeholder="Vai trò chính xác"
+          [value]="filters().role"
+          (input)="setFilter('role', $any($event.target).value)"
+          [disabled]="viewState().status === 'loading'"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label for="status-filter">Trạng thái</label>
+        <input
+          id="status-filter"
+          type="text"
+          placeholder="Trạng thái chính xác"
+          [value]="filters().status"
+          (input)="setFilter('status', $any($event.target).value)"
+          [disabled]="viewState().status === 'loading'"
+        />
+      </div>
+
+      <div class="filter-buttons">
+        <button class="reset-button" type="submit" [disabled]="viewState().status === 'loading'">
+          Áp dụng
+        </button>
+        <button
+          class="reset-button"
+          type="button"
+          (click)="clearFilters()"
+          [disabled]="viewState().status === 'loading'"
+        >
+          Xóa lọc
+        </button>
+      </div>
+    </form>
+
+    <p class="controls-note">
+      Họ tên/email dùng tìm kiếm contains; vai trò và trạng thái là chuỗi chính xác do API #68 xử
+      lý.
+    </p>
+
+    <div class="active-filter-summary" aria-live="polite" aria-label="Bộ lọc đang áp dụng">
+      <strong>Bộ lọc đang áp dụng</strong>
+      @if (activeFilters().length) {
+        <ul>
+          @for (filter of activeFilters(); track filter.label) {
+            <li>
+              <span>{{ filter.label }}</span
+              ><b>{{ filter.value }}</b>
+            </li>
+          }
+        </ul>
+      } @else {
+        <span class="no-active-filters">Chưa có bộ lọc nào được áp dụng.</span>
+      }
+    </div>
+  </section>
+
+  <section
+    class="list-panel"
+    aria-labelledby="list-title"
+    [attr.aria-busy]="viewState().status === 'loading' ? 'true' : null"
+  >
+    <h2 id="list-title" class="visually-hidden">Danh sách tài khoản</h2>
+    @if (viewState().status === 'loaded' && snapshotMismatch()) {
+      <div class="snapshot-warning" role="status" aria-live="polite">
+        <div><strong>Số lượng và danh sách người dùng chưa đồng nhất</strong><p>Các dòng API trả về vẫn được giữ lại; tổng và phân trang đang ẩn cho đến khi tải lại.</p></div>
+        <button type="button" (click)="refreshList()">Tải lại trang này</button>
+      </div>
+    }
+    <div class="table-scroller" role="region" aria-label="Bảng người dùng" tabindex="0">
+      <table [class.table-empty]="viewState().status === 'loaded' && !viewState().rows?.length">
+        <caption class="visually-hidden">
+          Danh sách người dùng
+        </caption>
+        <thead>
+          <tr>
+            @for (column of columns; track column) {
+              <th scope="col">{{ column }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @if (viewState().status === 'loaded' && pageOutOfRange()) {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state" role="status" aria-live="polite">
+                  <p class="query-state-message">Trang này không còn người dùng. Danh sách đã thay đổi; hãy quay lại trang đầu để xem dữ liệu hiện có.</p>
+                  <div class="query-state-actions"><button class="query-state-action" type="button" (click)="returnToFirstPage()">Về trang 1</button></div>
+                </div>
+              </td>
+            </tr>
+          } @else if (viewState().status === 'loaded' && snapshotMismatch() && !viewState().rows?.length) {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state" role="status" aria-live="polite">
+                  <p class="query-state-message">API #68 trả về số dòng khác với tổng ở thời điểm đọc; không coi đây là danh sách rỗng.</p>
+                  <div class="query-state-actions"><button class="query-state-action" type="button" (click)="refreshList()">Tải lại trang này</button></div>
+                </div>
+              </td>
+            </tr>
+          } @else if (viewState().status === 'loaded' && viewState().rows?.length) {
+            @for (row of viewState().rows; track $index) {
+              <tr>
+                @for (value of row.values; track $index) {
+                  <td>
+                    @if ($first && row.route) {
+                      <a [routerLink]="row.route">{{ value }}</a>
+                    } @else {
+                      {{ value }}
+                    }
+                  </td>
+                }
+                <td>
+                  <div class="table-actions">
+                    @if (row.actions?.length) {
+                      @for (action of row.actions; track action.route) {
+                        <a
+                          class="table-action"
+                          [routerLink]="action.route"
+                          [attr.aria-label]="action.label + ' người dùng ' + row.values[0]"
+                        >
+                          {{ action.label }}
+                        </a>
+                      }
+                    } @else {
+                      <span class="action-unavailable">Không khả dụng</span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          } @else if (viewState().status === 'loaded') {
+            <tr class="empty-row">
+              <td [attr.colspan]="columns.length">
+                <div class="empty-state" role="status" aria-live="polite">
+                  <span class="empty-icon"><study-icon name="users" /></span>
+                  <p class="empty-title">Chưa có dữ liệu tài khoản người dùng</p>
+                  <p class="empty-description">
+                    Không tìm thấy tài khoản phù hợp với điều kiện hiện tại.
+                  </p>
+                  <div class="empty-state-actions">
+                    <button class="refresh-button" type="button" (click)="refreshList()">
+                      <study-icon name="refresh" />
+                      <span>Làm mới danh sách</span>
+                    </button>
+                    <button
+                      class="refresh-button help-button"
+                      type="button"
+                      disabled
+                      aria-describedby="user-guide-unavailable"
+                    >
+                      Xem hướng dẫn nhập liệu
+                    </button>
+                    <span class="visually-hidden" id="user-guide-unavailable">
+                      Chưa có trang hướng dẫn nhập liệu được xác định.
+                    </span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          } @else if (viewState().status === 'loading') {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state" role="status" aria-live="polite">
+                  {{ queryStateMessage }}
+                </div>
+              </td>
+            </tr>
+          } @else {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state query-state--error" role="alert">
+                  <p class="query-state-message">{{ queryStateMessage }}</p>
+                  <div class="query-state-actions">
+                    @if (isFilterError()) {
+                      <button class="query-state-action" type="button" (click)="resetPageToFirst()">
+                        Về trang 1
+                      </button>
+                    }
+                    @if (viewState().retryable) {
+                      <button class="query-state-action" type="button" (click)="refreshList()">
+                        Thử lại
+                      </button>
+                    }
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (viewState().status === 'loaded' && viewState().pagination && !snapshotMismatch() && !pageOutOfRange()) {
+      <div class="list-footer">
+        <p class="result-count">
+          Hiển thị {{ viewState().rows?.length ?? 0 }} trên {{ viewState().pagination!.total }} tài
+          khoản
+        </p>
+
+        <nav class="pagination" aria-label="Phân trang danh sách người dùng">
+          <button
+            class="page-button previous-button"
+            type="button"
+            (click)="changePage(viewState().pagination!.page - 1)"
+            [disabled]="viewState().pagination!.page <= 1"
+            aria-label="Trang trước"
+          >
+            <study-icon name="chevron" />
+          </button>
+          <span
+            >{{ viewState().pagination!.totalPages === 0 ? 0 : viewState().pagination!.page }} /
+            {{ viewState().pagination!.totalPages }}</span
+          >
+          <button
+            class="page-button next-button"
+            type="button"
+            (click)="changePage(viewState().pagination!.page + 1)"
+            [disabled]="viewState().pagination!.page >= viewState().pagination!.totalPages"
+            aria-label="Trang sau"
+          >
+            <study-icon name="chevron" />
+          </button>
+        </nav>
+      </div>
+    }
+  </section>
+</main>

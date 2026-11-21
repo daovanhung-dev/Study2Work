@@ -1,0 +1,129 @@
+<main class="course-editor page-width" data-screen-id="AD08">
+  @let state = pageState();
+
+  <nav class="course-toolbar" aria-label="Đường dẫn chỉnh sửa khóa học">
+    <ol>
+      <li>Quản trị đào tạo</li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/admin/courses">Danh sách khóa học</a></li>
+      <li aria-hidden="true">›</li>
+      <li aria-current="page">Chỉnh sửa khóa học</li>
+    </ol>
+    <a class="back-link" [routerLink]="isCourseIdValid() ? ['/admin/courses', courseId()] : '/admin/courses'"><study-icon name="chevron" /> {{ isCourseIdValid() ? 'Quay lại chi tiết khóa học (AD-07)' : 'Danh sách khóa học' }}</a>
+  </nav>
+
+  <header class="course-hero">
+    <div>
+      <span class="gate-badge"><study-icon name="info" /> BIỂU MẪU TẠM THỜI · API #74 / #75</span>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+      <p class="route-id">Course ID từ đường dẫn: <code>{{ courseId() || '—' }}</code></p>
+    </div>
+  </header>
+
+  <aside class="course-notice" aria-labelledby="course-notice-heading">
+    <span class="notice-icon"><study-icon name="info" /></span>
+    <div>
+      <strong id="course-notice-heading">Thay đổi chỉ nằm trong bản nháp của trang</strong>
+      <p>#75 catalog chưa khai báo body; body bốn trường trong local handler là DERIVED. Không có nguồn upload thumbnail, và màn hình chưa gửi hoặc lưu dữ liệu.</p>
+    </div>
+  </aside>
+
+  @if (state.status === 'loading') {
+    <section class="course-state" role="status" aria-live="polite">
+      <span class="state-icon"><study-icon name="refresh" /></span>
+      <strong>Đang tải khóa học</strong>
+      <span>Đang chờ phản hồi từ Study Server API #74.</span>
+    </section>
+  } @else if (state.status === 'error') {
+    <section class="course-state course-state--error" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <strong>Không thể tải khóa học</strong>
+      <span>{{ state.message }}</span>
+      <a routerLink="/admin/courses">Quay lại danh sách khóa học</a>
+    </section>
+  } @else {
+    @let course = state.course;
+    <div class="course-grid">
+      <section class="course-card course-form" aria-labelledby="course-fields-heading">
+        <header class="section-heading">
+          <div><span class="section-icon" aria-hidden="true">▤</span><div><h2 id="course-fields-heading">Thuộc tính khóa học</h2><p>Dữ liệu ban đầu được ánh xạ từ API #74</p></div></div>
+          <span class="read-only-badge">LƯU ĐANG KHÓA</span>
+        </header>
+
+        <div class="form-grid">
+          <label class="field-group" for="course-title">
+            <span>Tiêu đề khóa học</span>
+            <input id="course-title" name="title" type="text" autocomplete="off" [value]="draft()?.title ?? ''" (input)="updateDraft('title', $event)" />
+            <small>Bản nháp cục bộ; giới hạn/validation chưa được áp dụng ở client.</small>
+          </label>
+
+          <label class="field-group" for="course-id">
+            <span>ID khóa học · chỉ đọc</span>
+            <input id="course-id" type="text" [value]="courseId()" readonly />
+            <small>Route ID được giữ nguyên dạng chuỗi: {{ courseId() }}</small>
+          </label>
+
+          <label class="field-group" for="course-mentor">
+            <span>Giảng viên phụ trách</span>
+            <input id="course-mentor" type="text" [value]="course.mentor.full_name" readonly />
+            <small>#75 không thay đổi mentor.</small>
+          </label>
+
+          <label class="field-group" for="course-price">
+            <span>Mức học phí (VND)</span>
+            <input id="course-price" name="price" type="text" inputmode="decimal" autocomplete="off" [value]="draft()?.price ?? ''" (input)="updateDraft('price', $event)" />
+            <small>Giữ chuỗi thập phân nguồn; client không làm tròn hoặc áp dụng range riêng.</small>
+          </label>
+
+          <label class="field-group field-group--full" for="course-description">
+            <span>Mô tả khóa học</span>
+            <textarea id="course-description" name="description" rows="5" [value]="draft()?.description ?? ''" (input)="updateDraft('description', $event)"></textarea>
+            <small>Mô tả nullable trong response #74. Giá trị chỉ thay đổi trong component memory.</small>
+          </label>
+        </div>
+
+        <section class="thumbnail-gate" aria-labelledby="thumbnail-heading">
+          <div class="thumbnail-heading"><div><h3 id="thumbnail-heading">Ảnh đại diện khóa học</h3><p>Không có API upload hoặc multipart contract được xác nhận.</p></div><span>UPLOAD CHƯA KHẢ DỤNG</span></div>
+          <div class="thumbnail-body">
+            <span class="thumbnail-placeholder" aria-hidden="true">▧</span>
+            <div><strong>Thumbnail URL từ #74</strong><p>{{ course.thumbnail_url ?? '—' }}</p><small>URL được hiển thị dạng văn bản; không tự tải hoặc nhúng ảnh.</small></div>
+            <button class="button button--quiet" type="button" disabled>Chọn ảnh</button>
+          </div>
+        </section>
+
+        <footer class="form-actions">
+          <a class="button button--quiet" [routerLink]="['/admin/courses', courseId()]">Hủy và quay lại chi tiết</a>
+          <button class="button button--primary" type="button" disabled><span aria-hidden="true">▣</span> Lưu thay đổi khóa học</button>
+        </footer>
+      </section>
+
+      <aside class="course-side-column">
+        <section class="course-card preview-card" aria-labelledby="preview-heading">
+          <header class="side-heading"><div><span class="side-icon"><study-icon name="info" /></span><h2 id="preview-heading">Bản xem trước cục bộ</h2></div><span>LOCAL ONLY</span></header>
+          <div class="preview-placeholder" role="img" aria-label="Ảnh thumbnail không được nhúng">
+            <span aria-hidden="true">▧</span>
+            <strong>Không tải ảnh thumbnail</strong>
+            <p>Không có upload/preview contract trong source hiện tại.</p>
+          </div>
+          <h3>{{ draft()?.title || 'Chưa có tiêu đề' }}</h3>
+          <p class="preview-description">{{ draft()?.description || 'Chưa có mô tả' }}</p>
+          <div class="mentor-summary"><span aria-hidden="true">{{ course.mentor.full_name.slice(0, 1) }}</span><div><strong>{{ course.mentor.full_name }}</strong><small>Giảng viên theo projection #74</small></div></div>
+          <div class="preview-meta"><div><strong>{{ draft()?.price || '—' }}</strong><span>Học phí (VND)</span></div><div><strong>{{ course.status }}</strong><span>Trạng thái trả về</span></div></div>
+        </section>
+
+        <section class="course-card contract-card" aria-labelledby="contract-heading">
+          <header class="side-heading"><div><span class="contract-icon"><study-icon name="info" /></span><h2 id="contract-heading">Ranh giới API hiện tại</h2></div></header>
+          <div class="contract-row"><span class="api-label">API #74</span><div><strong>GET chi tiết</strong><p>Trả singleton Page&lt;Course&gt;; màn hình dùng đúng bản ghi đầu tiên.</p></div></div>
+          <div class="contract-row"><span class="api-label api-label--blocked">API #75</span><div><strong>PUT chưa được client gọi</strong><p>Catalog không khai báo body; local source yêu cầu title, description, thumbnail_url và price.</p></div></div>
+          <p class="source-status">Trạng thái khóa học và mentor là dữ liệu nguồn. Màn hình không suy ra enrollment, chapter count, discount, readiness hoặc connection state.</p>
+        </section>
+      </aside>
+    </div>
+  }
+
+  <footer class="course-footer">
+    <a routerLink="/admin/courses">Danh sách khóa học</a>
+    <span><study-icon name="database" /> Nguồn đọc: GET /api/v1/admin/courses/&#123;course_id&#125; · API #74</span>
+  </footer>
+</main>

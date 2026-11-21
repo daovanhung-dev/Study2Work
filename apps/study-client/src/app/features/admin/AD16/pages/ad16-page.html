@@ -1,0 +1,292 @@
+<main class="quiz-builder page-width" data-screen-id="AD16">
+  <nav class="builder-breadcrumbs" aria-label="Đường dẫn thiết lập bài kiểm tra">
+    <ol>
+      <li>Quản lý khảo thí</li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/admin/quizzes">Danh sách bài kiểm tra</a></li>
+      <li aria-hidden="true">›</li>
+      <li aria-current="page">{{ isEditMode ? 'Chỉnh sửa bài kiểm tra' : 'Thiết lập bài kiểm tra' }}</li>
+    </ol>
+    <span class="source-badge">#73 danh sách khóa học · #88 tạo Quiz</span>
+  </nav>
+
+  <header class="builder-heading">
+    <div>
+      <p class="builder-eyebrow">QUIZ BUILDER</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+      @if (isEditMode) {
+        <p class="route-id">Quiz ID từ đường dẫn: <code>{{ quizId() }}</code></p>
+      }
+    </div>
+    <a class="back-link" routerLink="/admin/quizzes">
+      <study-icon name="chevron" />
+      Danh sách bài kiểm tra (AD-15)
+    </a>
+  </header>
+
+  <aside class="builder-notice" aria-labelledby="builder-notice-heading">
+    <span class="notice-icon"><study-icon name="info" /></span>
+    <div>
+      <strong id="builder-notice-heading">{{ isEditMode ? 'Chế độ chỉnh sửa đang khóa' : 'Tạo Quiz qua Study Server' }}</strong>
+      @if (isEditMode) {
+        <p>Không có API GET chi tiết để nạp cấu hình/câu hỏi và #89 chưa công bố body trong catalog. Dữ liệu hiện có không được thay bằng biểu mẫu trống.</p>
+      } @else {
+        <p>Bản nháp nằm trong trang cho tới khi lưu. Nút lưu gọi POST #88; embedded JSON đang theo current source của Study Server và vẫn được đánh dấu DERIVED.</p>
+      }
+    </div>
+    @if (!isEditMode) { <span class="notice-tag">POST #88</span> }
+  </aside>
+
+  @if (isEditMode) {
+    <section class="edit-blocker" role="status" aria-live="polite">
+      <span class="notice-icon"><study-icon name="info" /></span>
+      <div>
+        @if (!isQuizIdValid) {
+          <strong>Mã Quiz trên đường dẫn không hợp lệ</strong>
+          <p>Mã phải là số nguyên dương trong giới hạn signed 64-bit. Không có yêu cầu API nào được gửi.</p>
+        } @else {
+          <strong>Chưa thể nạp dữ liệu để chỉnh sửa Quiz này</strong>
+          <p>Study Server chưa có API GET chi tiết gồm cấu hình, câu hỏi và đáp án. Các trường bên dưới được khóa để tránh thay thế dữ liệu hiện hữu bằng biểu mẫu trống.</p>
+        }
+      </div>
+    </section>
+  }
+
+  <form class="builder-form" (submit)="saveQuiz($event)">
+    <div class="builder-grid">
+      <section class="builder-card config-card" aria-labelledby="config-heading">
+        <div class="section-heading">
+          <div class="section-title">
+            <span class="heading-icon" aria-hidden="true">≡</span>
+            <h2 id="config-heading">Cấu hình chung bài thi</h2>
+          </div>
+          <span class="section-part">PHẦN 1 / 2</span>
+        </div>
+
+        <div class="field-stack">
+          <label class="field-group" for="quiz-title">
+            <span class="field-label">Tên bài kiểm tra <span class="required-mark" aria-hidden="true">*</span></span>
+            <input
+              id="quiz-title"
+              name="title"
+              type="text"
+              autocomplete="off"
+              required
+              aria-describedby="quiz-title-help"
+              placeholder="Nhập tên bài thi trắc nghiệm..."
+              [value]="titleDraft"
+              [disabled]="isDraftLocked"
+              (input)="updateDraft('titleDraft', $event)" />
+            <span id="quiz-title-help" class="field-help">Bắt buộc · {{ titleLength }} ký tự · giới hạn backend 200 ký tự.</span>
+          </label>
+
+          <div class="field-group">
+            <label class="field-label" for="quiz-course">
+              <span>Khóa học áp dụng <span class="required-mark" aria-hidden="true">*</span></span>
+            </label>
+            <select
+              id="quiz-course"
+              name="course"
+              [value]="selectedCourse()?.id ?? ''"
+              [disabled]="isDraftLocked || courseState().status !== 'loaded'"
+              (change)="updateCourse($event)">
+              <option value="">Chọn khóa học</option>
+              @if (selectedCourse(); as selected) {
+                @if (!isSelectedCourseOnCurrentPage) {
+                  <option [value]="selected.id">{{ selected.title }} (#{{ selected.id }})</option>
+                }
+              }
+              @if (courseState(); as courses) {
+                @if (courses.status === 'loaded') {
+                  @for (course of courses.options; track course.id) {
+                    <option [value]="course.id">{{ course.title }} · {{ course.status }} (#{{ course.id }})</option>
+                  }
+                }
+              }
+            </select>
+            <span class="field-help">Danh sách lấy từ API #73, mỗi trang 20 khóa học; backend #88 xác nhận khóa học khi lưu.</span>
+            @if (!isEditMode) {
+              <div class="course-list-state">
+                @if (courseState(); as courses) {
+                  @if (courses.status === 'loading') {
+                    <p role="status">Đang tải danh sách khóa học…</p>
+                  } @else if (courses.status === 'error') {
+                    <p class="inline-error" role="alert">{{ courses.message }}</p>
+                    <button class="inline-action" type="button" (click)="refreshCourses()">Tải lại khóa học</button>
+                  } @else {
+                    @if (needsCoursePageRecovery) {
+                      <p class="inline-note">Danh sách đã thay đổi và trang hiện tại không còn hợp lệ.</p>
+                      <button class="inline-action" type="button" (click)="recoverCoursePage()">Mở trang khóa học hiện có</button>
+                    }
+                    @if (courses.options.length === 0) {
+                      <p>Trang này không có khóa học có ID biểu diễn chính xác.</p>
+                    }
+                    @if (courses.hasUnrepresentableIds) {
+                      <p class="inline-note">Đã ẩn khóa học có ID vượt khả năng biểu diễn chính xác của trình duyệt.</p>
+                    }
+                    @if (courses.totalPages > 1) {
+                      <div class="course-pagination" aria-label="Phân trang khóa học">
+                        <span>Trang {{ courses.page }} / {{ courses.totalPages }}</span>
+                        <div>
+                          <button type="button" (click)="changeCoursePage(courses.page - 1)" [disabled]="courses.page <= 1">Trước</button>
+                          <button type="button" (click)="changeCoursePage(courses.page + 1)" [disabled]="courses.page >= courses.totalPages">Sau</button>
+                        </div>
+                      </div>
+                    }
+                  }
+                }
+              </div>
+            }
+          </div>
+
+          <div class="number-fields">
+            <label class="field-group" for="quiz-duration">
+              <span class="field-label">Thời gian làm bài (phút)</span>
+              <span class="input-suffix">
+                <input
+                  id="quiz-duration"
+                  name="duration"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="Để trống nếu không giới hạn"
+                  [value]="durationDraft"
+                  [disabled]="isDraftLocked"
+                  (input)="updateDraft('durationDraft', $event)" />
+                <span aria-hidden="true">phút</span>
+              </span>
+              <span class="field-help">Để trống gửi `null`; nếu có, server nhận số nguyên signed 32-bit.</span>
+            </label>
+
+            <label class="field-group" for="quiz-passing-score">
+              <span class="field-label">Điểm đạt yêu cầu (%)</span>
+              <span class="input-suffix">
+                <input
+                  id="quiz-passing-score"
+                  name="passingScore"
+                  type="text"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  placeholder="Ví dụ: 70.00"
+                  [value]="passingScoreDraft"
+                  [disabled]="isDraftLocked"
+                  (input)="updateDraft('passingScoreDraft', $event)" />
+                <span aria-hidden="true">%</span>
+              </span>
+              <span class="field-help">Định dạng và độ chính xác phải khớp NUMERIC(5,2) của API #88.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="draft-note">
+          <span class="draft-mark" aria-hidden="true">✓</span>
+          <div>
+            <strong>Bản nháp cục bộ</strong>
+            <p>{{ isEditMode ? 'Chế độ sửa vẫn khóa cho tới khi có nguồn dữ liệu nạp đầy đủ.' : 'Các thay đổi chưa được lưu cho tới khi bạn chọn Lưu bài kiểm tra.' }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="builder-card questions-card" aria-labelledby="questions-heading">
+        <div class="section-heading">
+          <div class="section-title">
+            <span class="heading-icon" aria-hidden="true">□</span>
+            <h2 id="questions-heading">Ngân hàng câu hỏi &amp; Đáp án</h2>
+          </div>
+          <span class="section-part">PHẦN 2 / 2</span>
+        </div>
+
+        <div class="schema-note">
+          <study-icon name="info" />
+          <p>Loại câu hỏi và cấu trúc dưới đây khớp validator hiện tại của #88; embedded schema vẫn là DERIVED trong DD.</p>
+        </div>
+
+        @if (questions().length === 0) {
+          <div class="questions-empty">
+            <span class="empty-icon" aria-hidden="true">▤</span>
+            <h3>Chưa có câu hỏi nào được thêm vào bài kiểm tra</h3>
+            <p>Thêm câu hỏi và lựa chọn theo các trường mà backend #88 hiện chấp nhận.</p>
+            <button class="button button--add" type="button" (click)="addQuestion()" [disabled]="isDraftLocked">
+              <span aria-hidden="true">＋</span>
+              Thêm câu hỏi
+            </button>
+          </div>
+        } @else {
+          <div class="question-list">
+            @for (question of questions(); track question.id; let index = $index) {
+              <article class="question-editor" [attr.aria-labelledby]="'question-heading-' + question.id">
+                <div class="question-editor-heading">
+                  <h3 [id]="'question-heading-' + question.id">Câu hỏi {{ index + 1 }}</h3>
+                  <button class="inline-action inline-action--danger" type="button" (click)="removeQuestion(question.id)" [disabled]="isDraftLocked">Xóa câu hỏi</button>
+                </div>
+                <label class="field-group" [for]="'question-text-' + question.id">
+                  <span class="field-label">Nội dung câu hỏi</span>
+                  <input [id]="'question-text-' + question.id" type="text" [value]="question.text" [disabled]="isDraftLocked" (input)="updateQuestionText(question.id, $event)" />
+                </label>
+                <label class="field-group" [for]="'question-type-' + question.id">
+                  <span class="field-label">Loại câu hỏi</span>
+                  <select [id]="'question-type-' + question.id" [value]="question.type" [disabled]="isDraftLocked" (change)="updateQuestionType(question.id, $event)">
+                    <option value="SINGLE_CHOICE">Một đáp án</option>
+                    <option value="MULTIPLE_CHOICE">Nhiều đáp án</option>
+                    <option value="TRUE_FALSE">Đúng / Sai</option>
+                  </select>
+                </label>
+                <div class="choice-list" [attr.aria-label]="'Các lựa chọn của câu hỏi ' + (index + 1)">
+                  @if (question.choices.length === 0) {
+                    <p class="inline-note">Chưa có lựa chọn. Backend hiện cho phép mảng lựa chọn rỗng.</p>
+                  }
+                  @for (choice of question.choices; track choice.id; let choiceIndex = $index) {
+                    <div class="choice-row">
+                      <label class="field-group" [for]="'choice-text-' + choice.id">
+                        <span class="field-label">Lựa chọn {{ choiceIndex + 1 }}</span>
+                        <input [id]="'choice-text-' + choice.id" type="text" [value]="choice.text" [disabled]="isDraftLocked" (input)="updateChoiceText(question.id, choice.id, $event)" />
+                      </label>
+                      <label class="correct-choice" [for]="'choice-correct-' + choice.id">
+                        <input [id]="'choice-correct-' + choice.id" type="checkbox" [checked]="choice.isCorrect" [disabled]="isDraftLocked" (change)="updateChoiceCorrect(question.id, choice.id, $event)" />
+                        Đáp án đúng
+                      </label>
+                      <button class="inline-action inline-action--danger" type="button" [attr.aria-label]="'Xóa lựa chọn ' + (choiceIndex + 1)" (click)="removeChoice(question.id, choice.id)" [disabled]="isDraftLocked">Xóa</button>
+                    </div>
+                  }
+                  <button class="inline-action" type="button" (click)="addChoice(question.id)" [disabled]="isDraftLocked">＋ Thêm lựa chọn</button>
+                </div>
+              </article>
+            }
+          </div>
+          <button class="button button--add add-question-button" type="button" (click)="addQuestion()" [disabled]="isDraftLocked">
+            <span aria-hidden="true">＋</span> Thêm câu hỏi
+          </button>
+        }
+
+        <div class="builder-gate">
+          <study-icon name="info" />
+          <p>#88 nhận hai chuỗi JSON; nested field/type values đang theo current validator và vẫn DERIVED. Chỉnh sửa tiếp tục khóa vì không có GET detail và body #89 chưa được catalog mô tả.</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="builder-actions">
+      <div class="save-feedback" aria-live="polite">
+        @if (saveStatus() === 'saving') {
+          <p role="status"><study-icon name="refresh" /> Đang lưu bài kiểm tra…</p>
+        } @else if (saveStatus() === 'success') {
+          <p class="save-feedback--success" role="status"><span aria-hidden="true">✓</span> {{ saveMessage() }}</p>
+        } @else if (saveStatus() === 'error') {
+          <p class="save-feedback--error" role="alert"><study-icon name="info" /> {{ saveMessage() }}</p>
+        } @else if (saveStatus() === 'unconfirmed') {
+          <p class="save-feedback--error" role="alert"><study-icon name="info" /> {{ saveMessage() }}</p>
+        } @else {
+          <p><study-icon name="info" /> Lưu tạo mới gọi POST #88; chế độ chỉnh sửa vẫn chờ contract detail/update được xác nhận.</p>
+        }
+      </div>
+      <div class="action-buttons">
+        <a class="button button--quiet" routerLink="/admin/quizzes">Hủy bỏ</a>
+        <button class="button button--primary" type="submit" [disabled]="!canSaveQuiz">
+          @if (saveStatus() === 'saving') { <study-icon name="refresh" /> Đang lưu… }
+          @else { <span aria-hidden="true">▣</span> Lưu bài kiểm tra }
+        </button>
+      </div>
+    </footer>
+  </form>
+</main>

@@ -1,0 +1,79 @@
+<main class="static-page api-screen st13-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/courses">Khóa học của tôi</a><span>›</span><span>Bài kiểm tra</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">Bài kiểm tra</p>
+      <h1>{{ quiz()?.title || 'Bài kiểm tra' }}</h1>
+      <p>Xem thông tin bài kiểm tra trước khi bắt đầu.</p>
+    </div>
+    <span class="api-pill">{{ quiz()?.questions?.length ?? '—' }} câu hỏi</span>
+  </header>
+  @if (loading()) {
+    <section class="api-message" role="status">
+      <strong>Đang tải thông tin bài kiểm tra…</strong>
+    </section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryQuiz()">
+        Tải lại bài kiểm tra
+      </button>
+    </section>
+  }
+  @if (startError()) {
+    <section class="api-error" role="alert">{{ startError() }}</section>
+  }
+  @if (createdAttemptQuizId() === quizId() && createdAttemptId()) {
+    <section class="api-message">
+      <strong>Lượt làm đã được tạo.</strong>
+      <a
+        class="api-button secondary"
+        [routerLink]="['/student/quizzes', createdAttemptQuizId(), 'attempts', createdAttemptId()]"
+      >
+        Tiếp tục lượt làm
+      </a>
+    </section>
+  }
+  @if (!loading() && !error() && quiz(); as item) {
+    <section class="api-grid">
+      <article class="api-card">
+        <p class="api-eyebrow">Thông tin bài kiểm tra</p>
+        <h2>{{ item.title }}</h2>
+        <dl class="quiz-meta">
+          <div>
+            <dt>Thời lượng</dt>
+            <dd>
+              {{ item.duration_minutes ? item.duration_minutes + ' phút' : 'Chưa có thông tin' }}
+            </dd>
+          </div>
+          <div>
+            <dt>Điểm đạt</dt>
+            <dd>{{ item.passing_score }}</dd>
+          </div>
+          <div>
+            <dt>Số câu</dt>
+            <dd>{{ item.questions.length }}</dd>
+          </div>
+        </dl>
+        <p class="api-muted">Thời hạn và số lượt làm hiện chưa được cung cấp.</p>
+        <button
+          class="api-button"
+          type="button"
+          [disabled]="starting() || createdAttemptQuizId() === quizId()"
+          (click)="start()"
+        >
+          {{ starting() ? 'Đang tạo lượt làm…' : 'Bắt đầu làm bài' }}
+        </button>
+      </article>
+      <aside class="api-card">
+        <h2>Trước khi bắt đầu</h2>
+        <p class="api-muted">
+          Hãy kiểm tra thời lượng và số câu hỏi. Câu trả lời sẽ được lưu khi bạn chọn đáp án.
+        </p>
+      </aside>
+    </section>
+  }
+</main>

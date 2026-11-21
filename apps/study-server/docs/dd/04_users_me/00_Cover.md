@@ -16,7 +16,7 @@ format: markdown
 | Module | `GUEST / ACCOUNT & DISCOVERY` |
 | Loại tài liệu | `API Detail Design` |
 | API ID | `4` |
-| API name | `Nạp profile hiện tại / Lấy hồ sơ hiện tại` |
+| API name | `Lấy hồ sơ người dùng hiện tại` |
 | HTTP method | `GET` |
 | Endpoint | `/api/v1/users/me` |
 | Version | `V1` |
@@ -25,13 +25,13 @@ format: markdown
 | Reviewed by | `TBD — chưa được cung cấp` |
 | Approved by | `TBD — chưa được cung cấp` |
 | Created date | `2026-08-28` |
-| Updated date | `2026-08-28` |
+| Updated date | `2026-10-24` |
 
 ## Tên hiển thị
 
 ```text
 Study2Work API design
-Nạp profile hiện tại / Lấy hồ sơ hiện tại
+Lấy hồ sơ người dùng hiện tại
 ```
 
 ---

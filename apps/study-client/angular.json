@@ -1,0 +1,141 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": "c10cf1b3-43e4-4863-8b7f-30b9b2f8a9cc"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "study-client": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:class": {
+          "skipTests": true
+        },
+        "@schematics/angular:component": {
+          "skipTests": true
+        },
+        "@schematics/angular:directive": {
+          "skipTests": true
+        },
+        "@schematics/angular:guard": {
+          "skipTests": true
+        },
+        "@schematics/angular:interceptor": {
+          "skipTests": true
+        },
+        "@schematics/angular:pipe": {
+          "skipTests": true
+        },
+        "@schematics/angular:resolver": {
+          "skipTests": true
+        },
+        "@schematics/angular:service": {
+          "skipTests": true
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "study",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "src/styles.css",
+              "src/app/features/student/ST02/pages/st02-page.css",
+              "src/app/features/student/ST03/pages/st03-page.css",
+              "src/app/features/student/ST04/pages/st04-page.css",
+              "src/app/features/student/ST05/pages/st05-page.css",
+              "src/app/features/student/ST06/pages/st06-page.css",
+              "src/app/features/student/ST01/pages/st01-page.css",
+              "src/app/features/student/ST07/pages/st07-page.css",
+              "src/app/features/student/ST08/pages/st08-page.css",
+              "src/app/features/student/ST09/pages/st09-page.css",
+              "src/app/features/student/ST10/pages/st10-page.css",
+              "src/app/shared/ui/admin-screen-surface.css",
+              "src/app/shared/ui/admin-detail-page.css",
+              "src/app/features/admin/AD04/pages/ad04-page.css",
+              "src/app/features/admin/AD05/pages/ad05-page.css",
+              "src/app/features/admin/AD06/pages/ad06-page.css",
+              "src/app/features/admin/AD08/pages/ad08-page.css",
+              "src/app/features/admin/AD09/pages/ad09-page.css",
+              "src/app/features/admin/AD10/pages/ad10-page.css",
+              "src/app/features/admin/AD12/pages/ad12-page.css",
+              "src/app/features/admin/AD14/pages/ad14-page.css",
+              "src/app/features/admin/AD15/pages/ad15-page.css",
+              "src/app/features/admin/AD16/pages/ad16-page.css",
+              "src/app/features/admin/AD17/pages/ad17-page.css",
+              "src/app/features/admin/AD18/pages/ad18-page.css",
+              "src/app/features/admin/AD19/pages/ad19-page.css",
+              "src/app/features/admin/AD20/pages/ad20-page.css",
+              "src/app/features/admin/AD21/pages/ad21-page.css",
+              "src/app/features/admin/AD22/pages/ad22-page.css",
+              "src/app/features/admin/AD23/pages/ad23-page.css",
+              "src/app/features/admin/AD24/pages/ad24-page.css",
+              "src/app/features/admin/AD11/pages/ad11-page.css",
+              "src/app/features/admin/AD25/pages/ad25-page.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "study-client:build:production"
+            },
+            "development": {
+              "buildTarget": "study-client:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "study-client:build:development",
+            "tsConfig": "tsconfig.spec.json",
+            "runner": "vitest",
+            "include": ["**/*.spec.ts", "**/*.test.ts"],
+            "watch": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,95 @@
+<main class="mentor-page me02-page" [attr.aria-busy]="loading()">
+  <study-mentor-page-header
+    title="Khóa học phụ trách &amp; quản lý đào tạo"
+    description="Danh sách khóa học do Mentor trực tiếp sở hữu theo quyền kiểm tra của Study Server."
+    apiLabel="#46 · GET"
+  />
+
+  <section class="mentor-card me02-filter" aria-label="Lọc khóa học">
+    <div class="me02-filter-control">
+      <label for="me02-status">Trạng thái khóa học</label>
+      <select #statusSelect id="me02-status" [value]="status()" (change)="filter(statusSelect.value)">
+        <option value="">Tất cả trạng thái</option>
+        <option value="DRAFT">Bản nháp</option>
+        <option value="PUBLISHED">Đã xuất bản</option>
+      </select>
+    </div>
+    @if (loading()) {
+      <span class="mentor-meta" aria-live="polite">Đang tải khóa học…</span>
+    } @else {
+      <span class="mentor-meta" aria-live="polite">{{ total() }} khóa học theo bộ lọc hiện tại</span>
+    }
+  </section>
+
+  <section class="me02-results" aria-label="Danh sách khóa học" [attr.aria-busy]="loading()">
+    @if (loading()) {
+      <div class="mentor-card mentor-state" role="status">Đang tải khóa học…</div>
+    } @else if (error()) {
+      <div class="mentor-card mentor-state mentor-state--error" role="alert">
+        {{ error() }}
+        <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử lại</button>
+      </div>
+    } @else if (!courses().length) {
+      <div class="mentor-card mentor-state me02-empty">
+        <span class="mentor-empty-icon" aria-hidden="true">⌕</span>
+        <h2>Chưa có khóa học</h2>
+        <p>Study Server không trả về khóa học trong trang và trạng thái đã chọn.</p>
+      </div>
+    } @else {
+      <div class="me02-course-list">
+        @for (course of courses(); track course.id) {
+          <article class="mentor-card me02-course">
+            <div class="me02-course-media">
+              @if (thumbnailUrl(course); as thumbnail) {
+                @if (thumbnailFailed(thumbnail)) {
+                  <div class="me02-thumbnail-fallback" aria-label="Ảnh khóa học không khả dụng">Ảnh khóa học không khả dụng</div>
+                } @else {
+                  <img
+                    [src]="thumbnail"
+                    alt=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    (error)="markThumbnailFailed(thumbnail)"
+                  />
+                }
+              } @else {
+                <div class="me02-thumbnail-fallback" aria-label="Khóa học chưa có ảnh xem trước">Chưa có ảnh xem trước</div>
+              }
+              <span
+                class="me02-course-status"
+                [class.me02-course-status--published]="course.status === 'PUBLISHED'"
+              >{{ statusLabel(course.status) }}</span>
+              <span class="me02-course-id">ID #{{ course.id }}</span>
+            </div>
+
+            <div class="me02-course-content">
+              <div class="me02-course-heading">
+                <span class="mentor-meta">Khóa học</span>
+                <span class="mentor-meta">{{ course.mentor.full_name }}</span>
+              </div>
+              <h2>{{ course.title }}</h2>
+              @if (course.description) {
+                <p class="me02-course-description">{{ course.description }}</p>
+              } @else {
+                <p class="me02-course-description me02-course-description--empty">Khóa học chưa có mô tả.</p>
+              }
+              <div class="me02-course-actions">
+                @if (safeId(course.id); as id) {
+                  <a class="mentor-button" [routerLink]="['/mentor/courses', id]">Mở workspace <span aria-hidden="true">→</span></a>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <nav class="mentor-pagination me02-pagination" aria-label="Phân trang khóa học">
+        <button class="mentor-button mentor-button--light" type="button" aria-label="Trang đầu" [disabled]="loading() || page() <= 1" (click)="load(1)">«</button>
+        <button class="mentor-button mentor-button--light" type="button" [disabled]="loading() || page() <= 1" (click)="load(page() - 1)">Trang trước</button>
+        <span aria-live="polite">Trang {{ page() }} / {{ totalPages() || 1 }}</span>
+        <button class="mentor-button mentor-button--light" type="button" [disabled]="loading() || page() >= totalPages()" (click)="load(page() + 1)">Trang sau</button>
+        <button class="mentor-button mentor-button--light" type="button" aria-label="Trang cuối" [disabled]="loading() || page() >= totalPages()" (click)="load(totalPages())">»</button>
+      </nav>
+    }
+  </section>
+</main>

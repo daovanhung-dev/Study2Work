@@ -1,7 +1,7 @@
 ---
 task_id: "YYYY-MM-DD-short-name"
 date: "YYYY-MM-DD"
-primary_task_type: "coding | fix | docs | test"
+primary_task_type: "coding | fix | docs | test | review"
 secondary_task_types: []
 project_scopes: []
 cross_scope_dependencies: []
@@ -23,6 +23,16 @@ status: "PLANNED | IN_PROGRESS | VERIFIED | PARTIAL | BLOCKED"
 
 - Requirement:
 - Canonical contract/approved DD:
+
+## TARGET_UPDATES
+
+Record each target creation, verified progress change, blocker that affects
+progress, and completion evidence. `.agents/target.md` is the sole live progress
+source; do not duplicate its current value in a milestone table.
+
+| Target | From → to | Evidence / reason |
+|---|---:|---|
+| `<target name>` | `0% → 0%` | `<initial target and acceptance basis>` |
 
 ## CURRENT_BEHAVIOR
 
@@ -48,6 +58,7 @@ caller -> callee -> DB/external side effect -> response -> tests
 - CONTEXT_UPDATES:
 - Context pages changed:
 - Assumptions:
+- Target progress updates and completion evidence: see `TARGET_UPDATES`.
 
 ## VERIFICATION
 

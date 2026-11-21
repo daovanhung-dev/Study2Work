@@ -1,0 +1,122 @@
+<main class="notification-catalog page-width" data-screen-id="AD19">
+  <div class="catalog-breadcrumbs">
+    <nav aria-label="Đường dẫn thông báo">
+      <ol><li>Quản trị trung tâm</li><li aria-hidden="true">›</li><li aria-current="page">Thông báo hệ thống</li></ol>
+    </nav>
+    <span class="api-badge">API #92</span>
+  </div>
+
+  <header class="catalog-heading">
+    <div>
+      <p class="catalog-eyebrow">NOTIFICATION CENTER</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+    <a class="compose-link" routerLink="/admin/notifications/new"><span class="plus-mark" aria-hidden="true">+</span> Soạn thông báo</a>
+  </header>
+
+  <section class="filter-panel" aria-labelledby="filter-heading">
+    <div class="filter-panel-heading">
+      <h2 id="filter-heading"><study-icon name="filter" /> Lọc danh sách</h2>
+      <span class="source-badge">Delivery-backed</span>
+    </div>
+    <form class="filter-grid" aria-label="Bộ lọc thông báo" (submit)="submitFilters($event)">
+      <label for="notification-search">
+        <span>Tìm thông báo</span>
+        <span class="search-wrap"><study-icon name="search" /><input id="notification-search" type="search" placeholder="Tìm theo tiêu đề hoặc nội dung" disabled aria-describedby="search-note" /></span>
+      </label>
+      <label for="notification-status">
+        <span>Trạng thái</span>
+        <select id="notification-status" [value]="filterStatus()" (change)="setFilterStatus($any($event.target).value)" [disabled]="viewState().status === 'loading'">
+          <option value="">Tất cả</option><option value="QUEUED">QUEUED</option><option value="SENT">SENT</option><option value="FAILED">FAILED</option>
+        </select>
+      </label>
+      <label for="notification-channel">
+        <span>Kênh</span>
+        <select id="notification-channel" [value]="filterChannel()" (change)="setFilterChannel($any($event.target).value)" [disabled]="viewState().status === 'loading'">
+          <option value="">Tất cả</option><option value="EMAIL">EMAIL</option><option value="PUSH">PUSH</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <button class="apply-button" type="submit" [disabled]="viewState().status === 'loading'"><study-icon name="search" /> Áp dụng</button>
+        <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+      </div>
+    </form>
+    <p class="filter-note" id="search-note"><study-icon name="info" /> API #92 không nhận từ khóa. Status/channel gửi đúng giá trị source; trạng thái là aggregate theo delivery.</p>
+  </section>
+
+  <section class="notification-table-panel" aria-label="Danh sách thông báo">
+    @if (viewState().status === 'loaded' && snapshotMismatch()) {
+      <div class="snapshot-warning" role="status" aria-live="polite">
+        <div><strong>Số lượng và danh sách thông báo chưa đồng nhất</strong><p>Các dòng API trả về vẫn được giữ lại; tổng và phân trang đang ẩn cho đến khi tải lại.</p></div>
+        <button type="button" (click)="refreshNotifications()"><study-icon name="refresh" /> Tải lại trang này</button>
+      </div>
+    }
+    <div class="table-scroll" role="region" aria-label="Bảng thông báo" tabindex="0">
+      <table>
+        <caption class="visually-hidden">Thông báo có dữ liệu delivery trả về từ API #92</caption>
+        <thead><tr><th scope="col">Mã thông báo</th><th scope="col">Tiêu đề</th><th scope="col">Nội dung</th><th scope="col">Kênh</th><th scope="col">Trạng thái delivery</th><th scope="col">Ngày tạo</th><th scope="col">Theo dõi</th></tr></thead>
+        <tbody>
+          @if (viewState().status === 'loading') {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải thông báo…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
+          } @else if (viewState().status === 'error') {
+            <tr><td class="table-state table-state--error" colspan="7" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải danh sách thông báo</strong><span>{{ viewState().message }}</span></td></tr>
+          } @else if (pageOutOfRange()) {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="info" /></span><strong>Trang này không còn thông báo</strong><span>Danh sách đã thay đổi; hãy quay lại trang đầu để xem dữ liệu hiện có.</span><button type="button" (click)="returnToFirstPage()">Về trang đầu</button></td></tr>
+          } @else if (snapshotMismatch() && (viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="info" /></span><strong>Trang chưa đồng bộ</strong><span>API #92 trả về số dòng khác với tổng ở thời điểm đọc; không coi đây là danh sách rỗng.</span><button type="button" (click)="refreshNotifications()">Tải lại trang này</button></td></tr>
+          } @else if ((viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="bell" /></span><strong>Không có thông báo phù hợp</strong><span>API #92 trả về trang rỗng cho bộ lọc hiện tại.</span><button class="empty-refresh-button" type="button" (click)="refreshNotifications()"><study-icon name="refresh" /> Làm mới danh sách thông báo</button></td></tr>
+          } @else {
+            @for (row of viewState().rows ?? []; track $index) {
+              <tr>
+                <td class="notification-id">{{ row.values[0] }}</td>
+                <td class="notification-title"><strong>{{ row.values[1] }}</strong></td>
+                <td class="notification-content">{{ row.values[2] }}</td>
+                <td><span class="channel-list">{{ row.values[3] }}</span></td>
+                <td><span class="status-badge">{{ row.values[4] }}</span></td>
+                <td class="notification-date">{{ row.values[5] }}</td>
+                <td>
+                  @if (row.route) {
+                    <a class="row-action" [routerLink]="row.route">Trạng thái <study-icon name="chevron" /></a>
+                  } @else {
+                    <button class="row-action" type="button" disabled aria-label="Không thể mở thông báo do mã vượt khả năng biểu diễn an toàn"><span>Không thể mở</span></button>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (viewState().status === 'loaded' && !snapshotMismatch() && !pageOutOfRange()) {
+      <div class="pagination-bar">
+        <p>
+          @if (viewState().pagination; as pagination) {
+            <strong>{{ pagination.total }}</strong> thông báo có delivery
+            @if (pagination.totalPages > 0) { · Trang <strong>{{ pagination.page }} / {{ pagination.totalPages }}</strong> }
+          } @else {
+            Response không có metadata phân trang.
+          }
+        </p>
+        @if (viewState().pagination; as pagination) {
+          @if (pagination.totalPages > 0) {
+            <div class="pagination-controls" aria-label="Phân trang thông báo">
+              <button type="button" (click)="changePage(pagination.page - 1)" [disabled]="pagination.page <= 1"><study-icon name="chevron" /> Trước</button>
+              <span>Trang {{ pagination.page }}</span>
+              <button type="button" (click)="changePage(pagination.page + 1)" [disabled]="pagination.page >= pagination.totalPages">Sau <study-icon name="chevron" /></button>
+            </div>
+          }
+        }
+      </div>
+    }
+    <div class="source-note"><study-icon name="database" /><span>Nguồn: GET /api/v1/admin/notifications · #92 · mới nhất trước · page size 20</span></div>
+  </section>
+
+  <aside class="data-boundary">
+    <span class="boundary-icon"><study-icon name="shield" /></span>
+    <div><strong>Phạm vi phản hồi #92</strong><p>Trạng thái là tổng hợp theo delivery. Response không có người nhận, người gửi, số delivery, tiến độ theo từng kênh, trạng thái đã đọc hoặc lịch gửi.</p></div>
+    <span class="source-badge">Page&lt;Notification&gt;</span>
+  </aside>
+</main>

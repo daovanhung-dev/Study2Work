@@ -1,0 +1,106 @@
+<main class="static-page api-screen st18-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/courses">Khóa học của tôi</a><span>›</span
+    ><a [routerLink]="['/student/assignments', assignment()?.id]">{{
+      assignment()?.title || 'Bài tập'
+    }}</a
+    ><span>›</span><span>Nộp bài</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">Soạn và nộp bài tập</p>
+      <h1>{{ assignment()?.title || 'Bài nộp' }}</h1>
+      <p>Viết nội dung bài nộp và đính kèm một tệp nếu cần.</p>
+    </div>
+  </header>
+  @if (loading()) {
+    <section class="api-message" role="status"><strong>Đang tải đề bài…</strong></section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (!assignment()) {
+        <button class="api-button secondary" type="button" (click)="retryAssignment()">
+          Tải lại đề bài
+        </button>
+      }
+    </section>
+  }
+  @if (createdSubmission(); as receipt) {
+    <p class="api-success" role="status">
+      Bài nộp đã được tạo.
+      <a [routerLink]="['/student/submissions', receipt.submissionId]">Mở biên nhận</a>
+    </p>
+  }
+  @if (!loading() && assignment(); as item) {
+    <section class="api-grid">
+      <form class="api-card" (ngSubmit)="submit()">
+        <p class="api-eyebrow">Nội dung bài nộp</p>
+        <label class="api-field"
+          >Bài viết / ghi chú<textarea
+            name="content"
+            [disabled]="busy()"
+            [ngModel]="content()"
+            (ngModelChange)="content.set($event)"
+            rows="9"
+            placeholder="Nhập nội dung bài nộp"
+          ></textarea>
+        </label>
+        <label class="api-field"
+          >Đính kèm một tệp<input
+            name="submission-file"
+            type="file"
+            [disabled]="busy()"
+            (change)="selectFile($event)"
+        /></label>
+        @if (file(); as selectedFile) {
+          <p class="api-meta">
+            Đã chọn {{ selectedFile.name }} · {{ fileSize(selectedFile.size) }}
+          </p>
+        }
+        @if (uploadedAsset(); as asset) {
+          <p class="api-success">Đã tải tệp {{ asset.name }} lên. Bấm nộp để gửi bài.</p>
+        }
+        <p class="api-muted">Bạn có thể đính kèm một tệp cho bài nộp này.</p>
+        <button
+          class="api-button"
+          type="submit"
+          [disabled]="
+            busy() ||
+            !assignmentId() ||
+            outcomeUnknownAssignmentId() === assignmentId() ||
+            createdSubmission()?.assignmentId === assignmentId()
+          "
+        >
+          {{ busy() ? 'Đang tải tệp và gửi bài…' : 'Nộp bài' }}
+        </button>
+        @if (outcomeUnknownAssignmentId() === assignmentId()) {
+          <p class="api-error">
+            Chưa thể xác nhận bài đã được gửi. Nút gửi đã khóa để tránh gửi trùng.
+          </p>
+        }
+      </form>
+      <aside class="api-stack">
+        <section class="api-card">
+          <h2>Đề bài</h2>
+          <p>{{ item.description || 'Chưa có mô tả cho bài tập này.' }}</p>
+          <dl class="assignment-meta">
+            <div>
+              <dt>Hạn nộp</dt>
+              <dd>{{ item.due_at ? (item.due_at | date: 'medium') : 'Chưa có thông tin' }}</dd>
+            </div>
+            <div>
+              <dt>Điểm tối đa</dt>
+              <dd>{{ item.max_score }}</dd>
+            </div>
+            <div>
+              <dt>Khóa học</dt>
+              <dd>Khóa học liên quan</dd>
+            </div>
+          </dl>
+        </section>
+        <p class="api-muted">Tệp đã tải lên chưa đồng nghĩa bài đã được gửi. Chọn “Nộp bài” để hoàn tất.</p>
+      </aside>
+    </section>
+  }
+</main>

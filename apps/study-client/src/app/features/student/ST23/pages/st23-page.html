@@ -1,0 +1,126 @@
+<main class="static-page api-screen st23-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student">Trang chủ</a><span>›</span><span>Danh sách thảo luận</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">Diễn đàn học tập</p>
+      <h1>Danh sách thảo luận</h1>
+      <p>Trao đổi cùng học viên trong các khóa học bạn đang tham gia.</p>
+    </div>
+    <a
+      class="api-button"
+      [routerLink]="['/student/discussions/new']"
+      [queryParams]="courseFilter() ? { courseId: courseFilter() } : null"
+      >Tạo chủ đề</a
+    >
+  </header>
+  <form class="discussion-filter api-card" (ngSubmit)="applyCourseFilter()">
+    <label class="api-field"
+      >Lọc theo mã khóa học<input
+        name="courseId"
+        type="number"
+        min="1"
+        [(ngModel)]="courseIdInput"
+        placeholder="Để trống để xem tất cả khóa được phép"
+    /></label>
+    <div class="api-actions">
+      <button class="api-button secondary" type="submit">Lọc</button>
+      @if (courseFilter()) {
+        <button
+          class="api-button secondary"
+          type="button"
+          (click)="courseIdInput = ''; applyCourseFilter()"
+        >
+          Xóa bộ lọc
+        </button>
+      }
+    </div>
+  </form>
+  @if (loading()) {
+    <section class="api-message" role="status"><strong>Đang tải thảo luận…</strong></section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (!invalidCourseQuery()) {
+        <button class="api-button secondary" type="button" (click)="retry()">
+          Tải lại thảo luận
+        </button>
+      }
+    </section>
+  }
+  @if (!loading() && !error() && snapshotMismatch()) {
+    <section class="api-message" role="status">
+      <strong>Tổng số và danh sách thảo luận trên trang chưa đồng nhất.</strong>
+      <p>Không thể xác nhận trạng thái rỗng hoặc phân trang ở lần tải này. Hãy tải lại để đồng bộ.</p>
+      <button class="api-button secondary" type="button" (click)="retry()">
+        Tải lại danh sách
+      </button>
+    </section>
+  }
+  @if (!loading() && !error() && !snapshotMismatch() && discussions().length === 0) {
+    <section class="api-message">
+      <div>
+        <span class="api-empty-icon" aria-hidden="true">▣</span
+        ><strong>Chưa có chủ đề thảo luận.</strong>
+        <p>Hãy chọn một khóa học bạn đang tham gia để bắt đầu chủ đề mới.</p>
+        <a
+          class="api-button"
+          [routerLink]="['/student/discussions/new']"
+          [queryParams]="courseFilter() ? { courseId: courseFilter() } : null"
+          >Tạo chủ đề</a
+        >
+      </div>
+    </section>
+  }
+  @if (!loading() && !error() && discussions().length) {
+    <section class="api-card">
+      <ul class="discussion-list">
+        @for (discussion of discussions(); track discussion.id) {
+          <li>
+            <div class="discussion-copy">
+              <p class="api-meta">
+                Khóa học · {{ discussion.author.full_name }} · Đang hoạt động
+              </p>
+              <h2>{{ discussion.title }}</h2>
+              <p>{{ discussion.content }}</p>
+              <span class="api-meta">{{ discussion.comments.length }} phản hồi</span>
+            </div>
+            @if (safeId(discussion.id); as id) {
+              <a class="api-button secondary" [routerLink]="['/student/discussions', id]"
+                >Mở thảo luận</a
+              >
+            } @else {
+              <span class="api-meta">Chưa thể mở chủ đề này.</span>
+            }
+          </li>
+        }
+      </ul>
+      @if (pagination(); as pageInfo) {
+        @if (!snapshotMismatch()) {
+          <nav class="api-pagination" aria-label="Phân trang">
+            <button
+              class="api-button secondary"
+              type="button"
+              (click)="changePage(-1)"
+              [disabled]="pageInfo.page <= 1"
+            >
+              Trước</button
+            ><span
+              >Trang {{ pageInfo.page }} / {{ pageInfo.total_pages || 1 }} · {{ pageInfo.total }} chủ
+              đề</span
+            ><button
+              class="api-button secondary"
+              type="button"
+              (click)="changePage(1)"
+              [disabled]="pageInfo.page >= pageInfo.total_pages"
+            >
+              Sau
+            </button>
+          </nav>
+        }
+      }
+    </section>
+  }
+</main>

@@ -1,0 +1,50 @@
+{
+  "screen_id": "SH-01",
+  "source_image": "screen.png",
+  "source_size": { "width": 559, "height": 1600 },
+  "annotated_canvas": {
+    "render_scale": 2,
+    "side_gutter_source_px": 28,
+    "source_offset_output_px": { "x": 56, "y": 0 },
+    "size_output_px": { "width": 1230, "height": 3200 },
+    "background": "#FFFFFF"
+  },
+  "coordinate_origin": "top-left of screen.png; target is the component anchor in source-image pixels",
+  "marker_style": {
+    "shape": "circle",
+    "fill": "#0B5F8A",
+    "text": "white bold, sequential number",
+    "stroke": "#FFFFFF",
+    "leader_line": "short horizontal line confined to the outer gutter",
+    "approx_diameter_output_px": 40
+  },
+  "numbering_note": "Each marker maps one-to-one to SH01-EL-01 through SH01-EL-26 in SH-01.md. A repeated card row is one reusable component group; repeated instances and fields are enumerated in the DD. Badges sit in expanded outer gutters so source text/control pixels remain unobscured. The screenshot is the only current variant; no variant-2 is reconstructed.",
+  "markers": [
+    { "number": 1, "element_id": "SH01-EL-01", "label": "Header brand, navigation and utility group", "target": { "x": 278, "y": 16 }, "position": { "side": "left", "y_source": 16 } },
+    { "number": 2, "element_id": "SH01-EL-02", "label": "Hero campaign badge", "target": { "x": 280, "y": 52 }, "position": { "side": "left", "y_source": 52 } },
+    { "number": 3, "element_id": "SH01-EL-03", "label": "Hero title and supporting copy", "target": { "x": 278, "y": 101 }, "position": { "side": "right", "y_source": 101 } },
+    { "number": 4, "element_id": "SH01-EL-04", "label": "Hero search input", "target": { "x": 260, "y": 151 }, "position": { "side": "left", "y_source": 151 } },
+    { "number": 5, "element_id": "SH01-EL-05", "label": "Hero search submit button", "target": { "x": 399, "y": 151 }, "position": { "side": "right", "y_source": 151 } },
+    { "number": 6, "element_id": "SH01-EL-06", "label": "Hero CTA pair", "target": { "x": 278, "y": 184 }, "position": { "side": "left", "y_source": 184 } },
+    { "number": 7, "element_id": "SH01-EL-07", "label": "Three marketing KPI cards", "target": { "x": 278, "y": 235 }, "position": { "side": "right", "y_source": 235 } },
+    { "number": 8, "element_id": "SH01-EL-08", "label": "Category section heading", "target": { "x": 170, "y": 294 }, "position": { "side": "left", "y_source": 294 } },
+    { "number": 9, "element_id": "SH01-EL-09", "label": "Category chip row", "target": { "x": 278, "y": 336 }, "position": { "side": "left", "y_source": 336 } },
+    { "number": 10, "element_id": "SH01-EL-10", "label": "Category carousel controls", "target": { "x": 538, "y": 327 }, "position": { "side": "right", "y_source": 327 } },
+    { "number": 11, "element_id": "SH01-EL-11", "label": "Published-course section title and subtitle", "target": { "x": 190, "y": 397 }, "position": { "side": "left", "y_source": 397 } },
+    { "number": 12, "element_id": "SH01-EL-12", "label": "Course sort/filter and view-all controls", "target": { "x": 460, "y": 399 }, "position": { "side": "right", "y_source": 399 } },
+    { "number": 13, "element_id": "SH01-EL-13", "label": "Six repeated course-card grid", "target": { "x": 278, "y": 620 }, "position": { "side": "left", "y_source": 620 } },
+    { "number": 14, "element_id": "SH01-EL-14", "label": "Benefits section heading and intro", "target": { "x": 278, "y": 860 }, "position": { "side": "right", "y_source": 860 } },
+    { "number": 15, "element_id": "SH01-EL-15", "label": "Three benefit cards", "target": { "x": 278, "y": 957 }, "position": { "side": "left", "y_source": 957 } },
+    { "number": 16, "element_id": "SH01-EL-16", "label": "Testimonial section heading and metric", "target": { "x": 278, "y": 1053 }, "position": { "side": "right", "y_source": 1053 } },
+    { "number": 17, "element_id": "SH01-EL-17", "label": "Three testimonial cards", "target": { "x": 278, "y": 1150 }, "position": { "side": "left", "y_source": 1150 } },
+    { "number": 18, "element_id": "SH01-EL-18", "label": "Employer logo strip", "target": { "x": 278, "y": 1237 }, "position": { "side": "right", "y_source": 1237 } },
+    { "number": 19, "element_id": "SH01-EL-19", "label": "Email CTA heading and copy", "target": { "x": 278, "y": 1364 }, "position": { "side": "left", "y_source": 1364 } },
+    { "number": 20, "element_id": "SH01-EL-20", "label": "Email input", "target": { "x": 165, "y": 1424 }, "position": { "side": "left", "y_source": 1424 } },
+    { "number": 21, "element_id": "SH01-EL-21", "label": "Email submit action", "target": { "x": 306, "y": 1424 }, "position": { "side": "right", "y_source": 1424 } },
+    { "number": 22, "element_id": "SH01-EL-22", "label": "Privacy and reassurance labels", "target": { "x": 280, "y": 1454 }, "position": { "side": "left", "y_source": 1454 } },
+    { "number": 23, "element_id": "SH01-EL-23", "label": "Footer brand and description", "target": { "x": 115, "y": 1530 }, "position": { "side": "left", "y_source": 1530 } },
+    { "number": 24, "element_id": "SH01-EL-24", "label": "Footer navigation columns", "target": { "x": 385, "y": 1534 }, "position": { "side": "right", "y_source": 1534 } },
+    { "number": 25, "element_id": "SH01-EL-25", "label": "Accreditation badges", "target": { "x": 155, "y": 1566 }, "position": { "side": "left", "y_source": 1566 } },
+    { "number": 26, "element_id": "SH01-EL-26", "label": "Copyright and platform tagline", "target": { "x": 280, "y": 1590 }, "position": { "side": "right", "y_source": 1590 } }
+  ]
+}

@@ -1,0 +1,143 @@
+<div class="enrollment-screen" data-screen-id="ST-04">
+  <header class="enrollment-header">
+    <div class="enrollment-header__content">
+      <a class="enrollment-brand" routerLink="/" aria-label="Study2Work — trang chủ">
+        Study2Work
+      </a>
+
+      <nav class="enrollment-navigation" aria-label="Điều hướng chính">
+        <a routerLink="/" routerLinkActive="enrollment-navigation__link--active">Trang chủ</a>
+        <a
+          routerLink="/courses"
+          routerLinkActive="enrollment-navigation__link--active"
+          aria-current="page"
+          >Khóa học</a
+        >
+        <a routerLink="/student/courses" routerLinkActive="enrollment-navigation__link--active">Khóa học của tôi</a>
+        <a routerLink="/student/progress" routerLinkActive="enrollment-navigation__link--active">
+          Tiến độ
+        </a>
+      </nav>
+
+      <div class="enrollment-auth-links" aria-label="Tài khoản">
+        <a routerLink="/login">Đăng nhập</a>
+        <a class="enrollment-auth-links__register" routerLink="/register">Đăng ký</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="enrollment-main">
+    <div class="enrollment-breadcrumb-bar">
+      <nav class="enrollment-breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z" />
+          </svg>
+          <span>Trang chủ</span>
+        </a>
+        <span aria-hidden="true">›</span>
+        <a routerLink="/courses">Khóa học</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Kiểm tra ghi danh</span>
+      </nav>
+    </div>
+
+    <section
+      class="enrollment-status-card"
+      aria-live="polite"
+      aria-atomic="true"
+      [attr.aria-busy]="state() === 'loading' || state() === 'submitting'"
+      aria-labelledby="enrollment-title"
+    >
+      <div class="enrollment-status-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M16 3 27 7v8c0 7.2-4.6 11.8-11 15C9.6 26.8 5 22.2 5 15V7l11-4Z" />
+          <path d="m11 16 3.4 3.4L21.5 12" />
+        </svg>
+      </div>
+      @if (state() === 'loading') {
+        <h1 id="enrollment-title">Kiểm tra ghi danh</h1>
+        <p aria-live="polite">Đang kiểm tra thông tin khóa học…</p>
+      } @else if (state() === 'not-found') {
+        <h1 id="enrollment-title">Không tìm thấy khóa học</h1>
+        <p>Khóa học không tồn tại hoặc hiện không được xuất bản.</p>
+      } @else if (state() === 'login-required') {
+        <h1 id="enrollment-title">Đăng nhập để tiếp tục</h1>
+        <p>Đăng nhập bằng tài khoản học viên để kiểm tra trạng thái ghi danh của bạn.</p>
+        <a class="enrollment-return-button" routerLink="/login">Đăng nhập</a>
+      } @else if (state() === 'already-enrolled') {
+        <h1 id="enrollment-title">Bạn đã ghi danh khóa học</h1>
+        @if (course(); as currentCourse) {
+          <h2>{{ currentCourse.title }}</h2>
+        }
+        <p>Khóa học đã có trong danh sách của bạn.</p>
+        <a class="enrollment-return-button" routerLink="/student/courses">Mở khóa học của tôi</a>
+      } @else if (state() === 'enrollment-unresolved') {
+        <h1 id="enrollment-title">Chưa thể xác định trạng thái ghi danh</h1>
+        @if (course(); as currentCourse) {
+          <h2>{{ currentCourse.title }}</h2>
+        }
+        <p>Vui lòng kiểm tra lại trước khi đăng ký khóa học này.</p>
+        <button class="enrollment-return-button" type="button" (click)="retryCheck()">
+          Kiểm tra lại
+        </button>
+      } @else if (state() === 'free') {
+        <h1 id="enrollment-title">Khóa học miễn phí</h1>
+        @if (course(); as currentCourse) {
+          <h2>{{ currentCourse.title }}</h2>
+        }
+        <p>Ghi danh miễn phí để thêm khóa học vào danh sách học tập của bạn.</p>
+        <button class="enrollment-return-button" type="button" (click)="enrollForFree()">
+          Đăng ký miễn phí
+        </button>
+      } @else if (state() === 'paid') {
+        <h1 id="enrollment-title">Kiểm tra ghi danh</h1>
+        @if (course(); as currentCourse) {
+          <h2>{{ currentCourse.title }}</h2>
+        }
+        <p>Khóa học này có học phí và cần thanh toán trước khi ghi danh.</p>
+        @if (course(); as currentCourse) {
+          <a class="enrollment-return-button" [routerLink]="['/student/checkout', currentCourse.id]">
+            Tiếp tục thanh toán
+          </a>
+        }
+      } @else if (state() === 'submitting') {
+        <h1 id="enrollment-title">Đang ghi danh</h1>
+        <p aria-live="polite">Đang tạo quyền học miễn phí…</p>
+      } @else if (state() === 'refresh-error') {
+        <h1 id="enrollment-title">Chưa thể tải danh sách khóa học</h1>
+        <p>Yêu cầu ghi danh đã được gửi. Hãy tải lại danh sách để xác nhận trạng thái hiện tại.</p>
+        <button class="enrollment-return-button" type="button" (click)="retryMyCoursesRefresh()">
+          Tải lại danh sách khóa học
+        </button>
+      } @else if (state() === 'error') {
+        <h1 id="enrollment-title">Chưa thể hoàn tất ghi danh</h1>
+        <p>Đã xảy ra lỗi khi kiểm tra hoặc gửi yêu cầu ghi danh. Vui lòng thử lại sau.</p>
+        <button class="enrollment-return-button" type="button" (click)="retryCheck()">
+          Kiểm tra lại
+        </button>
+      } @else {
+        <h1 id="enrollment-title">Kiểm tra ghi danh</h1>
+        <p>Chưa thể xác nhận trạng thái ghi danh.</p>
+      }
+      <a class="enrollment-return-button enrollment-return-button--secondary" routerLink="/courses">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
+        </svg>
+        Quay lại danh sách khóa học
+      </a>
+    </section>
+  </main>
+
+  <footer class="enrollment-footer">
+    <div class="enrollment-footer__content">
+      <span class="enrollment-footer__brand">Study2Work</span>
+      <nav aria-label="Điều hướng cuối trang">
+        <a routerLink="/">Trang chủ</a>
+        <a routerLink="/courses">Khóa học</a>
+        <a routerLink="/login">Đăng nhập</a>
+        <a routerLink="/register">Đăng ký</a>
+      </nav>
+    </div>
+  </footer>
+</div>

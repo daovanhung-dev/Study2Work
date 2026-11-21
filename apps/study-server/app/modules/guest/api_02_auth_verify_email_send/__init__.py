@@ -1,1 +1,1 @@
-"""Email-verification dispatch module."""
+"""Đánh dấu package tiếp nhận yêu cầu gửi email xác minh tài khoản."""

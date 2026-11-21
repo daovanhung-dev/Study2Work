@@ -1,0 +1,57 @@
+<main class="static-page api-screen st16-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student">Trang học tập</a><span>›</span><span>Kết quả bài kiểm tra</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">Kết quả bài kiểm tra</p>
+      <h1>Kết quả lượt làm</h1>
+      <p>Kết quả được cập nhật sau khi bài làm được chấm.</p>
+    </div>
+  </header>
+  @if (loading()) {
+    <section class="api-message" role="status"><strong>Đang tải kết quả…</strong></section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryResult()">
+        Tải lại kết quả
+      </button>
+    </section>
+  }
+  @if (!loading() && !error() && result(); as item) {
+    <section class="api-stack">
+      @if (isPending(item.status)) {
+        <div class="api-card">
+          <span class="api-pill">{{ resultStatusLabel(item.status) }}</span>
+          <h2>Đang chờ chấm</h2>
+          <p class="api-muted">Điểm sẽ hiển thị sau khi bài làm được chấm.</p>
+        </div>
+      } @else if (item.score === null || item.score === undefined) {
+        <div class="api-card">
+          <span class="api-pill">{{ resultStatusLabel(item.status) }}</span>
+          <h2>Chưa có điểm để hiển thị</h2>
+          <p class="api-muted">Hiện chưa có điểm để hiển thị.</p>
+        </div>
+      } @else {
+        <div class="api-card result-score">
+          <p class="api-eyebrow">Điểm số</p>
+          <strong>{{ item.score }}</strong>
+          <p class="api-meta">
+            Trạng thái: {{ resultStatusLabel(item.status) }} · Nộp lúc
+            {{ item.submitted_at ? (item.submitted_at | date: 'medium') : 'chưa có thời gian' }}
+          </p>
+        </div>
+      }
+      <article class="api-card">
+        <h2>Nhận xét bài làm</h2>
+        <p class="api-muted">Chi tiết từng câu hiện chưa có.</p>
+      </article>
+      <div class="api-actions">
+        <a class="api-button" routerLink="/student/progress">Xem tiến độ</a
+        ><a class="api-button secondary" routerLink="/student/courses">Khóa học của tôi</a>
+      </div>
+    </section>
+  }
+</main>

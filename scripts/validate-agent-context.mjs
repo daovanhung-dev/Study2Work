@@ -195,6 +195,78 @@ function checkStatus(status, label) {
   }
 }
 
+function markdownTableCells(line) {
+  if (!line.startsWith("|") || !line.endsWith("|")) return null;
+  return line.slice(1, -1).split("|").map((cell) => cell.trim());
+}
+
+function checkTargetTracker(manifest) {
+  const tracker = manifest.targetTracker;
+  const expectedColumns = ["STT", "Tên target", "Tiến độ hoàn thiện"];
+  if (!tracker || typeof tracker !== "object") {
+    fail("targetTracker registry is missing");
+    return;
+  }
+
+  if (typeof tracker.path !== "string" || !tracker.path.trim()) {
+    fail("targetTracker.path is missing");
+    return;
+  }
+  mustExist(tracker.path, "target tracker");
+  if (JSON.stringify(tracker.columns) !== JSON.stringify(expectedColumns)) {
+    fail("targetTracker.columns must be STT, Tên target, Tiến độ hoàn thiện in order");
+  }
+  if (tracker.mode !== "active-targets-only") {
+    fail("targetTracker.mode must be active-targets-only");
+  }
+  if (tracker.completionPolicy !== "record-evidence-then-remove-at-100") {
+    fail("targetTracker.completionPolicy is invalid");
+  }
+
+  if (!existsSync(resolve(repoRoot, tracker.path))) return;
+  const text = readFileSync(resolve(repoRoot, tracker.path), "utf8").replace(/\r\n/g, "\n");
+  const lines = text.replace(/\n+$/, "").split("\n");
+  const header = markdownTableCells(lines[0] ?? "");
+  if (!header || JSON.stringify(header) !== JSON.stringify(expectedColumns)) {
+    fail("target tracker must use the exact three-column header");
+  }
+  if (lines.length < 2) {
+    fail("target tracker is missing the Markdown table separator");
+    return;
+  }
+
+  const separator = markdownTableCells(lines[1]);
+  if (!separator || separator.length !== 3 || separator.some((cell) => !/^:?-{3,}:?$/.test(cell))) {
+    fail("target tracker must have a three-column Markdown separator");
+  }
+
+  const names = new Set();
+  let expectedNumber = 1;
+  for (const [index, line] of lines.slice(2).entries()) {
+    const cells = markdownTableCells(line);
+    if (!cells || cells.length !== 3) {
+      fail(`target tracker line ${index + 3} must be a three-column table row`);
+      continue;
+    }
+
+    const number = Number(cells[0]);
+    if (!Number.isInteger(number) || number !== expectedNumber) {
+      fail(`target tracker line ${index + 3} must use sequential STT ${expectedNumber}`);
+    }
+    expectedNumber += 1;
+
+    const name = cells[1].trim();
+    if (!name) fail(`target tracker line ${index + 3} has an empty target name`);
+    else if (names.has(name)) fail(`target tracker contains duplicate target name: ${name}`);
+    names.add(name);
+
+    const match = /^(\d{1,3})%$/.exec(cells[2]);
+    if (!match || Number(match[1]) > 99) {
+      fail(`target tracker line ${index + 3} must have active progress from 0% to 99%`);
+    }
+  }
+}
+
 function checkRegistries(manifest) {
   const scopeNames = new Set(Object.keys(manifest.scopes ?? {}));
   scopeNames.add("all");
@@ -413,7 +485,7 @@ try {
 }
 
 if (manifest) {
-  if (manifest.schemaVersion !== 3) fail(`unsupported schemaVersion: ${manifest.schemaVersion}`);
+  if (manifest.schemaVersion !== 4) fail(`unsupported schemaVersion: ${manifest.schemaVersion}`);
   if (typeof manifest.sourceCommit !== "string" || !/^[0-9a-f]{40}$/.test(manifest.sourceCommit)) {
     fail("manifest.sourceCommit must be a 40-character git SHA");
   }
@@ -440,6 +512,7 @@ if (manifest) {
   checkNoAgentContextInApps();
   checkPageGraph(manifest, registry);
   checkRegistries(manifest);
+  checkTargetTracker(manifest);
   checkContextMap(manifest);
 
   const registered = registeredContextFiles(manifest);

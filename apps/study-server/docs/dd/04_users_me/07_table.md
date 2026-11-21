@@ -12,10 +12,10 @@ format: markdown
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | `N/A — users chỉ được đọc` |
-| Logical table | `N/A — current user profile query` |
-| Operation | `N/A — no DB mutation` |
-| Data Mapping step | `2.1 — SELECT users by JWT user_id` |
+| Physical table | `users` |
+| Logical table | `Hồ sơ người dùng hiện tại` |
+| Operation | `SELECT only — không ghi database` |
+| Data Mapping step | `2.1 — SELECT users theo ID từ JWT sub` |
 
 ## Update mapping
 

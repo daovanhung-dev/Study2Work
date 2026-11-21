@@ -1,0 +1,40 @@
+.st19-page { padding-bottom: 25px; }
+.submission-summary { display: grid; grid-template-columns: 1fr 190px; gap: 18px; align-items: center; }
+.submission-summary h1 { margin: 13px 0; font-size: clamp(24px, 3vw, 36px); }
+.submission-summary aside { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px; padding: 17px; border-radius: 11px; background: #e9fff5; }
+.submission-summary aside small { grid-column: 1/-1; }
+.submission-summary aside b { color: #078257; }
+.submission-summary aside strong { grid-row: 2/4; grid-column: 2; padding: 10px; border-radius: 8px; background: #087c56; color: #fff; font-size: 22px; }
+.submission-columns { grid-template-columns: minmax(0, 1.55fr) minmax(270px, .9fr); margin-top: 18px; }
+.rubric-panel .section-title h2 { margin-top: 4px; }
+.grade-overview { display: grid; grid-template-columns: 86px 1fr 1fr; gap: 15px; align-items: center; padding: 17px; border-radius: 11px; background: #edf5ff; }
+.grade-overview > strong { display: grid; width: 76px; height: 76px; place-items: center; border: 8px solid #0d7a53; border-radius: 50%; font-size: 24px; }
+.grade-overview > strong small { font-size: 9px; }
+.grade-overview p,.grade-overview > span { color: #68778a; font-size: 10px; }
+.grade-overview p { margin: 4px 0 0; }
+.rubric-score { margin-top: 10px; padding: 13px; border: 1px solid #e6ebf2; border-radius: 10px; }
+.rubric-score strong { float: right; }
+.rubric-score .progress-track { clear: both; margin: 10px 0 6px; }
+.rubric-score p { margin: 0; color: #68778a; font-size: 10px; }
+.skill-index { display: flex; flex-direction: column; gap: 8px; margin-top: 13px; padding: 15px; border-radius: 10px; background: #eaf0ff; }
+.skill-index span { color: #68778a; font-size: 11px; }
+.submission-aside { display: grid; align-content: start; gap: 15px; }
+.submission-aside .panel { display: grid; gap: 10px; }
+.mentor-profile { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 9px; background: #edf3ff; }
+.mentor-profile small { display: block; color: #68778a; font-size: 10px; }
+.submission-aside blockquote { margin: 0; padding: 14px; border-radius: 9px; background: #f2f5ff; color: #52627a; font-style: italic; line-height: 1.6; }
+.image-preview { display: grid; min-height: 180px; place-items: center; overflow: hidden; border-radius: 9px; background: linear-gradient(135deg,#d3dfeb,#f6f0e5 75%,#d9e2e8); }
+.mock-laptop { width: 74%; transform: perspective(700px) rotateX(3deg); }
+.mock-screen { padding: 7px; border: 5px solid #273141; border-radius: 8px 8px 2px 2px; background: #f5f8fd; box-shadow: 0 12px 22px rgb(33 45 59 / 25%); }
+.mock-screen header { display: flex; align-items: center; gap: 5px; padding: 4px 5px; background: #fff; color: #243c60; font-size: 6px; }
+.mock-screen header i { width: 8px; height: 8px; border-radius: 50%; background: #2d61c6; }
+.mock-screen header small { margin-left: auto; font-size: 4px; }
+.mock-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 7px 0; }
+.mock-metrics b { padding: 5px; background: #fff; color: #718099; font-size: 5px; }
+.mock-metrics strong { color: #1d416f; font-size: 9px; }
+.mock-chart { display: flex; height: 58px; align-items: flex-end; gap: 5px; padding: 7px; background: #fff; }
+.mock-chart span { flex: 1; background: linear-gradient(#3972cb,#a0c4ff); border-radius: 2px 2px 0 0; }
+.mock-base { width: 115%; height: 7px; margin-left: -7.5%; border-radius: 0 0 20px 20px; background: linear-gradient(#a8b3be,#667786); }
+.submission-bottom { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; padding: 15px; border-radius: 10px; background: #edf3ff; }
+@media(max-width:900px){.submission-columns{grid-template-columns:1fr}.grade-overview{grid-template-columns:76px 1fr}}
+@media(max-width:600px){.submission-summary{grid-template-columns:1fr}.grade-overview{grid-template-columns:1fr}.submission-bottom{flex-direction:column}}

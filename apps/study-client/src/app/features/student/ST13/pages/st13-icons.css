@@ -1,0 +1,15 @@
+.quiz-stats .stat-icon { display: grid; width: 42px; height: 42px; place-items: center; margin-bottom: 12px; border-radius: 10px; background: #edf2ff; color: #0648db; }
+.quiz-stats .stat-icon-timer { color: #067a49; }
+.quiz-stats .stat-icon-star { color: #9c5b09; }
+.st13-icon { display: block; width: 21px; height: 21px; flex: 0 0 auto; }
+.st13-heading { display: flex; align-items: center; gap: 12px; }
+.st13-heading .st13-icon { width: 26px; height: 26px; color: #0648db; }
+.security-rule { display: flex; align-items: flex-start; gap: 16px; }
+.security-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #5bf0b4; color: #064d36; }
+.security-icon .st13-icon { width: 24px; height: 24px; }
+.rule-label { display: flex; align-items: center; gap: 5px; color: #0648db; }
+.rule-label .st13-icon { width: 18px; height: 18px; }
+.rule-label-hourglass { color: #8a4606; }
+.rule-label-certificate { color: #126340; }
+.help-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #e0eaff; color: #1354db; }
+.help-icon .st13-icon { width: 22px; height: 22px; }

@@ -1,0 +1,100 @@
+<div class="profile-screen" data-screen-id="ST-02">
+  <header class="profile-header">
+    <div class="profile-header__content">
+      <a class="profile-brand" routerLink="/" aria-label="Study2Work — trang chủ">Study2Work</a>
+
+      <nav class="profile-navigation" aria-label="Điều hướng chính">
+        <a
+          routerLink="/"
+          routerLinkActive="profile-navigation__link--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          Trang chủ
+        </a>
+        <a routerLink="/courses" routerLinkActive="profile-navigation__link--active">Khóa học</a>
+        <a routerLink="/student/courses" routerLinkActive="profile-navigation__link--active">
+          Khóa học của tôi
+        </a>
+        <a
+          routerLink="/student/profile"
+          routerLinkActive="profile-navigation__link--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          aria-current="page"
+        >
+          Hồ sơ cá nhân
+        </a>
+      </nav>
+
+      <span class="profile-account">{{ profile()?.full_name ?? 'Hồ sơ học viên' }}</span>
+    </div>
+  </header>
+
+  <main class="profile-content">
+    <div class="profile-heading">
+      <h1>Hồ sơ cá nhân</h1>
+      <p>Xem thông tin tài khoản học viên của bạn.</p>
+    </div>
+
+    <section
+      class="profile-gate"
+      aria-labelledby="profile-gate-title"
+      [attr.aria-busy]="loading()"
+    >
+      @if (loading()) {
+        <p class="profile-gate__message" role="status">Đang tải hồ sơ học viên…</p>
+      } @else if (error()) {
+        <h2 id="profile-gate-title">Chưa thể tải hồ sơ</h2>
+        <p class="profile-gate__message profile-gate__message--error" role="alert">{{ error() }}</p>
+        <button class="profile-login" type="button" (click)="retry()">Thử tải lại</button>
+      } @else if (profile(); as student) {
+        <div class="profile-gate__icon profile-gate__icon--avatar" aria-hidden="true">
+          @if (avatarUrl(); as avatar) {
+            <img [src]="avatar" alt="" />
+          } @else {
+            <svg viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="20" />
+              <circle cx="24" cy="18" r="6.5" />
+              <path d="M11.8 37.3c1.6-6 6.4-9.3 12.2-9.3s10.6 3.3 12.2 9.3" />
+            </svg>
+          }
+        </div>
+
+        <h2 id="profile-gate-title">{{ student.full_name }}</h2>
+        <dl class="profile-details">
+          <div>
+            <dt>Địa chỉ email</dt>
+            <dd>{{ student.email }}</dd>
+          </div>
+          <div>
+            <dt>Vai trò</dt>
+            <dd>{{ roleLabel() }}</dd>
+          </div>
+          <div>
+            <dt>Trạng thái tài khoản</dt>
+            <dd>{{ statusLabel() }}</dd>
+          </div>
+        </dl>
+
+        <div class="profile-gate__actions">
+          <a class="profile-edit" routerLink="/student/profile/edit">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m4 4 16 16M14.7 5.3l4 4M5 19l4.5-1 9.7-9.7a2.8 2.8 0 0 0-4-4L5.5 14 5 19Z" />
+            </svg>
+            Chỉnh sửa hồ sơ
+          </a>
+        </div>
+      }
+    </section>
+  </main>
+
+  <footer class="profile-footer">
+    <div class="profile-footer__content">
+      <a class="profile-footer__brand" routerLink="/">Study2Work</a>
+      <nav class="profile-footer__navigation" aria-label="Điều hướng cuối trang">
+        <a routerLink="/">Trang chủ</a>
+        <a routerLink="/courses">Khóa học</a>
+        <a routerLink="/student/courses">Khóa học của tôi</a>
+      </nav>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,265 @@
+<main class="page-width admin-screen" [attr.data-screen-id]="definition.id">
+  <header class="screen-heading">
+    <div class="heading-copy">
+      <p class="eyebrow">{{ definition.eyebrow }} <span aria-hidden="true">·</span> {{ definition.id }}</p>
+      <h1>{{ definition.title }}</h1>
+      <p class="description">{{ definition.description }}</p>
+    </div>
+    @if (definition.links?.length) {
+      <nav class="heading-links" aria-label="Điều hướng liên quan">
+        @for (link of definition.links; track link.label) {
+          <a class="secondary-link" [routerLink]="resolveRoute(link.route)">
+            {{ link.label }}
+            <study-icon name="chevron" />
+          </a>
+        }
+      </nav>
+    }
+  </header>
+
+  <section class="connection-banner" role="status" aria-live="polite">
+    <span class="status-icon"><study-icon name="info" /></span>
+    <div class="connection-copy">
+      <h2>{{ connectionTitle }}</h2>
+      <p>{{ connectionMessage }}</p>
+      @if (viewState?.status !== 'loaded') {
+        <p class="api-reference">Nguồn đối chiếu: {{ definition.apiReferences.join(', ') || 'chưa có API' }}</p>
+      }
+    </div>
+  </section>
+
+  @if (referenceId) {
+    <p class="reference-note">Mã tham chiếu trên đường dẫn: <code>{{ referenceId }}</code></p>
+  }
+
+  @switch (definition.mode) {
+    @case ('list') {
+      <section class="panel list-panel" aria-labelledby="list-heading">
+        <div class="panel-heading">
+          <div>
+            <h2 id="list-heading">{{ definition.title }}</h2>
+            <p>Danh sách sẽ hiển thị sau khi có phiên Admin và nguồn dữ liệu được kết nối.</p>
+          </div>
+        </div>
+
+        @if (definition.filters?.length) {
+          <form class="filter-row" aria-label="Bộ lọc danh sách" (submit)="applyFilters($event)">
+            @for (filter of definition.filters; track filter.key) {
+              <label class="search-control">
+                <span>{{ filter.label }}</span>
+                <input
+                  [type]="filter.type"
+                  [attr.placeholder]="filter.placeholder ?? null"
+                  [value]="filterValues[filter.key] ?? ''"
+                  (input)="setFilter(filter.key, $any($event.target).value)"
+                  [disabled]="viewState?.status === 'loading'"
+                />
+              </label>
+            }
+            <div class="filter-actions">
+              <button class="button button--primary" type="submit" [disabled]="viewState?.status === 'loading'">Áp dụng</button>
+              <button class="button button--quiet" type="button" (click)="clearFilters()" [disabled]="viewState?.status === 'loading'">Xóa lọc</button>
+            </div>
+          </form>
+        }
+
+        <div class="table-scroll" role="region" [attr.aria-label]="'Bảng ' + definition.title" tabindex="0">
+          <table>
+            <caption class="visually-hidden">{{ definition.title }}</caption>
+            <thead>
+              <tr>@for (column of definition.columns ?? []; track column) { <th scope="col">{{ column }}</th> }</tr>
+            </thead>
+            <tbody>
+              @if (viewState?.status === 'loaded' && viewState.rows?.length) {
+                @for (row of viewState.rows; track $index) {
+                  <tr>
+                    @for (value of row.values; track $index) {
+                      <td>
+                        @if ($first && row.route) {
+                          <a [routerLink]="row.route">{{ value }}</a>
+                        } @else {
+                          {{ value }}
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              } @else {
+                <tr class="empty-row">
+                  <td [attr.colspan]="definition.columns?.length || 1">
+                    <span class="empty-mark"><study-icon name="info" /></span>
+                    <strong>{{ viewState?.status === 'loaded' ? 'Không có kết quả phù hợp' : unavailableText }}</strong>
+                    @if (viewState?.status !== 'loaded') {
+                      <span>Trạng thái này không có nghĩa là danh sách đang trống.</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (viewState?.status === 'loaded' && viewState.pagination && viewState.pagination.totalPages > 0) {
+          <div class="pagination" aria-label="Phân trang danh sách">
+            <span>Trang {{ viewState.pagination.page }} / {{ viewState.pagination.totalPages }} · {{ viewState.pagination.total }} mục</span>
+            <div>
+              <button class="button button--quiet" type="button" (click)="pageChange.emit(viewState.pagination.page - 1)" [disabled]="viewState.pagination.page <= 1">Trước</button>
+              <button class="button button--quiet" type="button" (click)="pageChange.emit(viewState.pagination.page + 1)" [disabled]="viewState.pagination.page >= viewState.pagination.totalPages">Sau</button>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+    @case ('detail') {
+      <section class="panel" aria-labelledby="detail-heading">
+        <div class="panel-heading"><div><h2 id="detail-heading">Thông tin chi tiết</h2><p>{{ unavailableText }}.</p></div></div>
+        <dl class="field-grid">
+          @if (viewState?.status === 'loaded' && viewState.fields?.length) {
+            @for (field of viewState.fields; track field.label) {
+              <div class="field-value"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div>
+            }
+          } @else {
+            @for (field of definition.fields ?? []; track field) {
+              <div class="field-value"><dt>{{ field }}</dt><dd>{{ unavailableText }}</dd></div>
+            }
+          }
+        </dl>
+      </section>
+      @if (definition.sections?.length) {
+        <div class="section-grid">
+          @if (viewState?.status === 'loaded' && viewState.sections?.length) {
+            @for (section of viewState.sections; track section.title) {
+              <section class="panel secondary-panel"><h2>{{ section.title }}</h2><p>{{ section.description }}</p><ul>@for (item of section.items; track $index) { <li>{{ item }}</li> }</ul></section>
+            }
+          } @else {
+            @for (section of definition.sections; track section.title) {
+              <section class="panel secondary-panel"><h2>{{ section.title }}</h2><p>{{ section.description }}</p><div class="section-unavailable">{{ unavailableText }}</div></section>
+            }
+          }
+        </div>
+      }
+    }
+
+    @case ('statistics') {
+      <section class="metric-grid" aria-label="Các chỉ số thống kê">
+        @if (viewState?.status === 'loaded' && viewState.metrics?.length) {
+          @for (metric of viewState.metrics; track metric.label) {
+            <article class="panel metric-card"><h2>{{ metric.label }}</h2><p class="metric-value">{{ metric.value }}</p></article>
+          }
+        } @else {
+          @for (metric of definition.metrics ?? []; track metric) {
+            <article class="panel metric-card"><h2>{{ metric }}</h2><p class="metric-value" aria-label="Chưa khả dụng">—</p><span>{{ unavailableText }}</span></article>
+          }
+        }
+      </section>
+      <section class="panel chart-panel"><div class="panel-heading"><div><h2>Phân bố kết quả</h2><p>API nguồn không trả chuỗi phân bố để dựng biểu đồ.</p></div></div><div class="chart-empty"><span>{{ viewState?.status === 'loaded' ? 'Không có dữ liệu phân bố trong phản hồi.' : unavailableText }}</span></div></section>
+    }
+
+    @case ('edit') {
+      <section class="panel form-panel" aria-labelledby="form-heading">
+        <div class="panel-heading"><div><h2 id="form-heading">Thông tin cần chỉnh sửa</h2><p>Các trường cho phép nhập bản nháp trong trang; chưa có request lưu thay đổi được xác nhận.</p></div></div>
+        <div class="form-grid">
+          @for (field of definition.fields ?? []; track field) {
+            <label class="form-field"><span>{{ field }}</span><input type="text" [value]="fieldValue(field)" aria-label="{{ field }} bản nháp" /></label>
+          }
+        </div>
+        <div class="form-actions"><button class="button button--primary" type="button" disabled>Lưu thay đổi</button><a class="button button--quiet" [routerLink]="definition.links?.[0] ? resolveRoute(definition.links[0].route) : '/admin'">Hủy</a><span>Chưa thể lưu: {{ definition.sourceNote }}</span></div>
+      </section>
+    }
+
+    @case ('actions') {
+      <section class="panel action-panel" aria-labelledby="actions-heading">
+        <div class="panel-heading"><div><h2 id="actions-heading">Thao tác quản trị</h2><p>Không có thao tác nào được thực hiện trên dữ liệu.</p></div></div>
+        @if (viewState?.status === 'loaded' && viewState.fields?.length) {
+          <dl class="field-grid">@for (field of viewState.fields; track field.label) { <div class="field-value"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div> }</dl>
+        }
+        <div class="action-list">
+          @for (action of definition.actions ?? []; track action.label) {
+            <article class="action-card" [class.action-card--danger]="action.destructive">
+              <div><h3>{{ action.label }}</h3><p>{{ action.reason }}</p></div>
+              <button class="button" [class.button--danger]="action.destructive" type="button" disabled>Chưa khả dụng</button>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @case ('review') {
+      <div class="review-grid">
+        <section class="panel content-preview"><div class="panel-heading"><div><h2>Nội dung cần xem</h2><p>{{ unavailableText }}</p></div></div>
+          @if (viewState?.status === 'loaded' && viewState.fields?.length) {
+            <dl class="field-grid">@for (field of viewState.fields; track field.label) { <div class="field-value"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div> }</dl>
+          } @else {
+            <div class="preview-placeholder"><study-icon name="info" /><span>Nội dung xem trước sẽ hiển thị khi dữ liệu được kết nối.</span></div>
+          }
+        </section>
+        <section class="panel review-decision"><div class="panel-heading"><div><h2>Quyết định kiểm duyệt</h2><p>Hành động đang khóa theo policy hiện tại.</p></div></div><label class="form-field"><span>Lý do</span><textarea disabled rows="4" placeholder="Chưa có quy tắc nhập lý do được xác nhận"></textarea></label><div class="button-stack"><button class="button button--primary" type="button" disabled>Duyệt</button><button class="button button--danger" type="button" disabled>Từ chối</button></div></section>
+      </div>
+    }
+
+    @case ('builder') {
+      <section class="panel form-panel" aria-labelledby="builder-heading">
+        <div class="panel-heading"><div><h2 id="builder-heading">Thông tin bài kiểm tra</h2><p>Trình soạn thảo chưa kết nối danh mục và quy tắc lưu.</p></div></div>
+        <div class="form-grid">
+          @for (field of definition.fields ?? []; track field) { <label class="form-field"><span>{{ field }}</span><input type="text" /></label> }
+        </div>
+        <div class="builder-section"><div><h3>Câu hỏi</h3><p>Chưa có dữ liệu câu hỏi để hiển thị.</p></div><button class="button button--quiet" type="button" disabled>Thêm câu hỏi</button></div>
+        <div class="form-actions"><button class="button button--primary" type="button" disabled>Lưu bài kiểm tra</button><span>{{ definition.sourceNote }}</span></div>
+      </section>
+    }
+
+    @case ('delete') {
+      <section class="panel confirm-panel" aria-labelledby="confirm-heading">
+        <span class="warning-icon"><study-icon name="info" /></span>
+        <h2 id="confirm-heading">Xác nhận xóa bài kiểm tra</h2>
+        <p>Chính sách xóa và ảnh hưởng tới lượt làm bài chưa được xác nhận. Không thể tiếp tục thao tác này.</p>
+        <div class="form-actions"><button class="button button--danger" type="button" disabled>Xóa bài kiểm tra</button><a class="button button--quiet" [routerLink]="definition.links?.[0] ? resolveRoute(definition.links[0].route) : '/admin/quizzes'">Quay lại</a></div>
+      </section>
+    }
+
+    @case ('compose') {
+      <div class="compose-grid">
+        <section class="panel form-panel"><div class="panel-heading"><div><h2>Người nhận và kênh</h2><p>Đối tượng và kênh chưa khả dụng; tiêu đề và nội dung chỉ được giữ cục bộ trong bản nháp.</p></div></div><div class="form-grid"><label class="form-field"><span>Đối tượng nhận</span><select disabled><option>Chưa khả dụng</option></select></label><label class="form-field"><span>Kênh gửi</span><select disabled><option>Chưa khả dụng</option></select></label><label class="form-field form-field--wide"><span>Tiêu đề bản nháp</span><input type="text" [value]="draftTitle()" (input)="setDraftTitle($any($event.target).value)" /></label><label class="form-field form-field--wide"><span>Nội dung bản nháp</span><textarea rows="5" [value]="draftContent()" (input)="setDraftContent($any($event.target).value)"></textarea></label></div><div class="form-actions"><button class="button button--primary" type="button" disabled>Gửi thông báo</button><span>Không có request gửi; accepted/queued không chứng minh thông báo đã được gửi.</span></div></section>
+        <aside class="panel preview-card"><h2>Xem trước</h2><p>{{ draftTitle() || 'Chưa có tiêu đề bản nháp.' }}</p><div class="preview-placeholder">{{ draftContent() || 'Nhập nội dung để xem trước.' }}</div><p>{{ unavailableText }}</p></aside>
+      </div>
+    }
+
+    @case ('status') {
+        <div class="detail-grid">
+        <section class="panel"><div class="panel-heading"><div><h2>Thông tin thông báo</h2><p>{{ unavailableText }}</p></div></div><dl class="field-grid">
+          @if (viewState?.status === 'loaded' && viewState.fields?.length) { @for (field of viewState.fields; track field.label) { <div class="field-value"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div> } }
+          @else { @for (field of definition.fields ?? []; track field) { <div class="field-value"><dt>{{ field }}</dt><dd>{{ unavailableText }}</dd></div> } }
+        </dl></section>
+        <section class="panel"><div class="panel-heading"><div><h2>Trạng thái gửi</h2><p>Không có dữ liệu người nhận hoặc trạng thái theo từng kênh.</p></div></div><div class="section-unavailable">{{ unavailableText }}</div><div class="button-stack"><button class="button button--quiet" type="button" disabled>Chỉnh sửa</button><button class="button button--danger" type="button" disabled>Hủy thông báo</button></div></section>
+      </div>
+    }
+
+    @case ('moderation') {
+      <div class="moderation-grid">
+        <section class="panel"><div class="panel-heading"><div><h2>Nội dung thảo luận</h2><p>{{ unavailableText }}</p></div></div>
+          @if (viewState?.status === 'loaded' && viewState.fields?.length) { <dl class="field-grid">@for (field of viewState.fields; track field.label) { <div class="field-value"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div> }</dl> }
+          @else { <div class="preview-placeholder"><study-icon name="info" /><span>Nội dung và chuỗi bình luận sẽ hiển thị ở đây.</span></div> }
+        </section>
+        <section class="panel"><div class="panel-heading"><div><h2>Báo cáo và xử lý</h2><p>Report context và policy xử lý chưa có nguồn xác nhận.</p></div></div>
+          @if (viewState?.status === 'loaded' && viewState.sections?.length) { @for (section of viewState.sections; track section.title) { <section class="discussion-comments"><h3>{{ section.title }}</h3><ul>@for (item of section.items; track $index) { <li>{{ item }}</li> }</ul></section> } }
+          @else { <div class="section-unavailable">{{ unavailableText }}</div> }
+          <div class="button-stack">@for (action of definition.actions ?? []; track action.label) { <button class="button" type="button" disabled>{{ action.label }}</button> }</div>
+        </section>
+      </div>
+    }
+
+    @case ('report') {
+      <section class="panel report-filters"><div class="panel-heading"><div><h2>Bộ lọc báo cáo</h2><p>Ngày, phân khúc và cách tính chỉ số cần được xác nhận trước khi dùng.</p></div></div><div class="form-grid"><label class="form-field"><span>Từ ngày</span><input type="date" disabled /></label><label class="form-field"><span>Đến ngày</span><input type="date" disabled /></label><label class="form-field"><span>Phân khúc</span><select disabled><option>Chưa khả dụng</option></select></label></div></section>
+      <section class="metric-grid" aria-label="Chỉ số tác động">@for (metric of definition.metrics ?? []; track metric) { <article class="panel metric-card"><h2>{{ metric }}</h2><p class="metric-value">—</p><span>{{ unavailableText }}</span></article> }</section>
+      <section class="panel chart-panel"><div class="panel-heading"><div><h2>Xu hướng tác động</h2><p>Biểu đồ chưa có nguồn số liệu.</p></div></div><div class="chart-empty"><span class="chart-line" aria-hidden="true"></span><span>Chưa có dữ liệu để hiển thị</span></div></section>
+    }
+
+    @case ('export') {
+      <div class="export-grid">
+        <section class="panel form-panel"><div class="panel-heading"><div><h2>Thiết lập báo cáo</h2><p>Chưa có contract tạo tác vụ và tải xuống.</p></div></div><div class="form-grid">@for (field of definition.fields ?? []; track field) { <label class="form-field"><span>{{ field }}</span><select disabled><option>Chưa khả dụng</option></select></label> }</div><div class="form-actions"><button class="button button--primary" type="button" disabled>Tạo báo cáo</button><span>{{ definition.sourceNote }}</span></div></section>
+        <section class="panel export-status"><div class="panel-heading"><div><h2>Tiến trình xuất</h2><p>Không có tác vụ xuất báo cáo để theo dõi.</p></div></div><div class="section-unavailable">Chưa có worker, artifact hoặc liên kết tải xuống được xác nhận.</div></section>
+      </div>
+    }
+  }
+</main>
+

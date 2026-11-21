@@ -1,0 +1,97 @@
+<main class="mentor-page me05-page">
+  <study-mentor-page-header
+    title="Chi tiết bài giảng"
+    description="Thông tin bài giảng và các tài liệu đã liên kết."
+    apiLabel="#48 · GET"
+  />
+
+  @if (invalidId()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Đường dẫn bài giảng không hợp lệ</h2>
+      <p>Mã bài giảng phải là số nguyên dương trong phạm vi hệ thống.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (loading()) {
+    <section class="mentor-card mentor-state" role="status" aria-live="polite">
+      Đang tải thông tin bài giảng…
+    </section>
+  } @else if (notFound()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không tìm thấy bài giảng</h2>
+      <p>Bài giảng không tồn tại, đã bị xóa hoặc không còn khả dụng theo đường dẫn này.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (accessDenied()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Bạn không có quyền truy cập bài giảng này</h2>
+      <p>Study Server từ chối quyền truy cập. Hãy quay lại danh sách khóa học để tiếp tục.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (error()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Chưa thể tải bài giảng</h2>
+      <p>{{ error() }}</p>
+      <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử tải lại</button>
+    </section>
+  } @else if (lecture(); as item) {
+    <article class="mentor-card me05-detail" aria-labelledby="me05-title">
+      <nav class="me05-breadcrumb" aria-label="Điều hướng khóa học">
+        <a routerLink="/mentor/courses">Danh sách khóa học</a>
+        <span aria-hidden="true">/</span>
+        <a [routerLink]="['/mentor/courses', item.course_id]">Workspace khóa học #{{ item.course_id }}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Bài giảng #{{ item.id }}</span>
+      </nav>
+
+      <header class="me05-heading">
+        <div class="me05-top">
+          <span class="mentor-status">{{ item.status }}</span>
+          <span class="mentor-meta">Bài giảng #{{ item.id }}</span>
+          <span class="mentor-meta">Thứ tự {{ item.order }}</span>
+        </div>
+        <h2 id="me05-title">{{ item.title }}</h2>
+      </header>
+
+      <section class="me05-content" aria-labelledby="me05-content-title">
+        <h3 id="me05-content-title">Nội dung bài giảng</h3>
+        @if (item.content !== null) {
+          <pre>{{ item.content }}</pre>
+        } @else {
+          <p class="mentor-meta">Bài giảng chưa có nội dung.</p>
+        }
+      </section>
+
+      <section class="me05-assets" aria-labelledby="me05-assets-title">
+        <h3 id="me05-assets-title">Tài liệu đính kèm</h3>
+        @if (!item.assets.length) {
+          <p class="mentor-meta">Chưa có tài liệu đính kèm.</p>
+        } @else {
+          <ul>
+            @for (asset of item.assets; track asset.id) {
+              <li>
+                <div class="me05-asset-name">
+                  <strong>{{ asset.name }}</strong>
+                  <span class="mentor-meta">{{ asset.content_type }} · {{ asset.size_bytes }} bytes</span>
+                </div>
+                <span class="mentor-status" [attr.aria-label]="'Trạng thái tệp: ' + asset.status">{{ asset.status }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <nav class="me05-actions" aria-label="Liên kết bài giảng">
+        <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', item.course_id]">
+          Về workspace khóa học
+        </a>
+        <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', item.course_id, 'content']">
+          Mở cây nội dung
+        </a>
+      </nav>
+    </article>
+  } @else {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      Không nhận được dữ liệu bài giảng hợp lệ.
+    </section>
+  }
+</main>

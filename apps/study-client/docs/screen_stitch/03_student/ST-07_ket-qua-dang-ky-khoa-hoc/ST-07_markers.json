@@ -1,0 +1,354 @@
+{
+  "screen_id": "ST-07",
+  "source_image": "screen_rendered_from_html.png",
+  "original_image": "screen.png",
+  "source_html": "code.html",
+  "source_image_sha256": "8b86fe81abb2cc75e062c6dddd015e17669abe0084ebe8fccc122bc6696ae140",
+  "source_html_sha256": "c2661fe474dd1d0ed0f50dafca99310e2ec681899bb55ae554337a0c05436c58",
+  "render_provenance": "Chrome 155 headless via CDP, file://code.html, viewport 1280x1024 CSS px, deviceScaleFactor=2; captured after document.readyState=complete and document.fonts.status=loaded; Tailwind config present.",
+  "image_size": {
+    "width": 2560,
+    "height": 2048
+  },
+  "viewport_css_px": {
+    "width": 1280,
+    "height": 1024
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2560,
+      "height": 2048
+    },
+    "coordinate_space": "CSS px; raster coordinates are CSS coordinates multiplied by 2",
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#C2412D",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_css_px": 26,
+      "font_size_css_px": 14,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#C2412D",
+      "stroke_width_css_px": 2,
+      "understroke": "#FFFFFF",
+      "understroke_width_css_px": 4
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST07-EL-01",
+      "name": "Header brand link",
+      "target": "Study2Work brand link (href=\"/\")",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 14,
+        "width": 149.281,
+        "height": 36
+      },
+      "marker_center_css_px": {
+        "x": 18,
+        "y": 60
+      },
+      "leader_end_css_px": {
+        "x": 32,
+        "y": 50
+      },
+      "marker_center_image_px": {
+        "x": 36,
+        "y": 120
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST07-EL-02",
+      "name": "Header primary navigation group",
+      "target": "Trang chủ, Khóa học, Khóa học của tôi, Tiến độ",
+      "target_bounds_css_px": {
+        "x": 213.281,
+        "y": 18,
+        "width": 364.75,
+        "height": 28
+      },
+      "marker_center_css_px": {
+        "x": 194,
+        "y": 60
+      },
+      "leader_end_css_px": {
+        "x": 213,
+        "y": 46
+      },
+      "marker_center_image_px": {
+        "x": 388,
+        "y": 120
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST07-EL-03",
+      "name": "Sign In link",
+      "target": "Đăng nhập link (href=\"/login\")",
+      "target_bounds_css_px": {
+        "x": 1047.516,
+        "y": 12,
+        "width": 105.375,
+        "height": 40
+      },
+      "marker_center_css_px": {
+        "x": 1032,
+        "y": 68
+      },
+      "leader_end_css_px": {
+        "x": 1048,
+        "y": 52
+      },
+      "marker_center_image_px": {
+        "x": 2064,
+        "y": 136
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST07-EL-04",
+      "name": "Sign Up link",
+      "target": "Đăng ký link (href=\"/register\")",
+      "target_bounds_css_px": {
+        "x": 1160.891,
+        "y": 12,
+        "width": 87.109,
+        "height": 40
+      },
+      "marker_center_css_px": {
+        "x": 1262,
+        "y": 68
+      },
+      "leader_end_css_px": {
+        "x": 1248,
+        "y": 52
+      },
+      "marker_center_image_px": {
+        "x": 2524,
+        "y": 136
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST07-EL-05",
+      "name": "Breadcrumb group",
+      "target": "Trang chủ, Khóa học, Kết quả đăng ký khóa học",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 96,
+        "width": 1216,
+        "height": 20
+      },
+      "marker_center_css_px": {
+        "x": 18,
+        "y": 132
+      },
+      "leader_end_css_px": {
+        "x": 32,
+        "y": 116
+      },
+      "marker_center_image_px": {
+        "x": 36,
+        "y": 264
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST07-EL-06",
+      "name": "Page heading",
+      "target": "H1 “Kết quả đăng ký khóa học”",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 140,
+        "width": 1216,
+        "height": 38
+      },
+      "marker_center_css_px": {
+        "x": 18,
+        "y": 194
+      },
+      "leader_end_css_px": {
+        "x": 32,
+        "y": 178
+      },
+      "marker_center_image_px": {
+        "x": 36,
+        "y": 388
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST07-EL-07",
+      "name": "Result status card surface",
+      "target": "Centered status-card container",
+      "target_bounds_css_px": {
+        "x": 304,
+        "y": 202,
+        "width": 672,
+        "height": 389.5
+      },
+      "marker_center_css_px": {
+        "x": 286,
+        "y": 218
+      },
+      "leader_end_css_px": {
+        "x": 304,
+        "y": 218
+      },
+      "marker_center_image_px": {
+        "x": 572,
+        "y": 436
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST07-EL-08",
+      "name": "Assignment/check icon",
+      "target": "Static Material Symbol assignment_turned_in",
+      "target_bounds_css_px": {
+        "x": 617.984,
+        "y": 285,
+        "width": 44.016,
+        "height": 44
+      },
+      "marker_center_css_px": {
+        "x": 590,
+        "y": 276
+      },
+      "leader_end_css_px": {
+        "x": 618,
+        "y": 285
+      },
+      "marker_center_image_px": {
+        "x": 1180,
+        "y": 552
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST07-EL-09",
+      "name": "Card status headline",
+      "target": "H2 “Chưa thể xác nhận kết quả đăng ký.”",
+      "target_bounds_css_px": {
+        "x": 456.609,
+        "y": 371,
+        "width": 366.766,
+        "height": 30
+      },
+      "marker_center_css_px": {
+        "x": 438,
+        "y": 375
+      },
+      "leader_end_css_px": {
+        "x": 456.609,
+        "y": 375
+      },
+      "marker_center_image_px": {
+        "x": 876,
+        "y": 750
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST07-EL-10",
+      "name": "Supporting status paragraph",
+      "target": "Static explanation that activation is not recorded",
+      "target_bounds_css_px": {
+        "x": 384,
+        "y": 405,
+        "width": 512,
+        "height": 45.5
+      },
+      "marker_center_css_px": {
+        "x": 366,
+        "y": 417
+      },
+      "leader_end_css_px": {
+        "x": 384,
+        "y": 417
+      },
+      "marker_center_image_px": {
+        "x": 732,
+        "y": 834
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "ST07-EL-11",
+      "name": "My courses CTA",
+      "target": "“Về khóa học của tôi” link (href=\"/student/courses\")",
+      "target_bounds_css_px": {
+        "x": 541.656,
+        "y": 482.5,
+        "width": 196.688,
+        "height": 44
+      },
+      "marker_center_css_px": {
+        "x": 524,
+        "y": 504
+      },
+      "leader_end_css_px": {
+        "x": 541.656,
+        "y": 504
+      },
+      "marker_center_image_px": {
+        "x": 1048,
+        "y": 1008
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "ST07-EL-12",
+      "name": "Footer brand group",
+      "target": "Static Study2Work mark",
+      "target_bounds_css_px": {
+        "x": 32,
+        "y": 968,
+        "width": 148.875,
+        "height": 32
+      },
+      "marker_center_css_px": {
+        "x": 18,
+        "y": 950
+      },
+      "leader_end_css_px": {
+        "x": 32,
+        "y": 968
+      },
+      "marker_center_image_px": {
+        "x": 36,
+        "y": 1900
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "ST07-EL-13",
+      "name": "Footer navigation group",
+      "target": "Trang chủ, Khóa học, Đăng nhập, Đăng ký",
+      "target_bounds_css_px": {
+        "x": 950.484,
+        "y": 976,
+        "width": 297.516,
+        "height": 16
+      },
+      "marker_center_css_px": {
+        "x": 1262,
+        "y": 950
+      },
+      "leader_end_css_px": {
+        "x": 1248,
+        "y": 976
+      },
+      "marker_center_image_px": {
+        "x": 2524,
+        "y": 1900
+      }
+    }
+  ]
+}

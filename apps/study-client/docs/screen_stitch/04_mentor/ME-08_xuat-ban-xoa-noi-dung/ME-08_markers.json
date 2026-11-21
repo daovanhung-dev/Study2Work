@@ -1,0 +1,338 @@
+{
+  "screen_id": "ME-08",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 1600,
+    "height": 1530
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 3200,
+    "height": 3060
+  },
+  "markers": [
+    {
+      "number": 1,
+      "id": "ME08-EL-01",
+      "label": "Logo Study2Work LMS Mentor",
+      "x": 250,
+      "y": 72
+    },
+    {
+      "number": 2,
+      "id": "ME08-EL-02",
+      "label": "Điều hướng Mentor toàn cục",
+      "x": 680,
+      "y": 72
+    },
+    {
+      "number": 3,
+      "id": "ME08-EL-03",
+      "label": "Liên kết thông báo Mentor",
+      "x": 1280,
+      "y": 72
+    },
+    {
+      "number": 4,
+      "id": "ME08-EL-04",
+      "label": "Danh tính và avatar Mentor",
+      "x": 1585,
+      "y": 72
+    },
+    {
+      "number": 5,
+      "id": "ME08-EL-05",
+      "label": "Breadcrumb khóa học phụ trách",
+      "x": 80,
+      "y": 165
+    },
+    {
+      "number": 6,
+      "id": "ME08-EL-06",
+      "label": "Breadcrumb cây nội dung ME-06",
+      "x": 335,
+      "y": 165
+    },
+    {
+      "number": 7,
+      "id": "ME08-EL-07",
+      "label": "Nhãn màn hình ME-08",
+      "x": 700,
+      "y": 165
+    },
+    {
+      "number": 8,
+      "id": "ME08-EL-08",
+      "label": "Badge hệ thống bảo vệ dữ liệu",
+      "x": 1575,
+      "y": 132
+    },
+    {
+      "number": 9,
+      "id": "ME08-EL-09",
+      "label": "Icon điều phối trạng thái",
+      "x": 148,
+      "y": 211
+    },
+    {
+      "number": 10,
+      "id": "ME08-EL-10",
+      "label": "Badge Bảng điều phối Mentor",
+      "x": 245,
+      "y": 203
+    },
+    {
+      "number": 11,
+      "id": "ME08-EL-11",
+      "label": "Badge quy chuẩn WCAG",
+      "x": 558,
+      "y": 203
+    },
+    {
+      "number": 12,
+      "id": "ME08-EL-12",
+      "label": "Tiêu đề Kiểm soát xuất bản và gỡ bỏ nội dung",
+      "x": 900,
+      "y": 283
+    },
+    {
+      "number": 13,
+      "id": "ME08-EL-13",
+      "label": "Mô tả vòng đời và tác động học tập",
+      "x": 1140,
+      "y": 353
+    },
+    {
+      "number": 14,
+      "id": "ME08-EL-14",
+      "label": "Nút Sổ tay chính sách",
+      "x": 1540,
+      "y": 322
+    },
+    {
+      "number": 15,
+      "id": "ME08-EL-15",
+      "label": "Tiêu đề khu vực Nội dung mục tiêu",
+      "x": 890,
+      "y": 463
+    },
+    {
+      "number": 16,
+      "id": "ME08-EL-16",
+      "label": "Badge trạng thái an toàn",
+      "x": 886,
+      "y": 505
+    },
+    {
+      "number": 17,
+      "id": "ME08-EL-17",
+      "label": "Icon tài liệu Content mục tiêu",
+      "x": 190,
+      "y": 532
+    },
+    {
+      "number": 18,
+      "id": "ME08-EL-18",
+      "label": "Nhãn Tên nội dung thao tác",
+      "x": 875,
+      "y": 557
+    },
+    {
+      "number": 19,
+      "id": "ME08-EL-19",
+      "label": "Placeholder Chưa chọn nội dung thao tác",
+      "x": 875,
+      "y": 602
+    },
+    {
+      "number": 20,
+      "id": "ME08-EL-20",
+      "label": "Hướng dẫn chọn mục từ cây nội dung",
+      "x": 875,
+      "y": 655
+    },
+    {
+      "number": 21,
+      "id": "ME08-EL-21",
+      "label": "Nhãn trạng thái phát hành hiện tại",
+      "x": 465,
+      "y": 722
+    },
+    {
+      "number": 22,
+      "id": "ME08-EL-22",
+      "label": "Badge Bản nháp chưa xuất bản",
+      "x": 465,
+      "y": 780
+    },
+    {
+      "number": 23,
+      "id": "ME08-EL-23",
+      "label": "Nhãn và giá trị mức độ tác động cấu trúc",
+      "x": 855,
+      "y": 780
+    },
+    {
+      "number": 24,
+      "id": "ME08-EL-24",
+      "label": "Tiêu đề Tác động đối với học viên",
+      "x": 885,
+      "y": 877
+    },
+    {
+      "number": 25,
+      "id": "ME08-EL-25",
+      "label": "Mô tả tác động xuất bản hoặc gỡ bỏ",
+      "x": 885,
+      "y": 980
+    },
+    {
+      "number": 26,
+      "id": "ME08-EL-26",
+      "label": "Claim về tỷ lệ hoàn thành chứng chỉ",
+      "x": 885,
+      "y": 1015
+    },
+    {
+      "number": 27,
+      "id": "ME08-EL-27",
+      "label": "Claim về điểm danh và bài nộp",
+      "x": 885,
+      "y": 1050
+    },
+    {
+      "number": 28,
+      "id": "ME08-EL-28",
+      "label": "Tiêu đề và nhãn nhật ký điều phối gần nhất",
+      "x": 890,
+      "y": 1131
+    },
+    {
+      "number": 29,
+      "id": "ME08-EL-29",
+      "label": "Dòng nhật ký mẫu và thời gian",
+      "x": 890,
+      "y": 1223
+    },
+    {
+      "number": 30,
+      "id": "ME08-EL-30",
+      "label": "Tiêu đề Bảng tác vụ chính và Cơ chế phát hành",
+      "x": 1495,
+      "y": 510
+    },
+    {
+      "number": 31,
+      "id": "ME08-EL-31",
+      "label": "Tiêu đề và mô tả thẻ Phát hành công khai",
+      "x": 1495,
+      "y": 600
+    },
+    {
+      "number": 32,
+      "id": "ME08-EL-32",
+      "label": "Nút Xuất bản bài học đang disabled",
+      "x": 1495,
+      "y": 661
+    },
+    {
+      "number": 33,
+      "id": "ME08-EL-33",
+      "label": "Lý do chờ xác nhận quyền sở hữu",
+      "x": 1495,
+      "y": 747
+    },
+    {
+      "number": 34,
+      "id": "ME08-EL-34",
+      "label": "Tiêu đề và mô tả thẻ Gỡ bỏ khỏi khóa học",
+      "x": 1495,
+      "y": 849
+    },
+    {
+      "number": 35,
+      "id": "ME08-EL-35",
+      "label": "Nút Xóa nội dung đang disabled",
+      "x": 1495,
+      "y": 917
+    },
+    {
+      "number": 36,
+      "id": "ME08-EL-36",
+      "label": "Lý do khóa thao tác gỡ bỏ",
+      "x": 1495,
+      "y": 990
+    },
+    {
+      "number": 37,
+      "id": "ME08-EL-37",
+      "label": "CTA Quay lại cây nội dung ME-06",
+      "x": 1502,
+      "y": 1098
+    },
+    {
+      "number": 38,
+      "id": "ME08-EL-38",
+      "label": "Badge và claim cơ chế bảo vệ dữ liệu",
+      "x": 1502,
+      "y": 1187
+    },
+    {
+      "number": 39,
+      "id": "ME08-EL-39",
+      "label": "Nhãn môi trường sản xuất chuẩn hóa",
+      "x": 325,
+      "y": 1414
+    },
+    {
+      "number": 40,
+      "id": "ME08-EL-40",
+      "label": "Nhãn phân vùng Châu Á–Thái Bình Dương",
+      "x": 690,
+      "y": 1414
+    },
+    {
+      "number": 41,
+      "id": "ME08-EL-41",
+      "label": "Nhãn chế độ an toàn Safe Mode",
+      "x": 1265,
+      "y": 1414
+    },
+    {
+      "number": 42,
+      "id": "ME08-EL-42",
+      "label": "Liên kết quy chế phê duyệt nội dung",
+      "x": 1500,
+      "y": 1414
+    },
+    {
+      "number": 43,
+      "id": "ME08-EL-43",
+      "label": "Footer brand và thông tin bản quyền",
+      "x": 800,
+      "y": 1452
+    },
+    {
+      "number": 44,
+      "id": "ME08-EL-44",
+      "label": "Footer Quy chế Giảng viên",
+      "x": 1080,
+      "y": 1452
+    },
+    {
+      "number": 45,
+      "id": "ME08-EL-45",
+      "label": "Footer Tiêu chuẩn đánh giá",
+      "x": 1290,
+      "y": 1452
+    },
+    {
+      "number": 46,
+      "id": "ME08-EL-46",
+      "label": "Footer Hỗ trợ kỹ thuật",
+      "x": 1490,
+      "y": 1452
+    }
+  ]
+}

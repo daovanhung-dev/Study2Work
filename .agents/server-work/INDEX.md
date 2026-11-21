@@ -11,6 +11,7 @@ Source root: `apps/work-server/`
 | Prisma schema/migration | `database.md` |
 | Tests/validation | `tests.md` |
 | Coding/fix workflow | `workflows/README.md` |
+| Code review | `code-review` skill from the global skill registry |
 
 Always verify `src/app.ts`, `src/main.ts`, `src/api/v1.ts`, `src/core/`,
 `src/modules/`, the compatibility `src/routes/api_routes.ts`, and

@@ -1,0 +1,36 @@
+<div class="student-public-frame">
+  <header class="student-public-frame__header">
+    <div class="student-public-frame__header-inner">
+      <a class="student-public-frame__brand" routerLink="/" aria-label="Study2Work — trang chủ">
+        <span class="student-public-frame__mark" aria-hidden="true">⌂</span>
+        <span><strong>Study2Work</strong><small>LMS PLATFORM</small></span>
+      </a>
+      <nav aria-label="Điều hướng chính">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Trang chủ</a>
+        <a routerLink="/courses" routerLinkActive="active">Khóa học</a>
+        <a routerLink="/student/courses" routerLinkActive="active">Khóa học của tôi</a>
+        <a routerLink="/student/progress" routerLinkActive="active">Tiến độ</a>
+      </nav>
+      <div class="student-public-frame__account">
+        <a routerLink="/login">Đăng nhập</a>
+        <a class="register-link" routerLink="/register">Đăng ký</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="student-public-frame__content">
+    <ng-content />
+  </div>
+
+  <footer class="student-public-frame__footer">
+    <div class="student-public-frame__footer-inner">
+      <a routerLink="/" aria-label="Study2Work — trang chủ">Study2Work</a>
+      <nav aria-label="Điều hướng cuối trang">
+        <a routerLink="/">Trang chủ</a>
+        <a routerLink="/courses">Khóa học</a>
+        <a routerLink="/login">Đăng nhập</a>
+        <a routerLink="/register">Đăng ký</a>
+      </nav>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,148 @@
+<main class="user-editor page-width" data-screen-id="AD04">
+  @let state = pageState();
+
+  <nav class="editor-toolbar" aria-label="Đường dẫn chỉnh sửa người dùng">
+    <ol>
+      <li>Quản trị người dùng</li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/admin/users">Danh sách tài khoản</a></li>
+      <li aria-hidden="true">›</li>
+      <li aria-current="page">Chỉnh sửa hồ sơ</li>
+    </ol>
+    <a class="back-link" [routerLink]="isUserIdValid() ? ['/admin/users', userId()] : ['/admin/users']">
+      <study-icon name="chevron" /> {{ isUserIdValid() ? 'Quay lại hồ sơ (AD-03)' : 'Danh sách tài khoản (AD-02)' }}
+    </a>
+  </nav>
+
+  <header class="editor-hero">
+    <div>
+      <span class="eyebrow"><study-icon name="users" /> QUẢN TRỊ NGƯỜI DÙNG · API #69 / #70</span>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+      <p class="route-id">User ID từ đường dẫn: <code>{{ userId() || '—' }}</code></p>
+    </div>
+    <span class="locked-badge">EDIT / SAVE ĐANG KHÓA</span>
+  </header>
+
+  <aside class="source-notice" aria-labelledby="source-notice-title">
+    <span class="notice-icon"><study-icon name="info" /></span>
+    <div>
+      <strong>Hồ sơ được tải từ API #69; chưa có dữ liệu nào được gửi đi</strong>
+      <p>#70 có candidate body trong local source, nhưng catalog không khai báo body và role/permission policy chưa được duyệt. Các giá trị trong biểu mẫu chỉ đọc.</p>
+    </div>
+  </aside>
+
+  @if (state.status === 'loading') {
+    <section class="user-state" role="status" aria-live="polite">
+      <span class="state-icon"><study-icon name="refresh" /></span>
+      <strong>Đang tải hồ sơ</strong>
+      <span>Đang chờ phản hồi từ Study Server API #69.</span>
+    </section>
+  } @else if (state.status === 'error') {
+    <section class="user-state user-state--error" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <strong>{{ state.invalidRouteId ? 'Mã người dùng trên đường dẫn không hợp lệ' : 'Không thể tải hồ sơ người dùng' }}</strong>
+      <span>{{ state.message }}</span>
+      @if (state.invalidRouteId) {
+        <a routerLink="/admin/users">Quay lại danh sách tài khoản (AD-02)</a>
+      } @else {
+        <a [routerLink]="['/admin/users', userId()]">Quay lại chi tiết người dùng (AD-03)</a>
+      }
+    </section>
+  } @else {
+    @let user = state.user;
+    <div class="editor-grid">
+      <section class="profile-card" aria-labelledby="profile-fields-heading">
+        <header class="section-heading">
+          <div>
+            <span class="section-icon" aria-hidden="true">▤</span>
+            <div><p class="section-kicker">USER PROFILE</p><h2 id="profile-fields-heading">Thông tin tài khoản</h2></div>
+          </div>
+          <span class="read-only-badge">CHỈ ĐỌC · API #69</span>
+        </header>
+
+        <div class="profile-form">
+          <label class="field-group" for="user-name">
+            <span>Họ và tên</span>
+            <input id="user-name" type="text" [value]="user.full_name" disabled />
+            <small>#70 local candidate nhận tên, nhưng request body chưa được catalog xác nhận.</small>
+          </label>
+
+          <label class="field-group" for="user-id">
+            <span>Mã người dùng</span>
+            <input id="user-id" type="text" [value]="userId()" disabled />
+            <small>Giữ nguyên chuỗi route; không chuyển đổi bằng Number ở client.</small>
+          </label>
+
+          <label class="field-group field-group--full" for="user-email">
+            <span>Địa chỉ email · chỉ đọc</span>
+            <input id="user-email" type="email" [value]="user.email" disabled />
+            <small>Email có trong #69 và không thuộc body candidate #70.</small>
+          </label>
+
+          <label class="field-group" for="user-phone">
+            <span>Số điện thoại · chỉ đọc</span>
+            <input id="user-phone" type="text" [value]="user.phone ?? '—'" disabled />
+            <small>Giá trị nullable từ #69; không được sửa hoặc xóa trong trang này.</small>
+          </label>
+
+          <label class="field-group" for="user-role">
+            <span>Vai trò trả về · chỉ đọc</span>
+            <input id="user-role" type="text" [value]="user.role" disabled />
+            <small>Hiển thị nguyên văn; không tự ánh xạ nhãn “lecturer”.</small>
+          </label>
+
+          <label class="field-group" for="user-status">
+            <span>Trạng thái tài khoản · chỉ đọc</span>
+            <input id="user-status" type="text" [value]="user.status" disabled />
+            <small>Trạng thái không thuộc body #70; action riêng nằm ở AD-05.</small>
+          </label>
+
+          <label class="field-group field-group--full" for="user-avatar-url">
+            <span>Avatar URL · chỉ đọc</span>
+            <input id="user-avatar-url" type="text" [value]="user.avatar_url ?? '—'" disabled />
+            <small>URL được hiển thị dạng văn bản; trang không tải ảnh hoặc thêm upload.</small>
+          </label>
+        </div>
+
+        <div class="notes-unavailable" role="note">
+          <span aria-hidden="true">ⓘ</span>
+          <p>Không hiển thị ghi chú Admin: #69/#70 không có field `adminNotes` hoặc API ghi chú.</p>
+        </div>
+
+        <footer class="form-actions">
+          <a class="button button--quiet" [routerLink]="['/admin/users', userId()]">Hủy và quay lại AD-03</a>
+          <button class="button button--primary" type="button" disabled>Lưu thay đổi</button>
+        </footer>
+      </section>
+
+      <aside class="profile-side-column">
+        <section class="preview-card" aria-labelledby="preview-heading">
+          <header class="side-heading"><div><span class="preview-icon"><study-icon name="person" /></span><h2 id="preview-heading">Hồ sơ nguồn</h2></div><span>API #69</span></header>
+          <div class="avatar-placeholder" role="img" aria-label="Không tải avatar">
+            <span aria-hidden="true">{{ user.full_name.slice(0, 1) || '?' }}</span>
+          </div>
+          <h3>{{ user.full_name }}</h3>
+          <p class="email-preview">{{ user.email }}</p>
+          <div class="profile-meta">
+            <div><strong>{{ user.role }}</strong><span>Vai trò trả về</span></div>
+            <div><strong>{{ user.status }}</strong><span>Trạng thái trả về</span></div>
+          </div>
+          <p class="source-caption">Không hiển thị tổ chức, actor chỉnh sửa, lịch sử hoạt động hoặc điểm tuân thủ vì #69 không trả các dữ liệu đó.</p>
+        </section>
+
+        <section class="contract-card" aria-labelledby="contract-heading">
+          <header class="side-heading"><div><span class="contract-icon"><study-icon name="info" /></span><h2 id="contract-heading">Ranh giới API</h2></div></header>
+          <div class="contract-row"><span class="api-label">API #69</span><div><strong>GET UserProfile</strong><p>Đọc hồ sơ theo raw route ID; không có audit hoặc sync metadata.</p></div></div>
+          <div class="contract-row"><span class="api-label api-label--blocked">API #70</span><div><strong>PUT chưa được client gọi</strong><p>Catalog/AC chưa khai báo body. Local candidate gồm full_name, phone, avatar_url và role.</p></div></div>
+          <p class="source-status">Body và mapping role của #70 còn DERIVED. Trang không tự chọn role option, gửi field thiếu, hoặc tuyên bố token đã được thu hồi sau khi đổi role.</p>
+        </section>
+      </aside>
+    </div>
+  }
+
+  <footer class="editor-footer">
+    <a routerLink="/admin/users">Danh sách người dùng (AD-02)</a>
+    <span><study-icon name="database" /> Nguồn đọc: GET /api/v1/admin/users/&#123;user_id&#125; · API #69</span>
+  </footer>
+</main>

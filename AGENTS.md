@@ -4,10 +4,10 @@
 
 ## 1. Phân loại task
 
-Trước khi đọc sâu, ghi ngắn:
+Trước khi đọc sâu, ghi ngắn vào worklog của task; không đăng phân loại này lên chat:
 
 ```text
-primary_task_type: coding | fix | docs | test
+primary_task_type: coding | fix | docs | test | review
 secondary_task_types:
   - <loại khác, nếu có>
 project_scopes:
@@ -20,8 +20,23 @@ cross_scope_dependencies:
 - `fix`: reproduce -> trace caller/callee/effect -> root cause -> smallest fix -> regression test.
 - `docs`: source -> verified tests/contracts -> tài liệu hiện có -> cập nhật.
 - `test`: requirement/contract -> implementation -> edge cases -> convention test.
+- `review`: yêu cầu -> diff hoặc path được nêu -> rule/contract/source/test
+  evidence của scope -> báo cáo chỉ đọc; không sửa code hoặc chạy test.
 
 Một task có thể có nhiều `project_scopes`. Không ép task cross-scope vào một scope duy nhất.
+
+## 1.1. Theo dõi target và giao tiếp
+
+Mục tiêu đang thực hiện và tiến độ hiển thị duy nhất tại `.agents/target.md`.
+File này chỉ chứa bảng ba cột `STT`, `Tên target`, `Tiến độ hoàn thiện`; xem
+`.agents/project/agent-control.md` để biết quy tắc cập nhật. Không tự gửi tiến
+độ, event receipt, milestone, tổng kết đọc/thao tác hoặc báo cáo hoàn tất vào
+chat. Chỉ phản hồi khi người dùng hỏi, cần làm rõ blocker, hoặc quy tắc cấp cao
+hơn yêu cầu.
+
+Phân loại task, lựa chọn scope và bằng chứng công việc được ghi trong worklog,
+không công bố thành milestone chat. Worklog lưu nguồn, thay đổi, xác minh và
+lịch sử cập nhật target; không dùng `MILESTONES` làm nguồn tiến độ thứ hai.
 
 ## 2. Định tuyến scope
 
@@ -64,8 +79,10 @@ Skill, workflow và contract phải được tra trong machine-readable registry
 `.agents/context-manifest.json`; không coi file tồn tại là bằng chứng đã được
 wire. Task DD phải chọn skill theo boundary: `create-dd-from-bd-mobile` cho
 Mobile/Flutter module DD, `createDD-markdown` cho Web/API DD. Web UI-only DD
-chưa có skill canonical. Chỉ load skill tương ứng trước khi authoring hoặc
-review.
+chưa có skill canonical. Với yêu cầu review code/PR/diff hoặc audit path/module,
+chỉ kích hoạt theo yêu cầu của người dùng và load `code-review` cùng workflow
+tương ứng trước khi review; skill này áp dụng cho cả sáu code scope và không
+được sửa code, chạy test, đổi Git state hoặc đăng nhận xét lên PR.
 
 ## 3. Progressive loading
 

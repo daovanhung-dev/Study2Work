@@ -11,7 +11,7 @@
 | Decision status | `NEEDS USER DECISION` |
 | Output folder | `apps/study-server/docs/dd/14_users_me_profile/` |
 | Basis | `DIRECT — approved design contract + AC-11; current source dùng để ghi discrepancy.` |
-| Runtime status | `UNWIRED / NOT_FOUND — chưa có route/module/test API #14` |
+| Current source status | `SOURCE_PRESENT — route, matching module/view, and focused test source exist in current checkout; runtime was not reverified in this macro-review` |
 | Tables read | `users` — safe profile reload theo AC-11/API #4 projection |
 | Tables write | `users` — `full_name`, `phone`, `avatar_url`, `updated_at` |
 | Business code delta | `N/A — dùng DESIGN_RESOURCE_UPDATED và DESIGN_* codes đã có trong design contract; không tạo code mới.` |
@@ -22,8 +22,8 @@
 - [`AC_02_STUDENT_LEARNING.drawio`](../../../docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio).
 - [`00_AC_API_INDEX.md`](../../../docs/diagrams/AC_UNICA/00_AC_API_INDEX.md).
 - [`DB.sql`](../../../../../infra/postgres/study-server/DB.sql).
-- [`API #4 current-user query`](../../../app/modules/guest/api_04_users_me/query.py).
-- [`API #4 current-user view`](../../../app/modules/guest/api_04_users_me/view.py).
+- [`API #4 current-user query`](../../../app/modules/student/api_04_users_me/query.py).
+- [`API #4 current-user view`](../../../app/modules/student/api_04_users_me/view.py).
 - [`code_http.md`](../../business_code/code_http.md).
 - [`createDD-markdown skill`](../../../../../.agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md).
 
@@ -49,4 +49,4 @@
 - 8 baseline sheet files được author theo template và giữ thứ tự.
 - Request/Query/Mutation/Response Source matrices được ghi trong Data Mapping.
 - Static Markdown, JSON và relative-link checks được ghi trong `VERIFICATION_REPORT.md`.
-- Không có runtime test API #14 vì endpoint chưa wired.
+- Test source API #14 hiện có trong checkout; task macro-review này không chạy test và không tuyên bố runtime pass.

@@ -1,0 +1,43 @@
+{
+  "screen_id": "ME-09",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 1600,
+    "height": 1280
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 3200,
+    "height": 2560
+  },
+  "markers": [
+    { "number": 1, "id": "ME09-EL-01", "label": "Logo và thương hiệu Study2Work LMS Mentor", "x": 28, "y": 13 },
+    { "number": 2, "id": "ME09-EL-02", "label": "Điều hướng Tổng quan", "x": 351, "y": 13 },
+    { "number": 3, "id": "ME09-EL-03", "label": "Điều hướng Khóa học phụ trách", "x": 524, "y": 13 },
+    { "number": 4, "id": "ME09-EL-04", "label": "Điều hướng Chấm bài đang chọn", "x": 681, "y": 88 },
+    { "number": 5, "id": "ME09-EL-05", "label": "Điều hướng Hộp thư hỗ trợ", "x": 845, "y": 13 },
+    { "number": 6, "id": "ME09-EL-06", "label": "Điều hướng Thông báo", "x": 992, "y": 13 },
+    { "number": 7, "id": "ME09-EL-07", "label": "Nút chuông thông báo", "x": 1277, "y": 13 },
+    { "number": 8, "id": "ME09-EL-08", "label": "Danh tính và avatar Mentor", "x": 1574, "y": 13 },
+    { "number": 9, "id": "ME09-EL-09", "label": "Nhãn Trung tâm Đánh giá và Phản hồi", "x": 27, "y": 128 },
+    { "number": 10, "id": "ME09-EL-10", "label": "Tiêu đề Danh sách bài nộp cần chấm điểm", "x": 637, "y": 170 },
+    { "number": 11, "id": "ME09-EL-11", "label": "Mô tả mục đích màn hình", "x": 27, "y": 211 },
+    { "number": 12, "id": "ME09-EL-12", "label": "Badge Đồng bộ tự động: Bật", "x": 1578, "y": 170 },
+    { "number": 13, "id": "ME09-EL-13", "label": "Bộ lọc Khóa học phụ trách", "x": 28, "y": 325 },
+    { "number": 14, "id": "ME09-EL-14", "label": "Bộ lọc Trạng thái bài nộp", "x": 437, "y": 325 },
+    { "number": 15, "id": "ME09-EL-15", "label": "Ô tìm kiếm bài tập", "x": 738, "y": 325 },
+    { "number": 16, "id": "ME09-EL-16", "label": "Nút Thiết lập lại bộ lọc", "x": 1550, "y": 325 },
+    { "number": 17, "id": "ME09-EL-17", "label": "Minh họa trạng thái rỗng", "x": 800, "y": 430 },
+    { "number": 18, "id": "ME09-EL-18", "label": "Tiêu đề trạng thái chưa có bài cần chấm", "x": 553, "y": 627 },
+    { "number": 19, "id": "ME09-EL-19", "label": "Nội dung giải thích trạng thái rỗng", "x": 395, "y": 686 },
+    { "number": 20, "id": "ME09-EL-20", "label": "Nút Tải lại danh sách", "x": 648, "y": 817 },
+    { "number": 21, "id": "ME09-EL-21", "label": "Thông tin tuân thủ hạn nộp 48 giờ", "x": 260, "y": 914 },
+    { "number": 22, "id": "ME09-EL-22", "label": "Thông tin hệ thống chấm theo Rubric chuẩn", "x": 590, "y": 883 },
+    { "number": 23, "id": "ME09-EL-23", "label": "Liên hệ Ban Đào tạo hỗ trợ chuyên môn", "x": 956, "y": 914 },
+    { "number": 24, "id": "ME09-EL-24", "label": "Logo và thông tin bản quyền footer", "x": 26, "y": 1064 },
+    { "number": 25, "id": "ME09-EL-25", "label": "Liên kết Quy chế Giảng viên", "x": 1109, "y": 1028 },
+    { "number": 26, "id": "ME09-EL-26", "label": "Liên kết Tiêu chuẩn đánh giá", "x": 1310, "y": 1028 },
+    { "number": 27, "id": "ME09-EL-27", "label": "Liên kết Hỗ trợ kỹ thuật", "x": 1491, "y": 1028 }
+  ]
+}

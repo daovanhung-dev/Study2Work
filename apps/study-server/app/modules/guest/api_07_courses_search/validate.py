@@ -1,0 +1,68 @@
+"""Kiểm tra input cho API #7 tìm kiếm khóa học công khai."""
+
+from __future__ import annotations
+
+from app.core.responses import ErrorDetail, error_response
+from app.modules.shared.course_catalog.constants import SORT_DIRECTIONS, SORT_FIELDS
+from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
+from app.utils.validate import normalize_search_query, normalize_sort
+from starlette.responses import JSONResponse
+
+
+def validate_course_search_query(
+    course_query: CourseSearchQuery,
+    *,
+    trace_id: str,
+) -> CourseSearchQuery | JSONResponse:
+    """Kiểm tra page/sort/category và chuẩn hóa query tìm kiếm tùy chọn."""
+
+    errors: list[ErrorDetail] = []
+    if course_query.page < 1:
+        errors.append(
+            ErrorDetail(
+                field="page",
+                code="GREATER_THAN_EQUAL",
+                message="Input should be greater than or equal to 1",
+            )
+        )
+
+    normalized_sort = course_query.sort
+    normalized_result = normalize_sort(
+        course_query.sort,
+        allowed_fields=SORT_FIELDS,
+        allowed_directions=SORT_DIRECTIONS,
+    )
+    if isinstance(normalized_result, ErrorDetail):
+        errors.append(
+            ErrorDetail(
+                field="sort",
+                code=normalized_result.code,
+                message=f"Value error, {normalized_result.message}",
+            )
+        )
+    else:
+        normalized_sort = normalized_result
+
+    if errors:
+        return error_response(
+            status_code=422,
+            business_code="DESIGN_VALIDATION_ERROR",
+            message="Dữ liệu đầu vào không hợp lệ.",
+            trace_id=trace_id,
+            errors=errors,
+        )
+
+    if course_query.category is not None:
+        return error_response(
+            status_code=422,
+            business_code="DESIGN_VALIDATION_ERROR",
+            message="Bộ lọc category chưa được hỗ trợ.",
+            trace_id=trace_id,
+        )
+
+    return course_query.model_copy(
+        update={
+            "q": normalize_search_query(course_query.q),
+            "sort": normalized_sort,
+        },
+    )

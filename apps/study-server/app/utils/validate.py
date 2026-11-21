@@ -1,93 +1,127 @@
-"""Reusable pure input-normalization and validation helpers."""
+"""Reusable input normalization and validation helpers for Study API modules."""
 
-from collections.abc import Mapping
-from typing import Any
+from __future__ import annotations
 
-from app.core.responses import ApiError
+import re
+import sys
+from collections.abc import Collection
+
+from pydantic import EmailStr, TypeAdapter, ValidationError
+
+from app.core.responses import ErrorDetail
+
+_EMAIL_ADAPTER = TypeAdapter(EmailStr)
+_INTEGER_PATTERN = re.compile(r"[+-]?[0-9](?:_?[0-9])*\Z")
 
 
 def strip_email(value: object) -> object:
-    """Xóa khoảng trắng ở đầu và cuối chuỗi email."""
-
+    """Loại khoảng trắng email ở hai đầu chuỗi và giữ nguyên các kiểu đầu vào khác."""
     return value.strip() if isinstance(value, str) else value
 
 
-def reject_blank_password(value: object) -> object:
-    """Từ chối mật khẩu chỉ chứa khoảng trắng."""
-
+def reject_blank_password(value: object) -> object | ErrorDetail:
+    """Từ chối mật khẩu chỉ có khoảng trắng, còn lại giữ nguyên giá trị đầu vào."""
     if isinstance(value, str) and not value.strip():
-        raise ValueError("Mật khẩu không được để trống.")
+        return ErrorDetail(code="VALUE_ERROR", message="Mật khẩu không được để trống.")
     return value
 
 
-def reject_blank_value(value: object) -> object:
-    """Từ chối giá trị chuỗi chỉ chứa khoảng trắng."""
-
+def reject_blank_value(value: object) -> object | ErrorDetail:
+    """Từ chối chuỗi chỉ có khoảng trắng, còn lại giữ nguyên giá trị đầu vào."""
     if isinstance(value, str) and not value.strip():
-        raise ValueError("Giá trị không được để trống.")
+        return ErrorDetail(code="VALUE_ERROR", message="Giá trị không được để trống.")
     return value
 
 
 def normalize_login_email(value: object) -> object:
-    """Chuẩn hóa email đăng nhập trước khi Pydantic kiểm tra."""
-
+    """Chuẩn hóa khoảng trắng email đăng nhập trước khi validator kiểm tra định dạng."""
     return strip_email(value)
 
 
-def validate_login_password(value: object) -> object:
-    """Kiểm tra mật khẩu đăng nhập không để trống."""
-
+def validate_login_password(value: object) -> object | ErrorDetail:
+    """Áp dụng helper chung để từ chối mật khẩu đăng nhập rỗng."""
     return reject_blank_password(value)
 
 
-def validate_refresh_token(value: object) -> object:
-    """Kiểm tra refresh token không để trống."""
+def normalize_email(
+    value: object,
+    *,
+    max_length: int | None = None,
+) -> str | ErrorDetail:
+    """Trim và kiểm tra email, trả chuỗi chuẩn hóa hoặc ErrorDetail nếu input sai."""
 
-    return reject_blank_value(value)
+    if not isinstance(value, str):
+        return ErrorDetail(code="VALUE_ERROR", message="Email must be a string.")
 
-
-def extract_bearer_token(authorization: str | None) -> str:
-    """Tách JWT từ header Authorization dùng Bearer."""
-
-    if authorization is None:
-        raise _authentication_error("Authorization header is required")
-
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise _authentication_error("Authorization header must use Bearer scheme")
-
-    return parts[1]
-
-
-def validate_access_claims(claims: Mapping[str, Any]) -> tuple[int, list[str]]:
-    """Kiểm tra và chuẩn hóa claims của access token."""
-
-    subject = claims.get("sub")
-    if not isinstance(subject, str) or not subject:
-        raise _authentication_error("JWT subject is missing")
-
+    normalized = value.strip()
     try:
-        user_id = int(subject)
-    except ValueError as exc:
-        raise _authentication_error("JWT subject is not a numeric user ID") from exc
+        parsed = str(_EMAIL_ADAPTER.validate_python(normalized))
+    except ValidationError as exc:
+        email_errors = exc.errors(include_url=False)
+        message = str(email_errors[0]["msg"]) if email_errors else "Invalid email address."
+        return ErrorDetail(code="VALUE_ERROR", message=message)
 
-    if user_id <= 0:
-        raise _authentication_error("JWT subject is not a positive user ID")
-
-    raw_roles = claims.get("roles")
-    if not isinstance(raw_roles, list) or not raw_roles:
-        raise _authentication_error("JWT roles are missing")
-
-    if not all(isinstance(role, str) and role.strip() for role in raw_roles):
-        raise _authentication_error("JWT roles are invalid")
-
-    roles = [role.strip().upper() for role in raw_roles]
-    return user_id, roles
+    if max_length is not None and len(parsed) > max_length:
+        return ErrorDetail(
+            code="STRING_TOO_LONG",
+            message=f"String should have at most {max_length} characters",
+        )
+    return parsed
 
 
-def _authentication_error(message: str) -> ApiError:
-    return ApiError(
-        status_code=401,
-        business_code="DESIGN_AUTHENTICATION_REQUIRED",
-        message=message,
-    )
+def require_non_blank(value: object, *, field_name: str) -> str | ErrorDetail:
+    """Trả chuỗi không rỗng hoặc ErrorDetail để validator API ánh xạ thành response."""
+
+    if not isinstance(value, str) or not value.strip():
+        return ErrorDetail(code="VALUE_ERROR", message=f"{field_name} must not be blank.")
+    return value
+
+
+def normalize_sort(
+    value: str | None,
+    *,
+    allowed_fields: Collection[str],
+    allowed_directions: Collection[str],
+) -> str | None | ErrorDetail:
+    """Chuẩn hóa sort theo allowlist hoặc trả ErrorDetail khi biểu thức không hợp lệ."""
+
+    if value is None:
+        return None
+
+    parts = value.split(":")
+    if len(parts) != 2:
+        return ErrorDetail(code="VALUE_ERROR", message="sort must use field:direction format.")
+    field, direction = parts
+    if field not in allowed_fields:
+        return ErrorDetail(code="VALUE_ERROR", message="sort field is not supported.")
+    if direction not in allowed_directions:
+        return ErrorDetail(code="VALUE_ERROR", message="sort direction is not supported.")
+    return f"{field}:{direction}"
+
+
+def parse_integer(value: object) -> int | None:
+    """Chuyển chuỗi số nguyên hợp lệ thành int; trả None nếu không thể parse an toàn."""
+
+    if type(value) is int:
+        return value
+    if not isinstance(value, str):
+        return None
+
+    normalized = value.strip()
+    if not _INTEGER_PATTERN.fullmatch(normalized):
+        return None
+
+    digit_count = len(normalized.lstrip("+-").replace("_", ""))
+    max_digits = sys.get_int_max_str_digits()
+    if max_digits and digit_count > max_digits:
+        return None
+    return int(normalized)
+
+
+def normalize_search_query(value: str | None) -> str | None:
+    """Trim/chuyển chữ thường query và coi chuỗi trắng như không có filter tìm kiếm."""
+
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        return normalized or None
+    return value

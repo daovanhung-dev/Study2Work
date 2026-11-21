@@ -14,9 +14,9 @@ format: markdown
 
 | Request field | Source | Data Mapping step | Validate | Storage/mutation usage | Branch/Loop | Response usage | Gap |
 |---|---|---|---|---|---|---|---|
-| `Authorization` | `header["Authorization"]` | `0.1/0.2` | Bearer JWT validation | Scope/authorization only | `0.3` | Không map trực tiếp | Exact claim names and JWT policy chưa có source. |
-| `Content-Type` | `header["Content-Type"]` | `1.1` | Transport validation | Chọn parser theo contract sau khi media type được khóa | `2.2/2.3` | Không map trực tiếp | Media type chưa được đặc tả. |
-| `image` | `request["image"]` | `1.2` | Required, encoding, MIME và size theo policy TBD | `M1` gửi vào Object Storage | `2.1/2.2/2.3/3.1` | Có thể là source cho `data.avatar_url` nếu storage result mapping được xác nhận | Không diễn giải string hoặc tự tạo format. |
+| `Authorization` | `header["Authorization"]` | `0.1/0.2` | Shared Bearer/JWT guard; require `STUDENT` | Scope/authorization only | `0.3` | Không map trực tiếp | Dùng claim `sub`/`roles` hiện hành. |
+| `Content-Type` | `header["Content-Type"]` | `1.1` | JSON request body | Chọn parser JSON | `1.2` | Không map trực tiếp | Multipart không được nhận. |
+| `image` | `request["image"]` | `1.2` | Data URL, strict Base64, PNG/JPEG/WebP signature, decoded size `<= 5 MiB` | `M1` gửi bytes và MIME vào Object Storage | `2.1-2.4/3.1` | `data.avatar_url` được ghép từ public base URL và object key | Field ngoài schema bị từ chối. |
 
 ## Query Matrix
 
@@ -28,7 +28,7 @@ format: markdown
 
 | Mutation ID | Operation | Target table/API | Record condition | Fields | Value sources | Audit | Mapping file | Transaction | Failure behavior |
 |---|---|---|---|---|---|---|---|---|---|
-| `M1` | `External upload` | `Object Storage` | `storage object key = SOURCE_REQUIRED` | `image payload` | `request["image"]` từ step `1.2` | `TBD — audit contract chưa có` | `07_table.md` ghi N/A vì không phải DB table | `N/A — external operation; transaction/cleanup TBD` | Lỗi upload hoặc storage response không hợp lệ đi tới `500 DESIGN_INTERNAL_ERROR`. |
+| `M1` | `PUT object` | `S3-compatible Object Storage` | `avatars/{user_id}` từ `sub` đã xác thực | `Body`, `ContentType` | Data URL đã giải mã và MIME đã kiểm tra | `N/A — audit chưa được yêu cầu` | `07_table.md` ghi N/A vì không phải DB table | `N/A — external operation; cùng key được ghi đè, không retry/cleanup riêng` | Thiếu config, provider error hoặc timeout đi tới `500 DESIGN_INTERNAL_ERROR`. |
 
 ## Response Source Matrix
 
@@ -36,19 +36,10 @@ format: markdown
 |---|---|---|---|---|---|---|---|
 | `success` | `boolean` | Branch constant | Processing result | `5.1/5.2/5.3/5.4` | `true` on success; `false` on error | `N/A` | `N/A` |
 | `businessCode` | `string` | Branch constant | Design contract | `5.1/5.2/5.3/5.4` | Fixed `DESIGN_*` code | `N/A` | `N/A` |
-| `message` | `string` | Branch message | Application | `5.1/5.2/5.3/5.4` | Fixed by branch | Text TBD | Message catalog chưa có. |
-| `data.id` | `int64` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Upload-only flow không reload profile. |
-| `data.full_name` | `string` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Không tự query `users`. |
-| `data.email` | `email` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Không tự query `users`. |
-| `data.role` | `string` | Token authorization context | `validated JWT role claim` | `0.2/5.1` | `SOURCE_REQUIRED` for profile response | `SOURCE_REQUIRED` | Role claim dùng auth nhưng chưa đủ làm UserProfile source. |
-| `data.avatar_url` | `uri` | External result | `Object Storage result field TBD` | `3.2/5.1` | `SOURCE_REQUIRED` | `TBD` | Storage output URL contract chưa có. |
-| `data.bio` | `string` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `Omit when no source` | Optional contract field, không có source trong flow. |
-| `data.phone` | `string` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `Omit when no source` | Optional contract field, không có source trong flow. |
-| `data.status` | `string` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Không tự gán `ACTIVE`. |
-| `data.created_at` | `date-time` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Không tự tạo timestamp. |
-| `data.updated_at` | `date-time` | Unresolved profile source | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | API #13 không update DB. |
+| `message` | `string` | Branch message | Application | `5.1-5.5` | Fixed by branch | Text value by branch | Safe fixed message; no provider detail. |
+| `data.avatar_url` | `uri` | External result | `OBJECT_STORAGE_PUBLIC_BASE_URL + /avatars/{user_id}` | `3.2/5.1` | Returned as the only `AvatarUploadResult` field | Present on success | API #14 uses this URL to update profile. |
 | `meta` | `object` | Envelope default | `N/A` | `5.1/5.2/5.3/5.4` | `{}` | `{}` | Không thêm storage metadata. |
-| `traceId` | `uuid` | Correlation generator | `N/A` | `5.1/5.2/5.3/5.4` | Request correlation UUID | `TBD` | Generator chưa được source đặc tả. |
+| `traceId` | `uuid` | Correlation generator | `app/core/trace.py` | `5.1-5.5` | Request correlation UUID | Always present | Middleware supplies the trace ID. |
 
 ## 0. Check quyền
 
@@ -60,10 +51,9 @@ format: markdown
 
 ### 0.2. Decode token
 
-- Verify Bearer JWT theo auth policy được phê duyệt.
-- Kiểm tra chữ ký, expiry và claim cần cho authorization.
-- `role`: lấy từ claim role theo policy được phê duyệt; tên claim cụ thể là `SOURCE_REQUIRED`.
-- Identity subject dùng để scope upload nếu storage policy yêu cầu; claim name và mapping là `SOURCE_REQUIRED`.
+- Dùng `app.utils.auth.validate_current_user_request` để verify Bearer JWT theo cấu hình hiện hành.
+- Guard kiểm tra chữ ký, expiry, `sub`, `roles` và yêu cầu role `STUDENT`.
+- Lấy `user_id` dạng số dương từ claim `sub` để tạo object key.
 
 ### 0.3. Check role
 
@@ -79,9 +69,9 @@ format: markdown
 
 ### 1.1. Get transport metadata
 
-- `content_type`: đọc từ request header nếu có.
-- Không chọn `application/json`, `multipart/form-data` hoặc media type khác khi contract chưa đặc tả.
-- Nếu transport không thể parse body theo contract đã được phê duyệt: đi tới error case validation trong [06_Error.md](./06_Error.md).
+- Route nhận `Content-Type: application/json`.
+- Request parser không nhận `multipart/form-data`.
+- Body parse/schema error được map thành `422 DESIGN_VALIDATION_ERROR`.
 
 ### 1.2. Get request body
 
@@ -91,58 +81,61 @@ format: markdown
 - Không nhận `size`.
 - Không nhận `storage_key`.
 - Không nhận `avatar_url`.
+- Field ngoài model bị từ chối.
 
 ## 2. Validate data input
 
 ### 2.1. Check required image
 
-- Nếu `image` thiếu: đi tới [06_Error.md](./06_Error.md), error case `7`, HTTP `422`.
-- Nếu `image` là `NULL`: đi tới [06_Error.md](./06_Error.md), error case `8`, HTTP `422`.
-- Nếu `image` là blank: xử lý theo required/blank policy sau khi policy được phê duyệt; nếu policy từ chối blank thì đi tới [06_Error.md](./06_Error.md), error case `9`, HTTP `422`.
+- Nếu body thiếu field `image`: đi tới [06_Error.md](./06_Error.md), error case `7`, HTTP `422`.
+- Nếu `image` bằng `null`: đi tới [06_Error.md](./06_Error.md), error case `8`, HTTP `422`.
+- Nếu `image` không phải chuỗi: đi tới [06_Error.md](./06_Error.md), error case `9`, HTTP `422`.
+- Nếu `image` rỗng: đi tới [06_Error.md](./06_Error.md), error case `10`, HTTP `422`.
 
-### 2.2. Check image encoding
+### 2.2. Check Data URL and Base64
 
-- Xác định image string có đúng encoding được contract phê duyệt hay không.
-- Encoding/data URI/base64/URL chưa được source xác nhận; không chọn một loại làm runtime rule.
-- Nếu encoding không hợp lệ sau khi policy được khóa: đi tới [06_Error.md](./06_Error.md), error case `10`, HTTP `422`.
+- Yêu cầu `image` khớp dạng `data:image/<mime>;base64,...`.
+- Giải mã Base64 ở chế độ strict; không nhận URL thường, khoảng trắng hoặc multipart.
+- Nếu header/Data URL hoặc Base64 sai: đi tới [06_Error.md](./06_Error.md), error case `11`, HTTP `422`.
 
-### 2.3. Check MIME and size
+### 2.3. Check MIME allowlist and size
 
-- Diagram AC-11 yêu cầu validate MIME/size trước khi lưu.
-- MIME allowlist chưa được source xác nhận.
-- Size limit chưa được source xác nhận.
-- Nếu MIME không đạt policy đã phê duyệt: đi tới [06_Error.md](./06_Error.md), error case `11`, HTTP `422`.
-- Nếu size vượt giới hạn đã phê duyệt: đi tới [06_Error.md](./06_Error.md), error case `12`, HTTP `422`.
+- Chỉ cho phép MIME `image/png`, `image/jpeg` và `image/webp`.
+- Giới hạn kích thước là 5 MiB tính trên bytes sau giải mã.
+- Nếu MIME ngoài allowlist: đi tới [06_Error.md](./06_Error.md), error case `12`, HTTP `422`.
+- Nếu decoded bytes vượt giới hạn: đi tới [06_Error.md](./06_Error.md), error case `13`, HTTP `422`.
+
+### 2.4. Check image signature
+
+- So khớp PNG/JPEG/WebP signature với MIME khai báo trong Data URL.
+- Nếu chữ ký không khớp: đi tới [06_Error.md](./06_Error.md), error case `14`, HTTP `422`.
 
 ## 3. Upload avatar
 
 ### 3.1. Send avatar to Object Storage
 
-- Gọi Object Storage adapter/service theo interface được phê duyệt.
-- `image_payload`: lấy từ `image` ở step `1.2`.
-- `storage_object_key`: `SOURCE_REQUIRED`; không tự tạo naming hoặc namespace rule.
+- Gọi S3-compatible provider bằng payload đã giải mã và MIME đã kiểm tra.
+- `image_payload`: bytes từ `image` ở step `1.2`.
+- `storage_object_key`: `avatars/{user_id}`, trong đó `user_id` đến từ claim `sub` đã xác thực.
+- `Content-Type` của object lấy từ MIME đã kiểm tra.
 - Không thực hiện `INSERT`, `UPDATE`, `DELETE` hoặc `SELECT` trên database.
 - Không cập nhật `users.avatar_url` trong API #13.
 
 ### 3.2. Check storage result
 
-- Nếu Object Storage trả kết quả upload thành công nhưng không có output mapping được contract xác nhận: giữ response field `data.avatar_url` ở trạng thái `SOURCE_REQUIRED`.
-- Nếu Object Storage upload thất bại: đi tới [06_Error.md](./06_Error.md), error case `13`, HTTP `500` theo status contract hiện có.
-- Nếu Object Storage timeout: đi tới [06_Error.md](./06_Error.md), error case `14`, HTTP `500` theo status contract hiện có.
-- Nếu Object Storage response không hợp lệ: đi tới [06_Error.md](./06_Error.md), error case `15`, HTTP `500` theo status contract hiện có.
-- Nếu response mapping thất bại: đi tới [06_Error.md](./06_Error.md), error case `16`, HTTP `500` theo status contract hiện có.
-- Retry, idempotency và cleanup object đã upload khi downstream response thất bại là `SOURCE_REQUIRED`.
+- URL thành công được dựng từ `OBJECT_STORAGE_PUBLIC_BASE_URL` và key `avatars/{user_id}`.
+- Connect timeout là 5 giây; read timeout là 30 giây; tổng số attempt là 1.
+- Thiếu cấu hình đi tới [06_Error.md](./06_Error.md), error case `16-17`, HTTP `500`.
+- Provider error hoặc timeout đi tới [06_Error.md](./06_Error.md), error case `18-19`, HTTP `500`.
+- Upload lần mới của cùng user ghi đè object cùng key; không có retry hoặc cleanup riêng.
 
 ## 4. Response mapping
 
-### 4.1. Preserve UserProfile contract
+### 4.1. Map upload result
 
-- Giữ response type `ApiEnvelope<UserProfile>` theo `list_api.md`.
-- Không tự gọi API #4 để reload profile.
-- Không tự gọi API #14 để cập nhật profile.
-- `data.avatar_url`: chỉ có thể map từ Object Storage result sau khi output field được source xác nhận; hiện ghi `SOURCE_REQUIRED`.
-- `data.id`, `data.full_name`, `data.email`, `data.role`, `data.status`, `data.created_at` và `data.updated_at`: ghi `SOURCE_REQUIRED` vì upload-only flow không có profile source.
-- `data.bio` và `data.phone`: omit khi không có source, không tạo cột hoặc query mới.
+- Dùng response type `ApiEnvelope<AvatarUploadResult>`.
+- `data.avatar_url`: public URL từ provider, chỉ field nghiệp vụ của `AvatarUploadResult`.
+- Không gọi API #4 hoặc API #14 từ API #13.
 
 ## 5. Trả về response
 
@@ -151,9 +144,9 @@ format: markdown
 - `HTTPStatus = 201`.
 - `success = true`.
 - `businessCode = DESIGN_RESOURCE_CREATED`.
-- `data = UserProfile` theo [04_Response.md](./04_Response.md); các mapping chưa có source vẫn là gap design.
+- `data = {avatar_url}` theo [04_Response.md](./04_Response.md).
 - `meta = {}`.
-- `traceId = request correlation UUID`; generator là `TBD`.
+- `traceId = request correlation UUID` do middleware cấp.
 
 ### 5.2. Authentication error
 
@@ -191,5 +184,5 @@ format: markdown
 ---
 ## Phụ lục đối chiếu template Markdown
 
-- Template: `../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/05_Data_Mapping.md`.
+- Template: `../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/05_Data_Mapping.md`.
 - Sheet logic: `3. Data mapping`.

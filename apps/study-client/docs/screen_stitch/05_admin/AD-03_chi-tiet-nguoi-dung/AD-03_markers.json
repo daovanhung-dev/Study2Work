@@ -1,0 +1,194 @@
+[
+  {
+    "number": 1,
+    "x": 16,
+    "y": 18,
+    "label": "Study2Work/LMS/Admin Portal brand"
+  },
+  {
+    "number": 2,
+    "x": 292,
+    "y": 22,
+    "label": "Primary admin navigation group"
+  },
+  {
+    "number": 3,
+    "x": 1250,
+    "y": 36,
+    "label": "System Normal status pill"
+  },
+  {
+    "number": 4,
+    "x": 1300,
+    "y": 36,
+    "label": "Notifications icon"
+  },
+  {
+    "number": 5,
+    "x": 1583,
+    "y": 59,
+    "label": "Admin identity and avatar"
+  },
+  {
+    "number": 6,
+    "x": 510,
+    "y": 96,
+    "label": "Global breadcrumb trail"
+  },
+  {
+    "number": 7,
+    "x": 1583,
+    "y": 111,
+    "label": "RBAC verification badge"
+  },
+  {
+    "number": 8,
+    "x": 523,
+    "y": 166,
+    "label": "User management/detail breadcrumb"
+  },
+  {
+    "number": 9,
+    "x": 1578,
+    "y": 166,
+    "label": "API #69 data-sync badge"
+  },
+  {
+    "number": 10,
+    "x": 20,
+    "y": 235,
+    "label": "Return to user list button (AD-02)"
+  },
+  {
+    "number": 11,
+    "x": 54,
+    "y": 315,
+    "label": "Detail hero: icon, heading, subtitle and screen code"
+  },
+  {
+    "number": 12,
+    "x": 54,
+    "y": 487,
+    "label": "Identity/contact card heading"
+  },
+  {
+    "number": 13,
+    "x": 899,
+    "y": 487,
+    "label": "Not synchronized status badge"
+  },
+  {
+    "number": 14,
+    "x": 957,
+    "y": 487,
+    "label": "Administrative actions card heading"
+  },
+  {
+    "number": 15,
+    "x": 956,
+    "y": 574,
+    "label": "Edit user button (AD-04), disabled"
+  },
+  {
+    "number": 16,
+    "x": 48,
+    "y": 581,
+    "label": "No-selected-user information panel"
+  },
+  {
+    "number": 17,
+    "x": 956,
+    "y": 647,
+    "label": "Lock/status button (AD-05), disabled"
+  },
+  {
+    "number": 18,
+    "x": 957,
+    "y": 730,
+    "label": "Account action advisory"
+  },
+  {
+    "number": 19,
+    "x": 50,
+    "y": 780,
+    "label": "Full-name row"
+  },
+  {
+    "number": 20,
+    "x": 50,
+    "y": 851,
+    "label": "Email row"
+  },
+  {
+    "number": 21,
+    "x": 960,
+    "y": 867,
+    "label": "Login/role audit heading and record count"
+  },
+  {
+    "number": 22,
+    "x": 50,
+    "y": 921,
+    "label": "User-ID row"
+  },
+  {
+    "number": 23,
+    "x": 958,
+    "y": 940,
+    "label": "Audit empty-state panel"
+  },
+  {
+    "number": 24,
+    "x": 50,
+    "y": 990,
+    "label": "Phone row"
+  },
+  {
+    "number": 25,
+    "x": 50,
+    "y": 1059,
+    "label": "System-role row"
+  },
+  {
+    "number": 26,
+    "x": 50,
+    "y": 1129,
+    "label": "Account-status row"
+  },
+  {
+    "number": 27,
+    "x": 957,
+    "y": 1166,
+    "label": "Security protocol and retention note"
+  },
+  {
+    "number": 28,
+    "x": 52,
+    "y": 1203,
+    "label": "API endpoint and response footnote"
+  },
+  {
+    "number": 29,
+    "x": 54,
+    "y": 1298,
+    "label": "Privacy/compliance banner"
+  },
+  {
+    "number": 30,
+    "x": 1285,
+    "y": 1320,
+    "label": "RBAC Strict Audit Active badge"
+  },
+  {
+    "number": 31,
+    "x": 15,
+    "y": 1397,
+    "label": "Copyright and system footer text"
+  },
+  {
+    "number": 32,
+    "x": 880,
+    "y": 1414,
+    "label": "Privacy/RBAC/support footer links"
+  }
+]

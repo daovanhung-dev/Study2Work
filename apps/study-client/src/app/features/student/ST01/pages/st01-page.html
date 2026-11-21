@@ -1,0 +1,197 @@
+<study-student-public-frame>
+  <main class="student-overview api-screen" data-screen-id="ST-01">
+    <nav class="student-overview__crumbs crumbs" aria-label="Breadcrumb">
+      <a routerLink="/">Trang chủ</a><span aria-hidden="true">›</span>
+      <span aria-current="page">Tổng quan học tập</span>
+    </nav>
+
+    <header class="student-overview__heading">
+      <div>
+        <p class="student-overview__eyebrow">KHU VỰC HỌC VIÊN</p>
+        <h1>Tổng quan học tập</h1>
+        <p>Theo dõi khóa học, thành tích và thông báo của bạn.</p>
+      </div>
+      <span class="student-overview__session">Khu vực học viên</span>
+    </header>
+
+    <div class="student-overview__grid">
+      <div class="student-overview__widgets">
+        <section class="student-overview__widget api-card" aria-labelledby="overview-courses-title">
+          <div class="student-overview__widget-heading">
+            <div>
+              <p class="student-overview__eyebrow">HỌC TẬP</p>
+              <h2 id="overview-courses-title">Khóa học đang học</h2>
+            </div>
+            <a routerLink="/student/courses">Tất cả khóa học</a>
+          </div>
+
+          @if (coursesLoading()) {
+            <p class="student-overview__message api-message" role="status">Đang tải khóa học…</p>
+          }
+          @if (coursesError()) {
+            <div class="student-overview__error api-error" role="group" aria-label="Lỗi tải khóa học">
+              <p role="alert">{{ coursesError() }}</p>
+              <button class="api-button secondary" type="button" (click)="retryCourses()">
+                Thử tải lại khóa học
+              </button>
+            </div>
+          }
+          @if (!coursesLoading() && !coursesError() && coursesSnapshotMismatch()) {
+            <div class="student-overview__message api-message" role="status">
+              <p>Danh sách khóa học vừa thay đổi. Hãy tải lại để đồng bộ số lượng.</p>
+              <button class="api-button secondary" type="button" (click)="retryCourses()">
+                Tải lại khóa học
+              </button>
+            </div>
+          }
+          @if (!coursesLoading() && !coursesError() && !coursesSnapshotMismatch() && courses().length === 0) {
+            <div class="student-overview__message api-message">
+              <strong>Bạn chưa có khóa học đang học.</strong>
+              <p>Các khóa học bạn đăng ký sẽ xuất hiện tại đây.</p>
+              <a routerLink="/courses">Khám phá khóa học</a>
+            </div>
+          }
+          @if (!coursesLoading() && !coursesError() && courses().length > 0) {
+            <ul class="student-overview__course-list api-list">
+              @for (course of courses().slice(0, 3); track course.course_id) {
+                <li>
+                  <div>
+                    @if (safeCourseId(course.course_id); as courseId) {
+                      <a [routerLink]="['/student/courses', courseId]">{{ course.name }}</a>
+                    } @else {
+                      <strong>{{ course.name }}</strong>
+                    }
+                    <p>Ghi danh {{ course.enrolled_at | date: 'mediumDate' }}</p>
+                  </div>
+                  <span class="student-overview__status">Đang học</span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="student-overview__widget api-card" aria-labelledby="overview-progress-title">
+          <div class="student-overview__widget-heading">
+            <div>
+              <p class="student-overview__eyebrow">TIẾN ĐỘ</p>
+              <h2 id="overview-progress-title">Tiến độ tổng quan</h2>
+            </div>
+            <span class="student-overview__status student-overview__status--limited">Chưa khả dụng</span>
+          </div>
+          <div class="student-overview__message api-message">
+            <strong>Chưa thể hiển thị tiến độ tổng hợp.</strong>
+            <p>Thông tin tiến độ sẽ xuất hiện tại đây khi dữ liệu học tập được đồng bộ.</p>
+            <a routerLink="/student/progress">Mở trang tiến độ</a>
+          </div>
+        </section>
+
+        <section class="student-overview__widget api-card" aria-labelledby="overview-achievements-title">
+          <div class="student-overview__widget-heading">
+            <div>
+              <p class="student-overview__eyebrow">THÀNH TÍCH</p>
+              <h2 id="overview-achievements-title">Thành tích</h2>
+            </div>
+            <a routerLink="/student/achievements">Xem danh sách</a>
+          </div>
+          @if (achievementsLoading()) {
+            <p class="student-overview__message api-message" role="status">Đang tải thành tích…</p>
+          }
+          @if (achievementsError()) {
+            <div class="student-overview__error api-error" role="group" aria-label="Lỗi tải thành tích">
+              <p role="alert">{{ achievementsError() }}</p>
+              <button class="api-button secondary" type="button" (click)="retryAchievements()">
+                Thử tải lại thành tích
+              </button>
+            </div>
+          }
+          @if (!achievementsLoading() && !achievementsError() && achievementsSnapshotMismatch()) {
+            <div class="student-overview__message api-message" role="status">
+              <p>Danh sách thành tích vừa thay đổi. Hãy tải lại để đồng bộ số lượng.</p>
+              <button class="api-button secondary" type="button" (click)="retryAchievements()">
+                Tải lại thành tích
+              </button>
+            </div>
+          }
+          @if (!achievementsLoading() && !achievementsError() && !achievementsSnapshotMismatch() && achievements().length === 0) {
+            <div class="student-overview__message api-message">
+              <strong>Chưa có thành tích được ghi nhận.</strong>
+            </div>
+          }
+          @if (!achievementsLoading() && !achievementsError() && achievements().length > 0) {
+            <ul class="student-overview__achievement-list api-list">
+              @for (achievement of achievements().slice(0, 3); track achievement.id) {
+                <li>
+                  <strong>{{ achievement.title }}</strong>
+                  <span>{{ achievement.awarded_at | date: 'mediumDate' }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="student-overview__widget api-card" aria-labelledby="overview-notifications-title">
+          <div class="student-overview__widget-heading">
+            <div>
+              <p class="student-overview__eyebrow">CHƯA ĐỌC</p>
+              <h2 id="overview-notifications-title">Thông báo</h2>
+            </div>
+            @if (unreadCount() !== null && !notificationsSnapshotMismatch()) {
+              <span class="student-overview__status">{{ unreadCount() }} chưa đọc</span>
+            }
+            <a routerLink="/student/notifications">Tất cả</a>
+          </div>
+          @if (notificationsLoading()) {
+            <p class="student-overview__message api-message" role="status">Đang tải thông báo…</p>
+          }
+          @if (notificationsError()) {
+            <div class="student-overview__error api-error" role="group" aria-label="Lỗi tải thông báo">
+              <p role="alert">{{ notificationsError() }}</p>
+              <button class="api-button secondary" type="button" (click)="retryNotifications()">
+                Thử tải lại
+              </button>
+            </div>
+          }
+          @if (!notificationsLoading() && !notificationsError() && notificationsSnapshotMismatch()) {
+            <div class="student-overview__message api-message" role="status">
+              <p>Danh sách thông báo vừa thay đổi. Hãy tải lại để đồng bộ số lượng.</p>
+              <button class="api-button secondary" type="button" (click)="retryNotifications()">
+                Tải lại thông báo
+              </button>
+            </div>
+          }
+          @if (!notificationsLoading() && !notificationsError() && !notificationsSnapshotMismatch() && notifications().length === 0) {
+            <div class="student-overview__message api-message">
+              <strong>Không có thông báo mới.</strong>
+              <p>Thông báo chưa đọc sẽ xuất hiện tại đây.</p>
+            </div>
+          }
+          @if (!notificationsLoading() && !notificationsError() && notifications().length > 0) {
+            <ul class="student-overview__notification-list api-list">
+              @for (item of notifications().slice(0, 3); track item.id) {
+                <li>
+                  <strong>{{ item.title }}</strong>
+                  <p>{{ item.content }}</p>
+                  <time [attr.datetime]="item.created_at">{{ item.created_at | date: 'medium' }}</time>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+
+      <aside class="student-overview__handoff api-card" aria-labelledby="overview-handoff-title">
+        <p class="student-overview__eyebrow">LỐI TẮT</p>
+        <h2 id="overview-handoff-title">Khu vực học tập</h2>
+        <p class="student-overview__handoff-copy">
+          Mở nhanh các trang thường dùng trong tài khoản của bạn.
+        </p>
+        <nav aria-label="Điều hướng học tập">
+          <a routerLink="/student/courses">Khóa học của tôi</a>
+          <a routerLink="/student/progress">Tiến độ học tập</a>
+          <a routerLink="/student/profile">Hồ sơ cá nhân</a>
+          <a routerLink="/student/notifications">Thông báo</a>
+        </nav>
+      </aside>
+    </div>
+  </main>
+</study-student-public-frame>

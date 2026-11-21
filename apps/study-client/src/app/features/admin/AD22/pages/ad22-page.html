@@ -1,0 +1,106 @@
+<main class="reported-discussions page-width" data-screen-id="AD22">
+  <div class="queue-breadcrumbs">
+    <nav aria-label="Đường dẫn kiểm duyệt">
+      <ol><li>Kiểm duyệt cộng đồng</li><li aria-hidden="true">›</li><li aria-current="page">Thảo luận được báo cáo</li></ol>
+    </nav>
+    <span class="api-badge">API #97</span>
+  </div>
+
+  <header class="queue-heading">
+    <div>
+      <p class="queue-eyebrow">COMMUNITY MODERATION</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+  </header>
+
+  <section class="filter-panel" aria-labelledby="filter-heading">
+    <div class="filter-panel-heading">
+      <h2 id="filter-heading"><study-icon name="filter" /> Lọc báo cáo</h2>
+      <span class="source-badge">API #97</span>
+    </div>
+    <form class="filter-grid" aria-label="Bộ lọc báo cáo thảo luận" (submit)="submitFilters($event)">
+      <label for="discussion-reason">
+        <span>Lý do báo cáo · giá trị chính xác</span>
+        <input id="discussion-reason" type="text" placeholder="Nhập mã lý do chính xác" [value]="filterReason()" (input)="setFilterReason($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </label>
+      <label for="discussion-severity">
+        <span>Mức độ · giá trị chính xác</span>
+        <input id="discussion-severity" type="text" placeholder="Nhập giá trị mức độ chính xác" [value]="filterSeverity()" (input)="setFilterSeverity($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </label>
+      <label for="discussion-search">
+        <span>Tìm thảo luận</span>
+        <input id="discussion-search" type="search" placeholder="API #97 không nhận từ khóa" disabled aria-describedby="search-note" />
+      </label>
+      <div class="filter-actions">
+        <button class="apply-button" type="submit" [disabled]="viewState().status === 'loading'"><study-icon name="search" /> Áp dụng</button>
+        <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+        <button class="refresh-button" type="button" (click)="refreshReportedDiscussions()" [disabled]="viewState().status === 'loading'"><study-icon name="refresh" /> Làm mới</button>
+      </div>
+    </form>
+    <p class="filter-note" id="search-note"><study-icon name="info" /> Lý do và mức độ được gửi nguyên văn để đối chiếu chính xác. API #97 không nhận từ khóa và không trả metadata của từng report.</p>
+  </section>
+
+  <section class="queue-table-panel" aria-label="Danh sách thảo luận được báo cáo">
+    <div class="table-scroll" role="region" aria-label="Bảng thảo luận được báo cáo" tabindex="0">
+      <table>
+        <caption class="visually-hidden">Discussion summary từ API #97; mỗi discussion xuất hiện một lần.</caption>
+        <thead><tr><th scope="col">Mã thảo luận</th><th scope="col">Tiêu đề từ nội dung</th><th scope="col">Nội dung</th><th scope="col">Tác giả</th><th scope="col">Mã khóa học</th><th scope="col">Trạng thái thảo luận</th><th scope="col">Chi tiết</th></tr></thead>
+        <tbody>
+          @if (viewState().status === 'loading') {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải hàng đợi báo cáo…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
+          } @else if (viewState().status === 'error') {
+            <tr><td class="table-state table-state--error" colspan="7" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải hàng đợi báo cáo</strong><span>{{ viewState().message }}</span></td></tr>
+          } @else if ((viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="users" /></span><strong>Không có thảo luận phù hợp</strong><span>API #97 trả về trang rỗng cho bộ lọc hiện tại.</span><button class="empty-refresh-button" type="button" (click)="refreshReportedDiscussions()"><study-icon name="refresh" /> Làm mới hàng đợi báo cáo</button></td></tr>
+          } @else {
+            @for (row of viewState().rows ?? []; track row.values[0]) {
+              <tr>
+                <td class="discussion-id">{{ row.values[0] }}</td>
+                <td class="discussion-title"><strong>{{ row.values[1] }}</strong></td>
+                <td class="discussion-content">{{ row.values[2] }}</td>
+                <td>{{ row.values[3] }}</td>
+                <td class="discussion-id">{{ row.values[4] }}</td>
+                <td><span class="discussion-status">{{ row.values[5] }}</span></td>
+                <td>
+                  @if (row.route) {
+                    <a class="row-action" [routerLink]="row.route">Mở <study-icon name="chevron" /></a>
+                  } @else {
+                    <button class="row-action" type="button" disabled aria-label="Không thể mở thảo luận do mã vượt khả năng biểu diễn an toàn">Không thể mở</button>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (viewState().status === 'loaded') {
+      <div class="pagination-bar">
+        <p>
+          @if (viewState().pagination; as pagination) {
+            <strong>{{ pagination.total }}</strong> thảo luận trong kết quả API #97
+            @if (pagination.totalPages > 0) { · Trang <strong>{{ pagination.page }} / {{ pagination.totalPages }}</strong> }
+          } @else { Response không có metadata phân trang. }
+        </p>
+        @if (viewState().pagination; as pagination) {
+          @if (pagination.totalPages > 0) {
+            <div class="pagination-controls" aria-label="Phân trang báo cáo thảo luận">
+              <button type="button" (click)="changePage(pagination.page - 1)" [disabled]="pagination.page <= 1"><study-icon name="chevron" /> Trước</button>
+              <span>Trang {{ pagination.page }}</span>
+              <button type="button" (click)="changePage(pagination.page + 1)" [disabled]="pagination.page >= pagination.totalPages">Sau <study-icon name="chevron" /></button>
+            </div>
+          }
+        }
+      </div>
+    }
+    <div class="source-note"><study-icon name="database" /><span>API #97 trả về Discussion summary; metadata của từng report không có trong response.</span></div>
+  </section>
+
+  <aside class="data-boundary">
+    <span class="boundary-icon"><study-icon name="shield" /></span>
+    <div><strong>Dữ liệu hiện có</strong><p>API #97 trả về Discussion summary và tác giả. Mỗi thảo luận xuất hiện một lần. Response không có số lượng, lý do, mức độ, người gửi hay thời điểm của từng report. Tiêu đề được lấy từ nội dung; danh sách này không nạp comments.</p></div>
+    <span class="source-badge">Page&lt;Discussion&gt;</span>
+  </aside>
+</main>

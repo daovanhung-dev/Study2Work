@@ -1,0 +1,88 @@
+<main class="mentor-page me10-page">
+  <study-mentor-page-header
+    title="Chấm điểm và phản hồi"
+    description="Bài nộp được đọc qua #55. Các thao tác ghi đang khóa cho tới khi rubric, thang điểm và attachment contract được duyệt."
+    apiLabel="#55 · #56 · #57"
+  />
+  <a class="me10-back" routerLink="/mentor/submissions">← Quay lại danh sách bài nộp</a>
+
+  @if (invalidId()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Submission ID không hợp lệ</h2>
+      <p>Đường dẫn cần có ID số nguyên dương trong giới hạn hệ thống.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/submissions">Về danh sách bài nộp</a>
+    </section>
+  } @else if (loading()) {
+    <section class="mentor-card mentor-state" role="status" aria-live="polite">Đang tải bài nộp…</section>
+  } @else if (notFound()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không tìm thấy bài nộp</h2>
+      <p>Study Server không trả về Submission hiện hành cho ID này.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/submissions">Về danh sách bài nộp</a>
+    </section>
+  } @else if (forbidden()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không có quyền xem bài nộp</h2>
+      <p>Study Server giới hạn dữ liệu theo vai trò Mentor và quyền sở hữu khóa học.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/submissions">Về danh sách bài nộp</a>
+    </section>
+  } @else if (error()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Chưa thể tải bài nộp</h2>
+      <p>{{ error() }}</p>
+      <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử tải lại</button>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/submissions">Về danh sách bài nộp</a>
+    </section>
+  } @else {
+    @if (submission(); as item) {
+      <div class="me10-layout">
+        <article class="mentor-card me10-submission">
+          <div class="me10-submission-top">
+            <span class="mentor-status">{{ item.status }}</span>
+            <span class="mentor-meta">Submission #{{ item.id }} · Assignment #{{ item.assignment_id }} · Student #{{ item.user_id }}</span>
+          </div>
+          <h2>Bài làm của học viên</h2>
+          <p class="mentor-meta">Nộp {{ item.submitted_at | date:'medium' }}</p>
+          <section class="me10-answer" aria-label="Nội dung bài làm">
+            @if (item.content) { <p>{{ item.content }}</p> }
+            @else { <p class="mentor-meta">Không có nội dung văn bản trong response.</p> }
+          </section>
+          <section class="me10-files" aria-label="Tệp đính kèm">
+            <h3>Tệp đính kèm ({{ item.files.length }})</h3>
+            @if (!item.files.length) {
+              <p class="mentor-meta">API #55 không trả metadata tệp đính kèm.</p>
+            } @else {
+              @for (file of item.files; track file.id) {
+                <div class="me10-file">
+                  <div>
+                    <strong>{{ file.name }}</strong>
+                    <span class="mentor-meta">{{ file.content_type }} · {{ file.size_bytes }} bytes · {{ file.status }}</span>
+                  </div>
+                  <span class="mentor-meta">Mở tệp đang khóa cho tới khi URL/storage policy được xác nhận.</span>
+                </div>
+              }
+            }
+          </section>
+        </article>
+
+        <aside class="me10-forms" aria-label="Trạng thái chấm điểm và phản hồi">
+          <section class="mentor-card me10-form">
+            <h2>Điểm số</h2>
+            <label for="me10-score">Điểm hiện tại từ API #55</label>
+            <input id="me10-score" type="text" readonly [value]="item.score ?? 'Chưa có điểm'" />
+            <p class="mentor-meta">#56 yêu cầu điểm nguyên nhưng #55 không trả `max_score`; rubric cũng chưa có persistence. Chưa gửi request chấm điểm.</p>
+            <button class="mentor-button" type="button" disabled aria-disabled="true">Lưu điểm (đang khóa)</button>
+          </section>
+
+          <section class="mentor-card me10-form">
+            <h2>Nhận xét</h2>
+            <label for="me10-feedback">Phản hồi hiện tại từ API #55</label>
+            <textarea id="me10-feedback" rows="6" readonly [value]="item.feedback ?? ''"></textarea>
+            <p class="mentor-meta">#57 yêu cầu chuỗi `attachments`; định dạng và persistence chưa được duyệt. Chưa gửi request feedback.</p>
+            <button class="mentor-button" type="button" disabled aria-disabled="true">Lưu nhận xét (đang khóa)</button>
+          </section>
+        </aside>
+      </div>
+    }
+  }
+</main>

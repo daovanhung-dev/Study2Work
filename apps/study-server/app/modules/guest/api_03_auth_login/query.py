@@ -1,5 +1,3 @@
-"""SQL statements for auth login and refresh-token persistence."""
-
 LOGIN_USER = """
 SELECT
     id,

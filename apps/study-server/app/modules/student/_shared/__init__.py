@@ -1,0 +1,1 @@
+"""Shared Student module projections."""

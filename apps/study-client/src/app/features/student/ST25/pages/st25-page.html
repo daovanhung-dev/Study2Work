@@ -1,0 +1,180 @@
+<main class="static-page api-screen st25-page">
+  <nav class="st25-crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/discussions">Diễn đàn</a>
+    <span aria-hidden="true">›</span>
+    <span>Chi tiết chủ đề</span>
+  </nav>
+
+  @if (loading()) {
+    <section class="api-message st25-state" role="status">
+      <strong>Đang tải chủ đề và phản hồi…</strong>
+    </section>
+  }
+
+  @if (error()) {
+    <section class="api-error st25-state" role="alert">
+      <p>{{ error() }}</p>
+      @if (replySent()) {
+        <p class="api-success">
+          Phản hồi đã được gửi. Chưa thể tải lại chủ đề; hãy thử tải lại để xem nội dung mới.
+        </p>
+      }
+      <button class="api-button secondary" type="button" (click)="retryThread()">
+        Tải lại thảo luận
+      </button>
+    </section>
+  }
+
+  @if (!loading() && !error() && thread(); as item) {
+    <div class="st25-layout">
+      <div class="st25-main-column">
+        <article class="api-card st25-topic">
+          <div class="st25-topic-meta">
+            <span>Thảo luận trong khóa học</span>
+            <span class="st25-status"><span aria-hidden="true"></span> Đang hoạt động</span>
+          </div>
+          <h1>{{ item.title }}</h1>
+
+          <div class="st25-author">
+            <span class="st25-avatar" aria-hidden="true">
+              @if (authorAvatarUrl(item.author); as avatarUrl) {
+                <img
+                  [src]="avatarUrl"
+                  alt=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  (error)="markAvatarFailed(item.author.id)"
+                />
+              }
+              <span>{{ authorInitials(item.author) }}</span>
+            </span>
+            <span class="st25-author-copy">
+              <strong>{{ item.author.full_name }}</strong>
+            </span>
+          </div>
+
+          <p class="st25-topic-content">{{ item.content }}</p>
+        </article>
+
+        <section class="api-card st25-replies" aria-labelledby="st25-replies-title">
+          <header class="st25-section-heading">
+            <div>
+              <p class="api-eyebrow">Trao đổi trong chủ đề</p>
+              <h2 id="st25-replies-title">
+                Phản hồi <span class="st25-count">{{ item.comments.length }}</span>
+              </h2>
+            </div>
+          </header>
+
+          @if (!item.comments.length) {
+            <p class="api-muted st25-empty-replies">Chưa có phản hồi nào.</p>
+          } @else {
+            <div class="st25-comment-list">
+              @for (comment of item.comments; track comment.id) {
+                <article class="st25-comment">
+                  <span class="st25-avatar st25-comment-avatar" aria-hidden="true">
+                    @if (authorAvatarUrl(comment.author); as avatarUrl) {
+                      <img
+                        [src]="avatarUrl"
+                        alt=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer"
+                        (error)="markAvatarFailed(comment.author.id)"
+                      />
+                    }
+                    <span>{{ authorInitials(comment.author) }}</span>
+                  </span>
+                  <div class="st25-comment-body">
+                    <header class="st25-comment-byline">
+                      <strong>{{ comment.author.full_name }}</strong>
+                      <time [attr.datetime]="comment.created_at">
+                        {{ comment.created_at | date: 'medium' }}
+                      </time>
+                    </header>
+                    <p>{{ comment.content }}</p>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </section>
+
+        <form class="api-card st25-composer" (ngSubmit)="sendReply()">
+          <p class="api-eyebrow">Gửi phản hồi</p>
+          <h2>Thêm ý kiến của bạn</h2>
+          <label class="api-field" for="st25-reply-content">Nội dung phản hồi</label>
+          <textarea
+            id="st25-reply-content"
+            name="replyContent"
+            [(ngModel)]="replyContent"
+            [disabled]="replyBusy() || replyOutcomeUnknownDiscussionId() === discussionId()"
+            aria-describedby="st25-reply-help"
+            rows="6"
+            required
+            placeholder="Nhập phản hồi của bạn"
+          ></textarea>
+          <p id="st25-reply-help" class="api-muted">
+            Nội dung chỉ gồm văn bản. Vui lòng kiểm tra lại trước khi gửi.
+          </p>
+
+          @if (replyError()) {
+            <p class="api-error" role="alert">{{ replyError() }}</p>
+          }
+          @if (replySent()) {
+            <p class="api-success" role="status">Phản hồi đã được gửi.</p>
+          }
+          @if (replyOutcomeUnknownDiscussionId() === discussionId()) {
+            <div class="st25-ambiguous-result" role="alert">
+              <p>
+                Chưa xác định được phản hồi đã được ghi nhận hay chưa. Tải lại chủ đề để kiểm tra;
+                nút gửi đang khóa để tránh tạo bản trùng.
+              </p>
+              <button class="api-button secondary" type="button" (click)="retryThread()">
+                Tải lại chủ đề
+              </button>
+            </div>
+          }
+
+          <div class="st25-composer-actions">
+            <button
+              class="api-button"
+              type="submit"
+              [disabled]="replyBusy() || replyOutcomeUnknownDiscussionId() === discussionId()"
+            >
+              {{ replyBusy() ? 'Đang gửi…' : 'Gửi phản hồi' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="st25-sidebar" aria-label="Thông tin chủ đề">
+        <section class="api-card st25-details">
+          <p class="api-eyebrow">Tóm tắt</p>
+          <h2>Thông tin chủ đề</h2>
+          <dl>
+            <div>
+              <dt>Trạng thái</dt>
+              <dd>Đang hoạt động</dd>
+            </div>
+            <div>
+              <dt>Khóa học</dt>
+              <dd>Khóa học liên quan</dd>
+            </div>
+            <div>
+              <dt>Người đăng</dt>
+              <dd>{{ item.author.full_name }}</dd>
+            </div>
+            <div>
+              <dt>Số phản hồi</dt>
+              <dd>{{ item.comments.length }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <a class="api-button secondary st25-back-link" routerLink="/student/discussions">
+          Quay lại diễn đàn
+        </a>
+      </aside>
+    </div>
+  }
+</main>

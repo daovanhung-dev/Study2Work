@@ -1,0 +1,18 @@
+"""Câu SQL tĩnh đọc một course cùng mentor cho API #74."""
+
+FIND_ADMIN_COURSE_DETAIL = """
+SELECT
+    c.id,
+    c.name AS title,
+    c.description,
+    c.thumbnail_url,
+    c.price,
+    c.status,
+    m.id AS mentor_id,
+    m.full_name AS mentor_full_name,
+    m.avatar_url AS mentor_avatar_url
+FROM courses AS c
+LEFT JOIN users AS m ON m.id = c.mentor_id
+WHERE c.id = :course_id
+LIMIT 1
+"""
