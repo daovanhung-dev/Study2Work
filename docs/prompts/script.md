@@ -22,10 +22,13 @@ uv run python scripts/create_admin.py
 Bash:
 
 ```bash
-export STUDY_ADMIN_DATABASE_URL="<PostgreSQL URL>"
-export STUDY_ADMIN_DB_SCHEMA="<schema đích>"
-export STUDY_ADMIN_APP_ENV="local"
+read -r -s -p "Study DB URL: " STUDY_ADMIN_DATABASE_URL
+printf '\n'
+export STUDY_ADMIN_DATABASE_URL
+export STUDY_ADMIN_DB_SCHEMA='dao_van_hung'
+export STUDY_ADMIN_APP_ENV='local'
 uv run python scripts/create_admin.py
+unset STUDY_ADMIN_DATABASE_URL STUDY_ADMIN_DB_SCHEMA STUDY_ADMIN_APP_ENV
 ```
 
 Script kiểm tra database/schema rồi yêu cầu xác nhận; họ tên, email và mật khẩu được nhập tương tác. Email đã tồn tại sẽ bị từ chối. Khi chủ động thao tác trên production, thay URL/schema bằng target production, đặt `STUDY_ADMIN_APP_ENV` thành `production` và thêm `--allow-production`; script vẫn yêu cầu xác nhận production tại prompt.
