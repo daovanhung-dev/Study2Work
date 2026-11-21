@@ -20,25 +20,29 @@ agent đi từ router tới context page, source, contract, test và worklog.
 
 ```text
 [AGENTS.md]
-  → [.agents/AGENTS.md]
   → classify primary_task_type
-  → [.agents/project/agent-control.md] (mandatory target and safety rules)
-  → [.agents/context-map.md] before final scope/subcontext selection
-  → choose project_scopes
-  → create/update the active target in [.agents/target.md]
-  → worklog preflight: select/read up to 3 same-type worklogs
+  → declare bootstrap read-set before opening file content
+  → [.agents/AGENTS.md]
+  → [.agents/context-map.md] (mandatory page graph and routing)
+  → [.agents/context-manifest.json] and [.agents/project/agent-control.md] from the declared read-set
+  → create worklog READ_PLAN and LEAF_TARGET_PLAN from the bootstrap read-set
+  → choose project_scopes and decompose plan into leaf operations
+  → create/update one active target row per leaf in [.agents/target.md]
+  → run selector; add exact selected paths to READ_PLAN before reading bodies
+  → read selected worklogs and record PRIOR_WORKLOG_REVIEW
   → [.agents/project/INDEX.md] when cross-scope/boundary context is needed
   → [.agents/<scope>/AGENTS.md]
   → [.agents/<scope>/INDEX.md] or subcontext/INDEX.md
-  → page đúng task
-  → exact source + contract/config/test
+  → declare and read only task-specific page/source/contract/config/test
   → update target only when verified progress changes; log its evidence
   → update context/worklog
   → focused verification + context validator
 ```
 
-The selector is a routing aid; the active worklog records which files were
-actually read in `PRIOR_WORKLOG_REVIEW`. `primary_task_type` is matched exactly.
+The selector is a routing aid; its returned worklog paths must be added to
+`READ_PLAN` before their bodies are opened, then recorded in
+`PRIOR_WORKLOG_REVIEW`. `primary_task_type` is matched exactly. Every other file
+read or content search must also be declared before it runs.
 
 ## Physical context tree
 
@@ -96,10 +100,12 @@ Study2Work/
 - [`.agents/AGENTS.md`](AGENTS.md) ⇢ global context index, status vocabulary,
   maintenance rules and canonical page graph boundary.
 - [`.agents/project/agent-control.md`](project/agent-control.md) ⇢ mandatory
-  all-scope target tracking, silent execution, source evidence and safety rules.
+  all-scope leaf-target tracking, silent execution, read planning, source
+  evidence and safety rules.
 - [`.agents/target.md`](target.md) ⇢ sole live tracker; exact columns are `STT`,
   `Tên target`, `Tiến độ hoàn thiện`; completed rows are removed after evidence
-  is recorded in the worklog.
+  is recorded in the worklog; active rows correspond to leaf operations, not
+  parent goals.
 - [`.agents/context-manifest.json`](context-manifest.json) ⇢ machine registry
   for project pages, scopes, subcontexts, skills, workflows, contracts and
   worklog preflight.
@@ -308,7 +314,7 @@ implemented by [`.agents/worklog/README.md`](worklog/README.md).
 
 | Workflow key | Trigger/boundary | Entry | Main result |
 |---|---|---|---|
-| `agent-control` | every task, all scopes | `project/agent-control.md` | silent execution and target progress tracking |
+| `agent-control` | every task, all scopes | `project/agent-control.md` | leaf-target tracking, declared reads and silent execution |
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
 | `study-web-screen-coding` | implement/fix/test/demo an individual Study Web screen | `web-work/study/workflows/screen-implementation.md` | DD-backed screen, tested local demo and verified fixture cleanup |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |
@@ -317,7 +323,7 @@ implemented by [`.agents/worklog/README.md`](worklog/README.md).
 | `docs-dd` | Web/API DD | `project/workflows.md` | source-backed API DD validation |
 | `docs-dd-mobile` | Mobile DD | `project/workflows.md` | Mobile DD validator + context validation |
 | `cross-scope-contract` | shared API/event boundary | `project/workflows.md` | producer/consumer/status verification |
-| `worklog` | every task/context update/handoff | `worklog/README.md` | preflight + evidence + handoff |
+| `worklog` | every task/context update/handoff | `worklog/README.md` | predeclared read-set + leaf target plan + evidence + handoff |
 
 Scope workflow pages refine the common workflow and side effects:
 
@@ -357,9 +363,9 @@ Important boundaries:
 ## Worklog graph
 
 - [`.agents/worklog/README.md`](worklog/README.md) ⇢ contract and mandatory
-  preflight.
+  preflight, predeclared read-set and leaf target plan.
 - [`.agents/worklog/TEMPLATE.md`](worklog/TEMPLATE.md) ⇢ required fields and
-  `PRIOR_WORKLOG_REVIEW`.
+  `READ_PLAN`, `LEAF_TARGET_PLAN`, and `PRIOR_WORKLOG_REVIEW`.
 - [`.agents/worklog`](worklog) ⇢ canonical root.
 - [`.agents/worklog/YYYY-MM-DD`](worklog) ⇢ date-based history/current entries.
 - [`scripts/select-worklogs.mjs`](../scripts/select-worklogs.mjs) ⇢ exact

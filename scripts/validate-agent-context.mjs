@@ -222,6 +222,9 @@ function checkTargetTracker(manifest) {
   if (tracker.completionPolicy !== "record-evidence-then-remove-at-100") {
     fail("targetTracker.completionPolicy is invalid");
   }
+  if (tracker.granularityPolicy !== "one-independently-verifiable-operation-per-row") {
+    fail("targetTracker.granularityPolicy must require one independently verifiable operation per row");
+  }
 
   if (!existsSync(resolve(repoRoot, tracker.path))) return;
   const text = readFileSync(resolve(repoRoot, tracker.path), "utf8").replace(/\r\n/g, "\n");
@@ -268,6 +271,7 @@ function checkTargetTracker(manifest) {
 }
 
 function checkRegistries(manifest) {
+  const targetTracker = manifest.targetTracker ?? {};
   const scopeNames = new Set(Object.keys(manifest.scopes ?? {}));
   scopeNames.add("all");
   for (const { name, node } of contextNodes(manifest)) {
@@ -288,6 +292,45 @@ function checkRegistries(manifest) {
     mustExist(manifest.worklog.root, "worklog root");
     mustExist(manifest.worklog.index, "worklog index");
     mustExist(manifest.worklog.template, "worklog template");
+    const readPlan = manifest.worklog.readPlan;
+    if (!readPlan || typeof readPlan !== "object") {
+      fail("worklog readPlan registry is missing");
+    } else {
+      if (readPlan.section !== "READ_PLAN") fail("worklog readPlan section must be READ_PLAN");
+      if (readPlan.pathField !== "Path") fail("worklog readPlan pathField must be Path");
+      if (readPlan.mustDeclareBeforeContentRead !== true) {
+        fail("worklog readPlan must require declaration before content reads");
+      }
+      if (readPlan.newPathPolicy !== "append-before-read") {
+        fail("worklog readPlan newPathPolicy must append before read");
+      }
+      if (readPlan.queryScope !== "declared-paths-only") {
+        fail("worklog readPlan queryScope must be declared-paths-only");
+      }
+      if (JSON.stringify(readPlan.statuses) !== JSON.stringify([
+        "PLANNED",
+        "READ",
+        "READ_FROM_CONTEXT",
+        "CHECKED_BY_TOOL",
+        "SKIPPED",
+      ])) {
+        fail("worklog readPlan statuses are invalid");
+      }
+    }
+    const leafTargetPlan = manifest.worklog.leafTargetPlan;
+    if (!leafTargetPlan || typeof leafTargetPlan !== "object") {
+      fail("worklog leafTargetPlan registry is missing");
+    } else {
+      if (leafTargetPlan.section !== "LEAF_TARGET_PLAN") {
+        fail("worklog leafTargetPlan section must be LEAF_TARGET_PLAN");
+      }
+      if (leafTargetPlan.granularityPolicy !== targetTracker.granularityPolicy) {
+        fail("worklog leafTargetPlan granularityPolicy must match targetTracker");
+      }
+      if (leafTargetPlan.displayPath !== targetTracker.path) {
+        fail("worklog leafTargetPlan displayPath must match targetTracker.path");
+      }
+    }
     const preflight = manifest.worklog.preflight;
     if (!preflight || typeof preflight !== "object") {
       fail("worklog preflight registry is missing");
@@ -316,6 +359,12 @@ function checkRegistries(manifest) {
       else if (!normalizedTemplate.includes(field.toLowerCase())) {
         fail(`worklog template is missing required field ${field}`);
       }
+    }
+    const readPlanIndex = templateText.indexOf("## READ_PLAN");
+    const leafPlanIndex = templateText.indexOf("## LEAF_TARGET_PLAN");
+    const priorReviewIndex = templateText.indexOf("## PRIOR_WORKLOG_REVIEW");
+    if (!(readPlanIndex >= 0 && leafPlanIndex > readPlanIndex && priorReviewIndex > leafPlanIndex)) {
+      fail("worklog template must order READ_PLAN, LEAF_TARGET_PLAN, then PRIOR_WORKLOG_REVIEW");
     }
   }
 
@@ -485,7 +534,7 @@ try {
 }
 
 if (manifest) {
-  if (manifest.schemaVersion !== 4) fail(`unsupported schemaVersion: ${manifest.schemaVersion}`);
+  if (manifest.schemaVersion !== 5) fail(`unsupported schemaVersion: ${manifest.schemaVersion}`);
   if (typeof manifest.sourceCommit !== "string" || !/^[0-9a-f]{40}$/.test(manifest.sourceCommit)) {
     fail("manifest.sourceCommit must be a 40-character git SHA");
   }

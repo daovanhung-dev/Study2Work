@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "sourceCommit": "9a70eb6764a6587093a92d3bd7e4cc0bea1651c4",
   "generatedAt": "2026-10-26",
   "rootRouter": "AGENTS.md",
@@ -9,6 +9,7 @@
     "path": ".agents/target.md",
     "columns": ["STT", "Tên target", "Tiến độ hoàn thiện"],
     "mode": "active-targets-only",
+    "granularityPolicy": "one-independently-verifiable-operation-per-row",
     "completionPolicy": "record-evidence-then-remove-at-100"
   },
   "skillsIndex": ".agents/skills/INDEX.md",
@@ -37,6 +38,19 @@
     "root": ".agents/worklog",
     "index": ".agents/worklog/README.md",
     "template": ".agents/worklog/TEMPLATE.md",
+    "readPlan": {
+      "section": "READ_PLAN",
+      "pathField": "Path",
+      "mustDeclareBeforeContentRead": true,
+      "newPathPolicy": "append-before-read",
+      "queryScope": "declared-paths-only",
+      "statuses": ["PLANNED", "READ", "READ_FROM_CONTEXT", "CHECKED_BY_TOOL", "SKIPPED"]
+    },
+    "leafTargetPlan": {
+      "section": "LEAF_TARGET_PLAN",
+      "granularityPolicy": "one-independently-verifiable-operation-per-row",
+      "displayPath": ".agents/target.md"
+    },
     "preflight": {
       "script": "scripts/select-worklogs.mjs",
       "typeField": "primary_task_type",
@@ -54,6 +68,8 @@
       "project_scopes",
       "cross_scope_dependencies",
       "expected_behavior",
+      "read_plan",
+      "leaf_target_plan",
       "target_updates",
       "current_behavior",
       "prior_worklogs_reviewed",
@@ -309,7 +325,8 @@
       "preflight": "worklog.preflight",
       "verificationCommands": [
         "required-field checklist including TARGET_UPDATES",
-        "active target table structure",
+        "active target table with leaf operations",
+        "READ_PLAN paths declared before content reads",
         "context validator"
       ]
     }

@@ -27,12 +27,17 @@ Một task có thể có nhiều `project_scopes`. Không ép task cross-scope v
 
 ## 1.1. Theo dõi target và giao tiếp
 
-Mục tiêu đang thực hiện và tiến độ hiển thị duy nhất tại `.agents/target.md`.
-File này chỉ chứa bảng ba cột `STT`, `Tên target`, `Tiến độ hoàn thiện`; xem
-`.agents/project/agent-control.md` để biết quy tắc cập nhật. Không tự gửi tiến
-độ, event receipt, milestone, tổng kết đọc/thao tác hoặc báo cáo hoàn tất vào
-chat. Chỉ phản hồi khi người dùng hỏi, cần làm rõ blocker, hoặc quy tắc cấp cao
-hơn yêu cầu.
+`.agents/target.md` là nguồn tiến độ duy nhất và chỉ chứa bảng ba cột `STT`,
+`Tên target`, `Tiến độ hoàn thiện`. Mỗi hàng phải là một mục tiêu lá: một thao
+tác nhỏ nhất có thể xác minh độc lập, diễn đạt bằng một hành động và một kết
+quả. Tách riêng các thao tác có thể hoàn thành hoặc xác minh riêng; không dùng
+mục tiêu bao trùm như “hoàn thiện màn hình/module”. Kế hoạch lá và bằng chứng
+nghiệm thu nằm trong worklog. Xem `.agents/project/agent-control.md`.
+
+Sau khi nhận task, không tự gửi nội dung vào chat: không bình luận, tiến độ,
+receipt, kế hoạch, tóm tắt đọc/thao tác, kết quả hay báo cáo hoàn tất. Chỉ phản
+hồi khi người dùng yêu cầu trả lời cụ thể, cần câu hỏi tối thiểu để gỡ blocker,
+hoặc system/developer/tool cấp cao hơn bắt buộc.
 
 Phân loại task, lựa chọn scope và bằng chứng công việc được ghi trong worklog,
 không công bố thành milestone chat. Worklog lưu nguồn, thay đổi, xác minh và
@@ -51,29 +56,51 @@ lịch sử cập nhật target; không dùng `MILESTONES` làm nguồn tiến �
 
 Không nạp scope khác nếu chưa có dependency thật. Task qua nhiều scope phải ghi contract nối giữa chúng; ví dụ Study -> Work event dùng `contracts/events/study-work/`.
 
-## 2.1. Luồng context chuẩn
+## 2.1. Khai báo read-set trước khi đọc
+
+Mọi nội dung file được agent mở hoặc tìm kiếm phải có trong `READ_PLAN` trước
+khi đọc, kèm path, phần cần đọc và lý do gắn với task. Read-set khởi động gồm
+các path router bắt buộc; ghi lại chúng vào worklog ngay khi worklog được tạo.
+Root `AGENTS.md` đã được cấp trong task context nên không đọc lại trừ khi task
+sửa chính file này. Bootstrap allowlist: `.agents/AGENTS.md`,
+`.agents/context-map.md`, `.agents/context-manifest.json`,
+`.agents/project/agent-control.md`, `.agents/target.md`,
+`.agents/worklog/README.md`, `.agents/worklog/TEMPLATE.md`,
+`scripts/select-worklogs.mjs`. Chỉ đọc phần liên quan trong từng path; sau đó
+không đọc path ngoài danh sách nếu chưa thêm vào `READ_PLAN`.
+
+Selector worklog chỉ trả metadata/path. Thêm path được chọn vào `READ_PLAN`
+trước khi mở nội dung log. Khi context map/manifest phát hiện dependency mới,
+thêm path và mục đích trước khi đọc. Mọi lệnh tìm kiếm nội dung cũng phải giới
+hạn trong path đã khai báo. Không quét repository rộng, không đọc trọn file lớn
+khi chỉ cần đoạn liên quan, và dừng khi đã đủ bằng chứng.
+
+## 2.2. Luồng context chuẩn
 
 ```text
 AGENTS.md
+  -> classify task from request and supplied router context
+  -> declare the bootstrap read-set before opening repository file content
   -> .agents/AGENTS.md
   -> .agents/context-map.md
-  -> classify task và xác định primary_task_type
+  -> .agents/context-manifest.json and agent-control sections in read-set
+  -> tạo worklog có READ_PLAN + LEAF_TARGET_PLAN
   -> scripts/select-worklogs.mjs --type <primary_task_type> --limit 3
-  -> đọc 3 worklog được chọn; nếu thiếu thì đọc toàn bộ log cùng type và ghi shortage
+  -> thêm path worklog được chọn vào READ_PLAN trước khi đọc nội dung
+  -> đọc worklog được chọn; nếu thiếu thì ghi shortage, không mở log khác type
   -> .agents/project/INDEX.md (chỉ khi có boundary/contract cross-scope)
   -> scope AGENTS.md
   -> scope INDEX.md hoặc subcontext INDEX.md
-  -> exact source + contract/config/test
+  -> khai báo path source + contract/config/test trước khi đọc đoạn cần thiết
   -> worklog cập nhật trước và sau verification
 ```
 
 `context-map.md` là bước load bắt buộc để hiểu page graph, scope boundary,
-skill/workflow/contract wiring trước khi chọn context cụ thể. Preflight worklog
-là bắt buộc trước khi đọc sâu hoặc chỉnh sửa. Selector chỉ
-chọn đường dẫn; agent phải thực sự đọc các file được chọn và ghi lại chúng
-trong phần `PRIOR_WORKLOG_REVIEW` của worklog hiện tại. Quy tắc match dùng
-`primary_task_type` chính xác; khi chưa đủ 3 log thì không bịa thêm log và phải
-ghi rõ số lượng thiếu.
+skill/workflow/contract wiring trước khi chọn context cụ thể. Worklog phải chứa
+`READ_PLAN` và `LEAF_TARGET_PLAN`. Selector chỉ chọn đường dẫn; sau khi ghi các
+path vào `READ_PLAN`, agent đọc đúng các log được chọn và ghi carry-forward facts
+trong `PRIOR_WORKLOG_REVIEW`. Quy tắc match dùng `primary_task_type` chính xác;
+nếu thiếu log thì ghi số lượng thiếu, không đọc log loại khác.
 
 Skill, workflow và contract phải được tra trong machine-readable registry của
 `.agents/context-manifest.json`; không coi file tồn tại là bằng chứng đã được

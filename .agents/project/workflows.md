@@ -1,22 +1,28 @@
 # Repository workflow registry
 
-All workflows begin with the root router, global registry, Agent Control,
-context map, task classification, and worklog preflight. Every task must load
-[`agent-control.md`](agent-control.md). Read selected same-type worklogs before
-deep source inspection. Keep live task progress in `.agents/target.md`; record
-sources, decisions, changes, verification and target updates in the active
-worklog. Do not create chat receipts or duplicate milestone progress.
+Every workflow starts from the supplied root router: classify the task, declare
+the bootstrap read-set, then load the global registry and context map before
+selecting a scope. Load the context manifest and
+[`agent-control.md`](agent-control.md) from that declared set. Before opening
+any other file content, add its path, required section/range and reason to
+`READ_PLAN`. Decompose the task into independently verifiable leaf operations
+and keep those active rows in `.agents/target.md`. Record sources, decisions,
+changes, verification and target updates in the worklog. Do not emit unsolicited
+chat content or duplicate milestone progress.
 
 ## Common flow
 
 ```text
-load `.agents/AGENTS.md` and `.agents/project/agent-control.md`
--> load `.agents/context-map.md` before final scope/subcontext selection
--> classify task and finalize project scope
--> create or update the active target at its verified progress
--> select/read up to 3 nearest worklogs with the same primary_task_type
--> load exact scope/subcontext
--> load skill/contract registry entries required by the task
+classify task from user request and supplied root router
+-> declare bootstrap read-set before repository file reads
+-> load `.agents/AGENTS.md`
+-> load `.agents/context-map.md` before final scope selection
+-> load context manifest and Agent Control sections from the declared read-set
+-> initialize worklog READ_PLAN and LEAF_TARGET_PLAN; finalize project scope
+-> select same-type worklogs; declare returned paths before opening their bodies
+-> record PRIOR_WORKLOG_REVIEW and decompose plan into LEAF_TARGET_PLAN
+-> create/update one active target row per independently verifiable operation
+-> load exact scope/subcontext and only required skill/contract/source paths
 -> separate EXPECTED_BEHAVIOR from CURRENT_BEHAVIOR
 -> trace caller -> callee -> DB/external side effect -> response -> tests
 -> make the smallest scoped change
@@ -48,7 +54,7 @@ worklog, since it is also part of agent context.
 
 | Workflow | Trigger | Required behavior | Verification |
 |---|---|---|---|
-| Agent Control | every task | load the global control page; keep live progress in `.agents/target.md` and evidence in the worklog; suppress automatic chat status | target table structure + context validator |
+| Agent Control | every task | one active target per leaf operation; predeclare file reads; keep evidence in worklog; suppress unsolicited chat | target structure + leaf plan + read plan + context validator |
 | Coding | `coding` | requirement/contract → existing pattern → implementation → tests | scope checks + context validator |
 | Study Web screen coding | implement/fix/test/demo one `apps/study-client` screen | load the registered `study-web-screen-coding` workflow; read full DD/images, plan, implement in the Study Web structure, then test/demo and clean isolated fixtures | focused Angular tests + local demo + fixture cleanup + context validator |
 | Fix | `fix`, bug, regression | reproduce → trace → root cause → smallest fix → regression test | reproduction/regression test |
@@ -57,7 +63,7 @@ worklog, since it is also part of agent context.
 | Docs/DD | Web/API DD/documentation | load `createDD-markdown`; preserve API template and mark source gaps; for `server-study`, follow its [Markdown-only deliverable rule](../server-study/workflows/README.md) | contract and DD validation |
 | Docs/DD Mobile | Mobile module DD/documentation | load `create-dd-from-bd-mobile`; follow BD evidence, module template and review gates | mobile DD validator + context validation |
 | Cross-scope contract | shared API/event/envelope | identify producer/consumer and status before changing either side | `contracts:validate` + context validator |
-| Worklog | every task | run `scripts/select-worklogs.mjs`, read selected same-type logs, record `PRIOR_WORKLOG_REVIEW`, evidence, `TARGET_UPDATES`, decisions, changes and verification | required-field checklist + target evidence + context validator |
+| Worklog | every task | create `READ_PLAN`/`LEAF_TARGET_PLAN`; run selector, declare selected paths before body reads, record `PRIOR_WORKLOG_REVIEW`, evidence and `TARGET_UPDATES` | required-field checklist + declared path order + leaf target evidence + context validator |
 
 ## Tool status in the current repository
 

@@ -10,6 +10,25 @@ status: "PLANNED | IN_PROGRESS | VERIFIED | PARTIAL | BLOCKED"
 
 # Worklog: <task title>
 
+## READ_PLAN
+
+Declare each file path and the exact section/range needed before opening or
+searching its content. Add newly discovered paths before reading them.
+Use status `PLANNED`, `READ`, `READ_FROM_CONTEXT`, `CHECKED_BY_TOOL` or `SKIPPED`.
+
+| Path | Needed section/range | Task-specific reason | Status |
+|---|---|---|---|
+| `<path>` | `<section, lines, or bounded query>` | `<why this evidence is needed>` | `PLANNED` |
+
+## LEAF_TARGET_PLAN
+
+List the independently verifiable operations displayed as active rows in
+`.agents/target.md`. Split multi-action targets; do not add parent/epic rows.
+
+| Target | Single operation | Acceptance evidence |
+|---|---|---|
+| `<target name>` | `<one action and its result>` | `<observable completion evidence>` |
+
 ## PRIOR_WORKLOG_REVIEW
 
 - primary_task_type: <fill>

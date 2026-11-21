@@ -49,19 +49,29 @@ ba cột đã định nghĩa. Worklog lưu bằng chứng, không thay thế tar
 Mỗi scope có `INDEX.md` làm page graph. Không tạo context agent trong `apps/`;
 root router luôn trỏ về các entry dưới `.agents/`.
 
-## Quy tắc target và giao tiếp (mọi task)
+## Quy tắc target, giao tiếp và read-set (mọi task)
 
 - `.agents/target.md` là nguồn tiến độ duy nhất cho target đang hoạt động. File
   chỉ chứa bảng `STT | Tên target | Tiến độ hoàn thiện`; không thêm mô tả,
   milestone, lịch sử hay cột khác.
-- Mỗi target độc lập, rõ nghĩa, bắt đầu ở `0%`; cập nhật phần trăm khi bằng
-  chứng xác minh làm thay đổi tiến độ. Giữ nguyên tiến độ đã xác minh khi bị
-  chặn. Khi hoàn thành, ghi bằng chứng vào worklog rồi xóa hàng `100%`.
-- Worklog ghi phân loại, nguồn đã đọc, thay đổi, xác minh và `TARGET_UPDATES`;
-  không lưu bảng `MILESTONES` hoặc bản sao tiến độ.
-- Không tự gửi tiến độ, Event receipt, milestone, tổng kết đọc/thao tác hoặc
-  báo cáo hoàn tất vào chat. Chỉ phản hồi câu hỏi của người dùng, yêu cầu làm
-  rõ blocker, hoặc yêu cầu bắt buộc từ quy tắc cấp cao hơn.
+- Trước khi thực thi, tách plan thành mục tiêu lá. Mỗi hàng là một thao tác nhỏ
+  nhất có thể nghiệm thu riêng, có một hành động, kết quả quan sát được và
+  evidence hoàn tất rõ ràng. Tách thao tác độc lập; không gộp nhiều hành động
+  hoặc giữ mục tiêu cấp epic/module/screen. Worklog ánh xạ từng hàng với tiêu
+  chí nghiệm thu và evidence.
+- Mỗi mục tiêu lá bắt đầu ở `0%`; chỉ cập nhật theo evidence, không theo thời
+  gian hay số thao tác. Giữ nguyên tiến độ đã xác minh khi bị chặn. Khi hoàn
+  thành, ghi bằng chứng vào worklog rồi xóa hàng `100%`.
+- Worklog ghi phân loại, `READ_PLAN`, `LEAF_TARGET_PLAN`, nguồn đã đọc, thay
+  đổi, xác minh và `TARGET_UPDATES`; không lưu bảng `MILESTONES` hoặc bản sao
+  tiến độ.
+- Sau khi nhận task, không tự gửi nội dung chat: không bình luận, tiến độ,
+  receipt, kế hoạch, tóm tắt thao tác, kết quả hay báo cáo hoàn tất. Chỉ phản hồi
+  khi người dùng yêu cầu câu trả lời cụ thể, cần một câu hỏi tối thiểu để gỡ
+  blocker, hoặc quy tắc cấp cao hơn bắt buộc.
+- Trước khi mở hoặc tìm kiếm nội dung file, khai báo path, phần cần đọc và lý do
+  trong `READ_PLAN`. Thêm path mới trước khi đọc; chỉ dùng đoạn cần thiết, không
+  quét rộng hoặc đọc lặp khi đã đủ evidence.
 
 Quy tắc này không thể ghi đè system/developer, bảo mật, quyền hạn hoặc giới
 hạn công cụ. `.agents/project/workflows.md` và
@@ -84,9 +94,10 @@ hạn công cụ. `.agents/project/workflows.md` và
 
 Sau thay đổi làm đổi architecture, endpoint, important function contract, database, external dependency, business code, convention hoặc test flow, cập nhật đúng page scope. Không copy cùng một mô tả sang nhiều page; page API/module link tới core/service dùng chung.
 
-Mọi task phải chạy worklog preflight sau khi xác định `primary_task_type`, đọc
-các log selector trả về trước khi inspect sâu hoặc sửa file, rồi ghi bằng chứng
-vào `PRIOR_WORKLOG_REVIEW`. Worklog canonical nằm dưới
+Mọi task phải tạo worklog có `READ_PLAN` trước khi đọc sâu. Chạy worklog
+preflight sau khi xác định `primary_task_type`; ghi các path selector trả về vào
+`READ_PLAN` rồi mới đọc nội dung, sau đó ghi carry-forward vào
+`PRIOR_WORKLOG_REVIEW`. Worklog canonical nằm dưới
 `.agents/worklog/YYYY-MM-DD/`; `docs/devs/worklogs` là legacy path và không còn
 là nguồn đọc mới.
 

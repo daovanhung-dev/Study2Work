@@ -7,7 +7,8 @@ toàn bộ project context nếu không có dependency thật.
 ## Load order
 
 ```text
-AGENTS.md
+AGENTS.md (supplied router context)
+→ classify task and declare bootstrap read-set
 → .agents/AGENTS.md
 → .agents/context-map.md
 → project/INDEX.md
@@ -34,9 +35,12 @@ AGENTS.md
 
 - Context map: `../context-map.md` (human-readable load and relationship graph).
 - Skill registry: `../skills/INDEX.md`.
-- Worklog contract: `../worklog/README.md` and `../worklog/TEMPLATE.md`.
-- Agent Control: `agent-control.md`; mandatory for every task and tool call.
-- Active target progress: `../target.md`; only the three-column live target table.
+- Worklog contract: `../worklog/README.md` and `../worklog/TEMPLATE.md`; require
+  predeclared `READ_PLAN` and action-level `LEAF_TARGET_PLAN`.
+- Agent Control: `agent-control.md`; mandatory for every task and tool call,
+  including leaf target granularity and silent execution.
+- Active target progress: `../target.md`; only the three-column live table,
+  with one independently verifiable leaf operation per active row.
 - Expected/current behavior must remain separate; conflicts are recorded as
   `DISCREPANCY` rather than silently resolved.
 
