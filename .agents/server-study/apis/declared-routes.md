@@ -4,7 +4,9 @@ Global status: route source is `SOURCE_BACKED`; the pre-merge verified baseline
 had 58 route templates / 69 operations through API #98. After reverting the
 `hoang_xuan_long_dev` merge, the current branch retains source routes for APIs
 #10, #26–#30, #32 and #33 from the merged branch history. APIs #11, #15, and
-#21–#25 from that merge are no longer present. Post-revert OpenAPI cardinality,
+#21–#25 from that merge were absent at that historical post-revert point; this
+paragraph is not a current route inventory. Current #15 and #21 routes are
+registered in `app/api/v1.py`. Post-revert OpenAPI cardinality,
 application startup and tests have not been reverified; see `tests.md`. The
 initial dated branch-backed HTTP run had 59 PASS / 10
 SQL-query FAIL; a follow-up verified ten repaired operations with empty and
@@ -69,23 +71,15 @@ invocation uses the current injectable development stub and does not claim real
 email delivery.
 
 ### `POST /api/v1/auth/login`
-Implemented through `app.modules.guest.api_03_auth_login.view.login(...)`. It looks up
-the user by email, verifies the stored password hash, requires `status=ACTIVE`,
-creates a JWT access token, stores only the HMAC refresh-token hash, commits the
-session and returns the profile plus token fields.
-Success is HTTP `200` with `DESIGN_RESOURCE_RETRIEVED`. Unknown/wrong
-credentials return `401 DESIGN_AUTHENTICATION_REQUIRED`; inactive accounts
-return `403 DESIGN_ACCESS_DENIED`; database/token failures return
-`500 DESIGN_INTERNAL_ERROR`.
 
+Implemented through `app.modules.guest.api_03_auth_login.view.login(...)`. It looks up the user by email, verifies the stored password hash, requires `status=ACTIVE`, creates a JWT access token and stores only the HMAC refresh-token hash. On successful login, any valid refresh session represented by the prior cookie is revoked in the same transaction before the new session is committed. The response is HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; JSON includes public profile fields and access-token metadata only. The opaque refresh token is set in an HttpOnly cookie. Login, refresh and logout require an Origin exactly matching configured CORS origins. Runtime and deployment are not verified.
 ### `POST /api/v1/auth/refresh`
-Implemented through `app.modules.guest.api_03_auth_login.view.refresh(...)`. It hashes
-the supplied opaque token, requires an unrevoked and unexpired DB row for an
-active user, revokes that row and inserts a new hashed refresh token in the same
-transaction, then returns a new access-token pair and profile.
-Invalid, expired or already rotated tokens return
-`401 DESIGN_AUTHENTICATION_REQUIRED`.
 
+Implemented through `app.modules.guest.api_03_auth_login.view.refresh(...)` as source-only R-X01. The route has no JSON body; it reads the HttpOnly refresh cookie, requires an unrevoked and unexpired DB row for an active user, revokes that row and inserts a new hashed refresh token in the same transaction, then returns access-token metadata and rotates the cookie. Invalid, expired or already rotated tokens return `401 DESIGN_AUTHENTICATION_REQUIRED`.
+
+### `POST /api/v1/auth/logout`
+
+Implemented through `app.modules.guest.api_03_auth_login.view.logout(...)` as source-only R-X02. The bodyless route revokes the active refresh session represented by the cookie and expires the cookie. Missing/expired/revoked sessions are handled idempotently. R-X01 and R-X02 have no numeric API ID assigned in this implementation. Runtime and live schema are not verified.
 ### `POST /api/v1/auth/verify-email/send`
 
 Implemented through `app.modules.guest.api_02_auth_verify_email_send.view.send_verification_email(...)`.
@@ -637,3 +631,12 @@ API #32 derives the same outcome from existing score/question/config columns.
 No new database column or migration was added for `passed`. This is source
 state only; the amended behavior has not been tested and migrations remain
 unapplied.
+
+### API #15 public enrollment selection correction (2026-11-21)
+
+`GET /api/v1/courses/{course_id}/enrollment-status` now returns 404 with null
+data when the request has no valid Student principal. It no longer queries an
+arbitrary enrollment for that course. A valid Student token selects only that
+Student's row. This closes the observed cross-user disclosure while the DD's
+public identity/selection contract remains unresolved. Focused tests: 8 passed;
+local guest HTTP check: 404 with null data.

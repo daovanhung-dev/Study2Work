@@ -29,3 +29,7 @@ Các lựa chọn cục bộ đã dùng để hoàn tất implementation đều 
 - `DISCREPANCY`: DB diagram/legacy schema ban đầu thiếu question type và choice order so với logical nested response.
 
 API #28 Student read phải tiếp tục loại `is_correct`. Việc thêm cột nullable để tương thích rows hiện hữu không tự lấp QuestionType cho dữ liệu cũ.
+
+## Resolved scoring validation decision (2026-11-15)
+
+passing_score is a percentage from 0 to 100 inclusive, with at most two fractional digits. The questions array must contain at least one question. Other source/owner questions remain open.

@@ -95,15 +95,19 @@ def test_get_enrollment_status_enrollment_not_found(
         "find_enrollment",
         lambda db, *, course_id, user_id=None: None,
     )
+    monkeypatch.setattr(
+        "app.modules.guest.api_15_courses_enrollment_status.validate.validate_current_user_request",
+        lambda authorization, *, role="STUDENT", trace_id: (1001, ["STUDENT"]),
+    )
 
-    response = client.get("/api/v1/courses/1/enrollment-status")
+    response = client.get("/api/v1/courses/1/enrollment-status", headers={"Authorization": "Bearer test-token"})
     assert response.status_code == 404
     payload = response.json()
     assert payload["success"] is False
     assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
 
 
-def test_get_enrollment_status_success(
+def test_public_request_does_not_expose_another_students_enrollment(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -115,25 +119,20 @@ def test_get_enrollment_status_success(
         "find_course_by_id",
         lambda db, *, course_id: {"id": course_id, "status": "PUBLISHED"},
     )
-    monkeypatch.setattr(
-        enrollment_view,
-        "find_enrollment",
-        lambda db, *, course_id, user_id=None: sample_enrollment_row(),
-    )
+    def fail_if_enrollment_queried(db, *, course_id, user_id):
+        raise AssertionError("Public request must not query a student's enrollment")
+
+    monkeypatch.setattr(enrollment_view, "find_enrollment", fail_if_enrollment_queried)
 
     response = client.get(
         "/api/v1/courses/101/enrollment-status",
         headers={"X-Trace-Id": "00000000-0000-0000-0000-000000000015"},
     )
-    assert response.status_code == 200
+    assert response.status_code == 404
     payload = response.json()
-    assert payload["success"] is True
-    assert payload["businessCode"] == "DESIGN_RESOURCE_RETRIEVED"
-    assert payload["message"] == "Enrollment status retrieved."
-    assert payload["data"]["id"] == 501
-    assert payload["data"]["user_id"] == 1001
-    assert payload["data"]["course_id"] == 101
-    assert payload["data"]["status"] == "ACTIVE"
+    assert payload["success"] is False
+    assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+    assert payload["data"] is None
     assert payload["traceId"] == "00000000-0000-0000-0000-000000000015"
 
 

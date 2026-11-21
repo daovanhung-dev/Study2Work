@@ -197,3 +197,9 @@ Source không trả `password_hash` hoặc `bio`. Tên field token được ghi 
 |    43 | `N43`  | }                                                           |                    |
 
 </details>
+
+## Approved response contract — 2026-11-17
+
+The approved login success response is HTTP 200 `DESIGN_RESOURCE_RETRIEVED`. `data` contains the public profile allowlist (`id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at`) and `access_token`, `token_type="bearer"`, `expires_in`. It does not contain `refresh_token` or `refresh_expires_in`. The response sets the opaque refresh token in an HttpOnly cookie with the approved attributes. This contract supersedes the prior source-only table that described refresh token fields in JSON.
+
+R-X01 success also sets the rotated refresh cookie and returns access-token metadata. R-X02 logout is bodyless and returns HTTP 204 while expiring the cookie; error responses use the shared Study error envelope. R-X01/R-X02 remain source-only without numeric API IDs.

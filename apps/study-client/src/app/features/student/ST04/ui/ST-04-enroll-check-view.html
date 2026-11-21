@@ -15,13 +15,23 @@
       <h1>Kiểm tra ghi danh</h1>
       @if (loadState === 'loading') {
         <h2>Đang tải thông tin khóa học.</h2>
-      } @else if (loadState === 'ready' && course) {
+      } @else if (course) {
         <h2>{{ course.title }}</h2>
         <p>{{ course.description }}</p>
-        <p>
-          Chưa thể xác nhận điều kiện ghi danh. Vui lòng đăng nhập và thử lại khi dịch vụ kiểm tra
-          ghi danh sẵn sàng.
-        </p>
+        @if (loadState === 'checking' || loadState === 'enrolling') {
+          <p>Đang kiểm tra trạng thái ghi danh…</p>
+        } @else if (loadState === 'enrolled') {
+          <p>Bạn đã ghi danh khóa học này.</p>
+          <a [href]="'/student/courses/' + course.id" class="btn-primary">Vào khóa học</a>
+        } @else if (loadState === 'free') {
+          <p>Khóa học miễn phí. Bạn có thể ghi danh để bắt đầu học.</p>
+          <button type="button" class="btn-primary" (click)="enrollRequested.emit()">Ghi danh miễn phí</button>
+        } @else if (loadState === 'paid') {
+          <p>Khóa học có phí. Tiếp tục để kiểm tra đơn hàng.</p>
+          <a [href]="'/student/checkout/' + course.id" class="btn-primary">Tiếp tục thanh toán</a>
+        } @else {
+          <p>Chưa thể kiểm tra ghi danh. Vui lòng thử lại sau.</p>
+        }
       } @else if (loadState === 'missing') {
         <h2>Không tìm thấy khóa học.</h2>
         <p>Khóa học này không còn hiển thị công khai hoặc đường dẫn không hợp lệ.</p>

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
@@ -14,15 +14,16 @@ describe('ST-04 enrollment check page', () => {
     await TestBed.configureTestingModule({
       imports: [StudentEnrollCheckPage],
       providers: [
+        provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ courseId: '12' }) } } },
-        { provide: St04CourseApi, useValue: { getCourse } },
+        { provide: St04CourseApi, useValue: { getCourse, getProgress: () => throwError(() => new HttpErrorResponse({ status: 404 })) } },
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(StudentEnrollCheckPage);
     fixture.detectChanges();
 
     expect(getCourse).toHaveBeenCalledWith('12');
-    expect(fixture.componentInstance.loadState()).toBe('ready');
+    expect(fixture.componentInstance.loadState()).toBe('paid');
     expect(fixture.componentInstance.course()).toEqual(course);
   });
 
@@ -30,6 +31,7 @@ describe('ST-04 enrollment check page', () => {
     await TestBed.configureTestingModule({
       imports: [StudentEnrollCheckPage],
       providers: [
+        provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ courseId: '12' }) } } },
         { provide: St04CourseApi, useValue: { getCourse: () => throwError(() => new HttpErrorResponse({ status: 404 })) } },
       ],
@@ -46,6 +48,7 @@ describe('ST-04 enrollment check page', () => {
     await TestBed.configureTestingModule({
       imports: [StudentEnrollCheckPage],
       providers: [
+        provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({}) } } },
         { provide: St04CourseApi, useValue: { getCourse } },
       ],

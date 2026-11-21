@@ -26,7 +26,7 @@ function mustExist(path, label = "path") {
   return true;
 }
 
-const SKIP_DIRS = new Set([".git", "node_modules", ".venv", ".dart_tool", "build"]);
+const SKIP_DIRS = new Set([".git", "node_modules", ".venv", ".dart_tool", ".pytest_cache", "build"]);
 
 function collectFiles(path, output = []) {
   const absolute = resolve(repoRoot, path);

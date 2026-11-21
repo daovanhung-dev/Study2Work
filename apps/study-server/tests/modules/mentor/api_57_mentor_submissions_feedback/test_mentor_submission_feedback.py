@@ -9,9 +9,11 @@ import app.utils.auth as auth_utils
 import pytest
 from app.core.database import get_db
 from app.modules.mentor.api_57_mentor_submissions_feedback.query import (
-    FIND_FEEDBACK_SUBMISSION_UPLOAD,
     LOCK_MENTOR_SUBMISSION_FOR_FEEDBACK,
     UPDATE_MENTOR_SUBMISSION_FEEDBACK,
+)
+from app.modules.mentor._shared.submission_uploads.query import (
+    FIND_MENTOR_SUBMISSION_UPLOADS,
 )
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
@@ -166,13 +168,22 @@ def install_query_flow(
             if fail_at == "update":
                 raise SQLAlchemyError("private update detail")
             return updated_row() if updated is _DEFAULT else updated
-        if query == FIND_FEEDBACK_SUBMISSION_UPLOAD:
-            if fail_at == "asset":
-                raise SQLAlchemyError("private asset detail")
-            return upload_row() if asset is _DEFAULT else asset
         raise AssertionError("Unexpected API #57 SQL query.")
 
     monkeypatch.setattr(feedback_view, "query_one", query_one)
+
+    def find_assets(_db, *, submission_ids, mentor_id):
+        if captured is not None:
+            captured.append(
+                (FIND_MENTOR_SUBMISSION_UPLOADS, {"submission_ids": submission_ids, "mentor_id": mentor_id})
+            )
+        if fail_at == "asset":
+            raise SQLAlchemyError("private asset detail")
+        if asset is None:
+            return []
+        return [upload_row()] if asset is _DEFAULT else asset
+
+    monkeypatch.setattr(feedback_view, "find_mentor_submission_uploads", find_assets)
 
 
 def test_feedback_saves_text_and_returns_submission_without_echoing_attachments(
@@ -229,11 +240,12 @@ def test_feedback_saves_text_and_returns_submission_without_echoing_attachments(
         "feedback_text": "Bài làm có lập luận rõ ràng.",
     }
     assert "attachments" not in captured[1][1]
-    assert "u.url = :file_url" in captured[2][0]
-    assert "u.owner_id = :user_id" in captured[2][0]
+    assert captured[2][0] == FIND_MENTOR_SUBMISSION_UPLOADS
+    assert "c.mentor_id = :mentor_id" in captured[2][0]
+    assert "u.owner_id = s.user_id" in captured[2][0]
     assert "u.purpose = 'SUBMISSION'" in captured[2][0]
-    assert "u.course_id = :course_id" in captured[2][0]
-    assert "ORDER BY u.id ASC" in captured[2][0]
+    assert "u.course_id = a.course_id" in captured[2][0]
+    assert "ORDER BY s.id, link.asset_position, link.upload_id" in captured[2][0]
     assert session.commit_count == 1
     assert session.rollback_count == 0
 

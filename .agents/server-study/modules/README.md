@@ -61,7 +61,7 @@ The router remains thin and delegates the API flow to `view.py`.
 | Module | Status | Context |
 |---|---|---|
 | `guest/api_01_auth_register` | `SOURCE_BACKED` | `register-account.md` |
-| `guest/api_03_auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
+| `guest/api_03_auth_login` | `SOURCE_BACKED` | Login issues access token plus HttpOnly refresh cookie; source-only R-X01 rotates and R-X02 revokes refresh sessions |
 | `guest/api_04_users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
 | `guest/api_12_resources_detail` | `SOURCE_BACKED` | API #12 public resource metadata read with published-parent check; response returns stored URL |
 | `guest/api_13_users_me_avatar` | `SOURCE_BACKED` | Student JSON Data URL upload through injectable S3-compatible storage; no DB access |
@@ -164,28 +164,28 @@ used by APIs #6–#8.
 ## API #54 Mentor submissions list
 
 - `app/modules/mentor/api_54_mentor_submissions_list` composes `GET /api/v1/mentor/submissions`; it requires explicit `MENTOR` role and direct `courses.mentor_id` ownership.
-- The response uses a fixed page size of 20 and stable `submitted_at DESC, id DESC` ordering. Candidate `assignment_submissions.file_url` is resolved against API #34 upload metadata by URL, Student owner, SUBMISSION purpose and course. This relationship is DERIVED; no FK or live DB inspection proves it.
+- The response uses a fixed page size of 20 and stable `submitted_at DESC, id DESC` ordering. Current source reads ordered files from `assignment_submission_uploads` in a separate owner-scoped query, preserving one row per submission. Migration 020 is qualified to `nguyen_anh_duc` and has not been applied to live DB.
 - Focused tests exercise the HTTP route with fake database results. API #55 detail and APIs #56/#57 mutations remain separate; the 409 error has no current trigger.
 
 ## API #55 Mentor submission detail
 
 - `app/modules/mentor/api_55_mentor_submissions_detail` composes `GET /api/v1/mentor/submissions/{submission_id}` and returns the reusable `SubmissionResponse` from API #54 inside `ApiEnvelope<Submission>`.
 - The view authenticates `MENTOR`, parses raw signed-int64 path input (malformed/out-of-range → 404), reads the candidate submission with LEFT JOINs to assignments/courses, returns 500 for broken required relation projections, and returns 403 for a different direct course owner under a DERIVED policy.
-- It resolves zero or one UploadAsset by the same exact URL, owner, `SUBMISSION` purpose and course fallback as API #54. It does not query or return rubric because the response schema has no rubric field and legacy assignment tables have no approved relation to the V1-PILOT rubric model.
+- It reads every ordered UploadAsset from `assignment_submission_uploads` after confirming the direct course owner; each asset must still match Student owner, `SUBMISSION` purpose, course and uploaded status. It does not query or return rubric because the response schema has no rubric field and legacy assignment tables have no approved relation to the V1-PILOT rubric model.
 - Focused tests use fake DB results and verify the HTTP contract/read-only behavior; live schema, API #35 URL compatibility, assigned-Mentor access and rubric remain unresolved.
 
 ## API #56 Mentor submission grade
 
 - The API #56 view authenticates MENTOR, locks one submission, checks direct course ownership, applies the DERIVED score range, updates only score/status and preserves feedback.
 - It accepts required opaque rubric_items under a DERIVED key but does not persist it because no supported target exists in the checked-in legacy model.
-- It validates the reusable Submission projection and constrained UploadAsset mapping before commit; failures roll back. Focused fake-DB HTTP tests do not verify live schema or deployment.
+- It validates the reusable Submission projection and all owner-scoped ordered UploadAsset mappings before commit; failures roll back. Migration 020 is source-only; live schema/deployment is unverified.
 
 ## API #57 Mentor submission feedback
 
 - `app/modules/mentor/api_57_mentor_submissions_feedback` composes `POST /api/v1/mentor/submissions/{submission_id}/feedback` and returns the reusable API #54 `SubmissionResponse` inside `ApiEnvelope<Submission>`.
 - The view authenticates MENTOR before DB access, parses signed-int64 path input (malformed/overflow → 422), locks the candidate row, checks direct course ownership, and repeats the owner predicate while updating only `assignment_submissions.feedback`.
 - `feedback_text` is a DERIVED wire key from catalog descriptor `feedback text`; `attachments` is required and accepted as an opaque string but is not persisted or echoed because no target/format is supported. Score/status remain unchanged; direct calls do not require GRADED.
-- The view resolves zero or one student UploadAsset by exact URL, owner, SUBMISSION purpose and course, validates the projection before commit, and rolls back failures. Focused fake-DB tests do not verify live schema/deployment; overwrite, owner mapping and wire-key decisions remain DERIVED pending approval.
+- The view resolves every ordered student UploadAsset through the shared Mentor asset query, validates the projection before commit, and rolls back failures. Migration 020 is source-only; live schema/deployment remains unverified. Overwrite, owner mapping and wire-key decisions remain DERIVED pending approval.
 
 ## API #58 Mentor support requests
 
@@ -488,9 +488,11 @@ ingestion.
   course summary projection.
 - #31 `guest/api_31_attempts_submit`: owner-scoped IN_PROGRESS attempt lock; objective choices use exact selected/correct set equality, unanswered questions score zero, and the attempt finalizes as GRADED. Raw points are stored in the existing score columns; response `passed` is derived from exact decimal percentage comparison against `passing_score`. #30/#32 group selected choices and results by question.
 - #35-36 `student/api_35_assignments_submissions` and
-  `api_36_submissions_detail`: create and owner-read submissions using upload
-  metadata scoped by owner, course and SUBMISSION purpose. Migration 016 adds
-  the schema-qualified uploads relation compatible with #34 metadata fields.
+  `api_36_submissions_detail`: API #35 accepts the FE's `text` plus JSON array
+  in `file refs`, persists ordered links, and keeps legacy `{content, upload_id}`
+  input compatibility; API #36 owner-reads every linked asset. Migration 020
+  creates/backfills the ordered relation only in `nguyen_anh_duc`; it has not
+  been applied to a live DB.
 - #37 `guest/api_37_users_me_progress_course`: derives lesson completion and
   percentage for the current Student; it does not claim activity-time totals.
 - #38 `guest/api_38_users_me_achievements`: reads explicit user award rows;

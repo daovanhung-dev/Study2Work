@@ -2,7 +2,7 @@
 
 ```text
 CONTEXT_STATUS: SOURCE_BACKED
-SOURCE_STATUS: Angular 22 SPA routes `/` to readiness scaffold, `/admin` to AD-01, `/admin/users` to AD-02, and `/student/lessons/:lessonId` to the ST-11 static fallback; other Student screens, functional player behavior, API integration, auth, and deployment are not verified here; the Mentor FE merge was reverted, so ME-06..ME-18 routes/screens are absent
+SOURCE_STATUS: Angular 22 SPA routes `/` to readiness scaffold, `/admin` to AD-01, `/admin/users` to AD-02, and `/student/lessons/:lessonId` to the ST-11 static fallback; other Student screens and functional player behavior remain unverified; Student auth source now has a memory token service, guarded routes, and cookie-backed refresh, while runtime/deployment remain unverified; the Mentor FE merge was reverted, so ME-06..ME-18 routes/screens are absent
 ```
 
 Canonical page graph: `INDEX.md`.

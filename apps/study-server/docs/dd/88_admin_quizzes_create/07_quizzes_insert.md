@@ -43,7 +43,7 @@ status: "Draft — Needs Confirmation"
 | 2 | course_id | Course ID | BIGINT / int64 | 8 bytes | N/A | Y by logical model | FK | config.course_id | Quiz schema + local embedded shape | 3 | DDL nullable; API supplies a checked ID. |
 | 3 | name | Quiz title | VARCHAR | 200 | N/A | Y |  | config.title → name | Quiz.title + legacy DDL | 3 | Alias; max follows physical candidate. |
 | 4 | description | Description | TEXT | N/A | N/A | N |  | Omit / NULL | No Quiz/config field | 3 | Do not invent input. |
-| 5 | passing_score | Passing score | NUMERIC | 5 | 2 | Y |  | config.passing_score | Quiz schema + legacy DDL | 3 | Must fit storage; no business range added. |
+| 5 | passing_score | Passing score | NUMERIC | 5 | 2 | Y |  | config.passing_score | Quiz schema + legacy DDL | 3 | Percentage 0..100 inclusive; exact decimal value, max 2 fractional digits. |
 | 6 | time_limit_minutes | Duration | INT | 4 | N/A | N |  | config.duration_minutes or NULL | Quiz schema + legacy DDL | 3 | Optional. |
 | 7 | status | Quiz status | VARCHAR | 20 | N/A | N |  | Use DDL default DRAFT | Legacy DB.sql | 3 | Lifecycle unresolved. |
 | 8 | created_at | Created time | TIMESTAMP | N/A | N/A | Y |  | Current transaction time | Legacy DB.sql | 3 | DDL has no default. |

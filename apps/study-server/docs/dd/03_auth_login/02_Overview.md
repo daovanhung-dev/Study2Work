@@ -97,3 +97,13 @@ format: markdown
 
 </details>
 
+
+## Approved session contract — 2026-11-17
+
+Login success is HTTP 200 `DESIGN_RESOURCE_RETRIEVED`. JSON `data` contains public profile fields plus `access_token`, `token_type`, and `expires_in`; raw refresh token and refresh expiry are not in JSON. The opaque refresh token is set as an HttpOnly, SameSite=Lax, host-only cookie at `/api/v1/auth`; Secure follows explicit environment configuration and is enabled outside local development. Login/refresh/logout require an exact configured Origin.
+
+R-X01 remains a source-only, bodyless POST using the cookie and rotating the stored refresh-token hash atomically. R-X02 is a source-only bodyless POST logout that revokes the active cookie session and clears the cookie. Neither route receives a numeric API ID in this implementation. API #03 DD remains Draft for unresolved error-contract, cleanup and live-schema questions. Runtime/deployment remain unverified.
+
+## Source/contract status update — 2026-11-17
+
+The previously recorded login/refresh transport discrepancy is superseded for this approved temporary implementation: API #03 is HTTP 200 with public profile fields plus access-token metadata, and the refresh token is cookie-only. R-X01 is a separate bodyless source-only refresh route; R-X02 is a separate bodyless source-only logout route. Both intentionally have no numeric API ID in this task. The remaining Draft questions concern the normative error set, token claim/lifetime governance, cleanup/retention, permissions, and live schema/deployment; this note does not claim runtime verification.

@@ -46,20 +46,3 @@ RETURNING
     s.feedback,
     s.status
 """
-
-FIND_FEEDBACK_SUBMISSION_UPLOAD = """
-SELECT
-    u.id,
-    u.file_name AS name,
-    u.url,
-    u.content_type,
-    u.size_bytes,
-    u.status
-FROM uploads AS u
-WHERE u.url = :file_url
-  AND u.owner_id = :user_id
-  AND u.purpose = 'SUBMISSION'
-  AND u.course_id = :course_id
-ORDER BY u.id ASC
-LIMIT 1
-"""

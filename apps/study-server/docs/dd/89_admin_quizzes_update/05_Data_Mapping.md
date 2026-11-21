@@ -48,7 +48,7 @@ status: "Draft — Needs Confirmation"
 - `config.course_id` là signed int64; `title` tối đa 200; `duration_minutes` optional/null và int32; `passing_score` là decimal-string biểu diễn chính xác trong `NUMERIC(5,2)`.
 - `questions[].type` theo ba giá trị validator #88: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE`.
 - `choices[].is_correct` optional; khi thiếu, validator #88 mặc định `false`.
-- `questions=[]` và `choices=[]` được chấp nhận; không thêm answer-count rule.
+- `questions` must contain at least one question; `choices=[]` remains accepted under the current contract.
 - Các body/nested rules là DERIVED vì catalog #89 không khai báo body.
 
 <a id="step-2-lock-target-quiz-and-children"></a>
@@ -108,7 +108,7 @@ status: "Draft — Needs Confirmation"
 | path quiz_id | quizzes.id | WHERE id = :quiz_id; giữ PK | Direct path + candidate schema |
 | config.course_id | quizzes.course_id | Gán target ID | DERIVED |
 | config.title | quizzes.name | Alias title → name | DERIVED; VARCHAR(200) candidate |
-| config.passing_score | quizzes.passing_score | decimal-string → NUMERIC(5,2) | DERIVED |
+| config.passing_score | quizzes.passing_score | decimal-string -> NUMERIC(5,2) | Percentage 0..100 inclusive; exact decimal representation. |
 | config.duration_minutes | quizzes.time_limit_minutes | Giá trị hoặc NULL khi omit/null | DERIVED |
 | Request timestamp | quizzes.updated_at | `CURRENT_TIMESTAMP` | DERIVED; legacy column NOT NULL |
 | N/A | quizzes.status | Giữ nguyên | Not in request |

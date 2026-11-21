@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from typing import Any, Literal
 
@@ -55,6 +56,10 @@ class Settings(BaseModel):
     cors_origins: list[str] = Field(
         default_factory=lambda: list(constants.CORS_ORIGINS),
         validation_alias=AliasChoices("CORS_ORIGINS", "cors_origins"),
+    )
+    refresh_cookie_secure: bool | None = Field(
+        default=constants.REFRESH_COOKIE_SECURE,
+        validation_alias=AliasChoices("REFRESH_COOKIE_SECURE", "refresh_cookie_secure"),
     )
 
     database_url: SecretStr = Field(
@@ -211,6 +216,19 @@ class Settings(BaseModel):
                 )
         return self
 
+    @model_validator(mode="after")
+    def resolve_refresh_cookie_security(self) -> Settings:
+        """Default Secure by environment and prohibit disabling it outside local development."""
+
+        if self.refresh_cookie_secure is None:
+            self.refresh_cookie_secure = self.app_env != "local"
+        elif self.app_env != "local" and not self.refresh_cookie_secure:
+            raise PydanticCustomError(
+                "insecure_refresh_cookie",
+                "Refresh cookies must be Secure outside local development.",
+            )
+        return self
+
     # Bí danh tương thích với API cấu hình viết hoa trước đây.
     @property
     def DB_HOST(self) -> str | None:
@@ -284,9 +302,11 @@ class Settings(BaseModel):
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """Tạo Settings từ app.core.constants và cache một instance trong tiến trình bằng lru_cache.
-    Các lần gọi sau dùng lại instance đó thay vì xác thực lại cấu hình."""
+    """Tạo Settings từ app.core.constants, nhận override CORS từ môi trường và cache trong tiến trình."""
 
+    cors_origins = os.getenv("CORS_ORIGINS")
+    if cors_origins is not None:
+        return Settings(CORS_ORIGINS=cors_origins)
     return Settings()
 
 

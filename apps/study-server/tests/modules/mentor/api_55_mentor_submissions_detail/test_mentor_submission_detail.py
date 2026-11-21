@@ -8,6 +8,9 @@ import app.modules.mentor.api_55_mentor_submissions_detail.view as submission_vi
 import app.utils.auth as auth_utils
 import pytest
 from app.core.database import get_db
+from app.modules.mentor._shared.submission_uploads.query import (
+    FIND_MENTOR_SUBMISSION_UPLOADS,
+)
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -112,6 +115,24 @@ def test_get_mentor_submission_returns_submission_and_scoped_upload(
         return submission_row()
 
     monkeypatch.setattr(submission_view, "query_one", find_submission)
+    captured_files: dict[str, Any] = {}
+
+    def find_files(_db, *, submission_ids, mentor_id):
+        captured_files["sql"] = FIND_MENTOR_SUBMISSION_UPLOADS
+        captured_files["params"] = {"submission_ids": submission_ids, "mentor_id": mentor_id}
+        return [
+            {
+                "submission_id": 55001,
+                "file_id": 34001,
+                "file_name": "answer.pdf",
+                "file_url": "https://storage.example/answer.pdf",
+                "file_content_type": "application/pdf",
+                "file_size_bytes": 12345,
+                "file_status": "UPLOADED",
+            }
+        ]
+
+    monkeypatch.setattr(submission_view, "find_mentor_submission_uploads", find_files)
     trace_id = "00000000-0000-4000-8000-000000000055"
 
     response = get_submission(client, trace_id=trace_id)
@@ -143,13 +164,13 @@ def test_get_mentor_submission_returns_submission_and_scoped_upload(
     }
     assert "LEFT JOIN assignments AS a" in captured["sql"]
     assert "LEFT JOIN courses AS c" in captured["sql"]
-    assert "LEFT JOIN LATERAL" in captured["sql"]
-    assert "u.url = s.file_url" in captured["sql"]
-    assert "u.owner_id = s.user_id" in captured["sql"]
-    assert "u.purpose = 'SUBMISSION'" in captured["sql"]
-    assert "u.course_id = a.course_id" in captured["sql"]
-    assert "ORDER BY u.id ASC" in captured["sql"]
+    assert "assignment_submission_uploads" not in captured["sql"]
     assert captured["params"] == {"submission_id": 55001}
+    assert captured_files["params"] == {"submission_ids": [55001], "mentor_id": 1001}
+    assert "u.owner_id = s.user_id" in captured_files["sql"]
+    assert "u.purpose = 'SUBMISSION'" in captured_files["sql"]
+    assert "u.course_id = a.course_id" in captured_files["sql"]
+    assert "ORDER BY s.id, link.asset_position, link.upload_id" in captured_files["sql"]
     assert "rubric" not in payload["data"]
     assert session.commit_count == 0
     assert session.rollback_count == 0
@@ -179,6 +200,11 @@ def test_get_mentor_submission_returns_empty_files_and_omits_optional_nulls(
         )
 
     monkeypatch.setattr(submission_view, "query_one", find_submission)
+    monkeypatch.setattr(
+        submission_view,
+        "find_mentor_submission_uploads",
+        lambda *_args, **_kwargs: [],
+    )
 
     response = get_submission(client)
 
@@ -387,6 +413,21 @@ def test_get_mentor_submission_rejects_partial_upload_projection(
         return submission_row(file_name=None)
 
     monkeypatch.setattr(submission_view, "query_one", find_partial_upload)
+    monkeypatch.setattr(
+        submission_view,
+        "find_mentor_submission_uploads",
+        lambda *_args, **_kwargs: [
+            {
+                "submission_id": 55001,
+                "file_id": 34001,
+                "file_name": None,
+                "file_url": "https://storage.example/answer.pdf",
+                "file_content_type": "application/pdf",
+                "file_size_bytes": 12345,
+                "file_status": "UPLOADED",
+            }
+        ],
+    )
 
     response = get_submission(client)
 

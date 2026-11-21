@@ -41,7 +41,7 @@ status: "Draft — Needs Confirmation"
 | choices[].is_correct | Not defined by catalog | Optional boolean, default false | DERIVED from legacy column default. |
 
 - Unknown fields, malformed outer/embedded JSON, invalid member types, unsupported type values and values outside physical int/numeric ranges return 422.
-- Passing score must fit legacy `NUMERIC(5,2)` without a business range rule.
+- `passing_score` must be a percentage in inclusive range 0..100 and fit `NUMERIC(5,2)` exactly; `questions` must contain at least one item.
 - Title must fit legacy `VARCHAR(200)`; no body-size or array-count limit is added.
 - Validate every nested item before opening the write flow.
 
@@ -66,7 +66,7 @@ status: "Draft — Needs Confirmation"
 |---|---|---|---|
 | config.course_id | quizzes.course_id | int64 direct | Required by logical Quiz; candidate DDL nullable. |
 | config.title | quizzes.name | title → name | Required, max 200 by candidate DDL. |
-| config.passing_score | quizzes.passing_score | decimal-string → NUMERIC(5,2) | Enforce physical representability; business range open. |
+| config.passing_score | quizzes.passing_score | decimal-string -> NUMERIC(5,2) | Validate percentage 0..100 inclusive; exact decimal representation. |
 | config.duration_minutes | quizzes.time_limit_minutes | Direct or NULL | Optional. |
 | N/A | quizzes.description | Leave NULL | Not in input/Quiz contract. |
 | N/A | quizzes.status | Existing DDL default `DRAFT` | Lifecycle remains open. |

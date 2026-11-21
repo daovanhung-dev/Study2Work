@@ -74,3 +74,15 @@
 **Ảnh hưởng:** Chưa rõ bước #04 là chủ ý để lấy quyền mới nhất hay lặp profile fetch; wording claims `user_id`/`role` của diagram cũng khác source claim names.
 
 **Cần xác nhận:** Chốt handoff/session flow, fields nguồn của permission/role, role routing và claims chung giữa #03/#04. Macro-review cả hai DD khi API #04 được hoàn thiện; không sửa #04 trong phiên này.
+
+## Decision update — 2026-11-17
+
+| Question | Current decision/status |
+|---|---|
+| Q-03-01 success contract | Resolved for success: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; JSON has public profile fields plus access-token metadata; refresh credential is cookie-only. Error set remains tracked under Q-03-02. |
+| Q-03-03 token/session transport | Resolved for this temporary implementation: access token in FE memory; opaque refresh token in HttpOnly cookie; refresh rotation and one-refresh retry. Claims/lifetime remain source-configured and are not otherwise changed. |
+| Q-03-04 refresh route identity | Resolved: keep R-X01 as a separate bodyless source-only route with no numeric API ID in this task. Logout is a separate bodyless source-only R-X02, also without numeric ID. |
+| Q-03-07 persistence/revocation | Session issue/rotation/revoke/logout behavior uses the existing `refresh_tokens` source. Cleanup/retention, live schema and deployment remain open/unverified. |
+| Q-03-09 post-login #04 | Resolved for Student handoff: login calls #04 and opens `/student` only after Student profile verification. Permissions remain unavailable/unresolved. |
+
+The auth-session implementation artifact records the approved contract. This DD remains Draft while unrelated API/error/schema questions remain open; source/runtime/deployment status must remain separate.

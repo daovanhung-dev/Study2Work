@@ -12,6 +12,9 @@ from app.modules.mentor.api_54_mentor_submissions_list.query import (
     COUNT_MENTOR_SUBMISSIONS,
     FIND_MENTOR_COURSE,
 )
+from app.modules.mentor._shared.submission_uploads.query import (
+    FIND_MENTOR_SUBMISSION_UPLOADS,
+)
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -112,14 +115,32 @@ def test_get_mentor_submissions_returns_page_and_linked_upload(
         return {"total": 21}
 
     def query_many(_db, query, params):
-        """Ghi nhận query trang và trả projection bài nộp có asset."""
+        """Trả projection submission của một trang."""
 
         captured["list_sql"] = query
         captured["list_params"] = params
         return [submission_row()]
 
+    def find_files(_db, *, submission_ids, mentor_id):
+        """Trả file rows đã được scoped theo submission và Mentor."""
+
+        captured["file_sql"] = FIND_MENTOR_SUBMISSION_UPLOADS
+        captured["file_params"] = {"submission_ids": submission_ids, "mentor_id": mentor_id}
+        return [
+            {
+                "submission_id": 54001,
+                "file_id": 34001,
+                "file_name": "answer.pdf",
+                "file_url": "https://storage.example/answer.pdf",
+                "file_content_type": "application/pdf",
+                "file_size_bytes": 12345,
+                "file_status": "UPLOADED",
+            }
+        ]
+
     monkeypatch.setattr(submissions_view, "query_one", query_one)
     monkeypatch.setattr(submissions_view, "query_many", query_many)
+    monkeypatch.setattr(submissions_view, "find_mentor_submission_uploads", find_files)
 
     response = get_submissions(
         client,
@@ -154,9 +175,12 @@ def test_get_mentor_submissions_returns_page_and_linked_upload(
         "offset": 20,
     }
     assert "c.mentor_id = :mentor_id" in captured["list_sql"]
-    assert "u.owner_id = s.user_id" in captured["list_sql"]
-    assert "u.purpose = 'SUBMISSION'" in captured["list_sql"]
-    assert "u.course_id = a.course_id" in captured["list_sql"]
+    assert captured["file_params"] == {"submission_ids": [54001], "mentor_id": 1001}
+    assert "c.mentor_id = :mentor_id" in captured["file_sql"]
+    assert "u.owner_id = s.user_id" in captured["file_sql"]
+    assert "u.purpose = 'SUBMISSION'" in captured["file_sql"]
+    assert "u.course_id = a.course_id" in captured["file_sql"]
+    assert "ORDER BY s.id, link.asset_position, link.upload_id" in captured["file_sql"]
     assert "ORDER BY s.submitted_at DESC, s.id DESC" in captured["list_sql"]
     count_sql = next(
         query for query, _params in captured["query_one"] if query == COUNT_MENTOR_SUBMISSIONS
@@ -241,16 +265,12 @@ def test_get_mentor_submissions_returns_empty_files_when_no_upload_matches(
     monkeypatch.setattr(
         submissions_view,
         "query_many",
-        lambda *_args: [
-            submission_row(
-                file_id=None,
-                file_name=None,
-                file_url=None,
-                file_content_type=None,
-                file_size_bytes=None,
-                file_status=None,
-            )
-        ],
+        lambda *_args: [submission_row()],
+    )
+    monkeypatch.setattr(
+        submissions_view,
+        "find_mentor_submission_uploads",
+        lambda *_args, **_kwargs: [],
     )
 
     response = get_submissions(client)
@@ -373,7 +393,14 @@ def test_get_mentor_submissions_rejects_malformed_asset_projection(
     monkeypatch.setattr(
         submissions_view,
         "query_many",
-        lambda *_args: [submission_row(file_name=None)],
+        lambda *_args: [submission_row()],
+    )
+    monkeypatch.setattr(
+        submissions_view,
+        "find_mentor_submission_uploads",
+        lambda *_args, **_kwargs: [
+            {"submission_id": 54001, "file_id": 34001, "file_name": None}
+        ],
     )
 
     response = get_submissions(client)

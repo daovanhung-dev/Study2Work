@@ -8,12 +8,14 @@ from typing import Any
 
 from app.core.database import query_one
 from app.core.responses import ErrorDetail, error_response, success_response
+from app.modules.mentor._shared.submission_uploads.service import (
+    find_mentor_submission_uploads,
+)
 from app.modules.mentor.api_54_mentor_submissions_list.models import SubmissionResponse
 from app.modules.mentor.api_57_mentor_submissions_feedback.models import (
     FeedbackSubmissionRequest,
 )
 from app.modules.mentor.api_57_mentor_submissions_feedback.query import (
-    FIND_FEEDBACK_SUBMISSION_UPLOAD,
     LOCK_MENTOR_SUBMISSION_FOR_FEEDBACK,
     UPDATE_MENTOR_SUBMISSION_FEEDBACK,
 )
@@ -140,26 +142,9 @@ def _updated_row_matches_candidate(
 def _map_submission(
     row: Mapping[str, Any],
     *,
-    asset_row: Mapping[str, Any] | None,
+    files: list[UploadAssetResponse],
 ) -> SubmissionResponse | None:
-    """Ánh xạ row sau UPDATE và tối đa một UploadAsset sang Submission."""
-
-    files: list[UploadAssetResponse] = []
-    if asset_row is not None:
-        try:
-            # Chỉ dựng asset khi truy vấn scoped lookup trả metadata đầy đủ.
-            files.append(
-                UploadAssetResponse(
-                    id=asset_row.get("id"),
-                    name=asset_row.get("name"),
-                    url=asset_row.get("url"),
-                    content_type=asset_row.get("content_type"),
-                    size_bytes=asset_row.get("size_bytes"),
-                    status=asset_row.get("status"),
-                )
-            )
-        except (TypeError, ValidationError):
-            return None
+    """Ánh xạ row sau UPDATE cùng danh sách UploadAsset sang Submission."""
 
     try:
         # Giữ nguyên field và nullable behavior của Submission API #54–56.
@@ -261,36 +246,31 @@ def save_mentor_submission_feedback(
         logger.error("Mentor submission feedback UPDATE projection failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 
-    # Reuse the constrained student-file projection shared with API #54–56.
-    asset_row: Mapping[str, Any] | None = None
-    file_url = updated.get("file_url")
-    if file_url is not None and not isinstance(file_url, str):
-        _rollback_safely(db, trace_id=trace_id)
-        logger.error("Mentor submission file URL projection failed; trace_id=%s", trace_id)
-        return _internal_error(trace_id)
-    if file_url is not None:
-        try:
-            found_asset = query_one(
-                db,
-                FIND_FEEDBACK_SUBMISSION_UPLOAD,
-                {
-                    "file_url": file_url,
-                    "user_id": updated.get("user_id"),
-                    "course_id": current.get("course_id"),
-                },
+    # Đọc file theo relation đã kiểm tra owner/course, không còn dựa vào một URL.
+    try:
+        file_rows = find_mentor_submission_uploads(
+            db,
+            submission_ids=[submission_id],
+            mentor_id=mentor_id,
+        )
+        files = [
+            UploadAssetResponse(
+                id=file_row["file_id"],
+                name=file_row["file_name"],
+                url=file_row["file_url"],
+                content_type=file_row["file_content_type"],
+                size_bytes=file_row["file_size_bytes"],
+                status=file_row["file_status"],
             )
-        except SQLAlchemyError:
-            _rollback_safely(db, trace_id=trace_id)
-            logger.error("Mentor submission file lookup failed; trace_id=%s", trace_id)
-            return _internal_error(trace_id)
-        if found_asset is not None and not isinstance(found_asset, Mapping):
-            _rollback_safely(db, trace_id=trace_id)
-            logger.error("Mentor submission file mapping failed; trace_id=%s", trace_id)
-            return _internal_error(trace_id)
-        asset_row = found_asset
+            for file_row in file_rows
+        ]
+    except (SQLAlchemyError, KeyError, TypeError, ValidationError):
+        _rollback_safely(db, trace_id=trace_id)
+        logger.error("Mentor submission files lookup or mapping failed; trace_id=%s", trace_id)
+        return _internal_error(trace_id)
 
     # Kiểm tra Submission và UploadAsset projection trước khi commit.
-    submission = _map_submission(updated, asset_row=asset_row)
+    submission = _map_submission(updated, files=files)
     if submission is None:
         _rollback_safely(db, trace_id=trace_id)
         logger.error("Mentor submission feedback response mapping failed; trace_id=%s", trace_id)

@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import type { Category, Course, LoadState } from '../models/SH-01-landing.models';
 
 @Component({
   selector: 'study-landing-view',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './SH-01-landing-view.html',
   styleUrl: './SH-01-landing-view.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

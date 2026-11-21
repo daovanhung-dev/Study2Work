@@ -36,4 +36,17 @@ export class St04CourseApi {
       })
       .pipe(map(getSt04Course));
   }
+
+  getProgress(rawCourseId: string) {
+    return this.api.request<{course_id: number}>(STUDY_SERVER_APIS.API_037, {
+      pathParams: { course_id: rawCourseId },
+    });
+  }
+
+  enroll(rawCourseId: string) {
+    return this.api.request<{id: number; status: string}>(STUDY_SERVER_APIS.API_019, {
+      pathParams: { course_id: rawCourseId },
+      body: { course_id: Number(rawCourseId) },
+    });
+  }
 }

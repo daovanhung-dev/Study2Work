@@ -58,7 +58,7 @@ def _field_errors(exc: ValidationError, *, prefix: str = "") -> list[ErrorDetail
     ]
 
 
-def _score_fits_legacy_numeric(value: str) -> bool:
+def _score_is_valid_percentage(value: str) -> bool:
     """Kiểm tra decimal-string có thể lưu nguyên vẹn vào NUMERIC(5,2)."""
 
     if _DECIMAL_SCORE_PATTERN.fullmatch(value) is None:
@@ -67,7 +67,7 @@ def _score_fits_legacy_numeric(value: str) -> bool:
         parsed = Decimal(value)
     except InvalidOperation:
         return False
-    return parsed.is_finite() and abs(parsed) <= Decimal("999.99")
+    return parsed.is_finite() and Decimal("0") <= parsed <= Decimal("100")
 
 
 def validate_create_admin_quiz_request(
@@ -155,14 +155,14 @@ def validate_create_admin_quiz_request(
                 )
             ],
         )
-    if not _score_fits_legacy_numeric(config.passing_score):
+    if not _score_is_valid_percentage(config.passing_score):
         return _validation_response(
             trace_id=trace_id,
             errors=[
                 ErrorDetail(
                     field="config.passing_score",
-                    code="NUMERIC_PRECISION",
-                    message="passing_score không biểu diễn được chính xác bằng NUMERIC(5,2).",
+                    code="PASSING_SCORE_RANGE",
+                    message="passing_score must be a percentage from 0 to 100 with at most 2 decimal places.",
                 )
             ],
         )

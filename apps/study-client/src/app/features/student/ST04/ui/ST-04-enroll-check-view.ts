@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import type { St04CourseLoadState, St04CourseSummary } from '../models/ST-04-enroll-course.models';
 
@@ -12,4 +12,5 @@ import type { St04CourseLoadState, St04CourseSummary } from '../models/ST-04-enr
 export class StudentEnrollCheckView {
   @Input() course: St04CourseSummary | null = null;
   @Input() loadState: St04CourseLoadState = 'loading';
+  @Output() enrollRequested = new EventEmitter<void>();
 }

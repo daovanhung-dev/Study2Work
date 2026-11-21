@@ -285,3 +285,10 @@ Source gọi auth utility để phát hành token pair, trả token cho client v
 |    59 | `F59`  | Trả về kết quả status = 2                                                        |                    |
 
 </details>
+
+## Approved response mapping update — 2026-11-17
+
+- `data.access_token`, `data.token_type`, `data.expires_in`: returned by API #03 and R-X01.
+- Raw refresh token: returned only in `Set-Cookie`; never in JSON or logs.
+- Refresh-token hash: existing `refresh_tokens.token_hash` persistence remains unchanged; R-X01 rotates old/new hashes atomically; R-X02 revokes the current active row.
+- No new table, column or migration is introduced. Live schema remains unverified.

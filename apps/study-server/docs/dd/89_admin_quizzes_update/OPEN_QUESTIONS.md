@@ -94,3 +94,7 @@ Catalog contract được giữ nguyên. Runtime có các lựa chọn DERIVED d
 - DISCREPANCY: catalog path-only so với diagram update set; logical QuizQuestion so với legacy persistence.
 
 Owner cần xác nhận body, persistence, attempt history và security policy trước khi DD được Approved/Final hoặc các fallback thành canonical contract. Runtime hiện tại vẫn là implementation DERIVED.
+
+## Resolved scoring validation decision (2026-11-15)
+
+The shared #88/#89 validator enforces passing_score as a percentage from 0 to 100 inclusive with at most two fractional digits, and requires at least one question. Other source/owner questions remain open.

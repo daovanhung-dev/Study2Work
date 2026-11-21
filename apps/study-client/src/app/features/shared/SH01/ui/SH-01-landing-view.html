@@ -18,9 +18,9 @@
 
       <nav class="main-nav" [class.main-nav--open]="mobileNavOpen" aria-label="Điều hướng chính">
         <button type="button" class="nav-btn nav-btn-active" aria-current="page">Trang chủ</button>
-        <button type="button" class="nav-btn">Khóa học</button>
+        <button type="button" class="nav-btn" (click)="onHeroSearch($event)">Khóa học</button>
         <button type="button" class="nav-btn">Lộ trình học</button>
-        <button type="button" class="nav-btn">Diễn đàn</button>
+        <button type="button" class="nav-btn" [routerLink]="['/student/discussions']">Diễn đàn</button>
       </nav>
     </div>
 
@@ -137,7 +137,7 @@
 
     <!-- 6. Action Buttons -->
     <div class="hero-cta-group">
-      <button type="button" class="btn-primary btn-lg">
+      <button type="button" class="btn-primary btn-lg" (click)="onHeroSearch($event)">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -272,8 +272,9 @@
       </div>
     </div>
     <div class="courses-grid" *ngIf="courseState === 'ready'">
-      <article
+      <a
         class="course-card-item"
+        [routerLink]="['/student/enroll', course.id]"
         *ngFor="let course of filteredCourses; trackBy: trackCourse"
       >
         <div class="course-thumbnail-box">
@@ -311,7 +312,7 @@
             </div>
           </div>
         </div>
-      </article>
+      </a>
       <div class="inline-state" *ngIf="filteredCourses.length === 0">
         Không có khóa học khớp từ khóa trong danh sách đang hiển thị.
       </div>

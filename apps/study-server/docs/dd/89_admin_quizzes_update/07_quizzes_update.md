@@ -32,7 +32,7 @@ status: "Draft — Needs Confirmation"
 | 1 | id | Quiz ID | BIGSERIAL | N/A | N/A | Yes | Yes | No | <No change> | Path quiz_id | Step 4 | Candidate key; không đổi. |
 | 2 | course_id | Course ID | BIGINT | N/A | N/A | DDL nullable | No | courses.id | config.course_id | DERIVED request body | Step 4 | Existing Course được khóa `FOR KEY SHARE`; move allowed. |
 | 3 | name | Quiz title | VARCHAR | 200 | N/A | Yes | No | No | config.title | DERIVED request body | Step 4 | Alias title → name; #88 validator giới hạn 200 ký tự. |
-| 4 | passing_score | Passing score | NUMERIC | 5 | 2 | DDL default 0 | No | No | config.passing_score | DERIVED request body | Step 4 | Validator #88 giới hạn exact decimal-string ±999.99. |
+| 4 | passing_score | Passing score | NUMERIC | 5 | 2 | DDL default 0 | No | No | config.passing_score | DERIVED request body | Step 4 | Shared #88 validator enforces percentage 0..100 inclusive, max 2 fractional digits. |
 | 5 | time_limit_minutes | Duration | INT | N/A | N/A | Nullable | No | No | config.duration_minutes | DERIVED request body | Step 4 | Omit/null được ghi NULL. |
 | 6 | updated_at | Update time | TIMESTAMP | N/A | N/A | Yes | No | No | CURRENT_TIMESTAMP | System/transaction | Step 4 | Legacy DDL NOT NULL/no default. |
 | 7 | status | Quiz status | VARCHAR | 20 | N/A | DDL default DRAFT | No | No | <No change> | Existing row | Step 4 | Không có status trong request/response contract. |

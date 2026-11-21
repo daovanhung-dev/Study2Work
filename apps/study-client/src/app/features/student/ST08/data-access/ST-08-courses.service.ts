@@ -1,8 +1,16 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
+import { StudyApiService } from '../../../../core/http/study-api.service';
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
+import type { StudentCoursesPageData } from '../models/ST-08-courses.models';
 
-/** Availability of the screen's DD-backed data source. No synthetic API result. */
 @Injectable({ providedIn: 'root' })
 export class StudentCoursesService {
-  /** DD gate: no verified data contract is available for this screen. */
-  readonly status = 'blocked' as const;
+  private readonly api = inject(StudyApiService);
+
+  getCourses(page = 1) {
+    return this.api.request<StudentCoursesPageData>(STUDY_SERVER_APIS.API_020, {
+      params: new HttpParams().set('page', page),
+    });
+  }
 }

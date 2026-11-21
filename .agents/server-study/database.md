@@ -77,18 +77,21 @@ tests do not verify live migration, schema or assignment support.
 API #54 reads candidate `assignment_submissions` through `assignments`, `courses`
 and `users`, scoping every row to the authenticated direct `courses.mentor_id`.
 Its DERIVED file fallback matches the legacy `file_url` to `uploads.url` under
-the same owner, `SUBMISSION` purpose and course; no submission-upload FK exists
-in the inspected DDL. Inner joins omit null/orphan relations permitted by the
-legacy DDL. Focused fake-DB tests do not verify the live assignment tables,
-upload URL persistence or query plan.
+the same owner, `SUBMISSION` purpose and course; current source now reads ordered
+assets from `assignment_submission_uploads` and constrains owner, purpose, course
+and status. The page query and asset query are separate so multiple assets do not
+duplicate submission rows or alter pagination. Migration 020 creates the relation
+and backfills the legacy first file, qualified only to `nguyen_anh_duc`; it was
+not applied because the live DB connection was unavailable. Fake-DB tests do not
+verify deployment or query plans.
 
 API #55 reads one candidate `assignment_submissions` row by ID and uses LEFT
 JOINs to `assignments`/`courses` so null or orphan parent relations remain
 observable. It requires direct `courses.mentor_id` ownership under a DERIVED
-fallback and resolves at most one `uploads` row with the same URL/owner/
-`SUBMISSION` purpose/course predicates as API #54. Fake-row tests verify
-application mapping only; no live schema, rubric relation, API #35 URL
-persistence or query plan is verified.
+fallback and reads all ordered relation rows through the shared Mentor asset
+query after checking ownership. Asset reads still require matching Student
+owner, `SUBMISSION` purpose, assignment course and `UPLOADED` status. No live
+schema, rubric relation or migration deployment is verified.
 
 API #49 reads `courses.id/mentor_id` then `contents` for the course, requiring direct Mentor ownership. The local `contents` DDL/migration 006 defines BIGINT course/parent keys, object JSONB payload, open text type/status, order and `deleted_at`; the query filters deleted rows and returns all statuses. The route returns a flat tree projection and does not write/commit. Fake-session tests and checked-in SQL do not verify live schema or migration deployment.
 
@@ -114,11 +117,11 @@ PostgreSQL behavior, timestamp interpretation, or migration deployment.
 
 ## API #56 Mentor submission grade
 
-The endpoint reads/locks candidate assignment_submissions joined to assignments and courses, checks direct course ownership, then updates only score and status=GRADED. The request score is cast to candidate NUMERIC(6,2) after DERIVED validation against assignments.max_score; existing feedback is returned unchanged. A non-null file_url can resolve at most one uploads row by exact URL, owner, SUBMISSION purpose and course. The query/view owns the transaction and commits after response validation. rubric_items has no supported persistence target. DDL and fake-DB tests do not establish live schema or migration deployment.
+The endpoint reads/locks candidate assignment_submissions joined to assignments and courses, checks direct course ownership, then updates only score and status=GRADED. The request score is cast to candidate NUMERIC(6,2) after DERIVED validation against assignments.max_score; existing feedback is returned unchanged. Its response reads every ordered association through the shared Mentor asset query. The query/view owns the transaction and commits after response validation. rubric_items has no supported persistence target. Migration 020 is source-only and live schema/deployment remains unverified.
 
 ## API #57 Mentor submission feedback
 
-The endpoint locks candidate `assignment_submissions` and LEFT JOINs assignments/courses to validate required relations, checks direct `courses.mentor_id`, and updates only `feedback`. The owner condition is repeated in the UPDATE. `feedback_text` is a DERIVED wire key; repeated calls overwrite the single nullable feedback candidate. `attachments` is required by the catalog and accepted as an opaque string but has no persistence binding. A non-null `file_url` resolves at most one `uploads` row by exact URL, owner, `SUBMISSION` purpose and course for the reusable Submission response. The view commits after mapping validation and rolls back failures. DDL and fake-DB tests do not prove live schema or migration deployment.
+The endpoint locks candidate `assignment_submissions` and LEFT JOINs assignments/courses to validate required relations, checks direct `courses.mentor_id`, and updates only `feedback`. The owner condition is repeated in the UPDATE. `feedback_text` is a DERIVED wire key; repeated calls overwrite the single nullable feedback candidate. `attachments` is required by the catalog and accepted as an opaque string but has no persistence binding. Its Submission response reads every ordered association through the shared Mentor asset query. The view commits after mapping validation and rolls back failures. Migration 020 is source-only; live schema/deployment is unverified.
 
 ## API #58 Mentor support requests
 
@@ -354,11 +357,15 @@ live schema, deployment or a producer that inserts reports.
 
 ## API #16-45 schema additions (2026-11-15 source only)
 
-Migrations `015_orders.sql` through `018_discussions_achievements.sql` use an
-explicit guard for schema `nguyen_anh_duc` and schema-qualified relation,
-constraint and index references. They add Orders; #34-compatible Uploads,
+Migrations `015_orders.sql` through `018_discussions_achievements.sql` and new
+`020_assignment_submission_uploads.sql` use an explicit guard for schema
+`nguyen_anh_duc` and schema-qualified relation, constraint and index references.
+They add Orders; #34-compatible Uploads,
 notification Operation UUID and per-user read/delivery state; objective quiz
-question type; Discussion title; and explicit user achievement records. The
+question type; Discussion title; explicit user achievement records; and the
+ordered assignment-submission upload relation with a legacy `file_url` backfill.
+Migration 020 is restricted to `nguyen_anh_duc` and was not applied because the
+live connection probe returned `OperationalError`. The
 Discussion title column has `NOT NULL DEFAULT ''`, preserving existing rows
 without deriving a title from content. These SQL files are migration source
 only: none was applied, and no live schema was re-read after their creation.

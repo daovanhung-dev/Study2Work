@@ -295,3 +295,15 @@ Mã nguồn kiểm thử liên quan gồm test_login_returns_profile_and_tokens_
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Approved session-flow implementation — 2026-11-17
+
+This section supersedes prior SESSION_POLICY_BLOCKED and LOGIN_RESPONSE_DISCREPANCY state rows for the approved flow:
+
+1. POST #03 remains HTTP 200. Its JSON data contains the public profile fields, `access_token`, `token_type`, and `expires_in`; the opaque refresh token is only an HttpOnly cookie.
+2. The FE keeps access token in memory only. Successful Student login calls GET #04 with Bearer authorization, then navigates to `/student`.
+3. A Student route entered without an in-memory access token calls bodyless POST R-X01 with the cookie, then verifies the Student profile with #04.
+4. A protected request may refresh once after 401 and retry once. Never refresh after 403 or retry login/refresh/logout. A 403 remains a role/access denial.
+5. R-X02 logs out by revoking the current refresh session and clearing the cookie. It is source-only and has no numeric API ID assigned here.
+6. Access tokens are per-tab memory; the cookie is shared across same-origin tabs in one browser profile. A successful account replacement/logout broadcasts a secret-free event; sibling tabs clear auth state and reload. Concurrent accounts in one browser profile are unsupported.
+7. No token is written to localStorage/sessionStorage, URLs, logs or analytics. Runtime and deployment remain unverified.

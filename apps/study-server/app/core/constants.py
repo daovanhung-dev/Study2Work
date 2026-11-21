@@ -4,6 +4,7 @@ app.core.config đọc trực tiếp, không phụ thuộc file .env hay biến 
 from typing import Literal
 
 APP_ENV: Literal["local", "test", "staging", "production"] = "local"
+REFRESH_COOKIE_SECURE: bool | None = None
 ENABLE_DOCS = True
 CORS_ORIGINS = (
     "http://127.0.0.2:3002",

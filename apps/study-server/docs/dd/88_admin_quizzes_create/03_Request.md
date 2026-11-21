@@ -51,7 +51,7 @@ Không có query parameter.
 | course_id | int64 | Yes | Course chứa quiz; kiểm tra courses.id. | Signed 64-bit integer; existence check. |
 | title | string | Yes | Tên quiz; map quizzes.name. | Required string; tối đa 200 ký tự theo physical candidate, không tự đặt min length. |
 | duration_minutes | int32 | No | Map quizzes.time_limit_minutes; NULL nếu absent. | Signed 32-bit integer; không thêm positivity rule. |
-| passing_score | decimal-string | Yes | Map quizzes.passing_score. | Phải biểu diễn được dưới NUMERIC(5,2); không thêm range nghiệp vụ. |
+| passing_score | decimal-string | Yes | Map quizzes.passing_score. | Percentage in inclusive range 0..100; at most 2 fractional digits; exact NUMERIC(5,2) representation. |
 
 ### questions[]
 

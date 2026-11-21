@@ -8,6 +8,9 @@ from typing import Any
 
 from app.core.database import query_one
 from app.core.responses import error_response, success_response
+from app.modules.mentor._shared.submission_uploads.service import (
+    find_mentor_submission_uploads,
+)
 from app.modules.mentor.api_54_mentor_submissions_list.models import SubmissionResponse
 from app.modules.mentor.api_55_mentor_submissions_detail.query import FIND_MENTOR_SUBMISSION
 from app.modules.mentor.api_55_mentor_submissions_detail.validate import (
@@ -94,37 +97,11 @@ def _required_database_ids_are_valid(row: Mapping[str, Any]) -> bool:
     )
 
 
-def _map_submission(row: Mapping[str, Any]) -> SubmissionResponse | None:
-    """Ánh xạ một SQL row sang reusable Submission và tối đa một UploadAsset."""
-
-    file_id = row.get("file_id")
-    file_fields = (
-        "file_name",
-        "file_url",
-        "file_content_type",
-        "file_size_bytes",
-        "file_status",
-    )
-    files: list[UploadAssetResponse] = []
-    if file_id is None:
-        # Một projection thiếu asset ID không được chứa metadata nửa vời.
-        if any(row.get(field) is not None for field in file_fields):
-            return None
-    else:
-        # Chỉ trả asset metadata khi LATERAL lookup khớp đầy đủ.
-        try:
-            files.append(
-                UploadAssetResponse(
-                    id=file_id,
-                    name=row.get("file_name"),
-                    url=row.get("file_url"),
-                    content_type=row.get("file_content_type"),
-                    size_bytes=row.get("file_size_bytes"),
-                    status=row.get("file_status"),
-                )
-            )
-        except (TypeError, ValidationError):
-            return None
+def _map_submission(
+    row: Mapping[str, Any],
+    files: list[UploadAssetResponse],
+) -> SubmissionResponse | None:
+    """Ánh xạ một SQL row sang reusable Submission cùng danh sách UploadAsset."""
 
     score = row.get("score")
     try:
@@ -197,8 +174,31 @@ def get_mentor_submission(
         _rollback_safely(db, trace_id=trace_id)
         return _access_denied(trace_id)
 
-    # Chỉ dựng field Submission sau khi course access đã được xác nhận.
-    submission = _map_submission(row)
+    # Chỉ truy vấn file sau khi đã xác nhận course thuộc Mentor hiện tại.
+    try:
+        file_rows = find_mentor_submission_uploads(
+            db,
+            submission_ids=[submission_id],
+            mentor_id=mentor_id,
+        )
+        files = [
+            UploadAssetResponse(
+                id=file_row["file_id"],
+                name=file_row["file_name"],
+                url=file_row["file_url"],
+                content_type=file_row["file_content_type"],
+                size_bytes=file_row["file_size_bytes"],
+                status=file_row["file_status"],
+            )
+            for file_row in file_rows
+        ]
+    except (SQLAlchemyError, KeyError, TypeError, ValidationError):
+        _rollback_safely(db, trace_id=trace_id)
+        logger.error("Mentor submission files lookup or mapping failed; trace_id=%s", trace_id)
+        return _internal_error(trace_id)
+
+    # Chỉ dựng field Submission sau khi course access và file scope được xác nhận.
+    submission = _map_submission(row, files)
     if submission is None:
         _rollback_safely(db, trace_id=trace_id)
         logger.error("Mentor submission response mapping failed; trace_id=%s", trace_id)

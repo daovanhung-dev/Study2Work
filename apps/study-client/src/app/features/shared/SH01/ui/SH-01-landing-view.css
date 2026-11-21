@@ -1372,3 +1372,7 @@
   .cta-guarantees-row { justify-content: flex-start; }
   .site-footer { padding-top: 28px; }
 }
+.course-card-item {
+  color: inherit;
+  text-decoration: none;
+}

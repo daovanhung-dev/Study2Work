@@ -3,10 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CreateSubmissionRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    text: str | None = None
+    file_refs: str | None = Field(default=None, alias="file refs")
+    # Preserve the former BE request shape while the FE uses text/file refs.
     content: str | None = None
     upload_id: int | None = None
 

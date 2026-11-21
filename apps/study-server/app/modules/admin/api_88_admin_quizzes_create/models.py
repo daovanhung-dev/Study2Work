@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 
 QuestionType = Literal["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE"]
 
@@ -52,7 +52,7 @@ class CreateAdminQuizInput(BaseModel):
     """Gom config và question set sau khi decode hai chuỗi outer body."""
 
     config: CreateAdminQuizConfig
-    questions: list[CreateAdminQuizQuestionInput]
+    questions: list[CreateAdminQuizQuestionInput] = Field(min_length=1)
 
     model_config = ConfigDict(extra="forbid", strict=True)
 

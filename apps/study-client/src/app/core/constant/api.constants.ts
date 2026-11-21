@@ -3,7 +3,7 @@ export const STUDY_API_BASE_PATH = '/api/v1';
 
 export type StudyApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export type StudyApiStatus = 'WIRED' | 'STUB' | 'UNWIRED' | 'SOURCE_ONLY';
-export type StudyApiId = number | 'R-X01';
+export type StudyApiId = number | 'R-X01' | 'R-X02';
 
 export interface StudyApiDescriptor {
   readonly id: StudyApiId;
@@ -14,7 +14,7 @@ export interface StudyApiDescriptor {
   readonly status: StudyApiStatus;
 }
 
-/** Design catalog for all Study API IDs plus the source-only refresh route. */
+/** Design catalog for Study API IDs plus source-only auth session routes. */
 export const STUDY_SERVER_APIS = {
   API_001: { id: 1, method: 'POST', path: '/auth/register', status: 'WIRED' },
   API_002: { id: 2, method: 'POST', path: '/auth/verify-email/send', status: 'STUB' },
@@ -39,8 +39,8 @@ export const STUDY_SERVER_APIS = {
   API_016: { id: 16, method: 'POST', path: '/orders', status: 'UNWIRED' },
   API_017: { id: 17, method: 'POST', path: '/payments', status: 'UNWIRED' },
   API_018: { id: 18, method: 'GET', path: '/operations/{operation_id}', status: 'UNWIRED' },
-  API_019: { id: 19, method: 'POST', path: '/courses/{course_id}/enrollments', status: 'UNWIRED' },
-  API_020: { id: 20, method: 'GET', path: '/users/me/courses', status: 'UNWIRED' },
+  API_019: { id: 19, method: 'POST', path: '/courses/{course_id}/enrollments', status: 'WIRED' },
+  API_020: { id: 20, method: 'GET', path: '/users/me/courses', status: 'WIRED' },
   API_021: { id: 21, method: 'GET', path: '/users/me/progress', status: 'UNWIRED' },
   API_022: { id: 22, method: 'GET', path: '/lessons/{lesson_id}/access', status: 'UNWIRED' },
   API_023: { id: 23, method: 'POST', path: '/lessons/{lesson_id}/start', status: 'UNWIRED' },
@@ -62,7 +62,7 @@ export const STUDY_SERVER_APIS = {
     status: 'UNWIRED',
   },
   API_036: { id: 36, method: 'GET', path: '/submissions/{submission_id}', status: 'UNWIRED' },
-  API_037: { id: 37, method: 'GET', path: '/users/me/progress/{course_id}', status: 'UNWIRED' },
+  API_037: { id: 37, method: 'GET', path: '/users/me/progress/{course_id}', status: 'WIRED' },
   API_038: { id: 38, method: 'GET', path: '/users/me/achievements', status: 'UNWIRED' },
   API_039: { id: 39, method: 'GET', path: '/discussions', status: 'UNWIRED' },
   API_040: { id: 40, method: 'POST', path: '/discussions', status: 'UNWIRED' },
@@ -219,6 +219,13 @@ export const STUDY_SERVER_APIS = {
     relatedApiId: 3,
     method: 'POST',
     path: '/auth/refresh',
+    status: 'SOURCE_ONLY',
+  },
+  API_003_LOGOUT: {
+    id: 'R-X02',
+    relatedApiId: 3,
+    method: 'POST',
+    path: '/auth/logout',
     status: 'SOURCE_ONLY',
   },
 } as const satisfies Readonly<Record<string, StudyApiDescriptor>>;

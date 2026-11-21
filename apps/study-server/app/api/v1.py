@@ -1,7 +1,7 @@
 from typing import Any
 
 # Nhập các thành phần cần thiết từ FastAPI.
-from fastapi import APIRouter, Depends, File, Form, Header, Path, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Header, Path, Query, Request, Response, UploadFile, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
@@ -9,6 +9,7 @@ from starlette.responses import JSONResponse
 
 # Nhập các thành phần từ core.
 from app.core.database import get_db, get_engine
+from app.core.config import get_settings
 from app.core.trace import get_trace_id
 from app.modules.admin.api_68_admin_users_list.models import GetAdminUsersEnvelope
 from app.modules.admin.api_68_admin_users_list.view import get_admin_users
@@ -124,8 +125,9 @@ from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSe
 from app.modules.guest.api_02_auth_verify_email_send.view import (
     send_verification_email as dispatch_verification_email,
 )
-from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
-from app.modules.guest.api_03_auth_login.view import login, refresh
+from app.modules.guest.api_03_auth_login.models import LoginRequest
+from app.modules.guest.api_03_auth_login.view import login, logout as logout_auth_session, refresh
+from app.utils.auth import REFRESH_COOKIE_NAME, validate_auth_origin
 from app.modules.guest.api_04_users_me.view import get_current_user
 from app.modules.guest.api_05_categories.models import CategoryQuery
 from app.modules.guest.api_05_categories.view import get_categories
@@ -476,15 +478,28 @@ def register(
 def authenticate(
     user_data: LoginRequest,
     request: Request,
+    response: Response,
     db: Session = db_dependency,
 ) -> dict[str, Any] | JSONResponse:
     """Nhận LoginRequest, Session và trace ID rồi chuyển quy trình xác thực cho login. Route giữ mã
     HTTP 200; việc kiểm tra thông tin đăng nhập, phát hành token và quản lý giao dịch do lớp
     view đảm nhiệm."""
+    trace_id = get_trace_id(request)
+    settings_for_auth = getattr(request.app.state, "settings", None) or get_settings()
+    origin_error = validate_auth_origin(
+        request.headers.get("origin"),
+        trace_id=trace_id,
+        allowed_origins=settings_for_auth.cors_origins,
+    )
+    if origin_error is not None:
+        return origin_error
     return login(
         user_data=user_data,
         db=db,
-        trace_id=get_trace_id(request),
+        trace_id=trace_id,
+        response=response,
+        cookie_secure=settings_for_auth.refresh_cookie_secure,
+        existing_refresh_token=request.cookies.get(REFRESH_COOKIE_NAME),
     )
 
 
@@ -493,33 +508,56 @@ def authenticate(
     "/auth/refresh",
     status_code=status.HTTP_200_OK,
     response_model=dict[str, Any],
-    openapi_extra={
-        "requestBody": {
-            "required": True,
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "type": "object",
-                        "required": ["refresh_token"],
-                        "properties": {"refresh_token": {"type": "string", "minLength": 1}},
-                    }
-                }
-            },
-        }
-    },
 )
 def refresh_access_token(
-    user_data: RefreshRequest,
     request: Request,
+    response: Response,
     db: Session = db_dependency,
 ) -> dict[str, Any] | JSONResponse:
     """Nhận RefreshRequest, Session và trace ID rồi chuyển việc xác thực, xoay vòng refresh token
     cho refresh. Route trả mã HTTP 200 khi thành công; lớp view sở hữu kiểm tra token và giao
     dịch."""
+    trace_id = get_trace_id(request)
+    settings_for_auth = getattr(request.app.state, "settings", None) or get_settings()
+    origin_error = validate_auth_origin(
+        request.headers.get("origin"),
+        trace_id=trace_id,
+        allowed_origins=settings_for_auth.cors_origins,
+    )
+    if origin_error is not None:
+        return origin_error
     return refresh(
-        user_data=user_data,
+        refresh_token=request.cookies.get(REFRESH_COOKIE_NAME),
         db=db,
-        trace_id=get_trace_id(request),
+        trace_id=trace_id,
+        response=response,
+        cookie_secure=settings_for_auth.refresh_cookie_secure,
+    )
+
+
+@router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
+def logout_access_session(
+    request: Request,
+    response: Response,
+    db: Session = db_dependency,
+) -> JSONResponse | None:
+    """Revoke the current refresh session and expire its HttpOnly cookie."""
+
+    trace_id = get_trace_id(request)
+    settings_for_auth = getattr(request.app.state, "settings", None) or get_settings()
+    origin_error = validate_auth_origin(
+        request.headers.get("origin"),
+        trace_id=trace_id,
+        allowed_origins=settings_for_auth.cors_origins,
+    )
+    if origin_error is not None:
+        return origin_error
+    return logout_auth_session(
+        refresh_token=request.cookies.get(REFRESH_COOKIE_NAME),
+        db=db,
+        trace_id=trace_id,
+        response=response,
+        cookie_secure=settings_for_auth.refresh_cookie_secure,
     )
 
 

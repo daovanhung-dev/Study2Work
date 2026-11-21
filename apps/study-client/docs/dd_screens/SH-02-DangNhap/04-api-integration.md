@@ -93,3 +93,13 @@ Authorization: Bearer <access_token>
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02.md)
+
+## Approved auth transport update — 2026-11-17
+
+- `POST /api/v1/auth/login`: HTTP 200; JSON has public profile fields plus `access_token`, `token_type`, `expires_in`; refresh token is `Set-Cookie` only. Browser request includes credentials and an Origin configured for Study.
+- `GET /api/v1/users/me`: Bearer access token; Student only. Login navigates to `/student` only after #04 returns a valid Student profile.
+- `POST /api/v1/auth/refresh` (R-X01): bodyless; browser sends the HttpOnly refresh cookie; success rotates cookie and returns access-token metadata. Source-only, no numeric API ID.
+- `POST /api/v1/auth/logout` (R-X02): bodyless; revokes the cookie session and expires the cookie. Source-only, no numeric API ID.
+- Cookie attributes: HttpOnly, SameSite=Lax, Path `/api/v1/auth`, host-only; Secure outside explicit local development. Auth cookie routes require an Origin exactly in configured CORS origins.
+- FE access token is memory-only. Shared HTTP infrastructure adds Bearer, permits one refresh/retry for a protected 401, and does not refresh on 403. Student routes restore/verify session before activation.
+- This addendum records source design; no runtime, browser or deployment verification is claimed.

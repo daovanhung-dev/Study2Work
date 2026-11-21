@@ -11,7 +11,6 @@ from app.modules.guest.api_15_courses_enrollment_status.models import (
     EnrollmentStatusResponse,
 )
 from app.modules.guest.api_15_courses_enrollment_status.query import (
-    FIND_ANY_ENROLLMENT_BY_COURSE,
     FIND_COURSE,
     FIND_USER_ENROLLMENT,
 )
@@ -41,17 +40,15 @@ def find_enrollment(
     db: Session,
     *,
     course_id: int,
-    user_id: int | None = None,
+    user_id: int,
 ) -> dict[str, Any] | None:
-    """Find enrollment for a specific user, or fallback to course scope."""
+    """Find only the current user's enrollment for this course."""
 
-    if user_id is not None:
-        return query_one(
-            db,
-            FIND_USER_ENROLLMENT,
-            {"course_id": course_id, "user_id": user_id},
-        )
-    return query_one(db, FIND_ANY_ENROLLMENT_BY_COURSE, {"course_id": course_id})
+    return query_one(
+        db,
+        FIND_USER_ENROLLMENT,
+        {"course_id": course_id, "user_id": user_id},
+    )
 
 
 # API #15 courses_enrollment_status
@@ -78,6 +75,10 @@ def get_enrollment_status(
         return _internal_error(trace_id)
 
     if course is None:
+        return _not_found_error(trace_id)
+
+    if user_id is None:
+        # A public request has no student selector. Never return another student's row.
         return _not_found_error(trace_id)
 
     try:

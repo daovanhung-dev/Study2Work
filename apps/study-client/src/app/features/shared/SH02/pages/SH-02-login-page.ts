@@ -2,7 +2,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import { Router } from '@angular/router';
+import { take } from 'rxjs';
 
+import { StudyAuthSessionService } from '../../../../core/auth/study-auth-session.service';
+import { StudentAccountProfileService } from '../../../student/data-access/student-profile.service';
 import { LoginApi } from '../data-access/SH-02-login.service';
 import type { LoginAlert, LoginCredentials, LoginFieldErrors } from '../models/SH-02-login.models';
 import { LoginView } from '../ui/SH-02-login-view';
@@ -16,6 +20,9 @@ import { LoginView } from '../ui/SH-02-login-view';
 export class LoginPage {
   private readonly destroyRef = inject(DestroyRef);
   private readonly api = inject(LoginApi);
+  private readonly session = inject(StudyAuthSessionService);
+  private readonly profileApi = inject(StudentAccountProfileService);
+  private readonly router = inject(Router);
   private readonly view = viewChild(LoginView);
 
   readonly submitting = signal(false);
@@ -31,14 +38,28 @@ export class LoginPage {
     if (this.submitting()) return;
 
     this.clearErrors();
+
+    const fieldErrors: LoginFieldErrors = {};
+    if (!credentials.email.trim()) {
+      fieldErrors.email = 'Vui lòng nhập địa chỉ email.';
+    }
+    if (!credentials.password.trim()) {
+      fieldErrors.password = 'Vui lòng nhập mật khẩu.';
+    }
+    if (fieldErrors.email || fieldErrors.password) {
+      this.fieldErrors.set(fieldErrors);
+      queueMicrotask(() => this.view()?.focusField(fieldErrors.email ? 'email' : 'password'));
+      return;
+    }
+
     this.submitting.set(true);
     this.api
       .login({ email: credentials.email.trim(), password: credentials.password })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.submitting.set(false);
           if (!response || response.success !== true || !response.data) {
+            this.submitting.set(false);
             this.alert.set({
               title: 'Không thể hoàn tất đăng nhập',
               description: 'Phản hồi từ hệ thống chưa đúng định dạng. Vui lòng thử lại sau.',
@@ -47,17 +68,72 @@ export class LoginPage {
             return;
           }
 
-          // SH-02 D01/D02: #03 và chính sách phiên chưa thống nhất; không lưu token hoặc điều hướng.
-          this.alert.set({
-            title: 'Chưa thể mở phiên đăng nhập',
-            description:
-              'Máy chủ đã phản hồi, nhưng hợp đồng đăng nhập và chính sách phiên chưa được thống nhất. Chưa thể chuyển vào hệ thống.',
-            kind: 'info',
-          });
+          const auth = response.data;
+          if (
+            typeof auth.access_token !== 'string' ||
+            !auth.access_token ||
+            typeof auth.role !== 'string' ||
+            auth.role.toUpperCase() !== 'STUDENT'
+          ) {
+            this.finishRejectedLogin();
+            return;
+          }
+
+          this.session.setAccessToken(auth.access_token);
+          this.profileApi
+            .getProfile()
+            .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (profile) => {
+                if (profile.role.toUpperCase() !== 'STUDENT') {
+                  this.finishRejectedLogin();
+                  return;
+                }
+                this.session.markStudentProfileVerified();
+                this.submitting.set(false);
+                this.session.broadcastSessionChange();
+                void this.router.navigateByUrl('/student');
+              },
+              error: () => this.finishFailedHandoff(),
+            });
         },
         error: (error: unknown) => {
           this.submitting.set(false);
           this.handleError(error);
+        },
+      });
+  }
+
+  private finishRejectedLogin(): void {
+    this.session.clearAccessToken();
+    this.session
+      .logout()
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.submitting.set(false);
+          void this.router.navigateByUrl('/forbidden');
+        },
+        error: () => {
+          this.submitting.set(false);
+          void this.router.navigateByUrl('/forbidden');
+        },
+      });
+  }
+
+  private finishFailedHandoff(): void {
+    this.session.clearAccessToken();
+    this.session
+      .logout()
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.submitting.set(false);
+          this.setGeneralError('Không thể xác minh hồ sơ người học. Vui lòng đăng nhập lại.');
+        },
+        error: () => {
+          this.submitting.set(false);
+          this.setGeneralError('Không thể hoàn tất phiên đăng nhập. Vui lòng thử lại.');
         },
       });
   }

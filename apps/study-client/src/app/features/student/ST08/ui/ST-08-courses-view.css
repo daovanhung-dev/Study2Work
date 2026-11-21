@@ -20,6 +20,13 @@
 .empty-card h2 { font-size: 16px; font-weight: 800; margin: 0 0 8px; }
 .empty-card p { font-size: 12px; color: #64748b; max-width: 360px; margin: 0 auto 24px; line-height: 1.5; }
 .btn-primary { display: inline-flex; padding: 10px 20px; border-radius: 10px; background: #065a82; color: #ffffff; font-size: 12px; font-weight: 700; text-decoration: none; }
+.course-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.course-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; }
+.course-card h2 { font-size: 18px; margin: 0 0 12px; }
+.course-card p { color: #64748b; line-height: 1.5; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 24px; }
+.pagination button { border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; padding: 8px 12px; cursor: pointer; }
+.pagination button:disabled { opacity: .5; cursor: not-allowed; }
 
 .site-footer { background: #f0f5fa; border-top: 1px solid #e2e8f0; padding: 20px 0; margin-top: auto; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }

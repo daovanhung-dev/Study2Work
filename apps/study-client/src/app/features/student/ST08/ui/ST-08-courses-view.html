@@ -2,11 +2,33 @@
   <main class="container main-wrap">
     <h1 class="page-heading">Khóa học của tôi</h1>
 
-    <div class="empty-card">
+    @if (state.kind === 'ready') {
+      <div class="course-list">
+        @for (course of state.items; track course.course_id) {
+          <article class="course-card">
+            <h2>{{ course.name }}</h2>
+            <p>{{ course.description }}</p>
+            <p>Trạng thái ghi danh: {{ course.enrollment_status }}</p>
+            <a [href]="'/student/courses/' + course.course_id" class="btn-primary">Vào khóa học</a>
+          </article>
+        }
+      </div>
+      @if (state.pagination; as page) {
+        @if (page.total_pages > 1) {
+          <nav class="pagination" aria-label="Trang khóa học">
+            <button type="button" [disabled]="page.page <= 1" (click)="pageRequested.emit(page.page - 1)">Trang trước</button>
+            <span>Trang {{ page.page }} / {{ page.total_pages }}</span>
+            <button type="button" [disabled]="page.page >= page.total_pages" (click)="pageRequested.emit(page.page + 1)">Trang sau</button>
+          </nav>
+        }
+      }
+    } @else {
+    <div class="empty-card" [attr.role]="state.kind === 'error' ? 'alert' : null">
       <div class="icon-circle">📘</div>
       <h2>{{ state.title }}</h2>
       <p>{{ state.message }}</p>
       <a href="/student" class="btn-primary">Về tổng quan học viên</a>
     </div>
+    }
   </main>
 </div>

@@ -62,3 +62,7 @@ Mã nguồn kiểm thử liên quan gồm test_login_returns_profile_and_tokens_
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.
+
+## Implementation status — 2026-11-17
+
+The references above remain planned acceptance cases; no test code was added or run in this task. Auth source changes are not runtime-verified. In particular, browser cookie attributes, configured Origin values, cross-tab reload behavior and DB revocation require later verification.

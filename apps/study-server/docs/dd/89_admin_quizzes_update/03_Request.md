@@ -60,7 +60,7 @@ Outer body candidate vẫn giữ hai string như #88. Chỉ owner mới có th�
 | course_id | int64 | Yes | Course đích; đổi course được phép nếu target tồn tại. | DERIVED; no publication/enrollment gate |
 | title | string | Yes | Map sang quizzes.name; tối đa 200 ký tự từ DDL candidate. | DERIVED |
 | duration_minutes | int32 or null | No | Map sang time_limit_minutes; omit/null ghi NULL. | DERIVED |
-| passing_score | decimal-string | Yes | Map sang passing_score; tối đa NUMERIC(5,2), từ -999.99 đến 999.99. | DERIVED |
+| passing_score | decimal-string | Yes | Map quizzes.passing_score. | Percentage 0..100 inclusive; max 2 fractional digits; exact NUMERIC(5,2). |
 
 ### questions[]
 
@@ -72,7 +72,7 @@ Outer body candidate vẫn giữ hai string như #88. Chỉ owner mới có th�
 | choices[].text | string | Yes | Candidate map sang choice_text. | DERIVED |
 | choices[].is_correct | boolean | No | Candidate answer key input; khi thiếu validator mặc định false. | DERIVED |
 
-> Body candidate không có question/choice IDs; implementation thay toàn bộ child set. `questions=[]` và `choices=[]` được chấp nhận. Validator reuse #88: title ≤200, duration trong int32, passing_score là decimal-string NUMERIC(5,2), QuestionType theo ba giá trị #88; không thêm answer-count rule.
+- `questions` must contain at least one question; `choices=[]` remains accepted under the existing body contract.
 
 ## Ví dụ Request — DERIVED proposal
 

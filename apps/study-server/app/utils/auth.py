@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from app.core.config import get_settings
 from app.core.responses import ErrorDetail, error_response
@@ -15,6 +15,9 @@ from app.core.security.access_token import create_access_token
 from app.core.security.access_token import decode_access_token as decode_signed_access_token
 from app.core.security.refresh_token import generate_refresh_token, hash_refresh_token
 from app.utils.validate import parse_integer, reject_blank_value
+
+REFRESH_COOKIE_NAME = "study_refresh_token"
+REFRESH_COOKIE_PATH = "/api/v1/auth"
 
 
 @dataclass(frozen=True)
@@ -34,6 +37,58 @@ def validate_refresh_token(value: object) -> object | ErrorDetail:
     """Giữ refresh token hợp lệ hoặc trả ErrorDetail nếu token chỉ có khoảng trắng."""
 
     return reject_blank_value(value)
+
+
+def validate_auth_origin(
+    origin: str | None,
+    *,
+    trace_id: str,
+    allowed_origins: Sequence[str] | None = None,
+) -> JSONResponse | None:
+    """Require an Origin that exactly matches a configured Study origin."""
+
+    configured_origins = list(allowed_origins) if allowed_origins is not None else get_settings().cors_origins
+    if origin and origin in configured_origins and "*" not in configured_origins:
+        return None
+    return error_response(
+        status_code=403,
+        business_code="DESIGN_ACCESS_DENIED",
+        message="Origin không được phép thực hiện thao tác phiên đăng nhập.",
+        trace_id=trace_id,
+    )
+
+
+def set_refresh_cookie(
+    response: Response,
+    tokens: IssuedTokens,
+    *,
+    secure: bool | None = None,
+) -> None:
+    """Set the opaque refresh token as an HttpOnly cookie."""
+
+    settings = get_settings()
+    response.set_cookie(
+        key=REFRESH_COOKIE_NAME,
+        value=tokens.refresh_token,
+        max_age=tokens.refresh_expires_in,
+        path=REFRESH_COOKIE_PATH,
+        secure=settings.refresh_cookie_secure if secure is None else secure,
+        httponly=True,
+        samesite="lax",
+    )
+
+
+def clear_refresh_cookie(response: Response, *, secure: bool | None = None) -> None:
+    """Expire the refresh cookie with the same scope and security attributes."""
+
+    settings = get_settings()
+    response.delete_cookie(
+        key=REFRESH_COOKIE_NAME,
+        path=REFRESH_COOKIE_PATH,
+        secure=settings.refresh_cookie_secure if secure is None else secure,
+        httponly=True,
+        samesite="lax",
+    )
 
 
 def extract_bearer_token(authorization: str | None) -> str | None:
@@ -178,9 +233,11 @@ def build_auth_payload(
     user: Mapping[str, Any],
     tokens: IssuedTokens,
 ) -> dict[str, Any]:
-    """Chọn các trường profile công khai từ hàng user rồi ghép access token, refresh token và
-    metadata bearer vào payload đăng nhập. Hàm không trả password hash hoặc các cột ngoài
-    allowlist."""
+    """Select public profile fields and access-token metadata for the response.
+
+    The refresh token is delivered separately in an HttpOnly cookie. Password
+    hashes and fields outside the allowlist are never included in the payload.
+    """
 
     profile_fields = (
         "id",
@@ -197,10 +254,8 @@ def build_auth_payload(
     payload.update(
         {
             "access_token": tokens.access_token,
-            "refresh_token": tokens.refresh_token,
             "token_type": "bearer",
             "expires_in": tokens.expires_in,
-            "refresh_expires_in": tokens.refresh_expires_in,
         }
     )
     return payload

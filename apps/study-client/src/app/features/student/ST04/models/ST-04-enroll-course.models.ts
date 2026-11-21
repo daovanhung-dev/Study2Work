@@ -16,4 +16,4 @@ export interface St04CoursePage {
   };
 }
 
-export type St04CourseLoadState = 'loading' | 'ready' | 'missing' | 'error';
+export type St04CourseLoadState = 'loading' | 'checking' | 'enrolled' | 'free' | 'paid' | 'enrolling' | 'missing' | 'error';

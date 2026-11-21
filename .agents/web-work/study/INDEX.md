@@ -8,13 +8,15 @@ The Mentor FE merge was reverted; screens ME-06 through ME-18 and `/mentor`
 routes are absent from current source. The Admin routes use `AdminLayout`. The
 readiness route is a root scaffold, not SH-01. AD-02 has an honest disconnected
 empty state and disabled search/filter/pagination controls; it has no user
-records or auth guard. Auth, deployment and live API behavior remain
-unverified.
+records or auth guard. Student auth source now uses memory-only access tokens,
+a Student route guard, and cookie-backed R-X01/R-X02; auth runtime, deployment
+and live API behavior remain unverified.
 ST-11 is now wired at `/student/lessons/:lessonId` as the documented static
 fallback through `StudentLayout`; lesson content, player behavior, API calls,
-other Student destinations and auth remain unwired or unverified.
+other Student destinations and functional player/API behavior remain unwired or
+unverified; Student auth source is wired but execution is unverified.
 The typed registry in `src/app/core/constant/api.constants.ts` defines catalog
-APIs #1–#103 and source-only route R-X01. `StudyApiService` in
+APIs #1–#103 and source-only routes R-X01 and R-X02. `StudyApiService` in
 `src/app/core/http/` consumes those descriptors through the local `/api/v1`
 proxy and rejects `UNWIRED` entries. `WIRED` records an exact route-source
 match and does not verify deployment; API #2 is an email-delivery stub. Check
@@ -23,6 +25,16 @@ current source for each screen task.
 `src/app/core/localStorage/local-storage.service.ts` provides generic JSON
 read/write operations for browser `localStorage`; it has no feature caller and
 does not integrate auth tokens.
+
+2026-11-21 scoped runtime update: ST-04 now reads public course #08, uses
+student-scoped course progress #37 as the ACTIVE-enrollment gate, and delegates
+free enrollment to server API #19. ST-08 reads paginated enrolled courses from
+#20. ST-09 loads #37 before public curriculum #09 and links published lessons
+to ST-10; it does not mount protected media. These paths were exercised in the
+local browser with a QA Student. ST-20 remains unresolved: current API #21
+returns `UserProfile` rather than progress metrics, and the canonical aggregate
+contract is still draft. Older status text elsewhere on this page predates this
+scoped verification.
 
 ## Pages
 

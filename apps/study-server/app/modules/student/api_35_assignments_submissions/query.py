@@ -11,12 +11,18 @@ WHERE user_id = :user_id AND course_id = :course_id AND status = 'ACTIVE'
 LIMIT 1
 """
 
-FIND_SUBMISSION_UPLOAD = """
+FIND_SUBMISSION_UPLOADS = """
 SELECT id, file_name AS name, url, content_type, size_bytes, status
 FROM uploads
-WHERE id = :upload_id AND owner_id = :user_id
+WHERE id = ANY(CAST(:upload_ids AS BIGINT[])) AND owner_id = :user_id
   AND purpose = 'SUBMISSION' AND course_id = :course_id AND status = 'UPLOADED'
-LIMIT 1
+ORDER BY id
+"""
+
+INSERT_SUBMISSION_UPLOAD = """
+INSERT INTO assignment_submission_uploads (submission_id, upload_id, asset_position)
+VALUES (:submission_id, :upload_id, :asset_position)
+RETURNING submission_id
 """
 
 INSERT_SUBMISSION = """

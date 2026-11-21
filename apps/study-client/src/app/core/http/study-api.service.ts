@@ -16,6 +16,7 @@ export interface StudyApiRequestOptions {
   params?: HttpParams;
   body?: unknown;
   headers?: HttpHeaders;
+  withCredentials?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,6 +53,7 @@ export class StudyApiService {
       body: options.body,
       headers: options.headers,
       params: options.params,
+      withCredentials: options.withCredentials,
     });
   }
 
@@ -69,6 +71,7 @@ export class StudyApiService {
         body: options.body,
         headers: options.headers,
         params: options.params,
+        withCredentials: options.withCredentials,
         observe: 'response',
       },
     );

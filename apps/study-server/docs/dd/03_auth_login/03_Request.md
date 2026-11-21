@@ -173,3 +173,7 @@ FastAPI có thể từ chối body/type sai trước khi view chạy; các giớ
 |    32 | `L32`  | }                                   |                    |
 
 </details>
+
+## Approved cookie transport update — 2026-11-17
+
+Login request remains JSON `{email, password}` and public/no Bearer. The browser must send an Origin exactly matching configured Study CORS origins. Success is HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; response data contains public profile fields plus `access_token`, `token_type`, and `expires_in`. The opaque refresh token is delivered only by the HttpOnly refresh cookie. R-X01 and R-X02 are separate source-only routes documented in the auth-session implementation artifact; they are not part of the login request body.

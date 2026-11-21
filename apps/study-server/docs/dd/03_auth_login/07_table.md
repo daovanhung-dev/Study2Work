@@ -109,3 +109,7 @@ Route refresh hiện được gắn marker API #03 nhưng không có catalog row
 
 </details>
 
+
+## Approved refresh/logout source update — 2026-11-17
+
+`POST /auth/refresh` (R-X01) reads the refresh token from the HttpOnly cookie, revokes the prior row and inserts the rotated hash in one transaction; no JSON body or raw refresh token appears in response data. `POST /auth/logout` (R-X02) resolves the cookie hash using the existing refresh-session query, revokes the active row, and clears the cookie. Missing/expired/revoked cookie logout is idempotent. These are source-only routes without numeric API IDs. The checked-in DB definition remains a candidate; live schema/deployment is not verified.

@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `SH-02` |
 | Module | Shared / Auth / System |
-| Route | `/login` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/login` — registered in current Study Web source; runtime remains unverified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái DD:** DD BLOCKED · **Trạng thái triển khai:** IMPLEMENTATION BLOCKED · **Runtime:** RUNTIME NOT VERIFIED |
+| DD status | Draft; approved auth/session contract; source updated, runtime not verified |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [SH-02.md](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02.md), [SH-02_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_PLAN.md), [SH-02_markers.json](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json), [list_screen.md](../../list_screen.md) |
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | idle/validating/submitting/401/403/network-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current runtime | Student login/session source implemented; runtime/deployment `NOT_VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-02 source screen.png](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/screen.png))
@@ -94,3 +94,9 @@ DD này tách riêng ba loại bằng chứng:
 - Khi API #03 thành công, nguồn hiện có thể cấp token cho vai trò không phải học viên. API #04 hiện chỉ chấp nhận học viên. Không gọi endpoint #04 dành cho học viên với token người hướng dẫn/quản trị viên và không đưa tài khoản đó tới bảng điều khiển học viên.
 - Nếu guard route cần bảo vệ cung cấp returnTo, giá trị phải là đường dẫn tương đối cùng miền trong danh sách cho phép của vai trò đã xác minh. Từ chối URL tuyệt đối, //host và đường dẫn không được duyệt. Không đưa token, mật khẩu hay email vào returnTo.
 - Đích mặc định học viên /student chỉ là đề xuất route, chưa có trong client hiện tại. Đích người hướng dẫn/quản trị viên và chính sách lưu token còn chưa quyết định.
+
+## Implementation update — 2026-11-17
+
+Current source now implements the approved Study session flow: #03 returns HTTP 200 with public profile fields and access-token metadata; the opaque refresh token is sent only through an HttpOnly cookie. FE stores the access token in memory, calls #04 as Student, and opens `/student` only after profile verification. `/student` restores its session through bodyless R-X01. R-X02 revokes the current refresh-token record and clears the cookie. No token is written to browser storage.
+
+One active account is supported per browser profile/origin. Successful login replacement/logout notifies sibling tabs without credentials; those tabs clear auth state and reload. The DD remains Draft for unresolved error/permission/schema questions. Source is updated; runtime, browser behavior, deployment and live DB remain unverified.

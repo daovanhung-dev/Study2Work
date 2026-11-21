@@ -10,6 +10,9 @@ from app.core.database import query_many, query_one
 from app.core.responses import error_response, success_response
 from app.modules.guest._shared.course_catalog.constants import DEFAULT_SIZE
 from app.modules.guest._shared.course_catalog.models import Pagination
+from app.modules.mentor._shared.submission_uploads.service import (
+    find_mentor_submission_uploads,
+)
 from app.modules.mentor.api_54_mentor_submissions_list.models import (
     GetMentorSubmissionsEnvelope,
     MentorSubmissionsQuery,
@@ -67,39 +70,17 @@ def _rollback_safely(db: Session, *, trace_id: str) -> None:
 
 def _map_submissions(
     rows: list[dict[str, Any]],
+    files_by_submission: dict[int, list[UploadAssetResponse]] | None = None,
 ) -> list[SubmissionResponse] | None:
-    """Ánh xạ các hàng SQL thành Submission và tối đa một UploadAsset tương ứng."""
+    """Ánh xạ các hàng SQL thành Submission cùng danh sách UploadAsset có thứ tự."""
 
     submissions: list[SubmissionResponse] = []
+    files_by_submission = files_by_submission or {}
     try:
-        # Chỉ dựng UploadAsset khi LATERAL query trả về một metadata row hoàn chỉnh.
+        # Danh sách file được lấy riêng để mỗi submission chỉ xuất hiện một lần.
         for row in rows:
             if not isinstance(row, Mapping):
                 return None
-            file_id = row.get("file_id")
-            files: list[UploadAssetResponse] = []
-            file_fields = (
-                "file_name",
-                "file_url",
-                "file_content_type",
-                "file_size_bytes",
-                "file_status",
-            )
-            if file_id is None:
-                if any(row.get(field) is not None for field in file_fields):
-                    return None
-            else:
-                files.append(
-                    UploadAssetResponse(
-                        id=file_id,
-                        name=row.get("file_name"),
-                        url=row.get("file_url"),
-                        content_type=row.get("file_content_type"),
-                        size_bytes=row.get("file_size_bytes"),
-                        status=row.get("file_status"),
-                    )
-                )
-
             score = row.get("score")
             submissions.append(
                 SubmissionResponse(
@@ -107,7 +88,7 @@ def _map_submissions(
                     assignment_id=row.get("assignment_id"),
                     user_id=row.get("user_id"),
                     content=row.get("content"),
-                    files=files,
+                    files=files_by_submission.get(row.get("id"), []),
                     status=row.get("status"),
                     submitted_at=row.get("submitted_at"),
                     score=None if score is None else str(score),
@@ -181,13 +162,36 @@ def get_mentor_submissions(
             LIST_MENTOR_SUBMISSIONS,
             {**params, "limit": DEFAULT_SIZE, "offset": offset},
         )
+        # Lấy file cho cả trang bằng một truy vấn riêng để không nhân đôi submission/pagination.
+        submission_ids = [row["id"] for row in rows]
+        file_rows = find_mentor_submission_uploads(
+            db,
+            submission_ids=submission_ids,
+            mentor_id=mentor_id,
+        )
     except SQLAlchemyError:
         _rollback_safely(db, trace_id=trace_id)
         logger.error("Mentor submissions lookup failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 
     # Kiểm tra toàn bộ projection trước khi trả dữ liệu cho client.
-    items = _map_submissions(rows)
+    files_by_submission: dict[int, list[UploadAssetResponse]] = {}
+    try:
+        for file_row in file_rows:
+            asset = UploadAssetResponse(
+                id=file_row["file_id"],
+                name=file_row["file_name"],
+                url=file_row["file_url"],
+                content_type=file_row["file_content_type"],
+                size_bytes=file_row["file_size_bytes"],
+                status=file_row["file_status"],
+            )
+            files_by_submission.setdefault(file_row["submission_id"], []).append(asset)
+    except (KeyError, TypeError, ValidationError):
+        _rollback_safely(db, trace_id=trace_id)
+        logger.error("Mentor submission files mapping failed; trace_id=%s", trace_id)
+        return _internal_error(trace_id)
+    items = _map_submissions(rows, files_by_submission)
     if items is None:
         _rollback_safely(db, trace_id=trace_id)
         logger.error("Mentor submissions response mapping failed; trace_id=%s", trace_id)
