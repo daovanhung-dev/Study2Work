@@ -8,7 +8,7 @@ event, shared envelope, or local deployable contract.
 | API guidelines | `contracts/api-guidelines/README.md` | repository API conventions | Study, Work, Web | `VERIFIED` |
 | Study → Work events | `contracts/events/study-work/` | Study | Work | `DECLARED_NOT_RUNNABLE` — schemas and examples exist, consumer is absent |
 | Work OpenAPI | `contracts/openapi/work/legacy-web.openapi.json` and `openapi.json` | Work contract files | Work server/Web | `DISCREPANCY` — legacy file aligns to current routes; target file is not wired |
-| Study OpenAPI | `contracts/openapi/study/README.md` | Study | Study Web | `NOT_FOUND` — placeholder only |
+| Study OpenAPI | `contracts/openapi/study/README.md` | Study | Study Web | `NOT_FOUND` — placeholder only; APIs #104/#105 are present in current FastAPI routes and the API catalog, but the placeholder still does not provide generated OpenAPI contract coverage |
 | Skill taxonomy | `contracts/skill-taxonomy/` | repository taxonomy | future modules | `VERIFIED`, no current server caller |
 | DB Admin local contract | `apps/db-admin-server/app/core/contracts.py` and `app/api/routes.py` | DB Admin server | DB Admin Web | `VERIFIED` |
 

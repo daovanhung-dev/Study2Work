@@ -1,23 +1,32 @@
 # Study declared API surface
 
-Global status: current source wires numbered API routes #01–#98 through
-`app/api/v1.py`; APIs #99–#103 have no current route/module. Current local full
+Global status: current source wires numbered API routes #01–#98, #101 and
+user-approved #104/#105 through `app/api/v1.py`; APIs #99, #100, #102 and #103 have no current route/module. Current local full
 Study verification after the API #18 auth fix is 1492 passed, 0 failed; see
 `tests.md`. Older route-count and branch-backed HTTP sections below are dated
 historical checkpoints and are not current totals.
 
 Role module ownership follows the actor mapping: Guest #01–#03/#05–#12/#15;
 Student #04/#13–#14/#16–#17/#19–#33/#35–#45; Shared #18/#34; Mentor #46–#67;
-Admin #68–#98. For SH-07 notification tracking, API #18 is reconciled to UUID
+Admin #68–#98, #101 and #104–#105. For SH-07 notification tracking, API #18 is reconciled to UUID
 and owner-only access for Student/Mentor/Admin; generic lifecycle/result remains
 unresolved. API #34 accepts
 both Student and Mentor. API #17 remains fail-closed with HTTP 503 until its
-payment provider is configured. APIs #99–#103 remain absent while their Draft
-DDs and authorization/schema decisions are unresolved.
+payment provider is configured. API #101 is now source-wired from an approved
+AD-01 slice while its DD remains Draft; APIs #99, #100, #102 and #103 remain
+absent pending their own implementation decisions.
 
 API #98's current handler is wired but differs from its Draft DD: the response
 contains the discussion thread/comments, derives title from content, and does
 not read report records. Keep that source/DD discrepancy explicit.
+
+### `POST /api/v1/admin/courses` — API #104 (user-approved extension)
+
+Mounted in `app/api/v1.py` through `admin/api_104_admin_courses_create`. The route passes raw request bytes to the view on the thread pool so the shared `ADMIN` JWT guard runs before body parsing or DB access. Request: required `title`, decimal-string `price`, positive signed-int64 `mentor_id`; optional nullable `description` and `thumbnail_url`. The view verifies the selected user has exact `role='MENTOR'` and `status='ACTIVE'`, inserts a `DRAFT` row into the existing courses relation, reads the shared Course projection, then commits. Success is HTTP 201 `DESIGN_RESOURCE_CREATED`; input errors are 422 `DESIGN_VALIDATION_ERROR`; shared auth failures are 401/403; unexpected DB/projection failures are safe 500 with rollback. Focused route/module tests: 6 passed on 2026-11-22 using fake DB sessions. This user-approved API extends beyond AC-32/AC_UNICA; checked-in DDL is candidate evidence only and live schema/deployment remain unverified.
+
+### `POST /api/v1/admin/users` — API #105 (user-approved extension)
+
+Mounted in `app/api/v1.py` through `admin/api_105_admin_users_create`. The route passes the raw body to the view so the shared `ADMIN` guard runs before parsing or data access. Request fields are required `full_name`, `email`, `password` and `role`; role is exactly `STUDENT`, `MENTOR` or `ADMIN`. Name/email use existing shared normalization rules; empty/all-whitespace password is rejected and otherwise passed unchanged to the shared Argon2id hash helper. The handler checks duplicate email, inserts the existing legacy `users` columns with selected role and explicit `ACTIVE`, then returns only the shared safe `UserProfile`. Success is HTTP 201 `DESIGN_RESOURCE_CREATED`; auth failures are 401/403, duplicate email is 409 `DESIGN_STATE_CONFLICT`, validation is 422 and database/projection failures are safe 500 with rollback. Focused route/module suite: 15 passed on 2026-11-22 using fake DB sessions. API #105 is outside AC_UNICA; no migration was added, and candidate DDL does not establish live schema or deployment.
 
 ## Composition-root routes
 
@@ -643,6 +652,34 @@ Adds one path and operation (OpenAPI: 57 paths / 68 operations at the time this 
 ### `GET /api/v1/admin/discussions/{discussion_id}` — API #98
 
 Adds a separate path and operation; OpenAPI had 58 `/api/v1` paths / 69 operations at that historical checkpoint. The source route is wired and uses the ADMIN guard. Its current response includes the discussion thread/comments, derives `title` from content, and does not query or return report records. The DD remains `Draft — Needs Confirmation` and labels the runtime `UNWIRED`, while requiring thread + report detail and leaving title/report/status decisions open. The HTTP success, role/auth, malformed ID, not-found and query failure/rollback behaviors are characterized in the added tests; do not treat source behavior as an approved DD resolution. Live PostgreSQL HTTP details are in the dated test report.
+
+### `GET /api/v1/admin/reports/summary` — API #101
+
+Source: `app/modules/admin/api_101_admin_reports_summary/`, composed in
+`app/api/v1.py`. The endpoint requires the shared `ADMIN` JWT guard before
+query-date parsing. Optional ISO `from`/`to` bounds are inclusive Vietnam
+calendar dates; the default is today plus the prior 29 dates. A supplied
+`from` without `to` ends today; a supplied `to` without `from` spans the prior
+29 dates. Invalid dates or a reversed range use the existing
+`422 DESIGN_VALIDATION_ERROR` envelope.
+
+Four independent read-only COUNT queries return all matching rows by
+`users.created_at`, `courses.created_at`, `enrollments.enrolled_at`, and
+`discussions.created_at`. No role/status filters are applied, and discussion
+topics and replies are both counted as rows. Values serialize as decimal
+strings in the `DESIGN_RESOURCE_RETRIEVED` envelope. SQL/query or projection
+failures return a safe `500 DESIGN_INTERNAL_ERROR` and roll back without
+committing.
+
+Focused route tests: 9 passed on 2026-11-22; they use a fake Session and
+monkeypatched COUNT projections. `infra/postgres/study-server/DB.sql` contains
+candidate legacy table/column definitions only. Queries apply `DATE(column)`
+without timezone conversion; the candidate columns are naive `TIMESTAMP`, and
+the Study writers for users, enrollments and discussions use `CURRENT_TIMESTAMP`.
+No current Study course writer or DB `TimeZone` setting was found, so live
+schema, timestamp interpretation, deployment and production API acceptance
+remain unverified. The API DD remains Draft, so preserve the source/contract
+discrepancy.
 
 ## APIs #16-20, #31, #35-45 added on 2026-11-15
 

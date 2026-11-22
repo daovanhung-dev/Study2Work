@@ -20,7 +20,7 @@
 | EV-05 — Chuyển trang | Click previous/next | Set 1-based `page`; size/order do server; update URL; disable controls theo metadata. | Page default 1, size 20; malformed/out-of-range page → 422. | Nút trước/sau disabled. |
 | EV-06 — Xem chi tiết user | Chọn row/ID | Dùng `items[].id` để mở AD-03; không dùng email làm route identity. | Handoff sang #69; response/error thuộc AD-03. | Không có row/action ở empty prototype. |
 | EV-07 — Chỉnh sửa hoặc status/delete | Chọn action được phép | Điều hướng AD-04/#70 hoặc AD-05/#71/#72; chỉ reload #68 sau success theo flow AC-31. | #68 không ghi dữ liệu; mutation status/error theo DD tương ứng. | Chưa có row controls hoặc handler. |
-| EV-08 — Thêm người dùng | Click Add user | Không mở form hoặc gửi request tới API khác trước khi có create-user contract/route. | Không có create API trong AC-31 #68–#72. | Button không có handler. |
+| EV-08 — Thêm người dùng | Mở Add user, nhập thông tin và submit | Gửi `full_name`, `email`, `password` khởi tạo và role đã chọn tới API #105; lỗi giữ dialog/draft, success thông báo và refetch cùng query #68. | API #105 là extension được duyệt ngoài AC_UNICA #68–#72; HTTP 201 `DESIGN_RESOURCE_CREATED`; 401/403/409/422/500 dùng lỗi tương ứng của API. | Prototype gốc không có handler; current Angular implementation xem addendum 2026-11-22. |
 | EV-09 — Export | Click Export | Không giả lập download; cần export contract/API, quyền và file URL/result. | #68 không export; #103 là report export khác domain, không được thay thế. | Button không có handler. |
 | EV-10 — Refresh / guide | Click Refresh hoặc Guide | Refresh refetch #68; guide chỉ điều hướng tới nội dung đã xác định. | #68 GET; errors theo EV-01. | Refresh disabled; guide không handler. |
 | EV-11 — Header/footer navigation | Click nav, notification hoặc footer | Điều hướng theo inventory/route được duyệt; notification/privacy/RBAC/support target còn cần map. | Không thêm API call từ mockup. | 8 placeholder anchors; notification no-op. |
@@ -32,6 +32,11 @@
 - EV-07: the `Thao tác` cell routes to AD-04 edit and AD-05 account-action pages for exact-safe IDs. This performs navigation only; AD-02 still issues no #70/#71/#72 request, and destination mutation gates remain unchanged.
 - EV-08/09: Add and export controls render disabled with an explanation; no create/export API or request is introduced.
 - EV-10: refresh calls #68 with the current query; the help control remains disabled because no supported guide destination is registered.
+
+### Current source update (2026-11-22)
+
+- EV-08 now opens the screen-local dialog and submits the selected role and initial password through `AD02ApiService` / API #105. The server requires Bearer ADMIN, rejects blank password/invalid fields and duplicate email, hashes the password and returns an ACTIVE safe profile. On a validated 201 response the client closes the dialog, announces success and refetches the same #68 URL/query; errors leave the dialog open with a safe message.
+- Focused AD-02 Angular tests pass 11/11; API #105 route tests pass 15/15 with fake sessions. Authenticated browser, live DB and deployment remain unverified. EV-09 export remains disabled.
 
 ### Current source evidence (2026-11-17, T030)
 

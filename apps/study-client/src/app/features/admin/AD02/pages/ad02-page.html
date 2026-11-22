@@ -26,21 +26,22 @@
         Xuất báo cáo
       </button>
       <button
+        #addUserButton
         class="page-action page-action--primary"
         type="button"
-        disabled
-        aria-describedby="user-create-unavailable"
+        (click)="openCreateDialog()"
       >
         Thêm người dùng
       </button>
       <p class="page-actions-note" id="user-export-unavailable">
-        Tạo người dùng và xuất danh sách hiện chưa khả dụng.
+        Xuất danh sách hiện chưa khả dụng.
       </p>
-      <span class="visually-hidden" id="user-create-unavailable">
-        Tạo người dùng chưa khả dụng.
-      </span>
     </div>
   </header>
+
+  @if (createSuccess()) {
+    <p class="create-success" role="status" aria-live="polite">{{ createSuccess() }}</p>
+  }
 
   <section class="filter-panel" aria-label="Bộ lọc danh sách người dùng">
     <form class="filters" aria-label="Bộ lọc danh sách người dùng" (submit)="applyFilters($event)">
@@ -290,4 +291,14 @@
       </div>
     }
   </section>
+
+  @if (createDialogOpen()) {
+    <study-ad02-create-user-dialog
+      [pending]="createPending()"
+      [errorMessage]="createError()"
+      (submitted)="createUser($event)"
+      (dismissed)="closeCreateDialog()"
+      (edited)="clearCreateError()"
+    />
+  }
 </main>

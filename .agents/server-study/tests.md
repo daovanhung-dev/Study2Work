@@ -4,7 +4,7 @@ Current source note (2026-11-20): API #47 changed request `content` from signed 
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED_TARGETED_APIS_03_18_63_68_93 (2026-11-21 targeted suites: 87 passed; full Study suite not rerun)
+TEST_STATUS: VERIFIED_TARGETED_APIS_03_18_63_68_93_101_104_105 (2026-11-22 API #101 suite: 9 passed, #104 suite: 6 passed, #105 suite: 15 passed; full Study suite not rerun)
 ```
 
 ## Current targeted verification — 2026-11-21
@@ -13,6 +13,26 @@ TEST_STATUS: VERIFIED_TARGETED_APIS_03_18_63_68_93 (2026-11-21 targeted suites: 
 - Coverage includes current #03 HTTP 200 login payload, #18 notification-only UUID/owner lookup, #63 strict text content and notification/outbox writes, #68 explicit-recipient pages, and #93 explicit-recipient dispatch with operation UUID metadata.
 - These suites use local test clients and fake DB/session behavior; they do not verify live schema, deployment, or provider/worker delivery.
 - Ruff: `uv run ruff check app/modules/mentor/api_63_mentor_notifications_create tests/modules/mentor/api_63_mentor_notifications_create` — passed.
+
+## Current focused Admin report verification — 2026-11-22
+
+- `apps/study-server/.venv/bin/pytest -q tests/modules/admin/api_101_admin_reports_summary/test_admin_reports_summary.py` from `apps/study-server/` — 9 passed, one upstream Starlette/httpx `TestClient` deprecation warning.
+- Coverage includes shared ADMIN authorization before query parsing/DB access, default and partial date bounds, invalid/reversed periods, four source projections, zero counts, safe database errors, rollback and read-only behavior.
+- `ruff check` passes for the API #101 module, its tests and `app/core/middleware.py`; `ruff format` leaves the new module and test files unchanged. Whole-file Ruff checks on `app/api/v1.py` still report existing import-order/line-length debt; the import-order finding is present in the HEAD version too.
+- HTTP tests replace query results with fakes. The checked-in legacy DDL is only a candidate, so these tests do not prove live schema, timestamp interpretation, deployment or production acceptance.
+
+## Current focused Admin course-create verification — 2026-11-22
+
+- `uv run --project apps/study-server pytest apps/study-server/tests/modules/admin/api_104_admin_courses_create/test_admin_courses_create.py` from the repository root — 6 passed, one upstream Starlette deprecation warning.
+- Coverage includes shared ADMIN authorization before body parsing/DB, field/price validation, exact ACTIVE Mentor eligibility, optional metadata, HTTP 201 `DESIGN_RESOURCE_CREATED` with a DRAFT Course projection, commit, and safe rollback on projection/write failures.
+- The test suite uses fake DB sessions. It does not verify live PostgreSQL schema, deployment or production acceptance. API #104 is a user-approved extension outside AC-32/AC_UNICA.
+
+## Current focused Admin user-create verification — 2026-11-22
+
+- `uv run pytest tests/modules/admin/api_105_admin_users_create/test_admin_users_create.py` from `apps/study-server/` — 15 passed, one upstream Starlette/httpx `TestClient` deprecation warning.
+- Coverage includes all three approved roles, auth before body/SQL, shared input normalization, whitespace-only password rejection, Argon2 hash binding, duplicate and unique-race conflicts, safe `UserProfile` without password/hash, commit/rollback, safe DB failures and OpenAPI request/error schemas.
+- `uv run ruff check app/modules/admin/api_105_admin_users_create tests/modules/admin/api_105_admin_users_create` and `uv run ruff format --check app/modules/admin/api_105_admin_users_create tests/modules/admin/api_105_admin_users_create` pass. Whole-file Ruff checks on `app/api/v1.py` retain existing import-order/line-length findings; the route file was not globally reformatted.
+- These tests use fake DB sessions and monkeypatched hashing. They do not verify live PostgreSQL schema, deployment or production acceptance. API #105 is a user-approved extension outside AC_UNICA.
 
 ## Current focused Guest resource verification — 2026-11-21
 
@@ -39,7 +59,7 @@ TEST_STATUS: VERIFIED_TARGETED_APIS_03_18_63_68_93 (2026-11-21 targeted suites: 
 - API #12 focused suite after signed-int64 contract alignment: `uv run pytest -q tests/modules/guest/api_12_resources_detail/test_resources_detail.py` — 17 passed. Coverage confirms malformed/out-of-range paths return 404 before DB, while zero, negative and signed-int64 boundary values reach the read lookup.
 - API #12 Ruff check passes for its validator and focused tests. The focused run reports one upstream Starlette/httpx `TestClient` deprecation warning.
 - API #10 test expectations were aligned to its current source/DD response projection; API #92–#95 tests now assert their own OpenAPI operations without stale app-wide path totals.
-- Existing API test packages are grouped under Guest (#01–#03, #05–#12, #15), Student (#04, #13–#14, #21–#30, #32–#33), Shared (#18, #34), Mentor (#46–#67) and Admin (#68–#98).
+- Existing API test packages are grouped under Guest (#01–#03, #05–#12, #15), Student (#04, #13–#14, #21–#30, #32–#33), Shared (#18, #34), Mentor (#46–#67) and Admin (#68–#98, #101, #104–#105); other current APIs may still lack dedicated behavioral tests.
 - Module-specific test packages are absent for APIs #16–#17, #19–#20, #31 and #35–#45. A passing full suite does not imply those APIs have dedicated behavioral coverage.
 - DB and external service behavior is generally exercised through fakes/overrides; this suite does not prove production schema, deployment or provider integration.
 - Historical counts and branch-backed HTTP results below remain dated evidence, not current post-move counts.

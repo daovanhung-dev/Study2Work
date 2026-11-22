@@ -1,0 +1,109 @@
+<dialog
+  #dialog
+  class="create-user-dialog"
+  aria-modal="true"
+  aria-labelledby="create-user-title"
+  aria-describedby="create-user-description"
+  (cancel)="handleCancel($event)"
+  (close)="handleClosed()"
+>
+  <form #formElement class="create-user-form" (submit)="submitForm($event)">
+    <header class="create-user-dialog__header">
+      <div>
+        <span class="create-user-dialog__badge">API #105</span>
+        <h2 id="create-user-title">Thêm người dùng</h2>
+        <p id="create-user-description">Nhập thông tin tài khoản và mật khẩu khởi tạo.</p>
+      </div>
+      <button
+        class="create-user-dialog__close"
+        type="button"
+        aria-label="Đóng biểu mẫu"
+        [disabled]="pending"
+        (click)="closeDialog()"
+      >
+        ×
+      </button>
+    </header>
+
+    @if (errorMessage) {
+      <p class="create-user-message create-user-message--error" role="alert">{{ errorMessage }}</p>
+    }
+
+    <div class="create-user-fields">
+      <label class="create-user-field" for="create-user-full-name">
+        <span>Họ và tên <strong aria-hidden="true">*</strong></span>
+        <input
+          id="create-user-full-name"
+          name="full_name"
+          type="text"
+          maxlength="150"
+          autocomplete="name"
+          required
+          [disabled]="pending"
+          [value]="form.full_name"
+          (input)="updateTextField('full_name', $any($event.target).value)"
+        />
+      </label>
+
+      <label class="create-user-field" for="create-user-email">
+        <span>Địa chỉ email <strong aria-hidden="true">*</strong></span>
+        <input
+          id="create-user-email"
+          name="email"
+          type="email"
+          maxlength="255"
+          autocomplete="email"
+          required
+          [disabled]="pending"
+          [value]="form.email"
+          (input)="updateTextField('email', $any($event.target).value)"
+        />
+      </label>
+
+      <label class="create-user-field" for="create-user-password">
+        <span>Mật khẩu khởi tạo <strong aria-hidden="true">*</strong></span>
+        <input
+          id="create-user-password"
+          name="password"
+          type="password"
+          autocomplete="new-password"
+          required
+          [disabled]="pending"
+          [value]="form.password"
+          (input)="updatePassword($any($event.target).value)"
+          [attr.aria-invalid]="passwordError ? 'true' : null"
+          [attr.aria-describedby]="passwordError ? 'create-user-password-error' : null"
+        />
+        @if (passwordError) {
+          <small class="create-user-field__error" id="create-user-password-error">{{ passwordError }}</small>
+        }
+      </label>
+
+      <label class="create-user-field" for="create-user-role">
+        <span>Vai trò <strong aria-hidden="true">*</strong></span>
+        <select
+          id="create-user-role"
+          name="role"
+          required
+          [disabled]="pending"
+          [value]="form.role"
+          (change)="updateRole($any($event.target).value)"
+        >
+          <option value="" disabled>Chọn vai trò</option>
+          @for (role of roles; track role.value) {
+            <option [value]="role.value">{{ role.label }} ({{ role.value }})</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <footer class="create-user-dialog__actions">
+      <button class="create-user-cancel" type="button" [disabled]="pending" (click)="closeDialog()">
+        Hủy
+      </button>
+      <button class="create-user-submit" type="submit" [disabled]="pending">
+        @if (pending) { Đang tạo… } @else { Tạo tài khoản }
+      </button>
+    </footer>
+  </form>
+</dialog>

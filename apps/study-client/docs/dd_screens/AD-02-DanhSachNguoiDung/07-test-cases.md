@@ -33,7 +33,7 @@
 - [ ] Role/status options dùng đúng values được duyệt; không gửi các alias prototype chưa map.
 - [ ] Page size/order/total dùng response API; không thêm `size/sort`; không hiển thị page 0 như response page 1.
 - [ ] PII email/phone, suspended/deleted visibility, audit access và logging policy được duyệt; list không hiển thị field ngoài contract.
-- [ ] Add/export/help/health/sync/audit controls chỉ hoạt động khi có endpoint/route/permission cụ thể; không fake kết quả.
+- [ ] API-backed actions use their exact route/permission; current Add uses approved API #105, while export/help/health/sync/audit claims stay gated without supporting source.
 - [ ] Study Web implementation tuân `.agents/web-study/design.md` (ocean semantic tokens, typography, responsive reflow, keyboard/focus, honest loading/error/empty copy); screenshot hiện có discrepancy cần review.
 - [ ] `screen.png` và `code.html` gốc giữ nguyên; marker 1–38 khớp một-một với 38 element rows.
 
@@ -62,3 +62,13 @@
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Task T030 verification: focused Angular spec **8/8 passed**; Study Server API #68 fake-session tests **15 passed**; Study Web production build exit 0 with three existing Student CSS budget warnings and no AD-02 warning. Browser opened `/admin/users` and displayed the Admin login gate; authenticated list/live API/DB/deployment remain unverified.
+
+## 4. Current source verification — API #105 (2026-11-22)
+
+| Verification | Cases | Evidence | Limit |
+|---|---:|---|---|
+| AD-02 Angular form/caller | 11/11 passed | `src/app/features/admin/AD02/pages/ad02-page.spec.ts`: Add opens, sends selected role/full_name/email/password with Bearer auth, validates the 201 result, refreshes the same #68 query, blocks whitespace-only passwords and preserves the draft on 409. | Angular test environment; no authenticated browser proof. |
+| Study Server API #105 | 15/15 passed | `tests/modules/admin/api_105_admin_users_create/test_admin_users_create.py`: all three roles, normalization, ADMIN guard before parse/SQL, invalid input, duplicate/race conflict, safe projection, rollback and OpenAPI request/errors. | Fake sessions and monkeypatched hash; no live DB/schema/deployment proof. |
+| API #105 Ruff | PASS | New module and focused test package pass `ruff check` and `ruff format --check`. | The shared route file contains unrelated pre-existing/import-order and line-length findings; it was not globally reformatted. |
+
+Current source status is `IMPLEMENTATION PARTIAL SOURCE`; broader AD-02 policy/DD gates and authenticated browser/live database/deployment acceptance remain open.

@@ -12,6 +12,8 @@ from app.core.database import get_db, get_engine
 from app.core.trace import get_trace_id
 from app.modules.admin.api_68_admin_users_list.models import GetAdminUsersEnvelope
 from app.modules.admin.api_68_admin_users_list.view import get_admin_users
+from app.modules.admin.api_105_admin_users_create.models import CreateAdminUserEnvelope
+from app.modules.admin.api_105_admin_users_create.view import create_admin_user
 
 # Nhập các thành phần từ những package nghiệp vụ của ứng dụng.
 from app.modules.admin.api_69_admin_user_detail.models import GetAdminUserEnvelope
@@ -30,6 +32,8 @@ from app.modules.admin.api_72_admin_user_delete.models import DeleteAdminUserEnv
 from app.modules.admin.api_72_admin_user_delete.view import delete_admin_user
 from app.modules.admin.api_73_admin_courses_list.models import GetAdminCoursesEnvelope
 from app.modules.admin.api_73_admin_courses_list.view import get_admin_courses
+from app.modules.admin.api_104_admin_courses_create.models import CreateAdminCourseEnvelope
+from app.modules.admin.api_104_admin_courses_create.view import create_admin_course
 from app.modules.admin.api_74_admin_course_detail.models import GetAdminCourseDetailEnvelope
 from app.modules.admin.api_74_admin_course_detail.view import get_admin_course_detail
 from app.modules.admin.api_75_admin_course_update.models import (
@@ -117,6 +121,10 @@ from app.modules.admin.api_98_admin_discussions_detail.models import (
     GetAdminDiscussionDetailEnvelope,
 )
 from app.modules.admin.api_98_admin_discussions_detail.view import get_admin_discussion_detail
+from app.modules.admin.api_101_admin_reports_summary.models import (
+    GetAdminReportSummaryEnvelope,
+)
+from app.modules.admin.api_101_admin_reports_summary.view import get_admin_report_summary
 from app.modules.shared.course_catalog.constants import DEFAULT_PAGE, DEFAULT_SIZE
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.modules.guest.api_01_auth_register.view import create_user
@@ -2045,6 +2053,79 @@ def get_admin_users_endpoint(
     )
 
 
+# API #105 admin_users_create
+@router.post(
+    "/admin/users",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CreateAdminUserEnvelope,
+    responses={
+        401: {"description": "DESIGN_AUTHENTICATION_REQUIRED"},
+        403: {"description": "DESIGN_ACCESS_DENIED"},
+        409: {"description": "DESIGN_STATE_CONFLICT"},
+        422: {"description": "DESIGN_VALIDATION_ERROR"},
+        500: {"description": "DESIGN_INTERNAL_ERROR"},
+    },
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "Authorization",
+                "in": "header",
+                "required": True,
+                "schema": {"type": "string"},
+            },
+        ],
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["full_name", "email", "password", "role"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "full_name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 150,
+                            },
+                            "email": {
+                                "type": "string",
+                                "format": "email",
+                                "maxLength": 255,
+                            },
+                            "password": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Rejects empty and whitespace-only values.",
+                            },
+                            "role": {
+                                "type": "string",
+                                "enum": ["STUDENT", "MENTOR", "ADMIN"],
+                            },
+                        },
+                    }
+                }
+            },
+        },
+    },
+)
+async def create_admin_user_endpoint(
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Chuyển raw body để view xác thực role ADMIN trước khi parse request."""
+
+    # Giữ nguyên bytes; view sở hữu thứ tự xác thực, validate và transaction.
+    raw_body = await request.body()
+    return await run_in_threadpool(
+        create_admin_user,
+        authorization=request.headers.get("Authorization"),
+        raw_body=raw_body,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
 # API #69 admin_user_detail
 @router.get(
     "/admin/users/{user_id}",
@@ -2284,6 +2365,64 @@ def get_admin_courses_endpoint(
         mentor_value=request.query_params.get("mentor"),
         category_value=request.query_params.get("category"),
         page_value=request.query_params.get("page"),
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #104 admin_courses_create
+@router.post(
+    "/admin/courses",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CreateAdminCourseEnvelope,
+    responses={
+        401: {"description": "DESIGN_AUTHENTICATION_REQUIRED"},
+        403: {"description": "DESIGN_ACCESS_DENIED"},
+        422: {"description": "DESIGN_VALIDATION_ERROR"},
+        500: {"description": "DESIGN_INTERNAL_ERROR"},
+    },
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "Authorization",
+                "in": "header",
+                "required": True,
+                "schema": {"type": "string"},
+            },
+        ],
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["title", "price", "mentor_id"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "title": {"type": "string", "minLength": 1, "maxLength": 200},
+                            "description": {"type": ["string", "null"]},
+                            "thumbnail_url": {"type": ["string", "null"]},
+                            "price": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]{1,2})?$"},
+                            "mentor_id": {"type": "integer", "format": "int64", "minimum": 1},
+                        },
+                    }
+                }
+            },
+        },
+    },
+)
+async def create_admin_course_endpoint(
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Chuyển raw body để view kiểm tra role ADMIN trước khi parse request."""
+
+    # Giữ nguyên bytes; view sở hữu thứ tự xác thực, validate và transaction.
+    raw_body = await request.body()
+    return await run_in_threadpool(
+        create_admin_course,
+        authorization=request.headers.get("Authorization"),
+        raw_body=raw_body,
         db=db,
         trace_id=get_trace_id(request),
     )
@@ -3809,3 +3948,54 @@ def mark_all_student_notifications_read(
     db: Session = db_dependency,
 ) -> dict[str, Any] | JSONResponse:
     return mark_all_notifications_read(authorization=authorization, db=db, trace_id=get_trace_id(request))
+
+
+# API #101 admin_reports_summary
+@router.get(
+    "/admin/reports/summary",
+    status_code=status.HTTP_200_OK,
+    response_model=GetAdminReportSummaryEnvelope,
+    responses={
+        401: {"description": "DESIGN_AUTHENTICATION_REQUIRED"},
+        403: {"description": "DESIGN_ACCESS_DENIED"},
+        422: {"description": "DESIGN_VALIDATION_ERROR — shared query-date validation"},
+        500: {"description": "DESIGN_INTERNAL_ERROR"},
+    },
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "from",
+                "in": "query",
+                "required": False,
+                "schema": {"type": "string", "format": "date"},
+            },
+            {
+                "name": "to",
+                "in": "query",
+                "required": False,
+                "schema": {"type": "string", "format": "date"},
+            },
+            {
+                "name": "Authorization",
+                "in": "header",
+                "required": True,
+                "schema": {"type": "string"},
+            },
+        ]
+    },
+)
+async def admin_report_summary_endpoint(
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Chuyển raw query và Authorization qua API #101 để auth chạy trước parse ngày."""
+
+    # Route giữ query dạng raw string để validator của module kiểm tra sau ADMIN guard.
+    return await run_in_threadpool(
+        get_admin_report_summary,
+        authorization=request.headers.get("Authorization"),
+        from_value=request.query_params.get("from"),
+        to_value=request.query_params.get("to"),
+        db=db,
+        trace_id=get_trace_id(request),
+    )

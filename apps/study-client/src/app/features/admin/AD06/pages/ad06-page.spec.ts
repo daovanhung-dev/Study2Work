@@ -1,9 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AdminSessionService } from '../../../../core/auth/admin-session.service';
 import type { ApiEnvelope } from '../../../../core/http/api-envelope';
@@ -22,7 +22,10 @@ describe('AD06Page', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    vi.restoreAllMocks();
+  });
 
   it('renders only the source-backed course projection and pagination', async () => {
     await signIn();
@@ -103,7 +106,7 @@ describe('AD06Page', () => {
     expect(root.textContent).not.toContain('Không tìm thấy khóa học');
   });
 
-  it('keeps unsupported search, filters, create and export disabled', async () => {
+  it('keeps unsupported search and filters gated while enabling course creation', async () => {
     await signIn();
     const fixture = TestBed.createComponent(AD06Page);
     fixture.detectChanges();
@@ -116,7 +119,9 @@ describe('AD06Page', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelectorAll<HTMLInputElement>('.filter-grid input:disabled')).toHaveLength(3);
-    expect(Array.from(root.querySelectorAll<HTMLButtonElement>('.catalog-actions button, .filter-actions button')).every((button) => button.disabled)).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.catalog-actions button:first-child')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.catalog-actions .catalog-action--primary')?.disabled).toBe(false);
+    expect(Array.from(root.querySelectorAll<HTMLButtonElement>('.filter-actions button')).every((button) => button.disabled)).toBe(true);
     expect(root.querySelector('.filter-summary')?.textContent).toContain('Không có bộ lọc nào được gửi cùng yêu cầu API #73.');
     expect(root.textContent).not.toContain('Tất cả danh mục gốc');
     expect(root.textContent).toContain('Không tìm thấy khóa học');
@@ -135,6 +140,139 @@ describe('AD06Page', () => {
       pagination: { page: 1, size: 20, total: 0, total_pages: 0 },
     }));
     await result;
+  });
+
+  it('loads active mentors and creates a DRAFT course before navigating to AD-07', async () => {
+    await signIn();
+    const fixture = TestBed.createComponent(AD06Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/admin/courses?page=1').flush(successEnvelope({
+      items: [],
+      pagination: { page: 1, size: 20, total: 0, total_pages: 0 },
+    }));
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('.catalog-action--primary')!
+      .click();
+    fixture.detectChanges();
+    const mentorRequest = http.expectOne(
+      '/api/v1/admin/users?role=MENTOR&status=ACTIVE&page=1',
+    );
+    expect(mentorRequest.request.headers.get('Authorization')).toBe('Bearer access-token-1');
+    mentorRequest.flush(successEnvelope({
+      items: [adminMentor(8)],
+      pagination: { page: 1, size: 20, total: 1, total_pages: 1 },
+    }));
+    fixture.detectChanges();
+
+    const page = fixture.componentInstance;
+    const root = fixture.nativeElement as HTMLElement;
+    setFormValue(root, '#create-course-name', 'Khóa học mới');
+    setFormValue(root, '#create-course-description', 'Mô tả mới');
+    setFormValue(root, '#create-course-thumbnail', 'https://example.test/new.png');
+    setFormValue(root, '#create-course-price', '250000.00');
+    setFormValue(root, '#create-course-mentor', '8', 'change');
+    fixture.detectChanges();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    page.submitCreateCourse();
+
+    const createRequest = http.expectOne('/api/v1/admin/courses');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Authorization')).toBe('Bearer access-token-1');
+    expect(createRequest.request.body).toEqual({
+      title: 'Khóa học mới',
+      description: 'Mô tả mới',
+      thumbnail_url: 'https://example.test/new.png',
+      price: '250000.00',
+      mentor_id: 8,
+    });
+    createRequest.flush(successEnvelope(
+      course(77, 'Khóa học mới', 'Mô tả mới', 'Giảng viên A', '250000.00', 'DRAFT'),
+      'DESIGN_RESOURCE_CREATED',
+    ));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(navigate).toHaveBeenCalledWith(
+      ['/admin/courses', 77],
+      { state: { courseCreated: true } },
+    );
+    expect(page.createPending()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).querySelector('dialog')?.open).toBe(false);
+  });
+
+  it('keeps the create form open when API #104 rejects the request', async () => {
+    await signIn();
+    const fixture = TestBed.createComponent(AD06Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/admin/courses?page=1').flush(successEnvelope({
+      items: [],
+      pagination: { page: 1, size: 20, total: 0, total_pages: 0 },
+    }));
+    fixture.detectChanges();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('.catalog-action--primary')!
+      .click();
+    fixture.detectChanges();
+    http.expectOne('/api/v1/admin/users?role=MENTOR&status=ACTIVE&page=1').flush(successEnvelope({
+      items: [adminMentor(8)],
+      pagination: { page: 1, size: 20, total: 1, total_pages: 1 },
+    }));
+    fixture.detectChanges();
+
+    const page = fixture.componentInstance;
+    const root = fixture.nativeElement as HTMLElement;
+    setFormValue(root, '#create-course-name', 'Khóa học chưa tạo');
+    setFormValue(root, '#create-course-price', '0');
+    setFormValue(root, '#create-course-mentor', '8', 'change');
+    fixture.detectChanges();
+    page.submitCreateCourse();
+    http.expectOne('/api/v1/admin/courses').flush(
+      {
+        success: false,
+        businessCode: 'DESIGN_VALIDATION_ERROR',
+        message: 'invalid',
+        data: null,
+        meta: { fieldErrors: [{ field: 'price', code: 'DECIMAL_CONSTRAINT' }] },
+        traceId: 'test-trace',
+      },
+      { status: 422, statusText: 'Unprocessable Entity' },
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(root.querySelector('dialog')?.open).toBe(true);
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('Study Server từ chối');
+    expect(page.createForm.title).toBe('Khóa học chưa tạo');
+    expect(page.createPending()).toBe(false);
+  });
+
+  it('disables course creation when API #68 returns no active mentors', async () => {
+    await signIn();
+    const fixture = TestBed.createComponent(AD06Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/admin/courses?page=1').flush(successEnvelope({
+      items: [],
+      pagination: { page: 1, size: 20, total: 0, total_pages: 0 },
+    }));
+    fixture.detectChanges();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('.catalog-action--primary')!
+      .click();
+    fixture.detectChanges();
+    http.expectOne('/api/v1/admin/users?role=MENTOR&status=ACTIVE&page=1').flush(successEnvelope({
+      items: [],
+      pagination: { page: 1, size: 20, total: 0, total_pages: 0 },
+    }));
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector<HTMLButtonElement>('.create-submit')?.disabled).toBe(true);
+    expect(root.textContent).toContain('Chưa có giảng viên đang hoạt động');
   });
 
   async function signIn(): Promise<void> {
@@ -197,10 +335,39 @@ function coursePage(pageNumber: number, total: number, firstCourse?: AdminCourse
   };
 }
 
-function successEnvelope<T>(data: T): ApiEnvelope<T> {
+function adminMentor(id: number) {
+  return {
+    id,
+    full_name: 'Giảng viên A',
+    email: 'mentor@example.test',
+    role: 'MENTOR',
+    avatar_url: null,
+    phone: null,
+    status: 'ACTIVE',
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  };
+}
+
+function setFormValue(
+  root: HTMLElement,
+  selector: string,
+  value: string,
+  eventName = 'input',
+): void {
+  const control = root.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(selector);
+  if (!control) throw new Error(`Missing form control: ${selector}`);
+  control.value = value;
+  control.dispatchEvent(new Event(eventName, { bubbles: true }));
+}
+
+function successEnvelope<T>(
+  data: T,
+  businessCode = 'DESIGN_RESOURCE_RETRIEVED',
+): ApiEnvelope<T> {
   return {
     success: true,
-    businessCode: 'DESIGN_RESOURCE_RETRIEVED',
+    businessCode,
     message: 'ok',
     data,
     meta: {},

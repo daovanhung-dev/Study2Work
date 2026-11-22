@@ -2,8 +2,10 @@ import type { AdminScreenApiBoundary } from '../../../../shared/ui/admin-screen.
 
 export const AD06_API_BOUNDARY: AdminScreenApiBoundary = {
   "apiReferences": [
-    "#73"
+    "#73",
+    "#68",
+    "#104"
   ],
   "sourceState": "data-backed",
-  "sourceNote": "#73 trả Page<Course> và hỗ trợ bộ lọc exact status/mentor/page; category bị từ chối. Không hiển thị KPI hoặc cột chưa được source xác nhận."
+  "sourceNote": "#73 trả Page<Course>; #68 cấp Mentor ACTIVE cho form; #104 tạo Course DRAFT. Các bộ lọc khác vẫn khóa theo giới hạn nguồn."
 };

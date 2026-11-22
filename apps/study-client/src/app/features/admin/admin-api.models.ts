@@ -10,6 +10,15 @@ export interface AdminUserProfile {
   readonly updated_at: string;
 }
 
+export type AdminUserRole = 'STUDENT' | 'MENTOR' | 'ADMIN';
+
+export interface AdminCreateUserRequest {
+  readonly full_name: string;
+  readonly email: string;
+  readonly password: string;
+  readonly role: AdminUserRole;
+}
+
 export interface AdminPagination {
   readonly page: number;
   readonly size: number;
@@ -36,6 +45,14 @@ export interface AdminCourse {
   readonly price: string;
   readonly status: string;
   readonly mentor: AdminMentorSummary;
+}
+
+export interface AdminCourseCreateRequest {
+  readonly title: string;
+  readonly description: string | null;
+  readonly thumbnail_url: string | null;
+  readonly price: string;
+  readonly mentor_id: number;
 }
 
 export interface AdminContent {

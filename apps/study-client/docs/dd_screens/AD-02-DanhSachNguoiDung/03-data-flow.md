@@ -89,3 +89,15 @@ COUNT và LIST dùng cùng role/status/keyword predicates; page query dùng `LIM
 
 - The #68 response mapper requires DESIGN_RESOURCE_RETRIEVED, valid UserProfile items, fixed page size, exact requested-page echo and total_pages consistent with safe totals.
 - AD02Page derives the expected row count from page/size/total. If the separate COUNT/LIST reads disagree, the page retains returned rows, shows a retryable warning, hides total/pagination and blocks page changes. Empty out-of-range pages can return to page 1; matching empty filters remain empty.
+
+### Current-source addendum — 2026-11-22 (API #105 create)
+
+```text
+AD02 Add button → screen-local dialog → AD02Page.createUser → AD02ApiService.createUser → AdminApiService POST API_105
+→ server ADMIN guard → request normalization/validation → duplicate email read → Argon2id hash → INSERT users(role selected, status ACTIVE)
+→ safe UserProfile projection + 201 envelope → validate code/profile/status → close + announce → clone current query signal → same API #68 query refetch
+```
+
+- Request state stays in the dialog while pending or after a safe error; password is never rendered back in an error message or response. Whitespace-only password is blocked in the form and server validator; other password bytes are passed unchanged to the shared hash helper.
+- The create and list calls are separate transactions/requests. The successful API #105 response is validated before the current #68 query is refreshed; no navigation or query-filter/page reset occurs.
+- Backend behavior is verified only with fake-session route tests. Candidate checked-in DDL supplies the existing `users` columns, but current live schema/migrations and deployment are not verified.

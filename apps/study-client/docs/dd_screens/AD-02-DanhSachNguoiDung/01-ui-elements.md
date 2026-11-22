@@ -103,8 +103,13 @@ Mỗi dòng khớp một marker cùng số trong [AD-02_markers.json](../../scre
 ### Current source update (2026-11-21)
 
 - The response-backed user table includes the seven source-specified columns, including `Thao tác`. A positive JavaScript safe-integer ID receives 44px-minimum `Chỉnh sửa` and `Quản lý trạng thái` links; the ID remains the AD-03 detail link. Unsafe/non-positive IDs have no route actions and show a non-actionable label.
-- The page uses the source title and email-column label. Add, export, and help controls are present but disabled with accessible explanations; they issue no request. The action links do not mutate user data. #68 remains the sole AD-02 API, and unsupported audit/sync claims remain absent.
+- The page uses the source title and email-column label. At that snapshot Add, export, and help controls were disabled; see the 2026-11-22 source update for the approved Add-user extension. Export/help remain unsupported. The action links do not mutate user data.
 - Role/status remain exact-string text filters because #68 accepts string filters and the complete queryable value sets are not defined by its source contract.
+
+### Current source update (2026-11-22)
+
+- Marker #15 now opens an accessible dialog with required full name, email, initial password and role fields. Role choices are the approved exact values `STUDENT`, `MENTOR` and `ADMIN`; whitespace-only passwords are rejected before a request. The dialog reports pending/error states and retains the draft after failure.
+- Successful creation announces status and returns focus to the Add button after closing. Export/help remain gated, and the new form is a supplemental UI state rather than a new numbered screenshot marker.
 
 ## 5. Link
 - [Events](02-events.md) · [Data Flow](03-data-flow.md) · [Tests](07-test-cases.md)

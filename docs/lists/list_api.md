@@ -2,7 +2,7 @@
 
 > **Trạng thái:** `APPROVED_DESIGN_CONTRACT` — nguồn chuẩn V1 để tạo OpenAPI/implementation sau này; chưa runtime-verified.
 >
-> **Phạm vi:** Giữ nguyên 102 endpoint AC_UNICA và thêm `GET /api/v1/operations/{operation_id}` cho job tracking. Không thay đổi runtime, OpenAPI, UC hoặc ERD.
+> **Phạm vi:** Giữ nguyên 102 endpoint AC_UNICA, thêm `GET /api/v1/operations/{operation_id}` cho job tracking, API #104 tạo khóa học và API #105 tạo người dùng quản trị theo phê duyệt của người dùng ngày 2026-11-22. API #104/#105 là phần mở rộng ngoài danh sách AC_UNICA ban đầu.
 >
 > **DISCREPANCY:** Schema thiếu trong sơ đồ được đặc tả mới ở đây với trạng thái design-only; không khẳng định persistence mapping cho Orders, Categories, Reviews, Content, Support, Achievements và Uploads.
 
@@ -28,6 +28,12 @@
 |  422 | `DESIGN_VALIDATION_ERROR`                                                                                             | Schema hoặc business validation lỗi.                 |
 |  503 | `DESIGN_DEPENDENCY_UNAVAILABLE`                                                                                       | Payment/storage/delivery/export lỗi.                  |
 |  500 | `DESIGN_INTERNAL_ERROR`                                                                                               | Lỗi không xác định.                               |
+
+## API extension được người dùng phê duyệt — 2026-11-22
+
+API #104 cho phép Admin tạo khóa học mới từ AD-06. Request cần `title`, decimal-string `price` và `mentor_id`; `description` cùng `thumbnail_url` là tùy chọn. Server chỉ chấp nhận Mentor có `role=MENTOR` và `status=ACTIVE`, tạo khóa học ở trạng thái `DRAFT`, rồi trả projection `Course`.
+
+API #105 cho phép Admin tạo người dùng từ AD-02. Request gồm `full_name`, `email`, `password` khởi tạo và role `STUDENT`, `MENTOR` hoặc `ADMIN`. Server yêu cầu Bearer ADMIN, chuẩn hóa/kiểm tra dữ liệu theo helper hiện có, từ chối email trùng, băm mật khẩu bằng Argon2id, tạo user ở trạng thái `ACTIVE` và chỉ trả `UserProfile` an toàn. Endpoint và caller có source cùng focused fake-session/component tests; live DB và deployment chưa xác minh.
 
 ## Reusable API schemas
 
@@ -217,6 +223,8 @@ status constraint; this does not establish live schema or future transition rule
 | 101 | Lấy KPI tổng quan                                            | `GET /api/v1/admin/reports/summary`                        | Bearer JWT; role=Admin | `query{from?:date, to?:date}`                                                                                          | `ApiEnvelope&lt;Report&gt;`           | 200`DESIGN_RESOURCE_RETRIEVED`401 `DESIGN_AUTHENTICATION_REQUIRED`403 `DESIGN_ACCESS_DENIED`500 `DESIGN_INTERNAL_ERROR`                                                                     | AC-38 Báo cáo tác động cộng đồng |
 | 102 | Lấy dữ liệu tác động cộng đồng                        | `GET /api/v1/admin/reports/community-impact`               | Bearer JWT; role=Admin | `query{from?:string, to?:string, segment?:string}`                                                                     | `ApiEnvelope&lt;Report&gt;`           | 200`DESIGN_RESOURCE_RETRIEVED`401 `DESIGN_AUTHENTICATION_REQUIRED`403 `DESIGN_ACCESS_DENIED`500 `DESIGN_INTERNAL_ERROR`                                                                     | AC-38 Báo cáo tác động cộng đồng |
 | 103 | Xuất báo cáo                                                | `GET /api/v1/admin/reports/community-impact/export`        | Bearer JWT; role=Admin | `query{filters?:string, format?:string}`                                                                               | `ApiEnvelope&lt;Report&gt;`           | 202`DESIGN_OPERATION_ACCEPTED`401 `DESIGN_AUTHENTICATION_REQUIRED`403 `DESIGN_ACCESS_DENIED`503 `DESIGN_DEPENDENCY_UNAVAILABLE`500 `DESIGN_INTERNAL_ERROR`                                | AC-38 Báo cáo tác động cộng đồng |
+| 104 | Tạo khóa học quản trị — phần mở rộng được người dùng phê duyệt | `POST /api/v1/admin/courses`                              | Bearer JWT; role=Admin | `body{title:string!, description:string?, thumbnail_url:string?, price:decimal-string!, mentor_id:int64!}`              | `ApiEnvelope&lt;Course&gt;`           | 201`DESIGN_RESOURCE_CREATED`401 `DESIGN_AUTHENTICATION_REQUIRED`403 `DESIGN_ACCESS_DENIED`422 `DESIGN_VALIDATION_ERROR`500 `DESIGN_INTERNAL_ERROR`                                   | AD-06 Admin tạo Course DRAFT |
+| 105 | Tạo người dùng quản trị — phần mở rộng được người dùng phê duyệt | `POST /api/v1/admin/users`                              | Bearer JWT; role=Admin | `body{full_name:string!, email:email!, password:string!, role:STUDENT\|MENTOR\|ADMIN}` | `ApiEnvelope&lt;UserProfile&gt;` | 201`DESIGN_RESOURCE_CREATED`401 `DESIGN_AUTHENTICATION_REQUIRED`403 `DESIGN_ACCESS_DENIED`409 `DESIGN_STATE_CONFLICT`422 `DESIGN_VALIDATION_ERROR`500 `DESIGN_INTERNAL_ERROR` | AD-02 Admin tạo người dùng ACTIVE |
 
 ## Operation tracking
 
@@ -224,4 +232,4 @@ status constraint; this does not establish live schema or future transition rule
 
 ## Tổng số
 
-**103 API thiết kế duy nhất / 113 API-card occurrences**
+**105 API thiết kế duy nhất / 115 API-card occurrences**

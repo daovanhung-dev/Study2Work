@@ -1,8 +1,10 @@
 # AD-06 — Data Flow & State
 
-## Current Study Web source follow-up (2026-11-17)
+## Current Study Web source follow-up (2026-11-22)
 
 `admin.routes.ts` maps `/admin/courses` to AD06Page. AD06Page calls AD06ApiService → AdminApiService (Admin Bearer token) → GET #73 and maps the response into rows and pagination. Returned rows link to AD-07 by `Course.id`. Local dev-server route returned HTTP 200, but browser/authenticated screen and live API/DB behavior remain `NOT VERIFIED`.
+
+The user-approved create extension also loads mentor options from #68 and sends the dialog request to #104. The response is validated before the dialog closes or navigation occurs.
 
 
 
@@ -102,3 +104,15 @@ Bearer token chỉ được cấp qua shared auth client; không lưu token tron
 
 - The #73 mapper requires DESIGN_RESOURCE_RETRIEVED, a valid Course Page/item projection, page echo, fixed size 20 and total_pages consistent with safe totals.
 - AD06Page derives expected items for page/size/total after validation. COUNT/LIST disagreement keeps the returned rows, shows a retryable warning, hides stale totals/page controls and blocks navigation. Empty out-of-range responses can return to page 1; matching zero-total pages remain empty.
+
+### Current create-flow data — 2026-11-22
+
+| Data | Source and processing | Destination / write |
+|---|---|---|
+| Mentor options | API #68 `GET /api/v1/admin/users?role=MENTOR&status=ACTIVE&page=N`; client validates the UserProfile page and appends eligible options by page. | Create-dialog mentor select; no course data changes. |
+| Course draft input | Dialog form: required `title`, decimal-string `price`, numeric `mentor_id`; optional `description`, `thumbnail_url`. | Client sends the approved request to API #104. |
+| Mentor eligibility | Server loads selected `users` row and requires exact `role='MENTOR'` and `status='ACTIVE'` while holding a share lock. | Invalid/ineligible mentor fails before course insert. |
+| New course | Server inserts existing course columns, explicitly sets `status='DRAFT'`, reads back the shared Course projection, and commits atomically. | HTTP 201 `DESIGN_RESOURCE_CREATED` + Course. On server failure the transaction rolls back. |
+| Success navigation | Client validates the exact success code and Course fields; checks returned `id` for positive JS-safe integer. | Safe ID → AD-07 with one-time created state; otherwise refresh #73 list without numeric coercion. |
+
+The earlier quoted statement “No mutation at AD-06” describes the source DD before the user approved and wired API #104. AD-06 now has a create mutation; list/search/filter, export, sync and unrelated controls retain their existing source/API gates. Focused tests pass 6 server cases and 8 Angular cases; live database and deployment remain unverified.

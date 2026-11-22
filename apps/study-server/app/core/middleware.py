@@ -61,6 +61,7 @@ DESIGN_CONTRACT_PATHS = {
     "/api/v1/admin/notifications/{notification_id}/status",
     "/api/v1/admin/discussions/reported",
     "/api/v1/admin/discussions/{discussion_id}",
+    "/api/v1/admin/reports/summary",
     "/api/v1/mentor/notifications",
     "/api/v1/mentor/notifications/{notification_id}/status",
     "/api/v1/mentor/content",

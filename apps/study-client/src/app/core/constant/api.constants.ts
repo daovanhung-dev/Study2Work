@@ -206,7 +206,7 @@ export const STUDY_SERVER_APIS = {
     path: '/admin/discussions/{discussion_id}',
     status: 'UNWIRED',
   },
-  API_101: { id: 101, method: 'GET', path: '/admin/reports/summary', status: 'UNWIRED' },
+  API_101: { id: 101, method: 'GET', path: '/admin/reports/summary', status: 'WIRED' },
   API_102: { id: 102, method: 'GET', path: '/admin/reports/community-impact', status: 'UNWIRED' },
   API_103: {
     id: 103,
@@ -214,6 +214,8 @@ export const STUDY_SERVER_APIS = {
     path: '/admin/reports/community-impact/export',
     status: 'UNWIRED',
   },
+  API_104: { id: 104, method: 'POST', path: '/admin/courses', status: 'WIRED' },
+  API_105: { id: 105, method: 'POST', path: '/admin/users', status: 'WIRED' },
   API_003_REFRESH: {
     id: 'R-X01',
     relatedApiId: 3,

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AD07ApiService } from '../data-access/ad07-api.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
@@ -16,6 +16,7 @@ import type { AdminScreenField } from '../../../../shared/ui/admin-screen.model'
 })
 export class AD07Page {
   private readonly route = inject(ActivatedRoute);
+  readonly courseCreated = inject(Router).getCurrentNavigation()?.extras.state?.['courseCreated'] === true;
   private readonly api = inject(AD07ApiService);
   readonly viewState = adminRouteState(
     this.route,

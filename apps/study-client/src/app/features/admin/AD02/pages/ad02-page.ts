@@ -1,13 +1,17 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink, type ParamMap } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { take } from 'rxjs';
 
 import { AD02ApiService } from '../data-access/ad02-api.service';
+import { AD02CreateUserDialog } from '../ui/ad02-create-user-dialog';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
 import { AD02_SCREEN_MODEL } from '../models/ad02-screen.model';
 import { adminQueryState, loadedRows } from '../../admin-screen-state';
-import { hasAdminPageCountMismatch, isAdminUserPage } from '../../admin-api-guards';
+import { hasAdminPageCountMismatch, isAdminUserPage, isAdminUserProfile } from '../../admin-api-guards';
 import { renderUserRow } from '../../admin-screen-renderers';
+import type { AdminCreateUserRequest } from '../../admin-api.models';
 
 interface AD02UsersQuery {
   keyword: string;
@@ -17,7 +21,7 @@ interface AD02UsersQuery {
 }
 
 @Component({
-  imports: [RouterLink, StudyIcon],
+  imports: [AD02CreateUserDialog, RouterLink, StudyIcon],
   selector: 'study-ad02-page',
   styleUrl: './ad02-page.css',
   templateUrl: './ad02-page.html',
@@ -26,11 +30,16 @@ export class AD02Page {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(AD02ApiService);
+  @ViewChild('addUserButton') private addUserButton?: ElementRef<HTMLButtonElement>;
   readonly screenModel = AD02_SCREEN_MODEL;
   readonly columns = AD02_SCREEN_MODEL.columns;
   readonly query = signal<AD02UsersQuery>(queryFromParamMap(this.route.snapshot.queryParamMap));
   readonly snapshotMismatch = signal(false);
   readonly pageOutOfRange = signal(false);
+  readonly createDialogOpen = signal(false);
+  readonly createPending = signal(false);
+  readonly createError = signal('');
+  readonly createSuccess = signal('');
   readonly filters = signal(filtersFromQuery(this.query()));
   readonly activeFilters = computed(() => {
     const query = this.query();
@@ -92,6 +101,59 @@ export class AD02Page {
     this.navigateQuery({ keyword: '', role: '', status: '', page: 1 });
   }
 
+  openCreateDialog(): void {
+    if (this.createPending()) return;
+    this.createError.set('');
+    this.createSuccess.set('');
+    this.createDialogOpen.set(true);
+  }
+
+  closeCreateDialog(): void {
+    if (this.createPending()) return;
+    this.createDialogOpen.set(false);
+    queueMicrotask(() => this.addUserButton?.nativeElement.focus());
+  }
+
+  clearCreateError(): void {
+    if (this.createError()) this.createError.set('');
+  }
+
+  createUser(request: AdminCreateUserRequest): void {
+    if (this.createPending()) return;
+    this.createError.set('');
+    this.createPending.set(true);
+    this.api.createUser(request).pipe(take(1)).subscribe({
+      next: (envelope) => {
+        const user = envelope.data;
+        if (
+          envelope.success !== true
+          || envelope.businessCode !== 'DESIGN_RESOURCE_CREATED'
+          || !isAdminUserProfile(user)
+          || user.full_name !== request.full_name.trim()
+          || user.role !== request.role
+          || user.status !== 'ACTIVE'
+        ) {
+          this.createPending.set(false);
+          this.createError.set(
+            'Study Server đã phản hồi nhưng hồ sơ tài khoản không hợp lệ. Hãy tải lại danh sách trước khi gửi lại.',
+          );
+          return;
+        }
+
+        this.createPending.set(false);
+        this.createDialogOpen.set(false);
+        this.createSuccess.set('Tài khoản đã được tạo. Danh sách đang được cập nhật.');
+        this.clearPageFlags();
+        this.query.update((current) => ({ ...current }));
+        queueMicrotask(() => this.addUserButton?.nativeElement.focus());
+      },
+      error: (error: unknown) => {
+        this.createPending.set(false);
+        this.createError.set(createUserErrorMessage(error));
+      },
+    });
+  }
+
   refreshList(): void {
     if (this.viewState().status === 'loading') {
       return;
@@ -151,6 +213,19 @@ export class AD02Page {
     }
     return 'Danh sách người dùng đã được tải.';
   }
+}
+
+function createUserErrorMessage(error: unknown): string {
+  if (!(error instanceof HttpErrorResponse)) {
+    return 'Không thể tạo tài khoản lúc này. Vui lòng thử lại.';
+  }
+  if (error.status === 401) return 'Phiên Admin không còn hiệu lực. Hãy đăng nhập lại.';
+  if (error.status === 403) return 'Tài khoản hiện tại không được phép tạo người dùng.';
+  if (error.status === 409) return 'Email này đã được sử dụng. Hãy nhập email khác.';
+  if (error.status === 422) {
+    return 'Thông tin chưa hợp lệ. Hãy kiểm tra họ tên, email, mật khẩu và vai trò.';
+  }
+  return 'Không thể tạo tài khoản lúc này. Vui lòng thử lại.';
 }
 
 function queryFromParamMap(params: ParamMap): AD02UsersQuery {

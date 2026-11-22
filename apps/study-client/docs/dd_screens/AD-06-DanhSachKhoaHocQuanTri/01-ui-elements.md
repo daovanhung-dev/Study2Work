@@ -1,6 +1,6 @@
 # AD-06 — UI Elements
 
-> **Current Study Web source (2026-11-17):** `/admin/courses` renders AD06Page and calls #73. The screen uses API-backed ID/title/mentor/price/status fields plus a detail link; search, filters, create/export/sync remain disabled. The detail link has a course-specific accessible name. Focused Angular spec: 5/5; browser runtime not verified.
+> **Current Study Web source (2026-11-22):** `/admin/courses` renders AD06Page and calls #73. The Add control opens a course-create dialog, loads active mentors through #68 and submits through user-approved API #104. Search, filters, export/sync remain unavailable. Focused Angular spec: 8/8; browser runtime not verified.
 
 
 ## 1. Quy tắc ảnh & mapping
@@ -77,14 +77,14 @@ ID phải khớp [annotated screenshot](../../screen_stitch/05_admin/AD-06_danh-
 | #11 | “CATALOG V2” badge; cạnh title. | Static version label; không có catalog version negotiation. | Visible, unverified; EV-08. |
 | #12 | Subtitle về giám sát, phân quyền mentor và trạng thái xuất bản. | Editorial text; API #73 chỉ cấp course/mentor projection, không trả aggregate/scope permission. | Visible; phải được duyệt nội dung trước implementation; EV-08. |
 | #13 | Export report button; hero bên phải. | Button tĩnh, không handler; API #103 là export impact report riêng, không phải course catalog export. | Enabled-looking nhưng unsupported; không gọi #103; EV-08. |
-| #14 | Add new course button; hero bên phải. | Button tĩnh, không handler; inventory/API #73–#77 không có Admin course-create endpoint. | Enabled-looking nhưng unsupported; không tạo client-only course; EV-08. |
+| #14 | Add new course button; hero bên phải. | Mở dialog tạo course; tải Mentor ACTIVE qua #68 và submit bằng API #104 (phần mở rộng được người dùng phê duyệt, ngoài AC-32). | Enabled; đang tải mentor/lưu thì disable submit; hủy đóng dialog; EV-10. |
 | #15 | KPI “Tổng khóa học”. | Giá trị 0 hard-coded; #73 `pagination.total` phụ thuộc filter, không định nghĩa aggregate không lọc. | Visible; dữ liệu chưa source-backed; EV-07. |
 | #16 | KPI “Chờ kiểm duyệt”. | Giá trị 0 hard-coded; #73 không có review count/aggregate. AC-33 content review không xác lập course KPI. | Visible; moderation relation/definition chưa có; EV-07. |
 | #17 | KPI “Đã xuất bản”. | Giá trị 0 hard-coded; #73 có `status` mỗi course nhưng không có aggregate/status enum được duyệt. | Visible; không thể tính chính xác từ page 20 rows; EV-07. |
 | #18 | KPI “Giảng viên tham gia”. | Giá trị 0 hard-coded; #73 không trả distinct mentor count; page projection không bảo đảm danh sách mentor đầy đủ. | Visible; no supported source; EV-07. |
 | #19 | Search input; đầu hàng bộ lọc. | Text, placeholder tên/mã/giảng viên. Không có max length/normalization/search query contract; DOM input không có listener. | Visible/editable markup, nhưng hiện không đổi kết quả; EV-02. |
 | #20 | Status filter select. | Mockup options: `all`, `draft`, `pending`, `published`, `archived` (lowercase). API nhận raw string exact-match; không enum/normalization/allowlist. | Visible; current HTML default `all`; server filter mapping blocked until vocabulary/case approval; EV-03. |
-| #21 | Mentor filter select. | Mockup chỉ có option `all`; API expects signed int64. Không có mentor option-list API trong AD-06 contract. | Visible; current default `all`; không gửi literal all; option choices blocked; EV-03. |
+| #21 | Mentor filter select. | Mockup chỉ có option `all`; API expects signed int64. Không có mentor filter selection trong #73; dialog create có riêng danh sách #68 role=MENTOR/status=ACTIVE. | Filter giữ unavailable; dialog option source-backed; EV-03/EV-10. |
 | #22 | Category filter locked badge. | Static lock/copy “đang chờ cấu hình liên kết dữ liệu”. Valid category int64 hiện trả 422; legacy DDL không có FK `courses.category_id`. | Visible/disabled conceptually; giữ disabled; EV-03. |
 | #23 | Applied-filter summary. | Hard-coded “Tất cả danh mục gốc (API 73)” và “Không có bộ lọc tùy chỉnh nào hoạt động”; không bind state/API. | Visible; summary trong prototype không phản ánh request; EV-07. |
 | #24 | “Khôi phục mặc định” reset control. | Anchor/button presentation; listener xóa text, đặt status/mentor thành `all`; không sửa category/URL hoặc gọi API. | Visible/enabled; local reset only; EV-04. |
@@ -115,3 +115,9 @@ ID phải khớp [annotated screenshot](../../screen_stitch/05_admin/AD-06_danh-
 
 ## 5. Link
 - [Events](02-events.md) · [Data Flow](03-data-flow.md) · [Tests](07-test-cases.md)
+
+### Current create-dialog source — 2026-11-22
+
+- The Add control opens an accessible native dialog with required title, price and active Mentor; description and thumbnail URL are optional. Thumbnail is entered as a URL; uploads are not part of this flow.
+- Mentor choices come from API #68 using `role=MENTOR`, `status=ACTIVE`, and paged loading. The server validates eligibility again when writing.
+- Saving shows pending/error feedback and prevents duplicate submission. Success closes the dialog and either opens AD-07 for a positive JS-safe Course ID with a one-time created notice, or refreshes the list for an unsafe ID.

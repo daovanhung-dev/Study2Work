@@ -3,16 +3,21 @@
 
   <div class="metrics-grid">
     @for (metric of metrics; track metric.title) {
-      <article class="metric-card" [attr.aria-label]="metric.title + ': chưa khả dụng'">
+      <article
+        class="metric-card"
+        [attr.aria-label]="metric.title + ': ' + (state === 'ready' ? metric.value : state === 'loading' ? 'đang tải' : 'chưa khả dụng')"
+      >
         <div class="metric-card-top">
           <h3>{{ metric.title }}</h3>
           <span class="metric-icon"><study-ad01-icon [name]="metric.icon" /></span>
         </div>
-        <p class="metric-value" aria-label="Chưa khả dụng">— —</p>
+        <p class="metric-value">{{ metric.value }}</p>
         <p class="metric-description">{{ metric.description }}</p>
         <div class="metric-availability">
           <study-ad01-icon name="info" />
-          <span>Chưa có dữ liệu tích hợp</span>
+          @if (state === 'loading') { <span>Đang tải số liệu</span> }
+          @else if (state === 'ready') { <span>Trong kỳ báo cáo</span> }
+          @else { <span>Số liệu chưa khả dụng</span> }
         </div>
       </article>
     }

@@ -6,7 +6,7 @@
 | Module | Admin |
 | Route | `/admin/courses` — current Admin route source; authenticated browser/runtime is not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft; **DD:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` (route/page/#73 caller, list/pagination and precision-safe detail links) · **Study Web runtime:** `NOT VERIFIED` |
+| DD status | Draft; **DD:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` (route/page/#68 mentor options/#73 list/#104 create; create dialog and DRAFT flow source-backed) · **Study Web runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.3 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-06.md](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06.md), [AD-06_PLAN.md](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06_PLAN.md), [AD-06_markers.json](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06_markers.json), [list_screen.md](../../list_screen.md) |
@@ -37,7 +37,7 @@
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-06 source screen.png](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/screen_annotated.png))
 - Luồng: GET #73 chỉ hỗ trợ raw exact `status`, signed-int64 `mentor`, category bị reject 422, page int32; size=20, `courses.id ASC`; không có search/KPI/course code/lesson count. AC-32 đi qua #74 detail trước #76 status; chưa xác nhận action trực tiếp từ row. #77 đánh dấu `DELETED`, #73 không loại status đó.
-- Priority: P1; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** route/page/#73 caller và list/pagination có source; search, status/DELETED visibility, category relation, mentor options, KPI, course code/lesson count, export/create/sync/policy và Admin permission mapping còn gated; **RUNTIME NOT VERIFIED**
+- Priority: P1; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** route/page/#68 mentor source/#73 caller/#104 create có source; search, status/DELETED visibility, category relation, KPI, course code/lesson count, export/sync/policy và Admin permission mapping còn gated; **RUNTIME NOT VERIFIED**
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -66,15 +66,15 @@ Inventory đề xuất tìm kiếm theo tên/mã/giảng viên, filter mentor/st
 
 | Chủ đề | Expected / contract | Current source hoặc prototype | Trạng thái |
 |---|---|---|---|
-| Route/UI | `/admin/courses` theo inventory. | Angular Admin route/page/service gọi #73; `code.html` vẫn là prototype tĩnh. AD-06 spec 5/5; authenticated browser runtime chưa xác minh. | `SOURCE WIRED; RUNTIME NOT VERIFIED` |
+| Route/UI | `/admin/courses` theo inventory. | Angular Admin route/page gọi #73; dialog tạo course gọi API #68/#104. `code.html` vẫn là prototype tĩnh. AD-06 spec 8/8; authenticated browser runtime chưa xác minh. | `SOURCE WIRED; RUNTIME NOT VERIFIED` |
 | Access | AC-32 yêu cầu Admin có course-management permission. API catalog ghi Bearer JWT/Admin. | #73 dùng shared JWT guard với role `ADMIN`; không kiểm tra riêng permission course-management. | Mapping `ADMIN` ↔ AC permission cần xác nhận. |
 | List | GET #73 có status, mentor, category, page. | Route/module/query/view/test có trong local source. Status exact-match; mentor int64; category bị từ chối; page 1-based, 20 rows, ID tăng dần. | Source-backed; DD API vẫn Draft. |
 | Search | Inventory/mockup nói tên/mã/giảng viên. | Không có search query hoặc search handler trong #73/prototype. | `BLOCKER` |
 | Dữ liệu row | Tên, mentor, fee, status có thể map từ response. | #73 trả `id`, `title`, `price`, `status`, `mentor`; không trả course code hay lesson count. | Mapping một phần; code/lesson count `BLOCKER`. |
 | KPI | Mockup có 4 summary cards. | Bốn số 0 là hard-coded. #73 chỉ trả pagination total theo filter hiện tại. | `BLOCKER` — không có aggregate source. |
 | Category/status | Mockup khóa category và có status lowercase. | Category có giá trị hợp lệ trả 422. Status không có enum/normalization; #77 đặt `DELETED`, #73 không loại status này. | `BLOCKER` — cần relation/status/visibility policy. |
-| Controls | Mockup có Export/Add/refresh/sync/manual/governance links. | Không có handler; #73 chỉ list. AC-32 không cung cấp create/export/manual-sync cho AD-06. | `BLOCKER` |
-| API test evidence | Report 2026-11-01 là test môi trường/schema tạm; T031 focused #73 module tests 24/24 với FakeSession. AD-06 Angular spec 5/5 và production build pass; không chứng minh production/live DB/browser. | Evidence cô lập; runtime chưa verified. |
+| Controls | Mockup có Export/Add/refresh/sync/manual/governance links. | Add mở dialog và gọi API #68 mentor options + API #104 tạo course; export/sync/manual/governance chưa có handler. #104 là phần mở rộng được người dùng phê duyệt, không thuộc AC-32. | Create source-backed; các control còn lại gated. |
+| API test evidence | Report 2026-11-01 là test môi trường/schema tạm; T031 focused #73 module tests 24/24 với FakeSession. | API #104 server 6/6 và AD-06 Angular 8/8 ngày 2026-11-22; fake DB/client không chứng minh live DB, deployment hoặc browser runtime. |
 | Status action entry | Inventory purpose nhắc sửa trạng thái; AC-32 sequence là list → #74 detail → lựa chọn #75/#76/#77. | AD-06 inventory links AD-07; mockup chỉ có một cột thao tác trống trong empty state. | Chưa xác nhận status action trực tiếp trên list; theo AC target handoff qua AD-07/AD-09. |
 | Visual system | Angular AD-06 hiện dùng Study semantic tokens, content width khoảng 1120px, visible focus và target ≥44px; screenshot Stitch vẫn là palette/font prototype. | Source đã align; browser rendering chưa verified. |
 
@@ -112,4 +112,5 @@ Inventory đề xuất tìm kiếm theo tên/mã/giảng viên, filter mentor/st
 
 - AD06Page now requires #73 DESIGN_RESOURCE_RETRIEVED and validates the local Course Page projection, fixed size 20, requested-page echo and safe total_pages arithmetic before mapping.
 - The separate COUNT/LIST reads can drift. AD-06 keeps returned Course rows visible on mismatch, hides the possibly stale total and page number, disables pagination and offers retry for the same page. An empty page beyond the returned last page has a page-1 recovery action, including when total and total_pages are both zero; matching zero-result responses remain the ordinary empty state.
-- Existing int64 display/route guards, exact decimal-string price display, and disabled search/status/mentor/category/create/export actions remain. The response discrepancy, course status/deleted visibility, permission, live schema and browser runtime remain unresolved. AD-06 stays at 50%; no full weighted axis was completed. No tests/build/lint/browser/API runtime were run.
+- API #104 is a user-approved extension outside AC-32. AD-06 now loads active Mentor options via #68 and submits a course through #104; the server creates `DRAFT` and returns a Course. A positive JavaScript-safe returned ID opens AD-07; other IDs refresh the list without numeric route coercion. Focused checks: server 6/6 and Angular 8/8 on 2026-11-22.
+- Existing int64 display/route guards, exact decimal-string price display, and disabled search/status/category/export actions remain. The response discrepancy, course status/deleted visibility, permission mapping, live schema and browser runtime remain unresolved. DD stays `DD BLOCKED`; implementation is partial source and runtime is unverified.

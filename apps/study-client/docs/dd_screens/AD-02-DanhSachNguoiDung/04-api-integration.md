@@ -1,17 +1,18 @@
 # AD-02 — API Integration
 
-> API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
+> API/status dưới đây lấy từ inventory, API catalog và các extension được người dùng duyệt. Package-local API IDs chỉ là alias truy vết; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
 | `AD-02-API-001` | #68 | See source contract excerpt | Source event IDs are preserved in [Events](02-events.md) | See source auth/permission evidence |
+| `AD-02-API-002` | #105 | `POST /api/v1/admin/users` | EV-08 — approved Admin user-create extension | Bearer JWT; role=Admin |
 
 ## 2. Contract / source detail
 
-- API refs trong inventory: #68
-- Orchestration/data notes: GET #68 với filter/page và giữ query URL; local source chỉ search name/email, exact-match role/status, fixed page 20. Không suy ra search ID hoặc tạo/export user từ mockup.
-- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** local route/page/#68 caller wired; role/status options và ID-search mismatch; Add/export/audit/sync unsupported; Admin permission, PII/lifecycle, live schema còn mở; authenticated runtime NOT VERIFIED
+- API refs trong inventory: #68; #105 là phần mở rộng Admin được người dùng duyệt ngoài AC_UNICA.
+- Orchestration/data notes: GET #68 với filter/page và giữ query URL; local source chỉ search name/email, exact-match role/status, fixed page 20. API #105 tạo user theo role được chọn; export vẫn chưa được hỗ trợ.
+- BE/source status and gate: #68 and #105 route/module sources exist locally; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** role/status filter options and ID-search mismatch; export/audit/sync unsupported; Admin permission policy, PII/lifecycle and live schema remain open; authenticated browser/live runtime NOT VERIFIED.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: UserProfile mapping có thể dùng từ API #68
@@ -61,3 +62,9 @@
 ### Current client/API source — 2026-11-21
 
 AD02Page requires the exact #68 success code, validates the local UserProfile Page projection, fixed size 20, requested-page echo and safe total_pages arithmetic, and then compares LIST item count with the count-derived expected rows. Mismatches preserve returned users while hiding possibly stale totals/pagination and allowing retry of the applied URL query/page. This follows the checked-out local Page source; catalog/AC cardinality, role/permission and live schema remain unresolved.
+
+### Current source extension — API #105 (2026-11-22)
+
+`POST /api/v1/admin/users` is a user-approved extension outside AC_UNICA. Request fields: `full_name` (required, trimmed, 1–150 characters), `email` (required, trimmed/validated by the shared email helper, max 255), `password` (required; empty/all-whitespace rejected, otherwise passed unchanged to Argon2id), and `role` (`STUDENT|MENTOR|ADMIN`). The shared ADMIN guard runs before parsing the request body or querying data. A duplicate email returns HTTP 409 `DESIGN_STATE_CONFLICT`; malformed input returns 422 `DESIGN_VALIDATION_ERROR`; shared authentication returns 401/403; database/projection failures return safe HTTP 500. Success is HTTP 201 `DESIGN_RESOURCE_CREATED` with the existing safe `UserProfile`, including status `ACTIVE` and excluding password/hash.
+
+The local server route and module plus the AD-02 caller are source-wired. API #105 focused fake-session tests pass 15/15 and AD-02 focused Angular tests pass 11/11. These results do not establish live database schema, authenticated browser behavior, or deployment.

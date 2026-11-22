@@ -1,10 +1,10 @@
 # AD-06 — Events (đặc tả xử lý)
 
-## Current Study Web source (2026-11-17)
+## Current Study Web source (2026-11-22)
 
 - EV-01 is wired through the Admin bearer API client to GET #73; page/loading/error/empty/out-of-range/loaded states are present.
 - EV-02/EV-03/EV-04 controls stay disabled because search/filter/reset semantics are not approved. EV-05 changes pages within returned API bounds. EV-06 links a returned course row to AD-07 using `Course.id`.
-- Export/create/sync/manual/policy controls remain disabled or absent. API #73 remains read-only. Focused Angular spec passes 5/5; authenticated browser runtime is not verified.
+- API #104 enables Add through an active-Mentor selector (#68) and a create dialog; successful writes start as `DRAFT`. Export/sync/manual/policy controls remain unavailable. Focused Angular spec passes 8/8; authenticated browser runtime is not verified.
 
 
 
@@ -20,6 +20,7 @@
 | `AD-06-EV-007` | `Source heading` / EV-07 — Ánh xạ list, empty state và summary | See source event detail below |
 | `AD-06-EV-008` | `Source heading` / EV-08 — Controls tĩnh, shell navigation và access/error feedback | See source event detail below |
 | `AD-06-EV-009` | `Source heading` / API request/response matrix | See source event detail below |
+| `AD-06-EV-010` | API #104 — Tạo khóa học từ dialog | Current implementation follow-up below |
 
 > Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
 
@@ -127,3 +128,16 @@
 
 - EV-01 and EV-07 now require the #73 success code and validate Course items, fixed size, requested page echo and pagination before rendering.
 - After shape validation, AD-06 compares the current page item count with the COUNT-derived expected rows. A mismatch preserves returned courses, hides stale totals/page data, disables page navigation and offers a same-page retry. An empty out-of-range page uses a separate return-to-page-1 action; this includes page > 1 after the collection becomes empty. Matching empty pages remain valid empty results.
+
+### Current implementation follow-up — 2026-11-22
+
+### EV-10 — Tạo khóa học mới
+
+- **Trigger:** Admin chọn “Thêm khóa học mới” và gửi form trong dialog AD-06. Đây là phần mở rộng được người dùng phê duyệt; AC-32 ban đầu không liệt kê API create.
+- **Mentor options:** Khi mở dialog, client gọi API #68 với `role=MENTOR`, `status=ACTIVE`, `page`; trang tiếp theo được tải theo thao tác “Tải thêm”. Chỉ option có ID hợp lệ được hiển thị. Loading/error/empty mentor state giữ submit không khả dụng.
+- **Input:** `title` bắt buộc; `price` bắt buộc dưới dạng decimal string; `mentor_id` bắt buộc. `description` và `thumbnail_url` tùy chọn; ảnh bìa là URL, không phải upload. Client kiểm tra form; server xác thực request và kiểm tra lại mentor role/status.
+- **Request:** `POST /api/v1/admin/courses` (API #104) qua Admin Bearer client. Client không tự thêm trạng thái; server ghi status `DRAFT`.
+- **Success:** Chấp nhận HTTP 201 chỉ với `DESIGN_RESOURCE_CREATED` và Course projection hợp lệ (`id`, title, exact price, `DRAFT`, mentor). Dialog đóng; Course ID dương và JS-safe điều hướng tới AD-07 kèm success notice. ID không safe không bị ép sang route number; danh sách được refresh.
+- **Failure:** Giữ dialog/draft mở, dừng pending state và hiển thị thông báo an toàn. Không điều hướng khi envelope, business code hoặc projection không hợp lệ; không tạo client-only row.
+- **Duplicate submit:** Khi request đang pending, submit bị khóa/ignored. Retry sau lỗi là thao tác gửi mới; server/API chưa khai báo idempotency key.
+- **Verification:** API #104 server tests 6/6; AD-06 focused Angular spec 8/8 (2026-11-22). Cả hai là test cô lập; live API/DB, deployment và browser runtime chưa xác minh.

@@ -61,7 +61,7 @@ The router remains thin and delegates the API flow to `view.py`.
 Current endpoint package inventory after the 2026-11-16 role reorganization:
 Guest #01–#03/#05–#12/#15 (12 packages); Student #04/#13–#14/#16–#17/
 #19–#33/#35–#45 (31); Shared #18/#34 (2); Mentor #46–#67 (22); Admin
-#68–#98 (31). `shared/course_catalog` contains pure course catalog contracts
+#68–#98/#101 (32). `shared/course_catalog` contains pure course catalog contracts
 and helpers used by Guest, Mentor and Admin. Student and Mentor `_shared`
 folders remain role-local. Existing test package paths follow actor ownership.
 
@@ -116,6 +116,9 @@ folders remain role-local. Existing test package paths follow actor ownership.
 | `admin/api_95_admin_notifications_delete` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #95 Admin notification delete; shared ADMIN guard, queued-only legacy candidate deletion and DeleteResult timestamp mapping are DERIVED; live schema/cascade and provider cancellation unverified |
 | `admin/api_96_admin_notifications_status` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #96 Admin notification status; shared ADMIN guard, legacy BIGINT notification/outbox aggregate and status precedence are DERIVED; live schema/retry grain unverified |
 | `admin/api_97_admin_discussions_reported` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #97 read-only Admin report queue; shared ADMIN guard and Study-local `discussion_reports` BIGINT candidate; queue grain, filters, Page, title/comments and invalid-page 422 are DERIVED; live schema and report ingestion unverified |
+| `admin/api_101_admin_reports_summary` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #101 Admin report summary; shared ADMIN guard, inclusive date bounds and four legacy COUNT sources; Q1–Q4 mappings are user-approved for AD-01, API DD remains Draft, and live schema/timestamp semantics are unverified |
+| `admin/api_104_admin_courses_create` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | User-approved AD-06 extension outside AC-32/AC_UNICA; shared ADMIN guard, active Mentor recheck, atomic DRAFT insert and shared Course projection; 6 focused fake-DB tests pass; live schema/deployment unverified |
+| `admin/api_105_admin_users_create` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | User-approved AD-02 extension outside AC_UNICA; shared ADMIN guard, selected STUDENT/MENTOR/ADMIN role, Argon2id password hash, ACTIVE insert and safe UserProfile; 15 focused fake-DB tests pass; live schema/deployment unverified |
 | `shared/api_34_uploads` | `SOURCE_BACKED` | API #34 multipart Student/Mentor upload; purpose-bound role/course checks, S3-compatible UUID object key and legacy BIGINT `uploads` metadata transaction |
 
 API #34 uses the shared auth guard with accepted roles `STUDENT` and `MENTOR`,
@@ -148,7 +151,7 @@ AC-33/request shape; focused tests use fake DB queries, so migration
 Shared course catalog boundary:
 `shared/course_catalog` contains only response models and pure helpers
 used by APIs #6–#8.
-| Other Study domain modules | `NOT_FOUND`/`UNWIRED` except individually indexed APIs through #98 | Require source/contract before implementation |
+| Other Study domain modules | `NOT_FOUND`/`UNWIRED` except individually indexed APIs through #98 and #101 | Require source/contract before implementation |
 
 
 ## API #51 Mentor Content update
@@ -523,3 +526,17 @@ ingestion.
 These modules and routes are source-backed, but tests were not run and no
 migration was applied. See `apis/declared-routes.md` and the dated worklog for
 decisions and verification boundaries.
+
+## API #104 Admin course creation
+
+- `admin/api_104_admin_courses_create` handles `POST /api/v1/admin/courses` for the user-approved AD-06 create extension.
+- `models.py` declares the request/result model; `validate.py` trims a required 1–200-character title, validates positive signed-int64 Mentor ID and exact decimal string compatible with `NUMERIC(12,2)`; optional description/thumbnail URL remain nullable. Thumbnail URL policy is only represented by the Web URL input; the API does not invent an additional URL scheme rule.
+- `query.py` provides SQL constants to lock-check `users.id` with exact `MENTOR`/`ACTIVE` status, insert the existing course columns with explicit `DRAFT`, and read the response projection. `view.py` runs shared ADMIN auth before parsing, owns transaction commit/rollback, maps the created row through the shared Course mapper, and returns HTTP 201 `DESIGN_RESOURCE_CREATED`.
+- Focused API #104 tests: 6 passed on 2026-11-22. They use fake sessions and do not verify live PostgreSQL schema or deployment. No migration was added.
+
+## API #105 Admin user creation
+
+- `admin/api_105_admin_users_create` handles `POST /api/v1/admin/users` for the user-approved AD-02 create extension outside AC_UNICA.
+- `models.py` declares required full name, email, initial password and exact role union `STUDENT|MENTOR|ADMIN`; `validate.py` uses the shared name/email rules, rejects only empty/all-whitespace passwords and passes nonblank password input unchanged to hashing.
+- `view.py` runs shared ADMIN auth before body parsing/query, rejects duplicate email, hashes with the shared Argon2id helper, writes the existing legacy `users` columns with selected role and `ACTIVE`, validates the shared safe UserProfile projection before commit and rolls back failures. Password/hash are not returned.
+- Focused API #105 route tests: 15 passed on 2026-11-22, with fake sessions/hash. No schema migration was added; current live PostgreSQL schema and deployment remain unverified.

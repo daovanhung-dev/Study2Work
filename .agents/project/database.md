@@ -16,7 +16,7 @@ phê duyệt và live metadata theo đúng task.
 
 | Scope | Runtime/config | Schema source hiện có |
 |---|---|---|
-| Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | current queries reference `users`, `courses`, `lessons`, `categories`, `refresh_tokens`; migration artifacts and `infra/postgres/02_study_db.sql` are checked in, live schema remains unverified |
+| Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | current queries reference `users`, `courses`, `lessons`, `categories`, `refresh_tokens`; migration artifacts and `infra/postgres/02_study_db.sql` are checked in; live status is verified only for `refresh_tokens` in `neondb/dao_van_hung` (2026-11-21), other schema status remains unverified |
 | AI | copied SQLAlchemy core, runtime không dùng | `NOT_FOUND`; không migration/model |
 | Work | Prisma + PostgreSQL/Neon | `apps/work-server/prisma/schema.prisma` + migration history |
 | DB Admin | SQLAlchemy + psycopg3 | two named backend-owned targets; runtime catalog plus independent `db_admin` control-plane bootstrap |

@@ -5,13 +5,15 @@
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
-| `AD-06-API-001` | #73 | See source contract excerpt | Source event IDs are preserved in [Events](02-events.md) | See source auth/permission evidence |
+| `AD-06-API-001` | #73 | `GET /api/v1/admin/courses` | EV-01/05/06/07 | Admin Bearer; shared server guard requires `ADMIN` |
+| `AD-06-API-002` | #68 | `GET /api/v1/admin/users` | EV-10 mentor selection | Admin Bearer; role/status/page query |
+| `AD-06-API-003` | #104 | `POST /api/v1/admin/courses` | EV-10 course creation | Admin Bearer; shared server guard requires `ADMIN` |
 
 ## 2. Contract / source detail
 
-- API refs trong inventory: #73
+- API refs trong original AC/DD: #73. User-approved AD-06 create extension: #68 for mentor options and #104 for course create.
 - Orchestration/data notes: GET #73 chỉ hỗ trợ raw exact `status`, signed-int64 `mentor`, category bị reject 422, page int32; size=20, `courses.id ASC`; không có search/KPI/course code/lesson count. AC-32 đi qua #74 detail trước #76 status; chưa xác nhận action trực tiếp từ row. #77 đánh dấu `DELETED`, #73 không loại status đó.
-- BE/source status và gate: **R** source/API #73; API DD Draft; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** Study Web route/page/#73 caller and pagination are present; search, status/DELETED visibility, category relation, mentor options, KPI, course code/lesson count, export/create/sync/policy and Admin permission mapping remain gated; **RUNTIME NOT VERIFIED**
+- BE/source status và gate: API #73 source wired; API #68 source wired for mentor selection; API #104 is user-approved and source wired for create. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** search, status/DELETED visibility, category relation, KPI, course code/lesson count, export/sync/policy and Admin permission mapping remain gated; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết
@@ -61,7 +63,7 @@ API #73 catalog không liệt kê 404. Không có mutation, idempotency key ho�
 | Runtime evidence | API route/module/test source có trong checkout. Test report 2026-11-01 ghi 20/20 isolated HTTP requests pass sau fix nullable cast; không chứng minh live DB/deploy. API DD `Draft — Needs Confirmation`. |
 
 ## 3. API không sử dụng
-- Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.
+- No additional API is inferred from AC-32 or the original DD. API #104 is the explicit user-approved extension documented below; other absent APIs remain gated.
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06.md)
@@ -69,3 +71,9 @@ API #73 catalog không liệt kê 404. Không có mutation, idempotency key ho�
 ### Current client/API source — 2026-11-21
 
 AD06Page requires the exact #73 success code and validates the local Course Page shape, fixed size 20, requested-page echo and safe total_pages calculation. The page then detects COUNT/LIST row-count drift, preserves Course rows, suppresses stale total/page values and allows same-page retry. Empty out-of-range pages have a page-1 recovery action, including an empty collection requested at page > 1. No query/filter or backend behavior was added; direct catalog, permission, deleted visibility and live schema gaps remain.
+
+### Current API #104 implementation — 2026-11-22
+
+API #104 is a user-approved extension outside the original AC_UNICA set and AC-32 flow. `POST /api/v1/admin/courses` accepts `{title:string, description?:string|null, thumbnail_url?:string|null, price:decimal-string, mentor_id:int64}` and returns HTTP 201 `DESIGN_RESOURCE_CREATED` with the shared Course projection. The server checks the selected user is an active Mentor, writes a `DRAFT` row, reads its projection and commits within one transaction. Errors: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`.
+
+AD-06 calls API #68 with `role=MENTOR`, `status=ACTIVE`, and paged selection for the dialog. Client only accepts the exact #104 success code plus a valid Course projection before success navigation. Focused tests on 2026-11-22: server 6/6; Angular 8/8. Tests use fakes and do not establish live DB schema or deployment. Formal Study OpenAPI remains `NOT_FOUND`; the route and catalog are source evidence, not a deployed contract.

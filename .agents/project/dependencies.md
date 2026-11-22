@@ -53,7 +53,7 @@ apps/db-admin-server/app/main.py
 - Study Web is an Angular 22 standalone SPA boundary with a readiness root,
   SH-02/SH-03 presentation routes, Guest GS-01–GS-03 route group with #05–#08
   callers, Student ST-11–ST-26 and Admin AD-01–AD-25 route groups. Selected
-  Admin GET callers use `AdminApiService`; Guest callers use the generic
+  Admin GET/POST callers use `AdminApiService`; AD-02 creates users with API #105 then refreshes the same API #68 list query; Guest callers use the generic
   `StudyApiService`. `GS03Page` calls #08 and owns the `?tab=curriculum` view;
   after #08 succeeds it calls API #09 through GS03-local data-access and renders
   only lesson title/order. Focused GS03 tests cover the tab; browser/live
@@ -72,6 +72,7 @@ apps/db-admin-server/app/main.py
 | Work target contract | `contracts/openapi/work/openapi.json` | Future Work API | DISCREPANCY / not wired to current source |
 | Study | `study.evidence.upserted.v1.schema.json` | Work | Consumer missing |
 | Study | `study.evidence.revoked.v1.schema.json` | Work | Consumer missing |
+| Study API #105 `POST /api/v1/admin/users` | API catalog + FastAPI local route | Study Web AD-02 via `AdminApiService` | Source-wired locally; #68 refresh follows a validated 201; live schema/deployment unverified |
 | Shared | `skill-taxonomy.v1*.json` | Future domain modules | No current server caller |
 | DB Admin | `/api/v1/admin/*` | `apps/db-admin-web/` | Implemented locally; no shared contract file yet |
 

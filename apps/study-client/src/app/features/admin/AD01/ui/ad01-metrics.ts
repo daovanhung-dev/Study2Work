@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 import { AD01Icon } from './ad01-icon';
+import type { AD01MetricCardModel } from '../models/ad01-report.model';
 
 @Component({
   imports: [AD01Icon],
@@ -9,26 +10,6 @@ import { AD01Icon } from './ad01-icon';
   templateUrl: './ad01-metrics.html',
 })
 export class AD01Metrics {
-  readonly metrics = [
-    {
-      title: 'Người dùng hệ thống',
-      description: 'Chỉ số chưa được định nghĩa trong contract.',
-      icon: 'users',
-    },
-    {
-      title: 'Chương trình học',
-      description: 'Chưa có mapping chỉ số được xác nhận.',
-      icon: 'book',
-    },
-    {
-      title: 'Kiểm định chất lượng',
-      description: 'Nguồn dữ liệu chưa được kết nối.',
-      icon: 'checklist',
-    },
-    {
-      title: 'Hạ tầng trực tuyến',
-      description: 'Chưa có nguồn trạng thái dịch vụ.',
-      icon: 'server',
-    },
-  ] as const;
+  @Input() metrics: readonly AD01MetricCardModel[] = [];
+  @Input() state: 'loading' | 'ready' | 'error' = 'loading';
 }

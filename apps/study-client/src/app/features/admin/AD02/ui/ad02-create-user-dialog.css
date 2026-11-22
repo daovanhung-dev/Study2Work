@@ -1,0 +1,170 @@
+.create-user-dialog {
+  width: min(calc(100% - 32px), 560px);
+  max-width: 560px;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text-primary);
+  background: var(--surface);
+  box-shadow: 0 24px 70px rgb(13 39 62 / 24%);
+}
+
+.create-user-dialog::backdrop {
+  background: rgb(7 25 40 / 55%);
+  backdrop-filter: blur(2px);
+}
+
+.create-user-form {
+  display: grid;
+}
+
+.create-user-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.create-user-dialog__badge {
+  color: var(--ocean-primary);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.create-user-dialog__header h2 {
+  margin: 8px 0 0;
+  color: var(--ocean-deep);
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.create-user-dialog__header p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.create-user-dialog__close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text-primary);
+  background: var(--surface);
+  font: inherit;
+  font-size: 24px;
+}
+
+.create-user-message {
+  margin: 16px 24px 0;
+  padding: 12px 14px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.create-user-message--error,
+.create-user-field__error {
+  color: var(--danger);
+}
+
+.create-user-message--error {
+  border: 1px solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 7%, white);
+}
+
+.create-user-fields {
+  display: grid;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.create-user-field {
+  display: grid;
+  gap: 7px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.create-user-field strong {
+  color: var(--danger);
+}
+
+.create-user-field input,
+.create-user-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text-primary);
+  background: var(--surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.create-user-field input:focus-visible,
+.create-user-field select:focus-visible,
+.create-user-dialog button:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 2px;
+}
+
+.create-user-field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.create-user-field__error {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.create-user-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.create-user-dialog__actions button {
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.create-user-cancel {
+  color: var(--text-primary);
+  background: var(--surface);
+}
+
+.create-user-submit {
+  border-color: var(--ocean-primary) !important;
+  color: white;
+  background: var(--ocean-primary);
+}
+
+.create-user-dialog button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 767px) {
+  .create-user-dialog__header,
+  .create-user-fields,
+  .create-user-dialog__actions {
+    padding-inline: 16px;
+  }
+}

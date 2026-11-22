@@ -20,7 +20,7 @@
 .brand,
 .profile-placeholder,
 .primary-nav ul,
-.breadcrumb-status {
+.session-status {
   display: flex;
   align-items: center;
 }
@@ -143,12 +143,22 @@
   gap: 10px;
 }
 
-.breadcrumb-status {
+.session-status-row {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.session-status {
   display: inline-flex;
   gap: 6px;
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 650;
+  text-align: right;
 }
 
 .icon-button {
@@ -189,36 +199,6 @@
   color: var(--text-muted);
   font-size: 10px;
   letter-spacing: 0.025em;
-}
-
-.breadcrumb-row {
-  display: flex;
-  min-height: 50px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.breadcrumbs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 7px;
-  margin: 0;
-  padding: 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  list-style: none;
-}
-
-.breadcrumbs li:last-child {
-  color: var(--text-primary);
-  font-weight: 650;
-}
-
-.breadcrumb-status {
-  text-align: right;
 }
 
 .page-footer {
@@ -298,21 +278,4 @@
     font-size: 11px;
   }
 
-  .breadcrumb-row {
-    min-height: 54px;
-    align-items: flex-start;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-    padding-block: 8px;
-  }
-
-  .breadcrumbs {
-    gap: 5px;
-    font-size: 11px;
-  }
-
-  .breadcrumb-status {
-    font-size: 10px;
-  }
 }

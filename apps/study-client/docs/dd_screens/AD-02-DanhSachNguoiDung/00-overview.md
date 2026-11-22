@@ -6,14 +6,14 @@
 | Module | Admin |
 | Route | `/admin/users` — route child `users` trong `admin.routes.ts`, trỏ tới `AD02Page` trong local Angular source |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | `BLOCKED — decisions remain open`; local implementation: `PARTIAL SOURCE — route/page/#68 caller wired`; runtime: `NOT VERIFIED` |
+| DD status | `BLOCKED — decisions remain open`; local implementation: `PARTIAL SOURCE — route/page/#68 caller and approved API #105 create flow wired`; runtime: `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.4 / 2026-11-21 |
+| Version / last updated | 0.5 / 2026-11-22 |
 | Nguồn đối chiếu | [AD-02.md](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02.md), [AD-02_PLAN.md](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02_PLAN.md), [AD-02_markers.json](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Bảng users, keyword, status, role, pagination; chọn user để mở AD-03/AD-04; API #68 chỉ đọc.
-- In-scope: GET #68 với filter/page và giữ query URL; local source chỉ search name/email, exact-match role/status, fixed page 20. Không suy ra search ID hoặc tạo/export user từ mockup.
+- In-scope: GET #68 với filter/page và giữ query URL; local source chỉ search name/email, exact-match role/status, fixed page 20. API #105 là phần mở rộng Admin được người dùng duyệt để tạo user; không suy diễn hợp đồng này từ mockup. Export vẫn chưa được hỗ trợ.
 - Out-of-scope: Không kết luận live API/DB, deployed route hoặc authenticated browser runtime đã chạy; giữ các quyết định permission/enum/PII/schema ở trạng thái mở.
 
 ### Current source snapshot (2026-11-17, T030)
@@ -128,3 +128,9 @@ API #68 direct contract đã đồng bộ catalog/AC thành `ApiEnvelope<Page<Us
 - AD02Page now requires DESIGN_RESOURCE_RETRIEVED and validates the #68 UserProfile Page projection, fixed size 20, requested-page echo and safe total_pages arithmetic before mapping rows.
 - The #68 COUNT and LIST reads are separate. On expected-row mismatch, AD-02 preserves users returned by LIST, hides possibly stale total and pagination values, and offers a same-query/page retry. An empty page beyond total_pages has a page-1 recovery action; matching empty results remain the ordinary filtered-empty state.
 - Keyword/role/status behavior, query-string synchronization, exact-safe ID actions and existing 422 page recovery remain. User-management permission, filter vocabulary/ID search, PII/lifecycle, live schema and browser runtime remain unresolved. AD-02 stays 75%; mismatch recovery does not complete another weighted axis. No tests/build/lint/browser/API runtime were run.
+
+### Current-source addendum — 2026-11-22 (Admin user creation)
+
+- The user-approved API #105 extension is now source-wired from the AD-02 Add user button. Admin enters full name, email, initial password and one of `STUDENT`, `MENTOR` or `ADMIN`; a valid HTTP 201 `DESIGN_RESOURCE_CREATED` with an `ACTIVE` safe `UserProfile` closes the dialog, announces success and refetches the current #68 query without changing its filters/page.
+- API #105 uses the shared `ADMIN` guard before body parsing, existing email/name validation helpers and Argon2id hashing. It rejects duplicate email and returns only the existing profile projection; the password and hash are excluded. The list API #68 remains read-only.
+- Focused AD-02 Angular tests pass 11/11 and API #105 fake-session route tests pass 15/15. `DD BLOCKED` remains for other policy/contract, filter vocabulary, export/audit, live-schema and deployment questions. Authenticated browser, live DB and deployment behavior remain `NOT VERIFIED`.

@@ -57,6 +57,7 @@ flowchart LR
 | Chọn user | AD-03 `/admin/users/:userId` | `id` từ `items[]` → #69. | Không đưa email/PII vào URL. |
 | Edit | AD-04 `/admin/users/:userId/edit` | `id` → destination reads #69 and may submit #70 under its own gates. | AD-02 only navigates; no write is made here. |
 | Status/delete action | AD-05 `/admin/users/:userId/actions` | `id` → destination reads #69; #71/#72 remain controlled by AD-05. | Policy/token/lifecycle còn mở; AD-02 only hands off. |
+| Add user | Dialog tại AD-02 → POST #105. | Validated 201 closes the dialog, announces success, and refetches the same #68 query; errors preserve the dialog and draft. | Không điều hướng và không thay đổi filter/page URL. |
 | Primary navigation | AD-01 hoặc các screen quản trị tương ứng | Dùng route catalog của từng Screen ID. | Prototype anchors hiện là `#`; không khẳng định destination đang chạy. |
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
@@ -69,7 +70,7 @@ flowchart LR
 4. `items=[]` là empty Page HTTP 200, không phải lỗi hoặc trạng thái đồng bộ. Không suy ra “chưa đồng bộ auth server” từ response rỗng.
 5. Admin chọn một user để mở AD-03 và API #69; edit mở AD-04 và API #70. Nhánh status/delete thuộc AD-05 với #71/#72. Sau mutation thành công, flow AC-31 yêu cầu reload list/detail; AD-02 không tự thực hiện mutation qua #68.
 
-### Current HTML behavior
+### Prototype HTML behavior (`screen_stitch/code.html`)
 
 - Header/footer links dùng `href="#"`; không có app router hoặc client API call.
 - Search và hai select chỉ là controls tĩnh. Listener duy nhất là Reset: clear keyword/role/status và focus search; URL không đổi.
@@ -90,3 +91,11 @@ GET /api/v1/admin/users → apps/study-server/app/api/v1.py:get_admin_users_endp
 ```
 
 COUNT và LIST dùng cùng role/status/keyword predicates; page query dùng `LIMIT 20`, offset từ page và `ORDER BY users.id ASC`. Keyword là lowercase literal substring trên `full_name` hoặc `email`; `%`/`_` không phải wildcard. Unknown role/status strings không bị enum validator chặn và có thể cho empty Page. API #68 không tìm theo ID. Catalog/AC response shape khớp current local response; filter, paging, schema target và permission policy vẫn có trạng thái `DERIVED`/Draft.
+
+### Current create-flow navigation — 2026-11-22
+
+```text
+AD-02 Add → create dialog → POST API #105 → valid HTTP 201 → close + announce → same AD-02 query → GET API #68
+```
+
+The flow remains on `/admin/users`; it preserves the current keyword, role, status and page query. Safe HTTP errors and malformed create-success projections keep the dialog/draft available for correction. The focused AD-02 suite passes 11/11. Authenticated browser, live API/DB and deployment remain `NOT VERIFIED`.

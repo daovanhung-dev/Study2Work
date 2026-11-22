@@ -1,7 +1,7 @@
 # Study database status
 
 ```text
-SCHEMA_ARTIFACT_STATUS: PILOT_DDL_CHECKED_IN; LIVE_STATUS: NOT_VERIFIED_HERE
+SCHEMA_ARTIFACT_STATUS: PILOT_DDL_CHECKED_IN; LIVE_STATUS: PARTIALLY_VERIFIED (neondb/dao_van_hung; refresh_tokens; 2026-11-21)
 MIGRATION_DIRECTORY_STATUS: SOURCE_BACKED (refresh token, categories, uploads, lecture-upload relation, Content/version and course/content/lesson status-audit candidates)
 RUNTIME_DB_HELPER: VERIFIED
 ```
@@ -9,7 +9,11 @@ RUNTIME_DB_HELPER: VERIFIED
 Current source establishes a Neon PostgreSQL connection URL in
 `app/core/constants.py` and sync SQLAlchemy helpers. Register references
 `users`; login/refresh references `users` and the source-backed
-`refresh_tokens` table. Live metadata is still not verified here.
+`refresh_tokens` table. On 2026-11-21, live metadata was verified for
+`neondb/dao_van_hung`: the Admin row was active, `refresh_tokens` was absent,
+then migration 002 was applied and the six expected columns and four indexes
+were confirmed from a new connection. This evidence covers that relation in
+that schema only; other tables and deployments remain unverified.
 
 At each PostgreSQL transaction begin, `build_engine()` applies only the
 validated `Settings.db_schema` using transaction-local
@@ -20,9 +24,10 @@ permissions. Schema is not sent in Neon startup options.
 
 `infra/postgres/02_study_db.sql` is part of the checked-in V1-PILOT bootstrap
 artifact. `migrations/002_refresh_tokens.sql`, `migrations/003_categories.sql`,
-and legacy migrations `004_uploads.sql` and `005_lesson_uploads.sql` plus `006_contents.sql` are
-migration artifacts; none establishes live application status by source
-inspection alone.
+and legacy migrations `004_uploads.sql` and `005_lesson_uploads.sql` plus
+`006_contents.sql` are migration artifacts; source inspection alone does not
+establish live application status. Migration 002 is live-verified only for the
+specific `neondb/dao_van_hung` target recorded above.
 The merged API
 #08/#09 queries reference `courses` and `lessons`, but do not establish that
 those relations exist in the configured live schema. Do not treat the pilot DDL
@@ -197,6 +202,8 @@ tests do not verify live metadata or deployment.
 ## API #68 Admin user list
 
 API #68 queries the checked-in legacy `users` candidate: `id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at` and `updated_at`. COUNT and page SELECT share optional role/status and keyword predicates; the page sorts by `id ASC` with fixed size 20. `password_hash` is not selected and there is no `bio` or deletion predicate. The query uses BIGINT legacy user IDs and does not join the structurally different V1-PILOT UUID identity/profile tables. These target/filter/order choices are DERIVED from local sources; fake-session tests do not prove live metadata, migration state or deployment.
+
+API #105 uses the same checked-in legacy `users` candidate and those existing columns: `full_name`, `email`, `password_hash`, `role`, `status`, `created_at` and `updated_at`, with the safe response projection reading `id`, `avatar_url` and `phone` as well. It writes the selected role and explicit `ACTIVE` status; no schema field or migration was added. Checked-in DDL is only a candidate and does not prove the current live schema or deployment.
 
 
 ## API #69 Admin user detail

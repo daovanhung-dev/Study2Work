@@ -17,10 +17,13 @@
     </div>
     <div class="catalog-actions" aria-describedby="catalog-actions-note">
       <button type="button" disabled><study-icon name="file" /> Xuất báo cáo</button>
-      <button type="button" disabled><study-icon name="book" /> Thêm khóa học mới</button>
+      <button #addCourseButton class="catalog-action--primary" type="button" (click)="openCreateDialog()"><study-icon name="book" /> Thêm khóa học mới</button>
     </div>
   </header>
-  <p class="control-note" id="catalog-actions-note"><study-icon name="info" /> API hiện tại không cung cấp tạo khóa học hoặc xuất danh mục.</p>
+  <p class="control-note" id="catalog-actions-note"><study-icon name="info" /> Tạo khóa học qua API #104; xuất danh mục hiện chưa được hỗ trợ.</p>
+  @if (createSuccess()) {
+    <p class="create-success" role="status" aria-live="polite">{{ createSuccess() }}</p>
+  }
 
   <section class="summary-grid" aria-label="Thông tin phân trang từ API #73" aria-live="polite">
     <article class="summary-card"><span>Tổng kết quả</span><strong>{{ totalCount }}</strong><p>Theo phản hồi hiện tại</p><span class="summary-icon"><study-icon name="book" /></span></article>
@@ -124,3 +127,79 @@
     </div>
   </section>
 </main>
+
+<dialog
+  #createDialog
+  class="create-dialog"
+  aria-modal="true"
+  aria-labelledby="create-course-title"
+  aria-describedby="create-course-dialog-description"
+  (cancel)="handleCreateDialogCancel($event)"
+  (close)="handleCreateDialogClosed()"
+>
+  <form #createCourseFormElement class="create-form" (ngSubmit)="submitCreateCourse()">
+    <header class="create-dialog__header">
+      <div>
+        <span class="api-badge">API #104</span>
+        <h2 id="create-course-title">Thêm khóa học mới</h2>
+        <p id="create-course-dialog-description">Khóa học mới sẽ được lưu ở trạng thái Nháp.</p>
+      </div>
+      <button class="create-dialog__close" type="button" aria-label="Đóng biểu mẫu" [disabled]="createPending()" (click)="closeCreateDialog()">×</button>
+    </header>
+
+    @if (createError()) {
+      <p class="create-message create-message--error" role="alert">{{ createError() }}</p>
+    }
+
+    <div class="create-form__fields">
+      <label class="create-field" for="create-course-name">
+        <span>Tên khóa học <strong aria-hidden="true">*</strong></span>
+        <input #createTitle id="create-course-name" name="title" type="text" maxlength="200" required autocomplete="off" [(ngModel)]="createForm.title" />
+      </label>
+
+      <label class="create-field" for="create-course-description">
+        <span>Mô tả</span>
+        <textarea id="create-course-description" name="description" rows="4" [(ngModel)]="createForm.description"></textarea>
+      </label>
+
+      <label class="create-field" for="create-course-thumbnail">
+        <span>URL ảnh bìa</span>
+        <input id="create-course-thumbnail" name="thumbnailUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://…" [(ngModel)]="createForm.thumbnailUrl" />
+      </label>
+
+      <label class="create-field" for="create-course-price">
+        <span>Học phí <strong aria-hidden="true">*</strong></span>
+        <input id="create-course-price" name="price" type="text" inputmode="decimal" pattern="-?[0-9]{1,10}([.][0-9]{1,2})?" maxlength="14" required placeholder="Ví dụ: 250000.00" [(ngModel)]="createForm.price" />
+        <small>Nhập số thập phân tối đa 2 chữ số sau dấu chấm.</small>
+      </label>
+
+      <label class="create-field" for="create-course-mentor">
+        <span>Giảng viên hướng dẫn <strong aria-hidden="true">*</strong></span>
+        <select id="create-course-mentor" name="mentorId" required [(ngModel)]="createForm.mentorId" [disabled]="mentorsLoading() || mentors().length === 0">
+          <option value="" disabled>Chọn giảng viên đang hoạt động</option>
+          @for (mentor of mentors(); track mentor.id) {
+            <option [value]="mentor.id">{{ mentor.full_name }}</option>
+          }
+        </select>
+        @if (mentorsLoading()) {
+          <small role="status">Đang tải giảng viên đang hoạt động…</small>
+        } @else if (mentorsError()) {
+          <small class="create-field__error" role="alert">{{ mentorsError() }}</small>
+        } @else if (mentors().length === 0 && !hasMoreMentors) {
+          <small>Chưa có giảng viên đang hoạt động để tạo khóa học.</small>
+        }
+      </label>
+    </div>
+
+    @if (hasMoreMentors) {
+      <button class="mentor-more" type="button" [disabled]="mentorsLoading()" (click)="loadMoreMentors()">Tải thêm giảng viên</button>
+    }
+
+    <footer class="create-dialog__actions">
+      <button class="create-cancel" type="button" [disabled]="createPending()" (click)="closeCreateDialog()">Hủy</button>
+      <button class="create-submit" type="submit" [disabled]="createPending() || mentorsLoading() || mentors().length === 0">
+        @if (createPending()) { Đang lưu… } @else { Tạo khóa học }
+      </button>
+    </footer>
+  </form>
+</dialog>

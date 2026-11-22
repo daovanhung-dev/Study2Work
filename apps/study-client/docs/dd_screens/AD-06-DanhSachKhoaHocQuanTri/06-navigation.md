@@ -38,7 +38,7 @@ flowchart LR
 
 | State | Điều kiện vào | UI / element liên quan | Thoát state |
 |---|---|---|---|
-| `SOURCE_WIRED_RUNTIME_UNVERIFIED` | Checked-in Admin route/page/API caller exist; this is implementation evidence, not a server response. | AD-06 source calls #73; authenticated browser/navigation and live API/DB behavior remain unverified. | Verify in an approved authenticated browser/runtime. |
+| `SOURCE_WIRED_RUNTIME_UNVERIFIED` | Checked-in Admin route/page/API callers exist; this is implementation evidence, not a server response. | AD-06 source calls #68/#73/#104; authenticated browser/navigation and live API/DB behavior remain unverified. | Verify in an approved authenticated browser/runtime. |
 | `INITIAL` | Entry target trước request. | Khởi tạo page=1, no filter theo contract; giữ controls không supported disabled. | Gửi #73 → `LOADING`. |
 | `LOADING` | #73 request đang chờ. | Skeleton/indicator cần theo approved design system; prototype pulse icon không phải loading contract. | 200 → `READY`/`EMPTY`; lỗi → state tương ứng. |
 | `READY` | HTTP 200, `items.length>0`, envelope/model hợp lệ. | Hiển thị row field có API mapping; pagination metadata từ response. | Filter/page change → `LOADING`; chọn row → AD-07. |
@@ -50,13 +50,16 @@ flowchart LR
 | `SERVICE_ERROR` | 500 hoặc lỗi mạng/invalid envelope. | Safe error; không render empty như thành công. | Retry action/policy chưa xác định. |
 | `FILTERED_EMPTY` | 200 với filter có hiệu lực và không có items/total. | Chỉ dùng khi filter semantics/search được approved; API #73 hiện không có search. | Bỏ/đổi filter → `LOADING`. |
 
-Không có mutation state ở AD-06. `REFRESHING` chưa có vì prototype refresh disabled; chỉ thêm khi có event/network behavior được duyệt.
+API #73 list remains read-only. AD-06 additionally has API #104 create states: dialog open/loading mentors, invalid/empty/error mentor options, create pending/failure/success. Prototype refresh is still not wired.
 
 ### Navigation và data handoff
 
 | Từ | Hành động | Đích / dữ liệu truyền | Hiện trạng |
 |---|---|---|---|
 | AD-01/Admin shell | Mở mục Khóa học & Nội dung | AD-06, không có data ID. | Inventory link; route source không có. |
+| AD-06 | Submit dialog tạo khóa học | API #104 `POST /api/v1/admin/courses`; response Course mới ở `DRAFT`. | User-approved extension outside AC-32; server guard and write flow are source-backed. |
+| AD-06 | Tạo thành công, trả ID dương và JS-safe | AD-07 route `/admin/courses/:courseId`; `courseCreated=true` navigation state. | Client validates response before navigating; AD-07 renders a one-time created notice. |
+| AD-06 | Tạo thành công, ID không JS-safe | Giữ AD-06 và refresh #73. | No numeric coercion into route; the list is refreshed. |
 | AD-06 | Chọn course row/action | AD-07 route `/admin/courses/:courseId`, `courseId = Course.id` (int64). | Angular source tạo link chỉ với ID dương, JavaScript safe integer; ID lớn hơn miền biểu diễn chính xác không điều hướng. Prototype không có rows/handler; downstream API #74 thuộc AD-07. |
 | AD-07 | Chỉnh sửa course | AD-08; ID giữ nguyên. #75 mutation/reload sau approval. | AC-32 target flow; không xử lý trong DD này. |
 | AD-07 | Đổi status/xóa | AD-09; ID giữ nguyên; #76/#77 theo confirmation/policy. | AC-32 target flow; reload #73 sau action theo policy; status/delete policy chưa khép kín. |
@@ -65,7 +68,7 @@ Không có mutation state ở AD-06. `REFRESHING` chưa có vì prototype refres
 
 ### Bảo mật phiên và navigation
 
-Bearer token chỉ được cấp qua shared auth client; không lưu token trong URL. Server-side #73 guard vẫn có thẩm quyền. 401/403 không được biến thành empty data. AC-32 permission mapping, session-expiry recovery, return URL, selected-page retention, route guard, and direct-entry behavior are unresolved cross-screen decisions. Direct status-action entry from the AD-06 row is also unresolved; AC sequence passes through AD-07 before AD-09. No mutation in this screen, so no optimistic update, duplicate-submit lock, or mutation retry behavior is defined.
+Bearer token chỉ được cấp qua shared auth client; không lưu token trong URL. Server-side #68/#73/#104 guards remain authoritative. 401/403 không được biến thành empty data. AC-32 permission mapping, session-expiry recovery, return URL, selected-page retention, route guard, and direct-entry behavior are unresolved cross-screen decisions. Direct status-action entry from the AD-06 row is also unresolved; AC sequence passes through AD-07 before AD-09. API #104 create locks duplicate submit while pending; no idempotency key or automatic mutation retry is defined.
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
 
@@ -94,4 +97,8 @@ Bearer token chỉ được cấp qua shared auth client; không lưu token tron
 | 500 / `DESIGN_INTERNAL_ERROR` | DB, count, orphan mentor, projection hoặc mapping lỗi. | Không hiển thị dữ liệu từng phần như thành công; báo lỗi an toàn. Retry/backoff/copy chưa được API contract xác định. |
 | Network/timeout/invalid envelope | Không có business code từ response. | Giữ state theo client error policy được duyệt; không suy ra success. Retry behavior chưa được định nghĩa. |
 
-API #73 catalog không liệt kê 404. Không có mutation, idempotency key hoặc client cache invalidation ở AD-06 list request. AC-32 yêu cầu reload list sau thao tác #75/#76/#77 ở flow liên màn hình; mutation và conflict policy thuộc AD-08/AD-09, không được đặc tả thành hành vi của nút trên mockup.
+API #73 catalog không liệt kê 404 and its list request remains read-only. API #104 create has no idempotency key or automatic retry. AC-32 yêu cầu reload list sau thao tác #75/#76/#77 ở flow liên màn hình; mutation và conflict policy thuộc AD-08/AD-09, không được đặc tả thành hành vi của nút trên mockup.
+
+### Current create navigation — 2026-11-22
+
+The user-approved API #104 extension adds a source-backed create path from the AD-06 dialog. Successful, validated Course projections close the dialog. Positive JavaScript-safe IDs navigate to AD-07 and show an accessible created notice through navigation state; other IDs trigger list refresh without lossy route conversion. Focused AD-06 spec: 8/8. Authenticated browser and deployed route behavior remain unverified.

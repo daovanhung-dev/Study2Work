@@ -374,8 +374,146 @@ describe('AD02Page', () => {
     const text = root.textContent ?? '';
 
     expect(root.querySelector<HTMLButtonElement>('.page-action--secondary')?.disabled).toBe(true);
-    expect(root.querySelector<HTMLButtonElement>('.page-action--primary')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.page-action--primary')?.disabled).toBe(false);
+    expect(text).toContain('Xuất danh sách hiện chưa khả dụng.');
+    expect(text).not.toContain('Tạo người dùng chưa khả dụng');
     expect(text).not.toMatch(/RBAC|nhật ký kiểm toán|health/i);
+  });
+
+  it('creates a selected-role user and refreshes the current API #68 query', async () => {
+    await signIn();
+    const harness = await RouterTestingHarness.create();
+    const page = await harness.navigateByUrl(
+      '/admin/users?keyword=Mai&role=MENTOR&page=2',
+      AD02Page,
+    );
+    await harness.fixture.whenStable();
+    http.expectOne(
+      (request) => request.url === '/api/v1/admin/users'
+        && request.params.get('keyword') === 'Mai'
+        && request.params.get('role') === 'MENTOR'
+        && request.params.get('page') === '2',
+    ).flush(successEnvelope({
+      items: [],
+      pagination: { page: 2, size: 20, total: 45, total_pages: 3 },
+    }));
+    harness.fixture.detectChanges();
+
+    const root = harness.fixture.nativeElement as HTMLElement;
+    root.querySelector<HTMLButtonElement>('.page-action--primary')!.click();
+    harness.fixture.detectChanges();
+    expect(root.querySelector('dialog')?.open).toBe(true);
+
+    setControlValue(root, '#create-user-full-name', 'New Mentor');
+    setControlValue(root, '#create-user-email', 'new-mentor@example.com');
+    setControlValue(root, '#create-user-password', 'initial password');
+    setControlValue(root, '#create-user-role', 'MENTOR', 'change');
+    harness.fixture.detectChanges();
+    await harness.fixture.whenStable();
+    const form = root.querySelector<HTMLFormElement>('.create-user-form');
+    expect(form?.checkValidity()).toBe(true);
+    root.querySelector<HTMLButtonElement>('.create-user-submit')!.click();
+    harness.fixture.detectChanges();
+
+    const createRequest = http.expectOne('/api/v1/admin/users');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Authorization')).toBe('Bearer access-token-1');
+    expect(createRequest.request.body).toEqual({
+      full_name: 'New Mentor',
+      email: 'new-mentor@example.com',
+      password: 'initial password',
+      role: 'MENTOR',
+    });
+    createRequest.flush(successEnvelope(
+      userProfile(502, 'New Mentor', 'new-mentor@example.com', 'MENTOR'),
+      'DESIGN_RESOURCE_CREATED',
+    ));
+    await harness.fixture.whenStable();
+    harness.fixture.detectChanges();
+
+    expect(root.querySelector('dialog')).toBeNull();
+    expect(root.querySelector('[role="status"]')?.textContent).toContain('Tài khoản đã được tạo');
+    const refreshed = http.expectOne(
+      (request) => request.url === '/api/v1/admin/users'
+        && request.params.get('keyword') === 'Mai'
+        && request.params.get('role') === 'MENTOR'
+        && request.params.get('page') === '2',
+    );
+    refreshed.flush(successEnvelope({
+      items: [],
+      pagination: { page: 2, size: 20, total: 45, total_pages: 3 },
+    }));
+    harness.fixture.detectChanges();
+    expect(page.query()).toEqual({ keyword: 'Mai', role: 'MENTOR', status: '', page: 2 });
+  });
+
+  it('rejects whitespace-only initial password before sending API #105', async () => {
+    await signIn();
+    const fixture = TestBed.createComponent(AD02Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/admin/users?page=1').flush(successEnvelope(emptyUsersPage()));
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    root.querySelector<HTMLButtonElement>('.page-action--primary')!.click();
+    fixture.detectChanges();
+    setControlValue(root, '#create-user-full-name', 'Student One');
+    setControlValue(root, '#create-user-email', 'student-one@example.com');
+    setControlValue(root, '#create-user-password', '   ');
+    setControlValue(root, '#create-user-role', 'STUDENT', 'change');
+    fixture.detectChanges();
+    root.querySelector<HTMLButtonElement>('.create-user-submit')!.click();
+    fixture.detectChanges();
+
+    expect(root.querySelector('#create-user-password-error')?.textContent).toContain(
+      'Mật khẩu không được để trống',
+    );
+    expect(root.querySelector('dialog')?.open).toBe(true);
+    http.expectNone('/api/v1/admin/users');
+  });
+
+  it('keeps the user-create form and draft open after an API conflict', async () => {
+    await signIn();
+    const fixture = TestBed.createComponent(AD02Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/admin/users?page=1').flush(successEnvelope(emptyUsersPage()));
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    root.querySelector<HTMLButtonElement>('.page-action--primary')!.click();
+    fixture.detectChanges();
+    setControlValue(root, '#create-user-full-name', 'Student One');
+    setControlValue(root, '#create-user-email', 'used@example.com');
+    setControlValue(root, '#create-user-password', 'initial password');
+    setControlValue(root, '#create-user-role', 'STUDENT', 'change');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const form = root.querySelector<HTMLFormElement>('.create-user-form');
+    expect(form?.checkValidity()).toBe(true);
+    root.querySelector<HTMLButtonElement>('.create-user-submit')!.click();
+    fixture.detectChanges();
+    http.expectOne('/api/v1/admin/users').flush(
+      {
+        success: false,
+        businessCode: 'DESIGN_STATE_CONFLICT',
+        message: 'Email đã tồn tại.',
+        data: null,
+        meta: {},
+        traceId: 'test-trace',
+      },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(root.querySelector('dialog')?.open).toBe(true);
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain(
+      'Email này đã được sử dụng',
+    );
+    expect(root.querySelector<HTMLInputElement>('#create-user-email')?.value).toBe('used@example.com');
+    expect(fixture.componentInstance.createPending()).toBe(false);
   });
 
   async function signIn(): Promise<void> {
@@ -398,15 +536,30 @@ describe('AD02Page', () => {
   }
 });
 
-function successEnvelope<T>(data: T): ApiEnvelope<T> {
+function successEnvelope<T>(
+  data: T,
+  businessCode = 'DESIGN_RESOURCE_RETRIEVED',
+): ApiEnvelope<T> {
   return {
     success: true,
-    businessCode: 'DESIGN_RESOURCE_RETRIEVED',
+    businessCode,
     message: 'ok',
     data,
     meta: {},
     traceId: 'test-trace',
   };
+}
+
+function setControlValue(
+  root: HTMLElement,
+  selector: string,
+  value: string,
+  eventName = 'input',
+): void {
+  const control = root.querySelector<HTMLInputElement | HTMLSelectElement>(selector);
+  if (!control) throw new Error(`Missing test control: ${selector}`);
+  control.value = value;
+  control.dispatchEvent(new Event(eventName, { bubbles: true }));
 }
 
 function emptyUsersPage() {

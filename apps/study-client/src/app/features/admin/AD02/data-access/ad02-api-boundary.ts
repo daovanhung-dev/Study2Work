@@ -1,6 +1,6 @@
 export const AD02_API_BOUNDARY = {
-  apiReferences: ['#68'],
+  apiReferences: ['#68', '#105'],
   sourceState: 'data-backed',
-  sourceNote: 'API #68 yêu cầu Bearer ADMIN và trả Page<UserProfile>. Các bộ lọc là keyword, role, status và page; size cố định ở server.',
+  sourceNote: 'API #68 đọc Page<UserProfile>; API #105 tạo user với role được chọn và trả UserProfile. Cả hai yêu cầu Bearer ADMIN.',
 } as const;
 
