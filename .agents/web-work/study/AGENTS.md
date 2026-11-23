@@ -2,6 +2,12 @@
 
 Companion screen and API map: [INDEX.md](INDEX.md).
 
+Khi người dùng yêu cầu lập UTC/testcase từ Study Screen DD, load skill
+`utc-screen` và workflow `utc-screen-generation` theo registry. Đọc DD cùng
+ảnh được tham chiếu; giữ blocker `Chờ xác nhận DD` và không ghi nhận testcase
+đã chạy nếu chưa có bằng chứng thực thi. Việc này không thay workflow
+`study-web-screen-coding` hoặc skill `createDD-markdown`.
+
 Current Shared screen update (2026-11-21): SH-02–SH-07 are source-wired to the approved scoped behavior and score 100% under the static UI/UX/logic/API rubric; browser/live API/deployment remain unverified. SH-02 uses API #03 HTTP 200 `LoginData` and role-home routing with no `returnTo`; SH-03 uses API #01 plus a one-use handoff; SH-04 uses API #02's accepted stub only. SH-05 retries only Student #04 once after R-X01 on 401, skips refresh on 403, and has safe internal back or `/` fallback. SH-06 is a minimal 404 with `/courses` and `/` links. SH-07 is notification-only: API #18 UUID owner-bound lookup, manual refresh, producers ME-14/#63 and AD-20/#93, with Admin recipients selected via #68. API #63 `content` is text. This current status supersedes older Shared-screen blocker notes below; generic API #18 lifecycle/results remain out of scope.
 
 ```text

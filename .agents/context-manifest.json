@@ -135,6 +135,32 @@
         ".agents/skills/create-dd-mobile"
       ]
     },
+    "utc-screen": {
+      "status": "SOURCE_BACKED",
+      "target": "study-web-screen-test-planning",
+      "entry": ".agents/skills/utc-screen-skill/SKILL.md",
+      "triggers": [
+        "tạo UTC Screen",
+        "sinh testcase từ DD màn hình",
+        "kiểm thử UI/UX và sự kiện",
+        "xuất UTC Excel",
+        "đối chiếu coverage DD → testcase",
+        "create Study Screen UTC",
+        "generate test cases from a Study Screen DD",
+        "Study Web UI/UX and event test coverage",
+        "export Study Screen UTC Excel",
+        "trace Study Screen DD requirements to test cases"
+      ],
+      "scopeRefs": [
+        "web-work/study-web"
+      ],
+      "workflowRefs": [
+        "utc-screen-generation"
+      ],
+      "resourcePaths": [
+        ".agents/skills/utc-screen-skill"
+      ]
+    },
     "code-review": {
       "status": "SOURCE_BACKED",
       "target": "read-only-code-review",
@@ -207,6 +233,26 @@
       "verificationCommands": [
         "focused Angular tests for DD screen cases",
         "local browser demo and fake-data cleanup verification",
+        "context validator"
+      ]
+    },
+    "utc-screen-generation": {
+      "status": "VERIFIED",
+      "entry": ".agents/skills/utc-screen-skill/SKILL.md",
+      "triggers": [
+        "tạo UTC Screen từ Study Screen DD",
+        "sinh testcase màn hình từ DD",
+        "Study Screen UTC generation",
+        "Study Screen test-case design",
+        "Study Screen UI/UX and event coverage"
+      ],
+      "scopeRefs": [
+        "web-work"
+      ],
+      "verificationCommands": [
+        "UTC JSON coverage check with .agents/skills/utc-screen-skill/scripts/kiem_tra_utc.py",
+        "UTC Excel generation with .agents/skills/utc-screen-skill/scripts/tao_utc.py (requires artifact_tool)",
+        "UTC Excel structure check with .agents/skills/utc-screen-skill/scripts/kiem_tra_excel.py",
         "context validator"
       ]
     },
@@ -1034,6 +1080,9 @@
           "status": "VERIFIED_WITH_UNWIRED_COMPONENTS",
           "entry": ".agents/web-work/study/AGENTS.md",
           "index": ".agents/web-work/study/INDEX.md",
+          "skillRefs": [
+            "utc-screen"
+          ],
           "pages": [
             ".agents/web-study/design.md",
             ".agents/web-study/frontend-rules.md",

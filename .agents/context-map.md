@@ -70,7 +70,8 @@ Study2Work/
 │   │   ├── INDEX.md
 │   │   ├── code-review/                        ← read-only review skill pack
 │   │   ├── create-dd-mobile/                   ← Mobile DD skill pack
-│   │   └── create_dd_api/                      ← Web/API DD skill pack
+│   │   ├── create_dd_api/                      ← Web/API DD skill pack
+│   │   └── utc-screen-skill/                    ← Study Web screen UTC skill pack
 │   ├── worklog/
 │   │   ├── README.md
 │   │   ├── TEMPLATE.md
@@ -218,6 +219,8 @@ Study2Work/
 - Status: `VERIFIED_WITH_UNWIRED_COMPONENTS`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
+- Skill ⇢ `utc-screen` for test-case design and UTC Excel from existing Study
+  Screen DD; this does not author the DD or prove test execution.
 - Pages:
   - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
     visual, interaction and accessibility target.
@@ -303,6 +306,11 @@ generic tracking remains contract-blocked.
   - Scope ⇢ `mobile-work`, `web-work`, `server-work`, `server-study`, `server-ai`, `db-admin`.
   - Workflow ⇢ `code-review`; explicit user requests only, read-only, with no test execution.
   - Resources: [review checklist](skills/code-review/references/review-checklist.md) and [report format](skills/code-review/references/report-format.md).
+- `utc-screen`
+  - Entry: [`.agents/skills/utc-screen-skill/SKILL.md`](skills/utc-screen-skill/SKILL.md)
+  - Scope ⇢ `web-work/study-web` only.
+  - Workflow ⇢ `utc-screen-generation`; activate for screen UTC/test-case generation from an existing Study Screen DD.
+  - Resource pack: [`.agents/skills/utc-screen-skill`](skills/utc-screen-skill), including its checklist, schema, scripts, template and GS-01 example.
 - Web UI-only DD has no canonical skill.
 
 ## Workflow graph
@@ -317,6 +325,7 @@ implemented by [`.agents/worklog/README.md`](worklog/README.md).
 | `agent-control` | every task, all scopes | `project/agent-control.md` | leaf-target tracking, declared reads and silent execution |
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
 | `study-web-screen-coding` | implement/fix/test/demo an individual Study Web screen | `web-work/study/workflows/screen-implementation.md` | DD-backed screen, tested local demo and verified fixture cleanup |
+| `utc-screen-generation` | create screen test cases/UTC from an existing Study Screen DD | `skills/utc-screen-skill/SKILL.md` | Traceable UTC JSON, coverage report and four-sheet Excel plan; execution status remains unclaimed |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |
 | `test` | test/verification | `project/workflows.md` | focused then scope verification |
 | `code-review` | explicit code review request | `project/workflows.md` | read-only, evidence-backed review and findings report |

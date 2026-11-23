@@ -48,6 +48,11 @@ registry. Đây là boundary API Detail Design, không phải Mobile module DD;
 Mobile/Flutter dùng `create-dd-from-bd-mobile`. Web UI-only DD hiện chưa có
 skill canonical trong repository.
 
+Với yêu cầu tạo UTC/testcase từ Study Screen DD hiện có, load `utc-screen` và
+workflow `utc-screen-generation` qua `study/AGENTS.md`. Đây là lập kế hoạch
+kiểm thử từ DD; không thay workflow triển khai màn hình hoặc skill authoring
+Web/API DD.
+
 Task cụ thể chỉ đọc đúng web app:
 
 1. `../project/design.md`, `architecture.md`, `conventions.md`,

@@ -41,8 +41,8 @@ ba cột đã định nghĩa. Worklog lưu bằng chứng, không thay thế tar
 - `project/agent-control.md`: quy tắc target, thực thi im lặng, bằng chứng và
   an toàn áp dụng cho mọi scope.
 - `skills/INDEX.md`: skill registry và resource của `create-dd-from-bd-mobile`
-  (Mobile module DD), `createDD-markdown` (Web/API DD), và `code-review`
-  (read-only review across all code scopes).
+  (Mobile module DD), `createDD-markdown` (Web/API DD), `utc-screen` (Study Web
+  screen test planning), và `code-review` (read-only review across all code scopes).
 - `worklog/README.md`: worklog contract và preflight đọc các worklog cùng type bắt buộc cho mọi task.
 - `db-admin/AGENTS.md`: ownership, API safety boundary và verified commands của Neon DB Admin.
 

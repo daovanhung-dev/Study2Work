@@ -17,6 +17,7 @@ Top-level scope: `apps/study-client/`, `apps/work-client/web/`
 | Feature/module routing | `modules/README.md` |
 | Coding/test workflow | `workflows/README.md` |
 | Web/API DD | `createDD-markdown` trong `context-manifest.json` |
+| Study Web UTC/testcase generation | `utc-screen` skill và `utc-screen-generation` workflow trong `context-manifest.json` |
 | Code review | `code-review` skill from the global skill registry |
 
 Study Web uses Angular 22 standalone components, strict TypeScript, and CSS.
