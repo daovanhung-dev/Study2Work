@@ -1,0 +1,2412 @@
+{
+  "metadata": {
+    "screen_id": "GS-01",
+    "screen_name": "Danh sách khóa học",
+    "module": "Study2Work / Guest – Discovery",
+    "route": "/courses",
+    "actor": "Khách (Guest)",
+    "version": "1.0 – KẾ HOẠCH",
+    "dd_version": "0.1 (gói DD 2026-11-08; ghi chú source 2026-11-21)",
+    "dd_status": "BLOCKED – có thiết kế chưa được duyệt",
+    "runtime_status": "CHƯA XÁC MINH TRÌNH DUYỆT / API THẬT",
+    "author": "AI lập kế hoạch kiểm thử, cần người kiểm thử rà soát",
+    "reviewer": "Chưa phân công",
+    "approver": "Chưa phê duyệt",
+    "date": "Chưa phát hành",
+    "source_name": "GS-01-DanhSachKhoaHoc.tar.gz; 00-overview.md → 07-test-cases.md"
+  },
+  "overall": {
+    "objective": "Cho khách khám phá khóa học công khai; xem số lượng, phân trang, sắp xếp và mở chi tiết theo thiết kế được duyệt.",
+    "inputs": "Tuyến /courses, locale tùy chọn; #06 page=1, size=20; không truyền category.",
+    "outputs": "Dữ liệu category (#05), danh sách khóa học đã xuất bản (#06), trạng thái trống/có dữ liệu/lỗi; các đích điều hướng đề xuất.",
+    "main_flow": "Mở trang → trạng thái tải → đọc #05 theo locale → gọi #06 (page=1,size=20,không category) → kiểm tra envelope → quyết định empty/ready/query-error; xử lý lệch COUNT/LIST theo source audit.",
+    "states": [
+      "Đang tải",
+      "Không có khóa học",
+      "Có dữ liệu",
+      "Lỗi truy vấn",
+      "Trang ngoài phạm vi (chưa chốt UX)",
+      "Dữ liệu lệch COUNT/LIST"
+    ],
+    "preconditions": "Khách mở trang /courses; API public; không cần Bearer token.",
+    "security": "Chỉ dữ liệu PUBLISHED; category không dùng để lọc; API #05/#06 public; chưa có bằng chứng runtime/browser.",
+    "out_of_scope": "Không gọi #07 tại GS-01; không tự bật lọc category; không tự thiết kế lại card/sort/page khi chưa được duyệt."
+  },
+  "apis": [
+    {
+      "id": "GS-01-API-001",
+      "method": "GET",
+      "path": "/api/v1/categories",
+      "event_ids": [
+        "GS-01-EV-001"
+      ],
+      "request": "locale tùy chọn (mặc định máy chủ vi-VN); không body, không token",
+      "response": "success, businessCode=DESIGN_RESOURCE_RETRIEVED, data.items[] category và pagination",
+      "errors": "422 validation; 500 DESIGN_INTERNAL_ERROR; chính sách lỗi cache chưa chốt",
+      "auth": "Công khai",
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md GS01-EV-01; 04-api-integration.md"
+    },
+    {
+      "id": "GS-01-API-002",
+      "method": "GET",
+      "path": "/api/v1/courses",
+      "event_ids": [
+        "GS-01-EV-001",
+        "GS-01-EV-005",
+        "GS-01-EV-006"
+      ],
+      "request": "page=1, size=20; sort tùy chọn field:direction; category không được gửi; không body/token",
+      "response": "data.items[] id/title/price/status/mentor, pagination page/size/total/total_pages; chỉ PUBLISHED",
+      "errors": "422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR; items=[] total>0 khác empty catalog",
+      "auth": "Công khai",
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md GS01-EV-01; 04-api-integration.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "GS-01-YC-001",
+      "description": "Màn hình công khai /courses cho khách xem danh sách khóa học",
+      "group": "Toàn màn hình",
+      "design_status": "Đã xác nhận",
+      "source_ref": "00-overview.md §1; §3",
+      "notes": "",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-002",
+      "description": "Hiển thị 16 thành phần đánh số trong ảnh trạng thái rỗng",
+      "group": "Giao diện",
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3",
+      "notes": "Chỉ xác nhận ảnh trạng thái rỗng",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-003",
+      "description": "Đọc danh mục bằng API #05 theo locale và cache-first",
+      "group": "API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md GS01-EV-01; 05-business-rules.md GS01-B04",
+      "notes": "Chưa chốt chính sách cache/lỗi",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-004",
+      "description": "Tải danh sách bằng API #06, trang 1, kích thước 20, không truyền category",
+      "group": "API",
+      "design_status": "Đã xác nhận",
+      "source_ref": "00-overview.md §5; 02-events.md GS01-EV-01",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-005",
+      "description": "Trạng thái rỗng khi items=[] và total=0",
+      "group": "Trạng thái",
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md GS01-EV-01",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-006",
+      "description": "Trạng thái có danh sách, thẻ khóa học, bộ đếm và bố cục đã tải",
+      "group": "Giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "00-overview.md §1; 05-business-rules.md GS01-B01",
+      "notes": "Thiếu thiết kế loaded state",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-007",
+      "description": "Lỗi API/mạng không đồng nhất với trạng thái không có khóa học",
+      "group": "Trạng thái",
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md GS01-EV-01; 03-data-flow.md",
+      "notes": "Bản sao lỗi và retry cần chốt",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-008",
+      "description": "Phân biệt trang ngoài phạm vi items=[] total>0 với catalog rỗng",
+      "group": "Trạng thái",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "05-business-rules.md GS01-B06",
+      "notes": "Chính sách khôi phục chưa chốt",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-009",
+      "description": "Cho phép nhập chuỗi vào ô tìm kiếm đầu trang",
+      "group": "Thành phần",
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md #2; 02-events.md GS01-EV-02",
+      "notes": "Chỉ chứng minh ô nhập trên ảnh",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-010",
+      "description": "Cho phép nhập chuỗi vào ô tìm kiếm chính",
+      "group": "Thành phần",
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md #7; 02-events.md GS01-EV-03",
+      "notes": "Chỉ chứng minh ô nhập trên ảnh",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-011",
+      "description": "Hành vi gửi tìm kiếm sang GS-02, quy tắc q/Enter/click",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "05-business-rules.md GS01-B03; 02-events.md GS01-EV-04",
+      "notes": "Chưa duyệt handoff",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-012",
+      "description": "Thay đổi sắp xếp làm tải lại #06 và reset page=1",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md GS01-EV-05; 00-overview.md audit 2026-11-21",
+      "notes": "Thiếu UI control được duyệt",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-013",
+      "description": "Chuyển trang dùng #06 với page, size và sort hiện hành",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md GS01-EV-06",
+      "notes": "Thiếu UI phân trang",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-014",
+      "description": "Mở chi tiết GS-03 từ khóa học bằng course.id",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md GS01-EV-07",
+      "notes": "Thiếu card/layout và đích được duyệt",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-015",
+      "description": "Điều hướng đầu trang và chân trang theo danh sách đích đề xuất",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "06-navigation.md §3; 02-events.md EV08–EV11",
+      "notes": "Route runtime chưa được kiểm tra",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-016",
+      "description": "Chỉ trình bày khóa học có status=PUBLISHED; không lấy dữ liệu riêng tư",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "source_ref": "05-business-rules.md §2; 02-events.md GS01-EV-01",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-017",
+      "description": "Khi COUNT/LIST lệch, giữ item, ẩn total/paging và cho phép retry cùng trang",
+      "group": "Dữ liệu",
+      "design_status": "Đã xác nhận",
+      "source_ref": "00-overview.md audit 2026-11-21",
+      "notes": "Đã quan sát trong source; chưa kiểm thử runtime",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-018",
+      "description": "Hỗ trợ bàn phím/tiêu điểm và khả năng tiếp cận phù hợp",
+      "group": "UI/UX",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "05-business-rules.md §2; 00-overview.md §3",
+      "notes": "Không có bằng chứng a11y/runtime",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-019",
+      "description": "Danh mục category chỉ là metadata; không gửi category vào #06",
+      "group": "API",
+      "design_status": "Đã xác nhận",
+      "source_ref": "05-business-rules.md GS01-B02; 02-events.md GS01-EV-01",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-020",
+      "description": "Khi đổi sort/page thì hủy yêu cầu catalog đang chạy trước",
+      "group": "Sự kiện",
+      "design_status": "Đã xác nhận",
+      "source_ref": "00-overview.md audit 2026-11-21; 02-events.md audit 2026-11-21",
+      "notes": "Hiện mô tả source, chưa kiểm thử runtime",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-021",
+      "description": "Phản hồi lỗi 422/500 của #06 không được diễn giải là catalog trống",
+      "group": "API",
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md GS01-EV-01; 03-data-flow.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "GS-01-YC-022",
+      "description": "API #05/#06 là public, không cần Bearer token",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "source_ref": "05-business-rules.md §2; 04-api-integration.md",
+      "notes": "",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "GS-01-YC-023",
+      "description": "Không tự hiển thị ký hiệu tiền tệ khi response không chứa currency",
+      "group": "Dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "05-business-rules.md §2; GS01-B05",
+      "notes": "Cần phê duyệt display card/price",
+      "priority": "Trung bình"
+    }
+  ],
+  "elements": [
+    {
+      "id": "GS-01-EL-001",
+      "marker": "#1",
+      "name": "Header: liên kết Khóa học đang chọn",
+      "type": "Liên kết",
+      "position": "Đầu trang",
+      "properties": "Nhãn Khóa học, đang chọn trên ảnh trạng thái rỗng",
+      "event_ids": [
+        "GS-01-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §3 #1; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-002",
+      "marker": "#2",
+      "name": "Header: ô tìm kiếm",
+      "type": "Ô nhập",
+      "position": "Đầu trang",
+      "properties": "Có biểu tượng tìm kiếm, nhận chuỗi do khách nhập; giới hạn chưa duyệt",
+      "event_ids": [
+        "GS-01-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #2; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-003",
+      "marker": "#3",
+      "name": "Header: Đăng nhập",
+      "type": "Liên kết",
+      "position": "Đầu trang",
+      "properties": "Nhãn Đăng nhập, route /login đề xuất chưa được duyệt",
+      "event_ids": [
+        "GS-01-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #3; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-004",
+      "marker": "#4",
+      "name": "Header: Đăng ký",
+      "type": "Nút",
+      "position": "Đầu trang",
+      "properties": "Nhãn Đăng ký, route /register đề xuất chưa được duyệt",
+      "event_ids": [
+        "GS-01-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #4; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-005",
+      "marker": "#5",
+      "name": "Tiêu đề Danh sách khóa học",
+      "type": "Tiêu đề",
+      "position": "Nội dung",
+      "properties": "H1: Danh sách khóa học",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §3 #5; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-006",
+      "marker": "#6",
+      "name": "Mô tả giới thiệu",
+      "type": "Văn bản",
+      "position": "Nội dung",
+      "properties": "Mô tả: Tìm kiếm và khám phá các khóa học phù hợp với nhu cầu học tập của bạn.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §3 #6; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-007",
+      "marker": "#7",
+      "name": "Ô tìm kiếm chính",
+      "type": "Ô nhập",
+      "position": "Nội dung",
+      "properties": "Ô tìm kiếm và biểu tượng tìm kiếm; chưa chốt chuẩn hóa truy vấn",
+      "event_ids": [
+        "GS-01-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #7; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-008",
+      "marker": "#8",
+      "name": "Nút Tìm kiếm",
+      "type": "Nút",
+      "position": "Nội dung",
+      "properties": "Nhãn Tìm kiếm và biểu tượng mũi tên; xử lý submit chưa duyệt",
+      "event_ids": [
+        "GS-01-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #8; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-009",
+      "marker": "#9",
+      "name": "Minh họa trạng thái rỗng",
+      "type": "Ảnh minh họa",
+      "position": "Nội dung",
+      "properties": "Ảnh minh họa quyển sách; mang tính trang trí",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §3 #9; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-010",
+      "marker": "#10",
+      "name": "Tiêu đề trạng thái rỗng",
+      "type": "Tiêu đề",
+      "position": "Nội dung",
+      "properties": "Chưa có khóa học để hiển thị",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §3 #10; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-011",
+      "marker": "#11",
+      "name": "Mô tả trạng thái rỗng",
+      "type": "Văn bản",
+      "position": "Nội dung",
+      "properties": "Danh sách khóa học hiện tại chưa có dữ liệu hoặc đang được cập nhật.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §3 #11; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-012",
+      "marker": "#12",
+      "name": "Thương hiệu Study2Work ở chân trang",
+      "type": "Thương hiệu",
+      "position": "Chân trang",
+      "properties": "Nhãn Study2Work",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §3 #12; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-013",
+      "marker": "#13",
+      "name": "Chân trang: Trang chủ",
+      "type": "Liên kết",
+      "position": "Chân trang",
+      "properties": "Nhãn Trang chủ; đích / được đề xuất",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #13; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-014",
+      "marker": "#14",
+      "name": "Chân trang: Khóa học",
+      "type": "Liên kết",
+      "position": "Chân trang",
+      "properties": "Nhãn Khóa học; đích /courses được đề xuất",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #14; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-015",
+      "marker": "#15",
+      "name": "Chân trang: Đăng nhập",
+      "type": "Liên kết",
+      "position": "Chân trang",
+      "properties": "Nhãn Đăng nhập; đích /login được đề xuất",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #15; images/screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-016",
+      "marker": "#16",
+      "name": "Chân trang: Đăng ký",
+      "type": "Liên kết",
+      "position": "Chân trang",
+      "properties": "Nhãn Đăng ký; đích /register được đề xuất",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #16; images/screen-numbered.png"
+    }
+  ],
+  "events": [
+    {
+      "id": "GS-01-EV-001",
+      "name": "Khởi tạo màn hình và nạp dữ liệu",
+      "trigger": "Mở /courses",
+      "element_ids": [],
+      "api_ids": [
+        "GS-01-API-001",
+        "GS-01-API-002"
+      ],
+      "processing": "GET #05 rồi #06; xác thực envelope và phân biệt trạng thái",
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-01"
+    },
+    {
+      "id": "GS-01-EV-002",
+      "name": "Nhập chuỗi tại tìm kiếm đầu trang",
+      "trigger": "Nhập/chỉnh sửa",
+      "element_ids": [
+        "GS-01-EL-002"
+      ],
+      "api_ids": [],
+      "processing": "Chưa có quy tắc chuyển tiếp được duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-02"
+    },
+    {
+      "id": "GS-01-EV-003",
+      "name": "Nhập chuỗi tại tìm kiếm chính",
+      "trigger": "Nhập/chỉnh sửa",
+      "element_ids": [
+        "GS-01-EL-007"
+      ],
+      "api_ids": [],
+      "processing": "Chưa có quy tắc chuẩn hóa/submit được duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-03"
+    },
+    {
+      "id": "GS-01-EV-004",
+      "name": "Gửi yêu cầu tìm kiếm",
+      "trigger": "Nhấn nút hoặc Enter dự kiến",
+      "element_ids": [
+        "GS-01-EL-008"
+      ],
+      "api_ids": [],
+      "processing": "Chuyển GS-02 là hướng đề xuất; chưa duyệt handoff",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-04"
+    },
+    {
+      "id": "GS-01-EV-005",
+      "name": "Sắp xếp danh sách",
+      "trigger": "Thay đổi sắp xếp",
+      "element_ids": [],
+      "api_ids": [
+        "GS-01-API-002"
+      ],
+      "processing": "Đặt trang=1; gọi lại #06, không gửi category; control chưa duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-05"
+    },
+    {
+      "id": "GS-01-EV-006",
+      "name": "Chuyển trang",
+      "trigger": "Chọn số trang",
+      "element_ids": [],
+      "api_ids": [
+        "GS-01-API-002"
+      ],
+      "processing": "Gọi #06 cho page mới; control chưa duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-06"
+    },
+    {
+      "id": "GS-01-EV-007",
+      "name": "Mở chi tiết khóa học",
+      "trigger": "Nhấn thẻ khóa học",
+      "element_ids": [],
+      "api_ids": [],
+      "processing": "Mở GS-03 với course.id; giao diện thẻ chưa duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-07"
+    },
+    {
+      "id": "GS-01-EV-008",
+      "name": "Chọn mục Khóa học đầu trang",
+      "trigger": "Nhấn liên kết",
+      "element_ids": [
+        "GS-01-EL-001"
+      ],
+      "api_ids": [],
+      "processing": "Tuyến /courses đề xuất; điều hướng chưa phê duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-08"
+    },
+    {
+      "id": "GS-01-EV-009",
+      "name": "Chọn Đăng nhập đầu trang",
+      "trigger": "Nhấn liên kết",
+      "element_ids": [
+        "GS-01-EL-003"
+      ],
+      "api_ids": [],
+      "processing": "Tuyến /login đề xuất; điều hướng chưa phê duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-09"
+    },
+    {
+      "id": "GS-01-EV-010",
+      "name": "Chọn Đăng ký đầu trang",
+      "trigger": "Nhấn nút",
+      "element_ids": [
+        "GS-01-EL-004"
+      ],
+      "api_ids": [],
+      "processing": "Tuyến /register đề xuất; điều hướng chưa phê duyệt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-10"
+    },
+    {
+      "id": "GS-01-EV-011",
+      "name": "Chọn liên kết chân trang",
+      "trigger": "Nhấn 1 trong 4 liên kết",
+      "element_ids": [
+        "GS-01-EL-013",
+        "GS-01-EL-014",
+        "GS-01-EL-015",
+        "GS-01-EL-016"
+      ],
+      "api_ids": [],
+      "processing": "Tuyến /, /courses, /login, /register đều là đề xuất",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 GS01-EV-11"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "GS01-B01",
+      "description": "Thiếu bố cục danh sách đã tải",
+      "impact": "Không thể xác nhận giao diện card/sort/count/page",
+      "decision": "Duyệt màn trạng thái có dữ liệu",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B02",
+      "description": "Backend không hỗ trợ category filter",
+      "impact": "Không được tạo chức năng lọc category",
+      "decision": "Chốt contract DB/API hoặc chỉ metadata",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B03",
+      "description": "Handoff tìm kiếm chưa thống nhất",
+      "impact": "Không thể duyệt testcase click/Enter search",
+      "decision": "Chốt q, trim, query rỗng, URL sync",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B04",
+      "description": "Chính sách cache/partial #05/#06 chưa rõ",
+      "impact": "Không thể duyệt fallback khi #05 lỗi",
+      "decision": "Chốt TTL/partial/retry",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B05",
+      "description": "Thiếu trường category/currency và thiết kế thẻ",
+      "impact": "Không thể chốt card hiển thị giá",
+      "decision": "Duyệt schema và định dạng giá",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B06",
+      "description": "Phân biệt empty page/empty catalog thiếu UX",
+      "impact": "Chưa có cách khôi phục trang vượt phạm vi",
+      "decision": "Duyệt nội dung lỗi và retry",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B07",
+      "description": "Chưa kiểm chứng runtime trên trình duyệt",
+      "impact": "Không được tuyên bố testcase đã đạt",
+      "decision": "Chạy kiểm thử khi có môi trường",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B08",
+      "description": "Ảnh và HTML prototype không thống nhất",
+      "impact": "Không thể suy luận UI cuối",
+      "decision": "Duyệt nguồn thiết kế chuẩn",
+      "source_ref": "05-business-rules.md §2; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "GS-01-TC-MH-001",
+        "requirement_ids": [
+          "GS-01-YC-001"
+        ],
+        "target_id": "GS-01",
+        "group": "Vào màn hình",
+        "title": "Truy cập không cần đăng nhập",
+        "precondition": "Trình duyệt sẵn sàng, môi trường triển khai có tuyến /courses",
+        "data": "Khách chưa đăng nhập",
+        "steps": [
+          "Mở URL /courses",
+          "Quan sát điều hướng và yêu cầu API"
+        ],
+        "expected": "Màn hình dành cho khách tại tuyến /courses; #05/#06 không yêu cầu token.",
+        "api_ids": [
+          "GS-01-API-001",
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "00-overview.md §1; 05-business-rules.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-002",
+        "requirement_ids": [
+          "GS-01-YC-002"
+        ],
+        "target_id": "GS-01",
+        "group": "Bố cục",
+        "title": "Đối chiếu trạng thái rỗng với 16 marker",
+        "precondition": "Có thiết kế ảnh 1280×1114",
+        "data": "Ảnh screen-numbered.png, trạng thái không có khóa học",
+        "steps": [
+          "Mở trạng thái rỗng",
+          "So sánh các vùng #1 đến #16 với ảnh gốc"
+        ],
+        "expected": "Trong ảnh đối chiếu hiện diện 16 vùng #1–#16 theo mô tả trong 01-ui-elements.md; không kết luận responsive.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-003",
+        "requirement_ids": [
+          "GS-01-YC-003",
+          "GS-01-YC-004"
+        ],
+        "target_id": "GS-01",
+        "group": "Khởi tạo API",
+        "title": "Thứ tự #05 rồi #06 khi mở trang",
+        "precondition": "Môi trường có thể chặn và quan sát request",
+        "data": "#05: locale tùy chọn; #06 page=1,size=20",
+        "steps": [
+          "Mở /courses",
+          "Theo dõi thứ tự gọi API",
+          "Kiểm tra tham số #06"
+        ],
+        "expected": "#05 được giải quyết trước #06; #06 dùng page=1,size=20, không truyền category.",
+        "api_ids": [
+          "GS-01-API-001",
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "00-overview.md §5; 02-events.md GS01-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-004",
+        "requirement_ids": [
+          "GS-01-YC-004",
+          "GS-01-YC-019"
+        ],
+        "target_id": "GS-01",
+        "group": "API",
+        "title": "Không gửi category vào API #06",
+        "precondition": "Có thể quan sát truy vấn",
+        "data": "Danh mục category có dữ liệu",
+        "steps": [
+          "Mở trang và tương tác nạp danh sách",
+          "Quan sát URL truy vấn #06"
+        ],
+        "expected": "Không có tham số category được gửi đến #06, kể cả khi #05 có dữ liệu category.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B02; 02-events.md GS01-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-005",
+        "requirement_ids": [
+          "GS-01-YC-005"
+        ],
+        "target_id": "GS-01",
+        "group": "Trạng thái",
+        "title": "Danh sách rỗng đúng nghĩa",
+        "precondition": "Có thể giả lập API #06",
+        "data": "items=[], pagination.total=0",
+        "steps": [
+          "Mở trang với dữ liệu nạp trả về rỗng",
+          "Kiểm tra phần trạng thái"
+        ],
+        "expected": "Hiển thị trạng thái danh sách không có khóa học; không hiển thị course card giả.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01; 01-ui-elements.md #9–#11"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-006",
+        "requirement_ids": [
+          "GS-01-YC-007",
+          "GS-01-YC-021"
+        ],
+        "target_id": "GS-01",
+        "group": "Lỗi",
+        "title": "Lỗi API không hiển thị như danh sách rỗng",
+        "precondition": "Có thể giả lập response #06",
+        "data": "HTTP 500 và success:false",
+        "steps": [
+          "Mở trang",
+          "Cho #06 trả lỗi 500",
+          "Quan sát nhánh trạng thái"
+        ],
+        "expected": "Lỗi được phân loại là QUERY_ERROR; không sử dụng empty state làm kết quả thành công.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01; 03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-007",
+        "requirement_ids": [
+          "GS-01-YC-021"
+        ],
+        "target_id": "GS-01",
+        "group": "Lỗi",
+        "title": "HTTP 422 không coi là empty",
+        "precondition": "Có thể giả lập response #06",
+        "data": "HTTP 422, businessCode=DESIGN_VALIDATION_ERROR",
+        "steps": [
+          "Nạp danh sách với response 422",
+          "Quan sát phân loại trạng thái"
+        ],
+        "expected": "Phản hồi xác nhận lỗi kiểm tra dữ liệu; không được coi là danh sách rỗng hợp lệ.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-008",
+        "requirement_ids": [
+          "GS-01-YC-008"
+        ],
+        "target_id": "GS-01",
+        "group": "Dữ liệu biên",
+        "title": "Trang vượt phạm vi không đồng nhất catalog rỗng",
+        "precondition": "Cần chính sách UX phê duyệt",
+        "data": "items=[], total=25, page=999",
+        "steps": [
+          "Giả lập response có total>0 và items=[]",
+          "Quan sát nội dung và thao tác khôi phục"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: xử lý trang ngoài phạm vi/khôi phục chưa được duyệt; không chấp nhận coi catalog không tồn tại.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B06"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-009",
+        "requirement_ids": [
+          "GS-01-YC-006"
+        ],
+        "target_id": "GS-01",
+        "group": "Trạng thái có dữ liệu",
+        "title": "Danh sách khóa học có dữ liệu",
+        "precondition": "Cần thiết kế loaded state được duyệt",
+        "data": "items có 1 khóa học PUBLISHED",
+        "steps": [
+          "Đưa API #06 có 1 item",
+          "Kiểm tra bố cục card/tổng kết quả"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: layout card, số kết quả, sort và phân trang đang thiếu thiết kế phê duyệt.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-010",
+        "requirement_ids": [
+          "GS-01-YC-016"
+        ],
+        "target_id": "GS-01",
+        "group": "Bảo mật dữ liệu",
+        "title": "Không hiện khóa học bản nháp",
+        "precondition": "API #06 có dữ liệu public và draft trong kho dữ liệu kiểm thử",
+        "data": "1 PUBLISHED và 1 DRAFT (fixture mô phỏng)",
+        "steps": [
+          "Gọi #06",
+          "Kiểm tra danh sách phản hồi và UI"
+        ],
+        "expected": "Trong data.items của #06 chỉ có khóa học PUBLISHED; UI không có bản nháp.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md §2; 02-events.md GS01-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-011",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01",
+        "group": "Bảo mật",
+        "title": "API public không yêu cầu Bearer",
+        "precondition": "Có công cụ quan sát request",
+        "data": "Không có phiên đăng nhập",
+        "steps": [
+          "Mở /courses không đăng nhập",
+          "Quan sát request #05/#06"
+        ],
+        "expected": "Có thể yêu cầu #05/#06 mà không đính kèm Bearer token; không chứa PII.",
+        "api_ids": [
+          "GS-01-API-001",
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-012",
+        "requirement_ids": [
+          "GS-01-YC-017"
+        ],
+        "target_id": "GS-01",
+        "group": "Tính nhất quán",
+        "title": "COUNT/LIST trả số dòng không phù hợp",
+        "precondition": "Có thể giả lập hai truy vấn lệch nhau",
+        "data": "total=25, page=1,size=20, items có 5 dòng",
+        "steps": [
+          "Cho #06 trả dữ liệu lệch giữa count và list",
+          "Quan sát danh sách và bộ đếm"
+        ],
+        "expected": "Giữ các item được trả, ẩn tổng và bộ điều khiển phân trang, hiển thị thao tác thử lại cùng trang theo mô tả source.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "00-overview.md Current Study Web source re-audit (2026-11-21)"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-013",
+        "requirement_ids": [
+          "GS-01-YC-017"
+        ],
+        "target_id": "GS-01",
+        "group": "Tính nhất quán",
+        "title": "Thử lại trang hiện tại khi count/list lệch",
+        "precondition": "Môi trường giả lập đã kích hoạt nhánh lệch dữ liệu",
+        "data": "page=2, sort=name:asc; dữ liệu lệch",
+        "steps": [
+          "Kích hoạt trạng thái lệch",
+          "Chọn Thử lại",
+          "Quan sát request #06"
+        ],
+        "expected": "Yêu cầu thử lại sử dụng đúng trang và sắp xếp đang hiển thị theo source audit; chưa đánh dấu chạy thật.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "00-overview.md Current Study Web source re-audit (2026-11-21)"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-014",
+        "requirement_ids": [
+          "GS-01-YC-003"
+        ],
+        "target_id": "GS-01",
+        "group": "Cache",
+        "title": "Nhận metadata #05 qua cache",
+        "precondition": "Chưa có TTL/cache fallback được duyệt",
+        "data": "Cache có bản ghi trùng locale",
+        "steps": [
+          "Mở trang sau khi có cache",
+          "#05 có bản ghi trong cache",
+          "Quan sát số lần gọi mạng"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: cơ chế cache hit/miss, TTL và fallback #05 chưa được phê duyệt.",
+        "api_ids": [
+          "GS-01-API-001"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B04"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-015",
+        "requirement_ids": [
+          "GS-01-YC-003",
+          "GS-01-YC-007"
+        ],
+        "target_id": "GS-01",
+        "group": "Khả năng phục hồi",
+        "title": "API #05 lỗi trong khi #06 thành công",
+        "precondition": "Chưa có chính sách xử lý partial load",
+        "data": "Lỗi #05 500, #06 có item",
+        "steps": [
+          "Giả lập #05 lỗi",
+          "Quan sát xem có gọi #06 và giao diện cuối"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: có tiếp tục tải #06, hiển thị từng phần hoặc dừng chưa được duyệt.",
+        "api_ids": [
+          "GS-01-API-001",
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-016",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01",
+        "group": "Khả năng tiếp cận",
+        "title": "Điều khiển có thể sử dụng bằng bàn phím",
+        "precondition": "Chưa có phê duyệt tiêu chí chi tiết",
+        "data": "Tab, Shift+Tab, Enter",
+        "steps": [
+          "Truy cập bằng bàn phím",
+          "Di chuyển qua điều khiển tương tác",
+          "Kích hoạt bằng Enter"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: chuẩn tiêu điểm, thứ tự và hành vi Enter chưa được duyệt; tham chiếu WCAG 2.2.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-017",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01",
+        "group": "Đa kích thước",
+        "title": "Bố cục không cắt mất nội dung trên kích thước hẹp",
+        "precondition": "DD chỉ có ảnh 1280×1114",
+        "data": "Viewport 375×812 (giá trị thử nghiệm, không phải DD)",
+        "steps": [
+          "Mở trang ở chiều rộng hẹp",
+          "Kiểm tra tràn ngang/che mất điều khiển"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: các mốc responsive và bố cục hẹp chưa được phê duyệt; chỉ là phép kiểm thăm dò.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-MH-018",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01",
+        "group": "Hiển thị dữ liệu",
+        "title": "Không tự gắn tiền tệ khi response thiếu currency",
+        "precondition": "Cần card UI và contract tiền tệ được duyệt",
+        "data": "price=\"120000\", không có currency",
+        "steps": [
+          "Nạp một khóa học có price nhưng không currency",
+          "Kiểm tra cách hiển thị giá"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: không suy diễn ký hiệu/định dạng tiền tệ khi API không trả currency.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B05"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "GS-01-TC-TP-001",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EL-001",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 1",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #1 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #1 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Khóa học, đang chọn trên ảnh trạng thái rỗng; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #1; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-002",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-009"
+        ],
+        "target_id": "GS-01-EL-002",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 2",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #2 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #2 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Có biểu tượng tìm kiếm, nhận chuỗi do khách nhập; giới hạn chưa duyệt; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #2; images/screen-numbered.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-003",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EL-003",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 3",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #3 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #3 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Đăng nhập, route /login đề xuất chưa được duyệt; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #3; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-004",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EL-004",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 4",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #4 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #4 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Đăng ký, route /register đề xuất chưa được duyệt; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #4; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-005",
+        "requirement_ids": [
+          "GS-01-YC-002"
+        ],
+        "target_id": "GS-01-EL-005",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 5",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #5 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #5 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: H1: Danh sách khóa học; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #5; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-006",
+        "requirement_ids": [
+          "GS-01-YC-002"
+        ],
+        "target_id": "GS-01-EL-006",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 6",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #6 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #6 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Mô tả: Tìm kiếm và khám phá các khóa học phù hợp với nhu cầu học tập của bạn.; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #6; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-007",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-010"
+        ],
+        "target_id": "GS-01-EL-007",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 7",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #7 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #7 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Ô tìm kiếm và biểu tượng tìm kiếm; chưa chốt chuẩn hóa truy vấn; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #7; images/screen-numbered.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-008",
+        "requirement_ids": [
+          "GS-01-YC-002"
+        ],
+        "target_id": "GS-01-EL-008",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 8",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #8 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #8 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Tìm kiếm và biểu tượng mũi tên; xử lý submit chưa duyệt; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #8; images/screen-numbered.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-009",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-005"
+        ],
+        "target_id": "GS-01-EL-009",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 9",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #9 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #9 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Ảnh minh họa quyển sách; mang tính trang trí; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #9; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-010",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-005"
+        ],
+        "target_id": "GS-01-EL-010",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 10",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #10 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #10 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Chưa có khóa học để hiển thị; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #10; images/screen-numbered.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-011",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-005"
+        ],
+        "target_id": "GS-01-EL-011",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 11",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #11 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #11 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Danh sách khóa học hiện tại chưa có dữ liệu hoặc đang được cập nhật.; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #11; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-012",
+        "requirement_ids": [
+          "GS-01-YC-002"
+        ],
+        "target_id": "GS-01-EL-012",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 12",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #12 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #12 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Study2Work; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #12; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-013",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EL-013",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 13",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #13 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #13 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Trang chủ; đích / được đề xuất; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #13; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-014",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EL-014",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 14",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #14 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #14 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Khóa học; đích /courses được đề xuất; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #14; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-015",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EL-015",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 15",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #15 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #15 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Đăng nhập; đích /login được đề xuất; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #15; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-016",
+        "requirement_ids": [
+          "GS-01-YC-002",
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EL-016",
+        "group": "Hiển thị",
+        "title": "Đối chiếu thành phần với marker 16",
+        "precondition": "Màn GS-01 hiển thị trạng thái rỗng; có ảnh gốc và ảnh đánh số",
+        "data": "Ảnh tham chiếu 1280×1114",
+        "steps": [
+          "Xác định marker #16 trên ảnh đánh số",
+          "Quan sát vùng tương ứng trên màn hình",
+          "So sánh nhãn, loại và vị trí tương đối"
+        ],
+        "expected": "Trong trạng thái rỗng, vùng marker #16 hiển thị theo ảnh thiết kế và có nội dung/kiểu đối tượng: Nhãn Đăng ký; đích /register được đề xuất; chỉ so sánh phần nhìn thấy, không khẳng định hành vi chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #16; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-017",
+        "requirement_ids": [
+          "GS-01-YC-009"
+        ],
+        "target_id": "GS-01-EL-002",
+        "group": "Nhập liệu",
+        "title": "Tìm kiếm đầu trang nhận ký tự",
+        "precondition": "Ô #2 đang hiển thị",
+        "data": "Chuỗi Unicode: \"khóa học lập trình\"",
+        "steps": [
+          "Đặt con trỏ tại ô #2",
+          "Nhập chuỗi mẫu",
+          "Quan sát giá trị trong ô"
+        ],
+        "expected": "Ô #2 giữ nguyên nội dung người dùng vừa nhập; không có bằng chứng DD cho tự động gọi API khi nhập.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-02"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-018",
+        "requirement_ids": [
+          "GS-01-YC-010"
+        ],
+        "target_id": "GS-01-EL-007",
+        "group": "Nhập liệu",
+        "title": "Ô tìm kiếm chính nhận ký tự",
+        "precondition": "Ô #7 đang hiển thị",
+        "data": "Chuỗi Unicode: \"khóa học an ninh mạng\"",
+        "steps": [
+          "Nhấp ô #7",
+          "Nhập nội dung",
+          "Quan sát giá trị hiển thị"
+        ],
+        "expected": "Ô #7 hiển thị nội dung được nhập; không dùng tổng kết quả giả từ prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-03"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-019",
+        "requirement_ids": [
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01-EL-008",
+        "group": "Tương tác",
+        "title": "Trạng thái nút tìm kiếm khi bấm",
+        "precondition": "DD chưa duyệt xử lý submit",
+        "data": "Chuỗi nhập \"an ninh mạng\"",
+        "steps": [
+          "Nhập tại #7",
+          "Nhấn nút #8",
+          "Quan sát phản hồi, route và request"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: chưa có hành vi/validation/handoff được duyệt; không dựa vào prototype hỏng.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-04; 05-business-rules.md GS01-B03"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-020",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-009",
+        "group": "Khả năng tiếp cận",
+        "title": "Minh họa rỗng được xử lý như ảnh trang trí",
+        "precondition": "Cần xem DOM được duyệt và kiểm chứng truy cập",
+        "data": "Trình đọc màn hình; icon sách #9",
+        "steps": [
+          "Kiểm tra thuộc tính ảnh/icon",
+          "Duyệt bằng trình đọc màn hình"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: xác định biểu tượng chỉ trang trí hay có ý nghĩa trước khi chốt văn bản thay thế.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #9; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-021",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-005",
+        "group": "Khả năng tiếp cận",
+        "title": "Tiêu đề chính có cấu trúc ngữ nghĩa",
+        "precondition": "Chưa có kiểm chứng DOM runtime",
+        "data": "Ảnh H1 theo DD; DOM triển khai chưa chứng minh",
+        "steps": [
+          "Kiểm tra heading trong DOM",
+          "Duyệt bằng công cụ hỗ trợ"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: tiêu chí semantic H1 và cấu trúc heading chưa được kiểm chứng trên runtime.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #5"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-022",
+        "requirement_ids": [
+          "GS-01-YC-015",
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-001",
+        "group": "Tương tác bàn phím",
+        "title": "Liên kết/nút #1 nhận tiêu điểm",
+        "precondition": "Chưa có bằng chứng focus/keyboard trong DD",
+        "data": "Tab và Shift+Tab",
+        "steps": [
+          "Đưa focus đến vùng 1",
+          "Quan sát chỉ báo focus"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thứ tự và kiểu hiển thị focus chưa được chốt; không tự xác nhận WCAG chỉ từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #1; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-023",
+        "requirement_ids": [
+          "GS-01-YC-015",
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-003",
+        "group": "Tương tác bàn phím",
+        "title": "Liên kết/nút #3 nhận tiêu điểm",
+        "precondition": "Chưa có bằng chứng focus/keyboard trong DD",
+        "data": "Tab và Shift+Tab",
+        "steps": [
+          "Đưa focus đến vùng 3",
+          "Quan sát chỉ báo focus"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thứ tự và kiểu hiển thị focus chưa được chốt; không tự xác nhận WCAG chỉ từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #3; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-024",
+        "requirement_ids": [
+          "GS-01-YC-015",
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-004",
+        "group": "Tương tác bàn phím",
+        "title": "Liên kết/nút #4 nhận tiêu điểm",
+        "precondition": "Chưa có bằng chứng focus/keyboard trong DD",
+        "data": "Tab và Shift+Tab",
+        "steps": [
+          "Đưa focus đến vùng 4",
+          "Quan sát chỉ báo focus"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thứ tự và kiểu hiển thị focus chưa được chốt; không tự xác nhận WCAG chỉ từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #4; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-025",
+        "requirement_ids": [
+          "GS-01-YC-015",
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-013",
+        "group": "Tương tác bàn phím",
+        "title": "Liên kết/nút #13 nhận tiêu điểm",
+        "precondition": "Chưa có bằng chứng focus/keyboard trong DD",
+        "data": "Tab và Shift+Tab",
+        "steps": [
+          "Đưa focus đến vùng 13",
+          "Quan sát chỉ báo focus"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thứ tự và kiểu hiển thị focus chưa được chốt; không tự xác nhận WCAG chỉ từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #13; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-026",
+        "requirement_ids": [
+          "GS-01-YC-015",
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-014",
+        "group": "Tương tác bàn phím",
+        "title": "Liên kết/nút #14 nhận tiêu điểm",
+        "precondition": "Chưa có bằng chứng focus/keyboard trong DD",
+        "data": "Tab và Shift+Tab",
+        "steps": [
+          "Đưa focus đến vùng 14",
+          "Quan sát chỉ báo focus"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thứ tự và kiểu hiển thị focus chưa được chốt; không tự xác nhận WCAG chỉ từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #14; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-027",
+        "requirement_ids": [
+          "GS-01-YC-015",
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-015",
+        "group": "Tương tác bàn phím",
+        "title": "Liên kết/nút #15 nhận tiêu điểm",
+        "precondition": "Chưa có bằng chứng focus/keyboard trong DD",
+        "data": "Tab và Shift+Tab",
+        "steps": [
+          "Đưa focus đến vùng 15",
+          "Quan sát chỉ báo focus"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thứ tự và kiểu hiển thị focus chưa được chốt; không tự xác nhận WCAG chỉ từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #15; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-TP-028",
+        "requirement_ids": [
+          "GS-01-YC-015",
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EL-016",
+        "group": "Tương tác bàn phím",
+        "title": "Liên kết/nút #16 nhận tiêu điểm",
+        "precondition": "Chưa có bằng chứng focus/keyboard trong DD",
+        "data": "Tab và Shift+Tab",
+        "steps": [
+          "Đưa focus đến vùng 16",
+          "Quan sát chỉ báo focus"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thứ tự và kiểu hiển thị focus chưa được chốt; không tự xác nhận WCAG chỉ từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #16; 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "GS-01-TC-SK-001",
+        "requirement_ids": [
+          "GS-01-YC-003",
+          "GS-01-YC-004"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Khởi tạo",
+        "title": "Khởi tạo API theo thứ tự đã xác định",
+        "precondition": "Trang GS-01 ở trạng thái ban đầu",
+        "data": "Không token, page=1, size=20",
+        "steps": [
+          "Truy cập /courses",
+          "Theo dõi request",
+          "Đối chiếu #05/#06"
+        ],
+        "expected": "#05 xuất hiện trước #06, request #06 page=1,size=20, không gửi category; kiểm tra envelope success.",
+        "api_ids": [
+          "GS-01-API-001",
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-002",
+        "requirement_ids": [
+          "GS-01-YC-005"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Khởi tạo",
+        "title": "Nhận phản hồi rỗng hợp lệ",
+        "precondition": "API #05 có thể trả dữ liệu trống; #06 trống",
+        "data": "data.items=[], pagination.total=0",
+        "steps": [
+          "Mở trang",
+          "Giả lập response 200 của #06",
+          "Quan sát state"
+        ],
+        "expected": "Khi #06 trả items=[]/total=0, màn hình hiển thị empty state, không coi lỗi mạng là empty.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-003",
+        "requirement_ids": [
+          "GS-01-YC-007"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Lỗi",
+        "title": "Đáp ứng khi #06 lỗi 500",
+        "precondition": "Có thể giả lập API #06",
+        "data": "500 DESIGN_INTERNAL_ERROR",
+        "steps": [
+          "Mở trang",
+          "Trả lỗi #06",
+          "Quan sát UI"
+        ],
+        "expected": "Đường đi lỗi là QUERY_ERROR; không được thể hiện như danh sách rỗng hợp lệ.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-004",
+        "requirement_ids": [
+          "GS-01-YC-017"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Không đồng nhất dữ liệu",
+        "title": "COUNT/LIST sai số trang",
+        "precondition": "Có thể giả lập dữ liệu lệch",
+        "data": "page=1,size=20,total=25,items=5",
+        "steps": [
+          "Mở trang và trả kết quả lệch",
+          "Quan sát số thẻ và tổng"
+        ],
+        "expected": "Các thẻ trả về vẫn hiển thị, số tổng và phân trang bị ẩn, có thao tác thử lại theo source audit.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "00-overview.md Current Study Web source re-audit (2026-11-21)"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-005",
+        "requirement_ids": [
+          "GS-01-YC-009"
+        ],
+        "target_id": "GS-01-EV-002",
+        "group": "Nhập liệu",
+        "title": "Nhập tại header không gọi API #07",
+        "precondition": "Ô #2 khả dụng",
+        "data": "Chuỗi \"flutter\"",
+        "steps": [
+          "Nhập vào #2",
+          "Quan sát request",
+          "#07 không thuộc GS-01 theo DD"
+        ],
+        "expected": "Không phát sinh lời gọi #07 chỉ từ việc nhập tại #2; nội dung nhập còn trên control.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-02"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-006",
+        "requirement_ids": [
+          "GS-01-YC-009",
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01-EV-002",
+        "group": "Tình huống chưa chốt",
+        "title": "Nhấn Enter tại ô tìm kiếm đầu trang",
+        "precondition": "Cần quyết định chính thức về handoff",
+        "data": "Chuỗi \"flutter\"",
+        "steps": [
+          "Nhập ở #2",
+          "Nhấn Enter"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: chưa có hợp đồng Enter/handoff/URL cho ô header.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md GS01-B03"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-007",
+        "requirement_ids": [
+          "GS-01-YC-010"
+        ],
+        "target_id": "GS-01-EV-003",
+        "group": "Nhập liệu",
+        "title": "Nhập tại ô tìm kiếm chính",
+        "precondition": "Ô #7 khả dụng",
+        "data": "Chuỗi \"backend\"",
+        "steps": [
+          "Gõ tại #7",
+          "Quan sát nội dung",
+          "#07 không được gọi từ GS-01"
+        ],
+        "expected": "Nội dung ô #7 thay đổi theo thao tác; không tự gọi #07 hoặc thay URL theo source.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-03"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-008",
+        "requirement_ids": [
+          "GS-01-YC-010",
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01-EV-003",
+        "group": "Dữ liệu biên",
+        "title": "Xử lý khoảng trắng tại ô chính",
+        "precondition": "Chưa chốt trim/normalization",
+        "data": "Chuỗi \"   \"",
+        "steps": [
+          "Nhập ba khoảng trắng tại #7",
+          "Quan sát/submit nếu có handler"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: quy tắc query rỗng/trim và việc có submit hay không chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md GS01-B03"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-009",
+        "requirement_ids": [
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01-EV-004",
+        "group": "Tìm kiếm",
+        "title": "Nhấn nút Tìm kiếm với chuỗi có nghĩa",
+        "precondition": "Cần phê duyệt handoff sang GS-02",
+        "data": "Chuỗi \"python\"",
+        "steps": [
+          "Nhập vào #7",
+          "Nhấn nút #8",
+          "Theo dõi route và query"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: chuyển đến GS-02 với q theo quy tắc đã duyệt; không gọi #07 tại GS-01.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-04; 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-010",
+        "requirement_ids": [
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01-EV-004",
+        "group": "Tìm kiếm",
+        "title": "Nhấn nút với nội dung rỗng",
+        "precondition": "Chưa có quy tắc query rỗng",
+        "data": "Chuỗi rỗng",
+        "steps": [
+          "Xóa #7",
+          "Nhấn nút #8"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: thông báo, chặn thao tác hay điều hướng khi query rỗng chưa được quy định.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md GS01-B03"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-011",
+        "requirement_ids": [
+          "GS-01-YC-012"
+        ],
+        "target_id": "GS-01-EV-005",
+        "group": "Sắp xếp",
+        "title": "Đổi sắp xếp reset trang 1",
+        "precondition": "Cần có control sort được duyệt",
+        "data": "sort=price:asc, đang page=3",
+        "steps": [
+          "Chọn sort theo giá tăng dần",
+          "Theo dõi #06"
+        ],
+        "expected": "Sau khi duyệt control, #06 dùng page=1,size=20,sort=price:asc và không có category; chưa được phép xác nhận UI chưa duyệt.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-012",
+        "requirement_ids": [
+          "GS-01-YC-012"
+        ],
+        "target_id": "GS-01-EV-005",
+        "group": "Dữ liệu biên",
+        "title": "Không gửi sort ngoài allowlist",
+        "precondition": "Chưa có control sort được duyệt",
+        "data": "sort=unknown:asc (không hợp lệ)",
+        "steps": [
+          "Giả lập giá trị sort không hợp lệ",
+          "Quan sát request và trạng thái"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: UI có chặn giá trị không hợp lệ hay chỉ #06 trả 422 chưa được quy định.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-05"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-013",
+        "requirement_ids": [
+          "GS-01-YC-020"
+        ],
+        "target_id": "GS-01-EV-005",
+        "group": "Bất đồng bộ",
+        "title": "Hủy request cũ khi đổi sort liên tiếp",
+        "precondition": "Có thể quan sát yêu cầu đang chờ",
+        "data": "sort=name:asc rồi sort=price:desc",
+        "steps": [
+          "Kích hoạt sắp xếp A",
+          "Khi request chưa xong, chọn B",
+          "Theo dõi hủy request/đầu ra"
+        ],
+        "expected": "Theo source audit, request danh sách cũ bị hủy khi đổi sort; chỉ giữ kết quả từ lần tải mới có hiệu lực.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md Current Study Web event supplement (2026-11-21)"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-014",
+        "requirement_ids": [
+          "GS-01-YC-013"
+        ],
+        "target_id": "GS-01-EV-006",
+        "group": "Phân trang",
+        "title": "Chọn trang tiếp theo",
+        "precondition": "Cần UI phân trang được duyệt",
+        "data": "page=2, size=20, sort=name:asc",
+        "steps": [
+          "Chọn trang 2",
+          "Quan sát request #06"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: khi điều khiển được duyệt, #06 dùng page=2,size=20, giữ sort nếu có, không gửi category.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-06"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-015",
+        "requirement_ids": [
+          "GS-01-YC-008",
+          "GS-01-YC-013"
+        ],
+        "target_id": "GS-01-EV-006",
+        "group": "Dữ liệu biên",
+        "title": "Chọn trang ngoài phạm vi",
+        "precondition": "Chưa chốt UI recovery",
+        "data": "page=999,total>0,items=[]",
+        "steps": [
+          "Chọn trang vượt phạm vi (nếu có)",
+          "Quan sát UI và API"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: trang rỗng do vượt phạm vi không bị nhầm với catalog trống; cách khôi phục chưa duyệt.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-016",
+        "requirement_ids": [
+          "GS-01-YC-020"
+        ],
+        "target_id": "GS-01-EV-006",
+        "group": "Bất đồng bộ",
+        "title": "Hủy request cũ khi đổi trang nhanh",
+        "precondition": "Có môi trường quan sát mạng",
+        "data": "Chọn page=2 rồi page=3 nhanh",
+        "steps": [
+          "Chọn trang 2",
+          "Khi chưa trả response, chọn trang 3",
+          "Theo dõi hủy request"
+        ],
+        "expected": "Theo source audit, request trước bị hủy khi chuyển trang; chỉ kết quả trang cuối được áp dụng.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md Current Study Web event supplement (2026-11-21)"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-017",
+        "requirement_ids": [
+          "GS-01-YC-014"
+        ],
+        "target_id": "GS-01-EV-007",
+        "group": "Điều hướng",
+        "title": "Mở chi tiết từ thẻ khóa học",
+        "precondition": "Card chưa có thiết kế duyệt",
+        "data": "course.id=123 (giá trị mô phỏng)",
+        "steps": [
+          "Nhấp một thẻ khóa học",
+          "Theo dõi URL và API"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: route GS-03 /courses/:courseId được đề xuất, chưa có thiết kế card/route runtime được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-07; 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-018",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EV-008",
+        "group": "Điều hướng",
+        "title": "Chọn Khóa học tại header đang active",
+        "precondition": "Header hiện thị mục Khóa học",
+        "data": "Không payload",
+        "steps": [
+          "Nhấp mục #1",
+          "Theo dõi route"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: route /courses là đề xuất, chưa có chính sách reload khi click active.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-08"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-019",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EV-009",
+        "group": "Điều hướng",
+        "title": "Chọn Đăng nhập trên header",
+        "precondition": "Header link #3 hiển thị",
+        "data": "Không payload",
+        "steps": [
+          "Nhấp #3",
+          "Theo dõi route"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: đích SH-02 /login là đề xuất, không tự gắn hành vi của prototype href=\"#\".",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-09"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-020",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EV-010",
+        "group": "Điều hướng",
+        "title": "Chọn Đăng ký trên header",
+        "precondition": "Header CTA #4 hiển thị",
+        "data": "Không payload",
+        "steps": [
+          "Nhấp #4",
+          "Theo dõi route"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: đích SH-03 /register là đề xuất, chưa runtime verified.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-10"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-021",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EV-011",
+        "group": "Điều hướng chân trang",
+        "title": "Chọn liên kết Trang chủ tại chân trang",
+        "precondition": "Chân trang đang hiển thị",
+        "data": "Không payload",
+        "steps": [
+          "Nhấp marker #13",
+          "Theo dõi URL và route"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: đích / được đề xuất; không khẳng định điều hướng chạy thật.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-11; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-022",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EV-011",
+        "group": "Điều hướng chân trang",
+        "title": "Chọn liên kết Khóa học tại chân trang",
+        "precondition": "Chân trang đang hiển thị",
+        "data": "Không payload",
+        "steps": [
+          "Nhấp marker #14",
+          "Theo dõi URL và route"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: đích /courses được đề xuất; không khẳng định điều hướng chạy thật.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-11; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-023",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EV-011",
+        "group": "Điều hướng chân trang",
+        "title": "Chọn liên kết Đăng nhập tại chân trang",
+        "precondition": "Chân trang đang hiển thị",
+        "data": "Không payload",
+        "steps": [
+          "Nhấp marker #15",
+          "Theo dõi URL và route"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: đích /login được đề xuất; không khẳng định điều hướng chạy thật.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-11; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-024",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01-EV-011",
+        "group": "Điều hướng chân trang",
+        "title": "Chọn liên kết Đăng ký tại chân trang",
+        "precondition": "Chân trang đang hiển thị",
+        "data": "Không payload",
+        "steps": [
+          "Nhấp marker #16",
+          "Theo dõi URL và route"
+        ],
+        "expected": "CẦN XÁC NHẬN DD: đích /register được đề xuất; không khẳng định điều hướng chạy thật.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md GS01-EV-11; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-025",
+        "requirement_ids": [
+          "GS-01-YC-019"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "API",
+        "title": "Danh mục category không kích hoạt lọc",
+        "precondition": "API #05 trả danh mục có dữ liệu",
+        "data": "Danh mục category ACTIVE",
+        "steps": [
+          "Tải metadata #05",
+          "Quan sát query #06"
+        ],
+        "expected": "#05 chỉ nạp metadata; #06 không nhận query category dù metadata có category.",
+        "api_ids": [
+          "GS-01-API-001",
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01; 05-business-rules.md GS01-B02"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-026",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Bảo mật",
+        "title": "Khởi tạo không Bearer token",
+        "precondition": "Không có phiên người dùng",
+        "data": "Ẩn/không có Authorization header",
+        "steps": [
+          "Mở /courses",
+          "Kiểm tra request #05 và #06"
+        ],
+        "expected": "API công khai: client không bắt buộc gửi Bearer token; không phát sinh dữ liệu PII.",
+        "api_ids": [
+          "GS-01-API-001",
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS-01-TC-SK-027",
+        "requirement_ids": [
+          "GS-01-YC-021"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Lỗi",
+        "title": "Response #06 422 không làm empty",
+        "precondition": "Có thể giả lập lỗi validation #06",
+        "data": "422 DESIGN_VALIDATION_ERROR",
+        "steps": [
+          "Trả lỗi kiểm tra dữ liệu từ #06",
+          "Quan sát trạng thái"
+        ],
+        "expected": "Được phân loại là lỗi truy vấn/validation; không hiển thị empty catalog như thành công.",
+        "api_ids": [
+          "GS-01-API-002"
+        ],
+        "source_refs": [
+          "02-events.md GS01-EV-01"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/utc-screen-skill/utc-spec.schema.json",
+  "title": "Đặc tả đầu vào UTC Screen",
+  "description": "Đặc tả trung gian do AI Agent/người kiểm thử trích từ DD Screen; công cụ dựng Excel không tự hiểu DD.",
+  "type": "object",
+  "required": ["metadata", "overall", "apis", "requirements", "elements", "events", "blockers", "test_cases"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["screen_id", "screen_name", "dd_status", "runtime_status", "source_name"],
+      "properties": {
+        "screen_id": {"type": "string", "minLength": 1},
+        "screen_name": {"type": "string", "minLength": 1},
+        "module": {"type": "string"}, "route": {"type": "string"}, "actor": {"type": "string"},
+        "version": {"type": "string"}, "dd_version": {"type": "string"},
+        "dd_status": {"type": "string", "minLength": 1}, "runtime_status": {"type": "string", "minLength": 1},
+        "author": {"type": "string"}, "reviewer": {"type": "string"}, "approver": {"type": "string"},
+        "date": {"type": "string"}, "source_name": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "overall": {
+      "type": "object",
+      "properties": {
+        "objective": {"type": "string"}, "inputs": {"type": "string"}, "outputs": {"type": "string"},
+        "main_flow": {"type": "string"}, "preconditions": {"type": "string"},
+        "states": {"type": "array", "items": {"type": "string"}},
+        "security": {"type": "string"}, "out_of_scope": {"type": "string"}
+      }, "additionalProperties": true
+    },
+    "apis": {"type": "array", "items": {"$ref": "#/$defs/api"}},
+    "requirements": {"type": "array", "items": {"$ref": "#/$defs/requirement"}},
+    "elements": {"type": "array", "items": {"$ref": "#/$defs/element"}},
+    "events": {"type": "array", "items": {"$ref": "#/$defs/event"}},
+    "blockers": {"type": "array", "items": {"$ref": "#/$defs/blocker"}},
+    "test_cases": {
+      "type": "object", "required": ["screen", "elements", "events"],
+      "properties": {
+        "screen": {"type": "array", "items": {"$ref": "#/$defs/testcase"}},
+        "elements": {"type": "array", "items": {"$ref": "#/$defs/testcase"}},
+        "events": {"type": "array", "items": {"$ref": "#/$defs/testcase"}}
+      }
+    }
+  },
+  "$defs": {
+    "refList": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "api": {
+      "type": "object", "required": ["id", "method", "path", "source_ref"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "method": {"type": "string"},
+        "path": {"type": "string"}, "request": {"type": "string"}, "response": {"type": "string"},
+        "errors": {"type": "string"}, "auth": {"type": "string"},
+        "design_status": {"type": "string"}, "source_ref": {"type": "string"},
+        "event_ids": {"$ref": "#/$defs/refList"}
+      }
+    },
+    "requirement": {
+      "type": "object", "required": ["id", "description", "source_ref", "design_status"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "description": {"type": "string", "minLength": 1},
+        "group": {"type": "string"}, "source_ref": {"type": "string"},
+        "notes": {"type": "string"}, "priority": {"type": "string"},
+        "design_status": {"type": "string", "enum": ["Đã xác nhận", "Chờ xác nhận", "Không áp dụng"]}
+      }
+    },
+    "element": {
+      "type": "object", "required": ["id", "name", "type", "source_ref"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "marker": {"type": "string"},
+        "name": {"type": "string"}, "type": {"type": "string"},
+        "position": {"type": "string"}, "properties": {"type": "string"},
+        "event_ids": {"$ref": "#/$defs/refList"},
+        "design_status": {"type": "string"}, "source_ref": {"type": "string"}
+      }
+    },
+    "event": {
+      "type": "object", "required": ["id", "name", "trigger", "source_ref"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "name": {"type": "string"},
+        "trigger": {"type": "string"}, "processing": {"type": "string"},
+        "element_ids": {"$ref": "#/$defs/refList"}, "api_ids": {"$ref": "#/$defs/refList"},
+        "design_status": {"type": "string"}, "source_ref": {"type": "string"}
+      }
+    },
+    "blocker": {
+      "type": "object", "required": ["id", "description", "source_ref"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "description": {"type": "string"}, "impact": {"type": "string"},
+        "decision": {"type": "string"}, "source_ref": {"type": "string"}, "status": {"type": "string"}
+      }
+    },
+    "testcase": {
+      "type": "object",
+      "required": ["id", "requirement_ids", "target_id", "group", "title", "precondition", "data", "steps", "expected", "source_refs", "priority", "design_status"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "requirement_ids": {"$ref": "#/$defs/refList"}, "target_id": {"type": "string", "minLength": 1},
+        "group": {"type": "string"}, "title": {"type": "string", "minLength": 1},
+        "precondition": {"type": "string", "minLength": 1}, "data": {"type": "string", "minLength": 1},
+        "steps": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "expected": {"type": "string", "minLength": 1},
+        "api_ids": {"$ref": "#/$defs/refList"},
+        "source_refs": {"$ref": "#/$defs/refList"},
+        "priority": {"type": "string", "enum": ["Cao", "Trung bình", "Thấp"]},
+        "design_status": {"type": "string", "enum": ["Đã xác nhận", "Chờ xác nhận", "Không áp dụng"]}
+      },
+      "additionalProperties": true
+    }
+  }
+}

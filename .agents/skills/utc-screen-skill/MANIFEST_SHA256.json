@@ -1,0 +1,152 @@
+{
+  "ten": "UTC Screen Skill từ DD",
+  "phien_ban": "1.0.0",
+  "ngay": "2026-11-23",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "3a8624bfc7d71f644943eef3d6b87f4672e3ad99379a7a6e26b998b2eea253a9",
+      "size": 4621
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "5c8fc589a94d02d1ece200f74cd982e1aa09f0fc2cf52369935187cfd4b4f805",
+      "size": 8407
+    },
+    {
+      "path": "bao-cao/GS01_Doi_chieu_DD.md",
+      "sha256": "3f32af79411514601e1a12f52ad0104a805ab3b6c4b4004f2eeb1d112f4be86c",
+      "size": 2358
+    },
+    {
+      "path": "bao-cao/kiem-tra-gs01.json",
+      "sha256": "0428ef2cd3a1d1563b7d6f7d691e94ca1680dd559fb4bd249fa187410a6bd909",
+      "size": 448
+    },
+    {
+      "path": "huong-dan/01_Quy_trinh_12_buoc.md",
+      "sha256": "5260aed71e2f6448238fb0aaec8cc4217fdf49a9a91a7e08e98d4775bd8e334b",
+      "size": 9210
+    },
+    {
+      "path": "huong-dan/02_Quy_tac_sinh_ca.md",
+      "sha256": "53b5bc2adbc0b643ce27602672d3fd0654f66f73175e5599b38e3548c40da264",
+      "size": 4992
+    },
+    {
+      "path": "huong-dan/03_Anh_xa_Excel_JSON.md",
+      "sha256": "0e8cc48ec2412fe3ce278da360b014474e0d9a1d7f906e81e4fadab41d91527d",
+      "size": 4327
+    },
+    {
+      "path": "huong-dan/04_Mau_lenh_giao_viec_cho_AI.md",
+      "sha256": "2bd5804d1fde90178e5f77e27952468e9d8c58689ad8941dbe2908e0e68bcf13",
+      "size": 2293
+    },
+    {
+      "path": "mau/Mau_UTC_Screen.xlsx",
+      "sha256": "c398842dc68733670f88de2e1ecd107268a53efbc8fcf4f0146170c998b2db31",
+      "size": 68312
+    },
+    {
+      "path": "schema/utc-spec.schema.json",
+      "sha256": "d2f2f00e9c9e2129dc448916ee3d01ca48d67277751e80455fc99b18d69307ca",
+      "size": 5895
+    },
+    {
+      "path": "scripts/chuan_bi_dd.py",
+      "sha256": "1671863609e7f51a33794eda1bf09874eb7e9031df235d180d6372bbebad7e46",
+      "size": 3092
+    },
+    {
+      "path": "scripts/kiem_tra_excel.py",
+      "sha256": "38a79fc4553c2a5a2cc6d3f5c998b96ef9893afca25cdac19d6eb9fbc7cefbc8",
+      "size": 1757
+    },
+    {
+      "path": "scripts/kiem_tra_utc.py",
+      "sha256": "d6409230f3d9a9d89b3f16ee896f68b929df79ade0ffcabc8ffe2cd14350baa4",
+      "size": 5861
+    },
+    {
+      "path": "scripts/tao_utc.py",
+      "sha256": "d267017586e52a97428bbb4f3caf12aa77f3d2b19a02d7e7833a1807a686cb6c",
+      "size": 21050
+    },
+    {
+      "path": "tham-chieu/Nguon_quoc_te.md",
+      "sha256": "40e61939efe9134173e1f83ce04825187061150f038be75a912f5c214b23d8cc",
+      "size": 2005
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/00-overview.md",
+      "sha256": "7145a41915ea97a44bee68ab451bdb7e4ceb61ced03a649545fa6f439335ac17",
+      "size": 9677
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/01-ui-elements.md",
+      "sha256": "b202a4cfc236875954b3d3eb9d1df0d0fa2de1260deb98f7ba38a804d53934cf",
+      "size": 6527
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/02-events.md",
+      "sha256": "859f983d991da2e3761d241d4b66dc46eafa1a981ade4bc1e0088a4f78f1add2",
+      "size": 15382
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/03-data-flow.md",
+      "sha256": "82907542d52b95dafda7ad4b4428a687551e8fbaf7111313ff1b4beb10baf8f4",
+      "size": 20925
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/04-api-integration.md",
+      "sha256": "a3cf06c2ad4e7f4a74afaafc48a11883a8cedf73d6263ae111a3167e83084543",
+      "size": 5238
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/05-business-rules.md",
+      "sha256": "6d1eeb0eaf1a85610b224f2055a44c72f6d1cb531a168f967218ae3f87d2f860",
+      "size": 4388
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/06-navigation.md",
+      "sha256": "a34b80e2a08366da4a5f6d98d5bc6d462f49ffb3950f7c5e47f596ba71ccee4d",
+      "size": 5203
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/07-test-cases.md",
+      "sha256": "455241635af4a8fcba95a79c90cecbe82725840c1cc519d9b4208c2e30350a06",
+      "size": 5402
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/code.html",
+      "sha256": "d354d54db1ff21f8df8dd71fbf57c4836e751a0b021d76461d0c855968038fe5",
+      "size": 12693
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/images/README.md",
+      "sha256": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7",
+      "size": 455
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/images/screen-clean.png",
+      "sha256": "3ad9b03ef8862cc09e8879c3009318b097a6d7217b86f9144201ef10bb6251c7",
+      "size": 166916
+    },
+    {
+      "path": "vi-du/GS-01/DD_goc/images/screen-numbered.png",
+      "sha256": "105ea5777856da023f67a87c49b8da65b905cc3bedfcd5f5e0cd9707ff40ad37",
+      "size": 184946
+    },
+    {
+      "path": "vi-du/GS-01/UTC_GS-01_DanhSachKhoaHoc_KeHoach.xlsx",
+      "sha256": "adf6e90c444e81d787381d95ecf6b5b24a9bc4559e4e4d44e7ceafdf57d86aa6",
+      "size": 87319
+    },
+    {
+      "path": "vi-du/GS-01/utc-gs01.json",
+      "sha256": "e9c4fc270e6b238a379de1b0b02267fa4da90fa18a5b638999901385e3b6985e",
+      "size": 91317
+    }
+  ]
+}
