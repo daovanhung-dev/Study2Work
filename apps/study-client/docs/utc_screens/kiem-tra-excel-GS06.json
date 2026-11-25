@@ -1,0 +1,40 @@
+{
+  "artifact": "UTC_GS-06_TaiNguyenKhoaHoc.xlsx",
+  "checks": {
+    "trace_all_requirements": true,
+    "source_hashes_match": true,
+    "all_referenced_sources_hashed": true,
+    "zip_crc_clean": true,
+    "four_expected_sheets": true,
+    "sheet_valid_styles": true,
+    "case_rows_match_json": true,
+    "all_cases_unrun": true,
+    "execution_columns_blank": true,
+    "formula_count_exact": true,
+    "dropdown_count_and_options": true,
+    "no_placeholder_text": true,
+    "aria_and_responsive_literals": true,
+    "component_event_requirement_cross_refs": true
+  },
+  "case_rows": 85,
+  "unrun": 85,
+  "blank_execution_fields": 85,
+  "formula_count": 255,
+  "dropdowns": [
+    [
+      "xl/worksheets/sheet2.xml",
+      "O65:O99"
+    ],
+    [
+      "xl/worksheets/sheet3.xml",
+      "O40:O72"
+    ],
+    [
+      "xl/worksheets/sheet4.xml",
+      "O18:O34"
+    ]
+  ],
+  "referenced_sources": 37,
+  "hashed_sources": 73,
+  "errors": []
+}

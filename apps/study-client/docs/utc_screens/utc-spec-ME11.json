@@ -1,0 +1,2515 @@
+{
+  "metadata": {
+    "screen_id": "ME-11",
+    "screen_name": "Hộp thư hỗ trợ học viên",
+    "module": "Mentor / Study Web",
+    "route": "/mentor/support",
+    "actor": "Mentor; API #58 yêu cầu Bearer/JWT, subject số và vai trò MENTOR. Giới hạn chủ sở hữu trực tiếp là cách xử lý trong mã nguồn; quyền Mentor được phân công còn chờ xác nhận.",
+    "dd_status": "DD BLOCKED. Người dùng xác nhận dùng DD hiện có, kể cả điểm bị chặn, làm chuẩn. API #58 còn bản nháp cần xác nhận; không tự đóng điểm chờ.",
+    "runtime_status": "Chưa xác minh trình duyệt, triển khai, cơ sở dữ liệu đang chạy hoặc môi trường kiểm thử.",
+    "version": "1.0",
+    "dd_version": "0.1 (cập nhật mã nguồn đến 2026-11-20)",
+    "author": "Chưa được cung cấp",
+    "reviewer": "Chưa được cung cấp",
+    "approver": "Người dùng xác nhận dùng DD hiện có làm chuẩn; chưa có tên người duyệt.",
+    "date": "2026-11-24",
+    "source_name": "Tài liệu DD ME-11 mục 00–07; ảnh/HTML Stitch có 33 marker; trang ME11Page và API #58 cùng DD tương ứng.",
+    "baseline_authorization": "Người dùng xác nhận sử dụng tài liệu DD hiện có dù đang bị chặn. Quyết định về trạng thái, bộ lọc, thiết kế danh sách, quyền, lược đồ và tuyên bố sản phẩm vẫn chờ xác nhận.",
+    "environment": "Chỉ đối chiếu tĩnh tài liệu, ảnh và mã nguồn; không chạy ứng dụng, kiểm thử, trình duyệt, API hoặc truy vấn cơ sở data.",
+    "release_readiness": "UTC được tạo theo tài liệu chuẩn người dùng xác nhận; chưa đủ căn cứ xác nhận sẵn sàng thực thi. Tất cả ca chưa chạy; DD/API còn điểm chặn và lúc chạy chưa xác minh.",
+    "discrepancy_note": "Đoạn DD cũ nói Study Web chưa nối; cập nhật 2026-11-20, danh mục màn hình và mã nguồn hiện tại xác nhận tuyến/trang đã gọi GET #58. Ảnh mẫu dùng thẻ/mã chữ và làm mới giả; mã nguồn hiện dùng ô Mã khóa học/Trạng thái, hủy truy vấn cũ và chỉ có tải lại khi lỗi."
+  },
+  "overall": {
+    "objective": "Đối chiếu hộp thư hỗ trợ theo DD, ảnh mẫu, mã nguồn hiện tại và API #58; phân biệt điều đã có với phần còn thiếu quyết định.",
+    "inputs": "GET #58 với course_id/status tùy chọn; danh sách yêu cầu, học viên, toàn bộ mảng messages (tin nhắn) và siêu dữ liệu attachments (tệp đính kèm) theo hợp đồng hiện có.",
+    "outputs": "Trạng thái đang tải, rỗng, danh sách, không có quyền hoặc lỗi; liên kết yêu cầu sang ME-12 bằng ID an toàn.",
+    "main_flow": "Mở /mentor/support → gọi #58 → kiểm tra phong bì và dữ liệu lồng nhau → hiện trạng thái hoặc danh sách → chọn yêu cầu có ID hợp lệ để mở ME-12.",
+    "preconditions": "Dùng dữ liệu giả, không dùng nội dung hoặc danh tính học viên thật. API yêu cầu vai trò MENTOR; môi trường và quyền thực tế chưa xác minh.",
+    "states": [
+      "Đang tải",
+      "Danh sách rỗng hợp lệ",
+      "Danh sách có dữ liệu",
+      "Không có quyền 403",
+      "Lỗi khác và tải lại",
+      "Bộ lọc Mã khóa học/Trạng thái",
+      "Mở ME-12"
+    ],
+    "security": "API yêu cầu MENTOR và lọc courses.mentor_id trong mã nguồn. Bộ lọc giao diện không thay thế phân quyền; chỉ nhận ID và URL ảnh an toàn; không ghi nội dung hoặc URL tệp vào nhật ký.",
+    "out_of_scope": "Không tự quyết định nhóm trạng thái, số đếm, ánh xạ mã chữ, phân trang, SLA, thông báo tức thời và Meet, nguồn tạo phía học viên, quyền được phân công, lược đồ thật hoặc migration đang chạy.",
+    "summary": {
+      "requirements": 13,
+      "elements": 33,
+      "events": 6,
+      "apis": 1,
+      "blockers": 8,
+      "test_cases": {
+        "screen": 32,
+        "elements": 33,
+        "events": 6,
+        "total": 71
+      }
+    }
+  },
+  "apis": [
+    {
+      "id": "API #58",
+      "number": "58",
+      "method": "GET",
+      "path": "/api/v1/mentor/support/requests",
+      "event_ids": [
+        "ME-11-EV-001",
+        "ME-11-EV-002",
+        "ME-11-EV-003",
+        "ME-11-EV-004"
+      ],
+      "request": "Authorization Bearer/JWT; vai trò MENTOR. Tham số tùy chọn course_id là số nguyên dương int64 (1 đến 2^63−1), status là chuỗi chính xác; không có phần thân yêu cầu. Hai bộ lọc được áp dụng đồng thời; status không được kiểm theo danh sách giá trị.",
+      "response": "HTTP 200, success=true, businessCode DESIGN_RESOURCE_RETRIEVED; data là SupportRequest[]. Mỗi mục có id, course_id, student{id,full_name,avatar_url?}, status, messages[] đầy đủ, created_at, resolved_at? Và meta rỗng. Yêu cầu mới hơn đứng trước; tin nhắn cũ hơn đứng trước trong từng luồng trao đổi.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 422 DESIGN_VALIDATION_ERROR khi course_id sai; 500 DESIGN_INTERNAL_ERROR khi cơ sở dữ liệu/ánh xạ/phong bì lỗi. Lỗi có data=null. Mã khóa học không tồn tại trả danh sách rỗng; khóa thuộc Mentor khác trả 403.",
+      "auth": "Bearer/JWT, vai trò MENTOR và subject số. Mã nguồn lọc courses.mentor_id; quyền Mentor được phân công chưa được xác nhận.",
+      "design_status": "API #58 còn bản nháp cần xác nhận; các phương án dự phòng về trường dữ liệu, vòng đời và lược đồ triển khai thật chưa được chủ hợp đồng duyệt.",
+      "source_ref": "apps/study-server/app/api/v1.py; api_58_mentor_support_requests/{models.py,query.py,view.py}; API #58 DD 00–07, OPEN_QUESTIONS.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ME-11-YC-001",
+      "group": "Tải danh sách",
+      "title": "Tải danh sách",
+      "description": "Gọi GET #58 khi mở /mentor/support; chỉ nhận phong bì có mã DESIGN_RESOURCE_RETRIEVED và data đúng cấu trúc.",
+      "source_ref": "list_screen.md hàng 51; ME-11 00-overview.md; me11-page.ts; API #58 view.py",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-002",
+      "group": "Phân quyền",
+      "title": "Phân quyền",
+      "description": "API yêu cầu Bearer/JWT, vai trò MENTOR, subject số và lọc yêu cầu theo courses.mentor_id trong mã nguồn hiện tại.",
+      "source_ref": "ME-11 04-api-integration.md; API #58 view.py/query.py; OPEN_QUESTIONS.md",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-003",
+      "group": "Bộ lọc",
+      "title": "Bộ lọc",
+      "description": "Trang hiện gửi mã khóa học qua course_id (int64 dương) và status (chuỗi chính xác); bỏ tham số rỗng, không gửi mã chữ làm course_id.",
+      "source_ref": "me11-page.ts; me11-support-inbox.service.ts; API #58 models.py/query.py",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-004",
+      "group": "Danh sách rỗng",
+      "title": "Danh sách rỗng",
+      "description": "Data=[] trong phản hồi thành công là rỗng hợp lệ; lỗi không được coi là không có yêu cầu.",
+      "source_ref": "ME-11 03-data-flow.md; me11-page.ts; API #58 view.py",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-005",
+      "group": "Danh sách đã tải",
+      "title": "Danh sách đã tải",
+      "description": "Trang hiện hiển thị tên học viên, ID yêu cầu, course_id, status, tin nhắn cuối, ngày tạo, số tin nhắn trong messages và liên kết ME-12; không tự thêm trường ngoài phản hồi API.",
+      "source_ref": "me11-page.html/ts; API #58 models.py; ME-11 04-api-integration.md",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-006",
+      "group": "Truy vấn mới nhất",
+      "title": "Truy vấn mới nhất",
+      "description": "SwitchMap hủy đăng ký truy vấn cũ; chỉ áp dụng kết quả khớp bộ lọc hiện hành.",
+      "source_ref": "me11-page.ts; ME-11 00-overview.md; 03-data-flow.md",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-007",
+      "group": "Kiểm tra phản hồi",
+      "title": "Kiểm tra phản hồi",
+      "description": "Kiểm tra ID duy nhất/an toàn, trường student, messages, attachments và ngày giờ trước khi hiển thị.",
+      "source_ref": "me11-page.ts; API #58 models.py/view.py; ME-11 00-overview.md",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-008",
+      "group": "Lỗi",
+      "title": "Lỗi",
+      "description": "403 có trạng thái riêng; 401/422/500/lỗi mạng/phản hồi sai hiển thị lỗi an toàn và cho tải lại theo mã nguồn hiện tại.",
+      "source_ref": "me11-page.ts/html; mentor-api-errors; API #58 view.py",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-009",
+      "group": "Ảnh và riêng tư",
+      "title": "Ảnh và riêng tư",
+      "description": "Chỉ dùng ảnh đại diện HTTPS hoặc HTTP cùng nguồn; URL thiếu/sai/hỏng dùng chữ viết tắt; không ghi nội dung hoặc URL tệp vào nhật ký.",
+      "source_ref": "me11-page.ts/html; ME-11 00-overview.md; API #58 response",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-010",
+      "group": "Mở ME-12",
+      "title": "Mở ME-12",
+      "description": "Liên kết dùng ID dương an toàn từ trường request.id tới /mentor/support/:requestId; ME-11 không gọi #59/#60/#61.",
+      "source_ref": "me11-page.ts/html; ME-11 06-navigation.md; API #58 response",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-011",
+      "group": "Tuyên bố mẫu",
+      "title": "Tuyên bố mẫu",
+      "description": "Không coi SLA, tức thời, thông báo tự động, kho câu trả lời, Meet hay WCAG trên ảnh mẫu là tính năng/đảm bảo đang chạy.",
+      "source_ref": "ME-11_markers.json; ME-11.md; code.html; API #58 response",
+      "priority": "P2",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-012",
+      "group": "Điều hướng/tiếp cận",
+      "title": "Điều hướng/tiếp cận",
+      "description": "Không khẳng định liên kết ảnh mẫu có đích, đạt WCAG hoặc đã phù hợp mọi kích thước nếu chưa kiểm chứng.",
+      "source_ref": "ME-11 06-navigation.md; me11-page.html/css; code.html",
+      "priority": "P2",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    },
+    {
+      "id": "ME-11-YC-013",
+      "group": "Trạng thái phát hành",
+      "title": "Trạng thái phát hành",
+      "description": "Ghi riêng mã nguồn hiện tại, quyết định còn mở và hành vi chưa kiểm chứng; mọi ca để Chưa chạy, không tự đóng blocker.",
+      "source_ref": "ME-11 00–07; API #58 OPEN_QUESTIONS.md; xác nhận dùng DD làm chuẩn của người dùng",
+      "priority": "P2",
+      "design_status": "Chờ xác nhận",
+      "notes": "Xác minh tĩnh; lúc chạy chưa kiểm chứng."
+    }
+  ],
+  "elements": [
+    {
+      "id": "ME-11-EL-001",
+      "marker": "1",
+      "source_element_id": "ME11-EL-01",
+      "name": "Thương hiệu Study2Work Mentor",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=246, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Liên kết thương hiệu ở đầu trang; đích ảnh mẫu chưa xác nhận.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-11_markers.json marker #1; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-002",
+      "marker": "2",
+      "source_element_id": "ME11-EL-02",
+      "name": "Điều hướng Tổng quan",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=330, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Mục điều hướng mẫu; href=# không xác nhận đích.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #2; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-003",
+      "marker": "3",
+      "source_element_id": "ME11-EL-03",
+      "name": "Điều hướng Khóa học phụ trách",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=465, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Không mang course_id; tuyến và việc giữ trạng thái chưa chốt.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #3; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-004",
+      "marker": "4",
+      "source_element_id": "ME11-EL-04",
+      "name": "Điều hướng Chấm bài",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=650, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Đích mục điều hướng chưa xác minh trong trình duyệt.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #4; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-005",
+      "marker": "5",
+      "source_element_id": "ME11-EL-05",
+      "name": "Mục hiện hành Hộp thư hỗ trợ",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=805, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Dấu hiệu chọn trong ảnh không chứng minh tuyến đang chạy.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #5; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-006",
+      "marker": "6",
+      "source_element_id": "ME11-EL-06",
+      "name": "Điều hướng Thông báo",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=955, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Đích Thông báo chưa xác nhận.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #6; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-007",
+      "marker": "7",
+      "source_element_id": "ME11-EL-07",
+      "name": "Chuông và chấm thông báo",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1276, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Chấm đỏ là hình mẫu; không có nguồn số chưa đọc.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #7; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-008",
+      "marker": "8",
+      "source_element_id": "ME11-EL-08",
+      "name": "Tên, vai trò và ảnh đại diện Mentor mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1524, y=16 trên ảnh nguồn 1600×1425",
+      "properties": "Tên/ảnh mẫu không lấy từ phiên người dùng.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-11_markers.json marker #8; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-009",
+      "marker": "9",
+      "source_element_id": "ME11-EL-09",
+      "name": "Biểu tượng và nhãn cổng hỗ trợ",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=20, y=111 trên ảnh nguồn 1600×1425",
+      "properties": "Chữ 1-1 không chứng minh có lịch hẹn.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #9; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-010",
+      "marker": "10",
+      "source_element_id": "ME11-EL-10",
+      "name": "Tiêu đề hộp thư hỗ trợ",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=20, y=173 trên ảnh nguồn 1600×1425",
+      "properties": "Đối chiếu đúng tiêu đề ảnh.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-11_markers.json marker #10; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-011",
+      "marker": "11",
+      "source_element_id": "ME11-EL-11",
+      "name": "Mô tả hộp thư",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=20, y=218 trên ảnh nguồn 1600×1425",
+      "properties": "Nội dung tĩnh không tạo cam kết API.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #11; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-012",
+      "marker": "12",
+      "source_element_id": "ME11-EL-12",
+      "name": "Nhãn cam kết phản hồi dưới bốn giờ",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1118, y=198 trên ảnh nguồn 1600×1425",
+      "properties": "Không có thời hạn hoặc lịch làm việc trong API #58.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #12; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-013",
+      "marker": "13",
+      "source_element_id": "ME11-EL-13",
+      "name": "Nhãn vừa cập nhật tức thì",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1530, y=198 trên ảnh nguồn 1600×1425",
+      "properties": "Không có mức độ mới do máy chủ trả về.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #13; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-014",
+      "marker": "14",
+      "source_element_id": "ME11-EL-14",
+      "name": "Khung bộ lọc",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=48, y=397 trên ảnh nguồn 1600×1425",
+      "properties": "Ảnh có thẻ/bộ chọn; mã nguồn dùng ô Mã khóa học/Trạng thái.",
+      "event_ids": [
+        "ME-11-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #14; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-015",
+      "marker": "15",
+      "source_element_id": "ME11-EL-15",
+      "name": "Thẻ Tất cả và số đếm mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=60, y=307 trên ảnh nguồn 1600×1425",
+      "properties": "Số 0 mẫu; không phải số đếm từ API.",
+      "event_ids": [
+        "ME-11-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #15; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-016",
+      "marker": "16",
+      "source_element_id": "ME11-EL-16",
+      "name": "Thẻ Đang mở và số đếm mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=229, y=307 trên ảnh nguồn 1600×1425",
+      "properties": "Chưa có nhóm trạng thái hay số đếm mã nguồn.",
+      "event_ids": [
+        "ME-11-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #16; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-017",
+      "marker": "17",
+      "source_element_id": "ME11-EL-17",
+      "name": "Thẻ Đã giải quyết và số đếm mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=402, y=307 trên ảnh nguồn 1600×1425",
+      "properties": "Trạng thái RESOLVED có trong phương án dự phòng; cách gom nhóm/số đếm chưa được duyệt.",
+      "event_ids": [
+        "ME-11-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #17; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-018",
+      "marker": "18",
+      "source_element_id": "ME11-EL-18",
+      "name": "Nhãn bộ lọc khóa học",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1040, y=318 trên ảnh nguồn 1600×1425",
+      "properties": "Bố cục ở màn hình nhỏ chưa kiểm tra.",
+      "event_ids": [
+        "ME-11-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #18; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-019",
+      "marker": "19",
+      "source_element_id": "ME11-EL-19",
+      "name": "Bộ chọn khóa học",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1530, y=307 trên ảnh nguồn 1600×1425",
+      "properties": "Mã chữ mẫu khác course_id int64; chưa nối mã nguồn lấy danh sách lựa chọn.",
+      "event_ids": [
+        "ME-11-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #19; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-020",
+      "marker": "20",
+      "source_element_id": "ME11-EL-20",
+      "name": "Khung trạng thái rỗng",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=50, y=455 trên ảnh nguồn 1600×1425",
+      "properties": "Mã nguồn hiện chỉ hiện khi phản hồi hợp lệ rỗng; AC-24 còn mâu thuẫn.",
+      "event_ids": [
+        "ME-11-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #20; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-021",
+      "marker": "21",
+      "source_element_id": "ME11-EL-21",
+      "name": "Hình minh họa phong bì",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=712, y=540 trên ảnh nguồn 1600×1425",
+      "properties": "Hình trang trí, không mang data.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-11_markers.json marker #21; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-022",
+      "marker": "22",
+      "source_element_id": "ME11-EL-22",
+      "name": "Tiêu đề trạng thái rỗng",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=518, y=695 trên ảnh nguồn 1600×1425",
+      "properties": "Nội dung/điều kiện hiển thị chờ thống nhất với AC-24.",
+      "event_ids": [
+        "ME-11-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #22; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-023",
+      "marker": "23",
+      "source_element_id": "ME11-EL-23",
+      "name": "Nội dung giải thích trạng thái rỗng",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=430, y=750 trên ảnh nguồn 1600×1425",
+      "properties": "Chưa xác nhận nguồn tạo yêu cầu phía học viên.",
+      "event_ids": [
+        "ME-11-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #23; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-024",
+      "marker": "24",
+      "source_element_id": "ME11-EL-24",
+      "name": "Nút làm mới hộp thư",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=652, y=887 trên ảnh nguồn 1600×1425",
+      "properties": "Bản mẫu không gọi API; mã nguồn chỉ có tải lại khi lỗi.",
+      "event_ids": [
+        "ME-11-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #24; ME-11 01-ui-elements.md; me11-page.ts/html"
+    },
+    {
+      "id": "ME-11-EL-025",
+      "marker": "25",
+      "source_element_id": "ME11-EL-25",
+      "name": "Tuyên bố thông báo tự động tức thì",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=509, y=957 trên ảnh nguồn 1600×1425",
+      "properties": "Không có cơ chế thăm dò định kỳ, đẩy sự kiện hoặc bộ lắng nghe được xác nhận.",
+      "event_ids": [
+        "ME-11-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #25; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-026",
+      "marker": "26",
+      "source_element_id": "ME11-EL-26",
+      "name": "Thẻ thông tin thời hạn SLA",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=51, y=1116 trên ảnh nguồn 1600×1425",
+      "properties": "#58 không trả thời hạn hoặc lịch làm việc.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #26; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-027",
+      "marker": "27",
+      "source_element_id": "ME11-EL-27",
+      "name": "Thẻ kho câu trả lời mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=567, y=1116 trên ảnh nguồn 1600×1425",
+      "properties": "Chưa có API/kho mẫu được xác nhận.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #27; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-028",
+      "marker": "28",
+      "source_element_id": "ME11-EL-28",
+      "name": "Thẻ hẹn gặp trực tiếp",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1084, y=1116 trên ảnh nguồn 1600×1425",
+      "properties": "Chưa có tích hợp Meet hoặc tạo liên kết cuộc họp.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #28; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-029",
+      "marker": "29",
+      "source_element_id": "ME11-EL-29",
+      "name": "Biểu tượng thương hiệu chân trang",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=20, y=1365 trên ảnh nguồn 1600×1425",
+      "properties": "Biểu tượng không chứng minh tuyến hoặc quyền sở hữu.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-11_markers.json marker #29; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-030",
+      "marker": "30",
+      "source_element_id": "ME11-EL-30",
+      "name": "Dòng bản quyền và WCAG",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=88, y=1345 trên ảnh nguồn 1600×1425",
+      "properties": "Chữ WCAG không phải kết quả kiểm toán.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #30; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-031",
+      "marker": "31",
+      "source_element_id": "ME11-EL-31",
+      "name": "Liên kết Quy chế Giảng viên",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1078, y=1345 trên ảnh nguồn 1600×1425",
+      "properties": "Đích chưa được cung cấp.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #31; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-032",
+      "marker": "32",
+      "source_element_id": "ME11-EL-32",
+      "name": "Liên kết Tiêu chuẩn đánh giá",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1265, y=1345 trên ảnh nguồn 1600×1425",
+      "properties": "Đích chưa được cung cấp; không suy ra thang điểm.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #32; ME-11 01-ui-elements.md; code.html"
+    },
+    {
+      "id": "ME-11-EL-033",
+      "marker": "33",
+      "source_element_id": "ME11-EL-33",
+      "name": "Liên kết Hỗ trợ kỹ thuật",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1450, y=1345 trên ảnh nguồn 1600×1425",
+      "properties": "Chưa có địa chỉ/kênh hỗ trợ.",
+      "event_ids": [
+        "ME-11-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11_markers.json marker #33; ME-11 01-ui-elements.md; code.html"
+    }
+  ],
+  "events": [
+    {
+      "id": "ME-11-EV-001",
+      "source_event_id": "ME11-E01",
+      "name": "Mở hộp thư và tải danh sách",
+      "trigger": "Vào /mentor/support hoặc áp dụng bộ lọc; trang khởi chạy GET #58.",
+      "processing": "Đặt trạng thái tải; gọi #58; kiểm tra phong bì, mã, danh sách và từng mục. Data=[] hợp lệ; 403 tách riêng; lỗi khác hiện thông báo an toàn. Tuyến/trang đã có trong mã nguồn; lúc chạy chưa xác minh.",
+      "element_ids": [
+        "ME-11-EL-020",
+        "ME-11-EL-022",
+        "ME-11-EL-023"
+      ],
+      "api_ids": [
+        "API #58"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-11 02-events.md ME11-E01; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+    },
+    {
+      "id": "ME-11-EV-002",
+      "source_event_id": "ME11-E02",
+      "name": "Chọn trạng thái yêu cầu",
+      "trigger": "Theo ảnh mẫu: chọn thẻ Tất cả, Đang mở hoặc Đã giải quyết.",
+      "processing": "Ảnh mẫu chỉ đổi kiểu/aria-selected. Trang hiện không có ba thẻ mà dùng ô status dạng chuỗi chính xác; chưa có ánh xạ thẻ, nhóm trạng thái hoặc nguồn số đếm.",
+      "element_ids": [
+        "ME-11-EL-015",
+        "ME-11-EL-016",
+        "ME-11-EL-017"
+      ],
+      "api_ids": [
+        "API #58"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11 02-events.md ME11-E02; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+    },
+    {
+      "id": "ME-11-EV-003",
+      "source_event_id": "ME11-E03",
+      "name": "Lọc theo khóa học",
+      "trigger": "Ảnh mẫu đổi bộ chọn; trang hiện nhập Mã khóa học rồi gửi biểu mẫu.",
+      "processing": "Dịch vụ gửi course_id nếu có; phía giao diện từ chối giá trị không phải int64 dương. Mã chữ mẫu không gửi được trực tiếp; nguồn lựa chọn và ánh xạ chưa được duyệt.",
+      "element_ids": [
+        "ME-11-EL-018",
+        "ME-11-EL-019"
+      ],
+      "api_ids": [
+        "API #58"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11 02-events.md ME11-E03; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+    },
+    {
+      "id": "ME-11-EV-004",
+      "source_event_id": "ME11-E04",
+      "name": "Làm mới hộp thư",
+      "trigger": "Theo ảnh mẫu: bấm Làm mới; trang hiện chỉ có Tải lại khi lỗi.",
+      "processing": "Bản mẫu chỉ chạy hoạt ảnh khoảng 650 ms và thay đồng hồ cục bộ, không gọi API. Trang hiện không có nút làm mới riêng; chính sách giữ dữ liệu cũ khi lỗi chưa chốt.",
+      "element_ids": [
+        "ME-11-EL-024",
+        "ME-11-EL-013"
+      ],
+      "api_ids": [
+        "API #58"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11 02-events.md ME11-E04; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+    },
+    {
+      "id": "ME-11-EV-005",
+      "source_event_id": "ME11-E05",
+      "name": "Mở yêu cầu ở ME-12",
+      "trigger": "Chọn Mở trao đổi trên một mục đã tải.",
+      "processing": "Liên kết trong mã nguồn dùng ID an toàn từ trường request.id tới /mentor/support/:requestId. ME-11 không gọi #59; bố cục danh sách đã tải và điều hướng trên trình duyệt chưa xác minh.",
+      "element_ids": [
+        "ME-11-EL-020"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11 02-events.md ME11-E05; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+    },
+    {
+      "id": "ME-11-EV-006",
+      "source_event_id": "ME11-E06",
+      "name": "Dùng liên kết đầu trang/chân trang",
+      "trigger": "Theo ảnh mẫu: chọn logo, menu, chuông hoặc liên kết cuối trang.",
+      "processing": "Các anchor trong code.html dùng href=#. Trang hiện dùng khung Mentor chung; đích thông báo/tài liệu/hỗ trợ chưa được xác nhận.",
+      "element_ids": [
+        "ME-11-EL-001",
+        "ME-11-EL-002",
+        "ME-11-EL-003",
+        "ME-11-EL-004",
+        "ME-11-EL-005",
+        "ME-11-EL-006",
+        "ME-11-EL-007",
+        "ME-11-EL-031",
+        "ME-11-EL-032",
+        "ME-11-EL-033"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-11 02-events.md ME11-E06; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ME11-B01",
+      "description": "Thiết kế danh sách đã tải và AC-24",
+      "impact": "Ảnh có trạng thái rỗng, AC-24 tiền điều kiện nói đã có yêu cầu; mã nguồn lại có danh sách nhưng bố cục chưa duyệt.",
+      "decision": "Chọn trạng thái rỗng và duyệt cách trình bày danh sách đã tải.",
+      "source_ref": "ME-11 00-overview.md; AC-24 trong list_screen.md hàng 51; ME-11 02-events.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME11-B02",
+      "description": "Nhóm trạng thái và số đếm",
+      "impact": "Ảnh mẫu có ba thẻ và số 0; mã nguồn dùng ô Trạng thái chính xác, API không trả số đếm theo nhóm.",
+      "decision": "Duyệt nhóm trạng thái, giá trị gửi, xử lý CANCELLED và nguồn số đếm.",
+      "source_ref": "ME-11 01-ui-elements.md; 02-events.md; API #58 03_Request.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME11-B03",
+      "description": "Bộ chọn khóa học",
+      "impact": "Ảnh mẫu dùng mã chữ; #58 cần course_id int64; mã nguồn dùng nhập ID, chưa nối nguồn lựa chọn.",
+      "decision": "Duyệt nguồn, nhãn, ID, giá trị Tất cả và trạng thái chọn.",
+      "source_ref": "ME-11 02-events.md; me11-page.ts; me11-support-inbox.service.ts; API #58 models.py",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME11-B04",
+      "description": "Kích thước dữ liệu và riêng tư",
+      "impact": "#58 tải toàn bộ messages/attachments, không phân trang; #59 đọc lại luồng trao đổi.",
+      "decision": "Duyệt các trường dữ liệu cần trả, giới hạn/phân trang và quy tắc riêng tư trước khi dùng dữ liệu thật.",
+      "source_ref": "ME-11 03-data-flow.md; API #58 04_Response.md; 05_Data_Mapping.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME11-B05",
+      "description": "Nguồn yêu cầu từ học viên",
+      "impact": "Chưa tìm thấy API tạo yêu cầu phía học viên nhưng nội dung trạng thái rỗng nói yêu cầu mới sẽ gửi về đây.",
+      "decision": "Xác nhận nguồn tạo và nội dung được phép hiển thị.",
+      "source_ref": "ME-11 00-overview.md; 02-events.md; API #58 OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME11-B06",
+      "description": "SLA và tích hợp trong ảnh",
+      "impact": "SLA, thông báo thời gian thực, thông báo tự động, kho câu trả lời mẫu và Meet chưa có API/chức năng tương ứng được xác nhận.",
+      "decision": "Xác nhận bằng nguồn chính thức hoặc sửa nội dung thiết kế.",
+      "source_ref": "ME-11_markers.json marker #12–13,#25–28; code.html; API #58 response",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME11-B07",
+      "description": "API #58 còn bản nháp cần xác nhận; quyền được phân công, phương án dự phòng về lược đồ/vòng đời, việc cập nhật lược đồ ở môi trường thật và thứ tự kiểm tra quyền so với tham số truy vấn chưa được chốt.",
+      "impact": "Quyền và các trường hợp dự phòng chưa được chủ hợp đồng duyệt; việc cập nhật lược đồ chưa xác minh. Tham số truy vấn sai có thể trả 422 trước khi view kiểm tra 401/403; danh mục chưa chốt thứ tự lỗi.",
+      "decision": "Chủ API duyệt hợp đồng, quyền và thứ tự lỗi; chủ cơ sở dữ liệu xác nhận lược đồ và việc cập nhật dữ liệu; môi trường thật chưa được kiểm tra.",
+      "source_ref": "API #58 03_Request.md; 06_Error.md; OPEN_QUESTIONS.md; api_58_mentor_support_requests/models.py/view.py",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME11-B08",
+      "description": "Điều hướng, tiếp cận và thiết bị",
+      "impact": "Đích liên kết, giữ bộ lọc, bàn phím, WCAG và bố cục đa kích thước chưa kiểm.",
+      "decision": "Duyệt đích và kiểm thử trình duyệt/bàn phím/kích thước màn hình sau khi có môi trường.",
+      "source_ref": "ME-11 06-navigation.md; 07-test-cases.md; me11-page.html/css; code.html",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ME11-TS-001",
+        "requirement_ids": [
+          "ME-11-YC-001",
+          "ME-11-YC-002"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Mở hộp thư và tải danh sách",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Mentor dùng phiên giả; không dùng dữ liệu học viên thật.",
+        "steps": [
+          "Vào /mentor/support; theo dõi GET #58."
+        ],
+        "expected": "Trang gắn ME11Page vào tuyến và gọi GET #58 khi khởi tạo; trình duyệt chưa chạy.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-002",
+        "requirement_ids": [
+          "ME-11-YC-001",
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Hiện trạng thái đang tải",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "GET #58 đang chờ phản hồi.",
+        "steps": [
+          "Mở trang",
+          "Quan sát trước khi API hoàn tất."
+        ],
+        "expected": "Trang đặt loading=true và hiển thị trạng thái đang tải; không dùng dữ liệu mẫu trong ảnh.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-003",
+        "requirement_ids": [
+          "ME-11-YC-001",
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Chấp nhận danh sách rỗng hợp lệ",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Phong bì thành công, DESIGN_RESOURCE_RETRIEVED, data=[].",
+        "steps": [
+          "Trả phong bì rỗng hợp lệ; quan sát trạng thái."
+        ],
+        "expected": "Trang hiện thông báo chưa có yêu cầu. Việc đối chiếu điều kiện rỗng với AC-24 vẫn chờ xác nhận.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-004",
+        "requirement_ids": [
+          "ME-11-YC-001",
+          "ME-11-YC-005",
+          "ME-11-YC-007"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị danh sách có dữ liệu",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Hai yêu cầu tổng hợp có ID khác nhau, cùng học viên và luồng trao đổi hợp lệ.",
+        "steps": [
+          "Trả hai yêu cầu; đối chiếu từng mục với phản hồi."
+        ],
+        "expected": "Chờ xác nhận: Mã nguồn hiện hiển thị tên học viên, ID yêu cầu, course_id, status, tin nhắn cuối, ngày tạo, số messages và liên kết ME-12; bố cục danh sách vẫn cần chủ sản phẩm duyệt.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-005",
+        "requirement_ids": [
+          "ME-11-YC-001",
+          "ME-11-YC-008"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Không biến lỗi thành danh sách rỗng",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Phản hồi lần lượt 401 và 500.",
+        "steps": [
+          "Quan sát trạng thái kết thúc của trang."
+        ],
+        "expected": "Trang hiện lỗi an toàn và không coi lỗi là data=[] hoặc hiển thị danh sách.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-006",
+        "requirement_ids": [
+          "ME-11-YC-002",
+          "ME-11-YC-008"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị riêng lỗi không có quyền",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "403; DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Trả lỗi 403",
+          "Quan sát trang."
+        ],
+        "expected": "Trang hiện trạng thái không có quyền; không hiển thị dữ liệu ngoài phạm vi.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-007",
+        "requirement_ids": [
+          "ME-11-YC-003",
+          "ME-11-YC-008"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Từ chối Mã khóa học sai trước khi gửi",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Giá trị 0, số âm, chữ hoặc vượt int64.",
+        "steps": [
+          "Nhập từng giá trị và gửi bộ lọc."
+        ],
+        "expected": "ToSafeMentorId từ chối cục bộ; hiện lỗi và không gửi yêu cầu GET mới.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-008",
+        "requirement_ids": [
+          "ME-11-YC-008"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Tải lại sau lỗi",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Trang lỗi có nút Tải lại; phản hồi mới hợp lệ.",
+        "steps": [
+          "Bấm Tải lại",
+          "Trả phong bì đúng."
+        ],
+        "expected": "Trang gọi lại #58; chỉ hiện dữ liệu sau khi kiểm tra phản hồi.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-009",
+        "requirement_ids": [
+          "ME-11-YC-001",
+          "ME-11-YC-007",
+          "ME-11-YC-008"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phong bì thiếu trường",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Thiếu success, businessCode, meta hoặc traceId.",
+        "steps": [
+          "Trả phong bì sai cấu trúc."
+        ],
+        "expected": "Trang từ chối phản hồi và hiện lỗi; không dùng data chưa kiểm tra.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-010",
+        "requirement_ids": [
+          "ME-11-YC-001",
+          "ME-11-YC-007"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Từ chối mã kết quả không đúng",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Phong bì đúng kiểu nhưng businessCode khác DESIGN_RESOURCE_RETRIEVED.",
+        "steps": [
+          "Trả phản hồi với mã khác."
+        ],
+        "expected": "Trang không chấp nhận danh sách và hiện lỗi phản hồi không hợp lệ.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-011",
+        "requirement_ids": [
+          "ME-11-YC-007"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Từ chối ID yêu cầu trùng",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Hai mục có cùng data[].id.",
+        "steps": [
+          "Trả danh sách có ID trùng."
+        ],
+        "expected": "Bộ kiểm tra danh sách từ chối toàn bộ phản hồi, không hiển thị một phần.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-012",
+        "requirement_ids": [
+          "ME-11-YC-007"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Từ chối dữ liệu lồng nhau sai kiểu",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Học viên thiếu ID/tên; tin nhắn thiếu author/content; tệp đính kèm sai kiểu.",
+        "steps": [
+          "Trả dữ liệu giả sai lần lượt ở từng nhánh."
+        ],
+        "expected": "Bộ kiểm tra từ chối yêu cầu có cấu trúc sai trước khi hiển thị.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-013",
+        "requirement_ids": [
+          "ME-11-YC-007"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Từ chối ngày giờ không hợp lệ",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "created_at hoặc resolved_at không thể phân tích.",
+        "steps": [
+          "Trả yêu cầu/tin nhắn sai thời gian."
+        ],
+        "expected": "Trang hiện lỗi dữ liệu thay vì hiển thị ngày giờ sai.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-014",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Gửi cả hai bộ lọc",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "course_id=27; status=OPEN.",
+        "steps": [
+          "Nhập hai giá trị",
+          "Gửi; kiểm tra tham số."
+        ],
+        "expected": "Dịch vụ gửi đúng course_id/trạng thái; API kết hợp điều kiện bằng VÀ. Ánh xạ thẻ còn chờ xác nhận.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-015",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Không gửi tham số lọc rỗng",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "course_id và/hoặc trạng thái để trống.",
+        "steps": [
+          "Gửi biểu mẫu và xem chuỗi tham số."
+        ],
+        "expected": "Dịch vụ bỏ qua tham số rỗng; không gửi course_id/trạng thái rỗng.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-016",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Xóa bộ lọc hiện tại",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Trang đang có giá trị lọc.",
+        "steps": [
+          "Bấm Xóa bộ lọc",
+          "Quan sát ô và yêu cầu mới."
+        ],
+        "expected": "Hai ô được xóa; trang tải lại không kèm course_id/trạng thái.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-017",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Không gửi mã chữ mẫu làm ID",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "fe-adv, be-node, đầy fullstack-capstone từ ảnh mẫu.",
+        "steps": [
+          "Đối chiếu giá trị với kiểm tra Mã khóa học trước khi gửi."
+        ],
+        "expected": "Mã chữ không được gửi như course_id; nguồn lựa chọn và ánh xạ ID vẫn chờ xác nhận.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-018",
+        "requirement_ids": [
+          "ME-11-YC-006"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Chỉ dùng kết quả truy vấn mới nhất",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Truy vấn A còn chờ; sau đó đổi sang B; A trả muộn.",
+        "steps": [
+          "Gửi A",
+          "B; trả B trước và A sau."
+        ],
+        "expected": "SwitchMap hủy đăng ký A; chỉ dữ liệu khớp bộ lọc B được áp dụng.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-019",
+        "requirement_ids": [
+          "ME-11-YC-006",
+          "ME-11-YC-008"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Đặt lại trạng thái khi đổi bộ lọc",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Trang đang có dữ liệu hoặc ảnh lỗi.",
+        "steps": [
+          "Gửi truy vấn với giá trị khác",
+          "Quan sát trước phản hồi."
+        ],
+        "expected": "Trang xóa danh sách/ảnh lỗi cũ, đặt đang tải và nhận kết quả của truy vấn mới.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-020",
+        "requirement_ids": [
+          "ME-11-YC-009"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Cho phép ảnh đại diện HTTPS",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "avatar_url=https://example.test/anh.png.",
+        "steps": [
+          "Trả phản hồi giả",
+          "Kiểm tra thẻ ảnh."
+        ],
+        "expected": "URL HTTPS được phép; ảnh đặt referrerpolicy=no-referrer.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-021",
+        "requirement_ids": [
+          "ME-11-YC-009"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Từ chối ảnh đại diện không an toàn",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "HTTP khác nguồn, javascript: hoặc URL trống.",
+        "steps": [
+          "Trả lần lượt các URL giả."
+        ],
+        "expected": "Không dùng URL không an toàn; thay bằng chữ viết tắt từ tên học viên.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-022",
+        "requirement_ids": [
+          "ME-11-YC-009"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Dùng chữ viết tắt khi ảnh tải lỗi",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Ảnh hợp lệ nhưng phát sinh lỗi tải; tên giả Nguyễn An.",
+        "steps": [
+          "Kích hoạt nhánh lỗi ảnh."
+        ],
+        "expected": "Trang đánh dấu ID ảnh lỗi và hiện chữ viết tắt từ tối đa hai từ cuối của tên.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-023",
+        "requirement_ids": [
+          "ME-11-YC-005",
+          "ME-11-YC-007"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Hiện tin nhắn cuối trong phần xem trước",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "messages[] theo thứ tự thời gian tăng; nội dung cũ và mới khác nhau.",
+        "steps": [
+          "Trả hai tin nhắn hợp lệ và đối chiếu phần xem trước."
+        ],
+        "expected": "Trang dùng phần tử cuối của messages[]; nội dung được hiển thị như văn bản, không diễn giải HTML.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-024",
+        "requirement_ids": [
+          "ME-11-YC-005",
+          "ME-11-YC-007"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái và ngày tạo nhận được",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "status=WAITING_LEARNER; created_at có múi giờ.",
+        "steps": [
+          "Trả yêu cầu hợp lệ và đối chiếu nội dung."
+        ],
+        "expected": "Trang giữ nguyên giá trị status do API trả và định dạng created_at bằng DatePipe; không tự gom nhóm trạng thái.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-025",
+        "requirement_ids": [
+          "ME-11-YC-010"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Mở đúng yêu cầu ở ME-12",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "yêu cầu.id=314 là số dương an toàn.",
+        "steps": [
+          "Chọn Mở trao đổi và quan sát RouterLink."
+        ],
+        "expected": "Chờ xác nhận: Mã nguồn hướng tới /mentor/support/314; không đặt nội dung luồng trao đổi/URL tệp trên tuyến. Chưa xác minh trình duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-026",
+        "requirement_ids": [
+          "ME-11-YC-010"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Không gọi API chi tiết từ ME-11",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Đang ở danh sách, chưa chọn một yêu cầu.",
+        "steps": [
+          "Mở trang và theo dõi các lời gọi."
+        ],
+        "expected": "Trang chỉ gọi GET #58; #59/#60/#61 thuộc ME-12.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-027",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Không suy ra số chưa đọc, SLA hoặc tên khóa",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "API #58 không trả các trường này.",
+        "steps": [
+          "Đối chiếu phản hồi với phần tử trang."
+        ],
+        "expected": "Chờ xác nhận: Không dùng giá trị mẫu làm dữ liệu thật; cần duyệt nội dung ảnh mẫu trước phát hành.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-028",
+        "requirement_ids": [
+          "ME-11-YC-002",
+          "ME-11-YC-009"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Giới hạn trường riêng tư được hiển thị",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Dữ liệu giả có student, messages và attachments; không có email/điện thoại.",
+        "steps": [
+          "Đối chiếu các trường được hiển thị và bảo đảm không ghi nội dung/URL vào nhật ký."
+        ],
+        "expected": "Trang chỉ hiển thị phần dữ liệu đã kiểm tra, không tự thêm dữ liệu liên hệ; không ghi nội dung hoặc URL tệp vào nhật ký.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-TS-029",
+        "requirement_ids": [
+          "ME-11-YC-002",
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt khóa không tồn tại và khóa của Mentor khác",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Mã khóa học dương; một ID không có row, một ID thuộc Mentor khác.",
+        "steps": [
+          "Gọi #58 với từng dữ liệu giả quyền."
+        ],
+        "expected": "Chờ xác nhận: Theo API mã nguồn, ID không tồn tại trả danh sách rỗng; khóa tồn tại thuộc người khác trả 403. Quyền phương án dự phòng vẫn chờ chủ API xác nhận.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-030",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu tiếp cận và bố cục từ mã nguồn",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Chỉ đối chiếu HTML/CSS; chưa chạy trình duyệt.",
+        "steps": [
+          "Kiểm tra liên kết giữa nhãn và ô nhập, thuộc tính role=status/alert và điểm ngắt CSS."
+        ],
+        "expected": "Chờ xác nhận: Chỉ ghi nhận bằng chứng mã nguồn; bàn phím, focus, trình đọc màn hình, thiết bị và WCAG vẫn chờ kiểm tra.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-031",
+        "requirement_ids": [
+          "ME-11-YC-013"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Giữ ca chưa chạy và điểm chặn",
+        "precondition": "Dùng dữ liệu giả đã nêu; không dùng dữ liệu cá nhân thật. Chưa chạy ứng dụng.",
+        "data": "Chưa có phiên thực thi được xác nhận.",
+        "steps": [
+          "Đối chiếu toàn bộ trạng thái ca, ô bằng chứng và danh sách blocker."
+        ],
+        "expected": "Chờ xác nhận: Mọi ca là Chưa chạy; cột kết quả/bằng chứng trống; các điểm chặn được giữ nguyên.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-TS-032",
+        "requirement_ids": [
+          "ME-11-YC-002",
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt lỗi tham số với lỗi xác thực",
+        "precondition": "API #58 nhận tham số trước khi vào hàm view; quyết định thứ tự lỗi vẫn cần chủ hợp đồng xác nhận.",
+        "data": "Thiếu Bearer đồng thời course_id không phải số nguyên dương int64.",
+        "steps": [
+          "Gửi yêu cầu giả không có Bearer và có course_id sai.",
+          "Ghi nhận mã HTTP và mã lỗi trả về."
+        ],
+        "expected": "Chờ xác nhận: Mã nguồn có thể trả 422 khi phân tích tham số truy vấn trước khi kiểm tra quyền; không coi 422 là bằng chứng phiên đã được xác thực. Chủ hợp đồng cần duyệt thứ tự lỗi.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 DD mục 00–07; mã nguồn me11-page.ts/html; API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ME11-ELTC-001",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #1: Thương hiệu Study2Work Mentor",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 1 / ME11-EL-01; Tọa độ x=246, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Liên kết thương hiệu ở đầu trang; đích ảnh mẫu chưa xác nhận. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #1; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-002",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #2: Điều hướng Tổng quan",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 2 / ME11-EL-02; Tọa độ x=330, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Menu mẫu; href=# không xác nhận đích. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #2; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-003",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #3: Điều hướng Khóa học phụ trách",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 3 / ME11-EL-03; Tọa độ x=465, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Không mang course_id; route và giữ trạng thái chưa chốt. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #3; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-004",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #4: Điều hướng Chấm bài",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 4 / ME11-EL-04; Tọa độ x=650, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Đích menu chưa xác minh trong trình duyệt. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #4; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-005",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #5: Mục hiện hành Hộp thư hỗ trợ",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 5 / ME11-EL-05; Tọa độ x=805, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Đánh dấu chọn trong ảnh không chứng minh route lúc chạy. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #5; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-006",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #6: Điều hướng Thông báo",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 6 / ME11-EL-06; Tọa độ x=955, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Đích Thông báo chưa xác nhận. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #6; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-007",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #7: Chuông và chấm thông báo",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 7 / ME11-EL-07; Tọa độ x=1276, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chấm đỏ là hình mẫu; không có nguồn số chưa đọc. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #7; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-008",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #8: Tên, vai trò và ảnh đại diện Mentor mẫu",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 8 / ME11-EL-08; Tọa độ x=1524, y=16 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Tên/ảnh mẫu không lấy từ phiên người dùng. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #8; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-009",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #9: Biểu tượng và nhãn cổng hỗ trợ",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 9 / ME11-EL-09; Tọa độ x=20, y=111 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chữ 1-1 không chứng minh có lịch hẹn. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #9; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-010",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #10: Tiêu đề hộp thư hỗ trợ",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 10 / ME11-EL-10; Tọa độ x=20, y=173 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Đối chiếu đúng tiêu đề ảnh. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #10; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-011",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #11: Mô tả hộp thư",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 11 / ME11-EL-11; Tọa độ x=20, y=218 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Nội dung tĩnh không tạo cam kết API. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #11; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-012",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #12: Nhãn cam kết phản hồi dưới bốn giờ",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 12 / ME11-EL-12; Tọa độ x=1118, y=198 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Không có thời hạn hoặc lịch làm việc trong API #58. Đối chiếu đúng mốc, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #12; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-013",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #13: Nhãn vừa cập nhật tức thì",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 13 / ME11-EL-13; Tọa độ x=1530, y=198 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Không có mức độ mới do máy chủ trả về. Đối chiếu đúng mốc, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #13; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-014",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #14: Khung bộ lọc",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 14 / ME11-EL-14; Tọa độ x=48, y=397 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Ảnh có thẻ/bộ chọn; mã nguồn dùng ô Mã khóa học/Trạng thái. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #14; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-015",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #15: thẻ Tất cả và số đếm mẫu",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 15 / ME11-EL-15; Tọa độ x=60, y=307 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Số 0 mẫu; không phải số đếm từ API. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #15; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-016",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #16: thẻ Đang mở và số đếm mẫu",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 16 / ME11-EL-16; Tọa độ x=229, y=307 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chưa có nhóm trạng thái hay số đếm mã nguồn. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #16; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-017",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #17: thẻ Đã giải quyết và số đếm mẫu",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 17 / ME11-EL-17; Tọa độ x=402, y=307 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Trạng thái RESOLVED có trong phương án dự phòng; cách gom nhóm/số đếm chưa được duyệt. Đối chiếu đúng mốc, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #17; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-018",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #18: Nhãn bộ lọc khóa học",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 18 / ME11-EL-18; Tọa độ x=1040, y=318 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Bố cục ở màn hình nhỏ chưa kiểm tra. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #18; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-019",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #19: Bộ chọn khóa học",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 19 / ME11-EL-19; Tọa độ x=1530, y=307 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: mã chữ mẫu khác course_id int64; mã nguồn lựa chọn chưa nối. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #19; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-020",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #20: Khung trạng thái rỗng",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 20 / ME11-EL-20; Tọa độ x=50, y=455 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Mã nguồn hiện chỉ hiện khi phản hồi hợp lệ rỗng; AC-24 còn mâu thuẫn. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #20; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-021",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #21: Hình minh họa phong bì",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 21 / ME11-EL-21; Tọa độ x=712, y=540 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Hình trang trí, không mang data. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #21; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-022",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #22: Tiêu đề trạng thái rỗng",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 22 / ME11-EL-22; Tọa độ x=518, y=695 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Nội dung/điều kiện hiển thị chờ thống nhất với AC-24. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #22; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-023",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #23: Nội dung giải thích trạng thái rỗng",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 23 / ME11-EL-23; Tọa độ x=430, y=750 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chưa xác nhận nguồn tạo tạo yêu cầu phía học viên. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #23; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-024",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #24: Nút làm mới hộp thư",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 24 / ME11-EL-24; Tọa độ x=652, y=887 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Bản mẫu không gọi API; mã nguồn chỉ có tải lại khi lỗi. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #24; ME-11 01-ui-elements.md; me11-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-025",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #25: Tuyên bố thông báo tự động tức thì",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 25 / ME11-EL-25; Tọa độ x=509, y=957 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Không có cơ chế thăm dò định kỳ, đẩy sự kiện hoặc bộ lắng nghe được xác nhận. Đối chiếu đúng mốc, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #25; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-026",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #26: Thẻ thông tin thời hạn SLA",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 26 / ME11-EL-26; Tọa độ x=51, y=1116 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: #58 không trả thời hạn hoặc lịch làm việc. Đối chiếu đúng mốc, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #26; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-027",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #27: Thẻ kho câu trả lời mẫu",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 27 / ME11-EL-27; Tọa độ x=567, y=1116 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chưa có API/kho mẫu được xác nhận. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #27; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-028",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #28: Thẻ hẹn gặp trực tiếp",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 28 / ME11-EL-28; Tọa độ x=1084, y=1116 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chưa có tích hợp Meet hoặc tạo liên kết cuộc họp. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11_dấus.json dấu #28; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-029",
+        "requirement_ids": [
+          "ME-11-YC-004"
+        ],
+        "target_id": "ME-11-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #29: Biểu tượng thương hiệu chân trang",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 29 / ME11-EL-29; Tọa độ x=20, y=1365 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Biểu tượng không chứng minh route/quyền sở hữu. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #29; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-030",
+        "requirement_ids": [
+          "ME-11-YC-011"
+        ],
+        "target_id": "ME-11-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #30: Dòng bản quyền và WCAG",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 30 / ME11-EL-30; Tọa độ x=88, y=1345 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chữ WCAG không phải kết quả kiểm toán. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #30; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-031",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #31: Liên kết Quy chế Giảng viên",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 31 / ME11-EL-31; Tọa độ x=1078, y=1345 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Đích chưa được cung cấp. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #31; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-032",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #32: Liên kết Tiêu chuẩn đánh giá",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 32 / ME11-EL-32; Tọa độ x=1265, y=1345 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Đích chưa được cung cấp; không suy ra thang điểm. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #32; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-ELTC-033",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #33: Liên kết Hỗ trợ kỹ thuật",
+        "precondition": "Đối chiếu ảnh đánh số, marker JSON và mã nguồn đã khai báo; chưa chạy trình duyệt.",
+        "data": "Marker 33 / ME11-EL-33; Tọa độ x=1450, y=1345 trên ảnh nguồn 1600×1425",
+        "steps": [
+          "Tìm marker trên ảnh đánh số.",
+          "Đối chiếu vị trí, nội dung và giới hạn ghi trong đặc tả."
+        ],
+        "expected": "Chờ xác nhận: Chưa có địa chỉ/kênh hỗ trợ. Đối chiếu đúng marker, tên và tọa độ; không suy diễn ngoài ghi chú nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11_dấus.json dấu #33; ME-11 01-ui-elements.md; code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ME11-EVTC-001",
+        "requirement_ids": [
+          "ME-11-YC-001"
+        ],
+        "target_id": "ME-11-EV-001",
+        "group": "Sự kiện",
+        "title": "Đối chiếu thao tác: Mở hộp thư và tải danh sách",
+        "precondition": "Dùng dữ liệu giả giả; đối chiếu tài liệu và mã nguồn, chưa chạy giao diện.",
+        "data": "Vào /mentor/support hoặc áp dụng bộ lọc; trang khởi chạy GET #58.",
+        "steps": [
+          "Đối chiếu trigger và phần tử liên quan.",
+          "Ghi riêng xử lý hiện tại với phần đang chờ duyệt."
+        ],
+        "expected": "Vào trang gọi GET #58; trang phân biệt đang tải, rỗng, danh sách và lỗi theo phản hồi đã kiểm tra. Trình duyệt chưa chạy.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 02-events.md ME11-E01; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME11-EVTC-002",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EV-002",
+        "group": "Sự kiện",
+        "title": "Đối chiếu thao tác: Chọn trạng thái yêu cầu",
+        "precondition": "Dùng dữ liệu giả giả; đối chiếu tài liệu và mã nguồn, chưa chạy giao diện.",
+        "data": "Theo ảnh mẫu: chọn thẻ Tất cả, Đang mở hoặc Đã giải quyết.",
+        "steps": [
+          "Đối chiếu trigger và phần tử liên quan.",
+          "Ghi riêng xử lý hiện tại với phần đang chờ duyệt."
+        ],
+        "expected": "Chờ xác nhận: ảnh mẫu chỉ đổi thẻ; mã nguồn hiện dùng ô Trạng thái. Chưa có ánh xạ nhóm trạng thái/số đếm.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 02-events.md ME11-E02; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-EVTC-003",
+        "requirement_ids": [
+          "ME-11-YC-003"
+        ],
+        "target_id": "ME-11-EV-003",
+        "group": "Sự kiện",
+        "title": "Đối chiếu thao tác: Lọc theo khóa học",
+        "precondition": "Dùng dữ liệu giả giả; đối chiếu tài liệu và mã nguồn, chưa chạy giao diện.",
+        "data": "Ảnh mẫu đổi bộ chọn; trang hiện nhập Mã khóa học rồi gửi biểu mẫu.",
+        "steps": [
+          "Đối chiếu trigger và phần tử liên quan.",
+          "Ghi riêng xử lý hiện tại với phần đang chờ duyệt."
+        ],
+        "expected": "Chờ xác nhận: Mã nguồn nhận mã khóa học dạng số, không gửi mã chữ; danh sách lựa chọn và ánh xạ chưa được duyệt.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 02-events.md ME11-E03; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-EVTC-004",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EV-004",
+        "group": "Sự kiện",
+        "title": "Đối chiếu thao tác: Làm mới hộp thư",
+        "precondition": "Dùng dữ liệu giả giả; đối chiếu tài liệu và mã nguồn, chưa chạy giao diện.",
+        "data": "Theo ảnh mẫu: bấm Làm mới; trang hiện chỉ có Tải lại khi lỗi.",
+        "steps": [
+          "Đối chiếu trigger và phần tử liên quan.",
+          "Ghi riêng xử lý hiện tại với phần đang chờ duyệt."
+        ],
+        "expected": "Chờ xác nhận: làm mới trong bản mẫu chỉ đổi đồng hồ; mã nguồn hiện không có nút làm mới riêng.",
+        "api_ids": [
+          "API #58"
+        ],
+        "source_refs": [
+          "ME-11 02-events.md ME11-E04; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-EVTC-005",
+        "requirement_ids": [
+          "ME-11-YC-010"
+        ],
+        "target_id": "ME-11-EV-005",
+        "group": "Sự kiện",
+        "title": "Đối chiếu thao tác: Mở yêu cầu ở ME-12",
+        "precondition": "Dùng dữ liệu giả giả; đối chiếu tài liệu và mã nguồn, chưa chạy giao diện.",
+        "data": "Chọn Mở trao đổi trên một mục đã tải.",
+        "steps": [
+          "Đối chiếu trigger và phần tử liên quan.",
+          "Ghi riêng xử lý hiện tại với phần đang chờ duyệt."
+        ],
+        "expected": "Chờ xác nhận: liên kết mã nguồn lấy ID an toàn sang ME-12; bố cục và điều hướng thật chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11 02-events.md ME11-E05; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME11-EVTC-006",
+        "requirement_ids": [
+          "ME-11-YC-012"
+        ],
+        "target_id": "ME-11-EV-006",
+        "group": "Sự kiện",
+        "title": "Đối chiếu thao tác: Dùng liên kết đầu trang/chân trang",
+        "precondition": "Dùng dữ liệu giả giả; đối chiếu tài liệu và mã nguồn, chưa chạy giao diện.",
+        "data": "Theo ảnh mẫu: chọn logo, menu, chuông hoặc liên kết cuối trang.",
+        "steps": [
+          "Đối chiếu trigger và phần tử liên quan.",
+          "Ghi riêng xử lý hiện tại với phần đang chờ duyệt."
+        ],
+        "expected": "Chờ xác nhận: anchor ảnh mẫu chưa có đích; không coi liên kết đầu/chân trang hoạt động.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-11 02-events.md ME11-E06; ME-11 03-data-flow.md; mã nguồn ME11/API #58"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  },
+  "source_hashes": {
+    "apps/study-client/docs/list_screen.md": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/00-overview.md": "009354a7f89c8628f39abd73dfe377ea57cf58ad59a16311f681765fb973bedf",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/01-ui-elements.md": "66e9066f4fdff98c775aba07ac4e328427c50c8c973238c85de3160ac9cd3097",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/02-events.md": "d3d084f0a8ecfa8f8dadbc3d9935e43b384436562c4339093fd09c79d6b7d454",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/03-data-flow.md": "045a45d85288979dad92c87281d20e8d4c928ef37f98e9fbce58a12f06ddf0b4",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/04-api-integration.md": "5851b4192288e1deab8213dd9feb4afe259ea9804807f487ef7425002c382e19",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/05-business-rules.md": "418d51b95b183cb606666609a116ff3dd891e1d4c55e18306832276a6170256d",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/06-navigation.md": "3eed0c3d4044ab0f1de7b0ae26b9389844d70715dd881f93c91537203bbd8f82",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/07-test-cases.md": "d4784104393ea45d01fa3808f2b34c9d96f5ead405ba0a6f5d04f6c82def4cc5",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/images/screen-clean.png": "2cbdc3691a241ee755ce6f422768472c943ddb352554f9ed9159df1cd5105272",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/images/screen-numbered.png": "8fc0ea097f96308a2e5a3e970aa86bcd8769b6ebc1a7776c3d4b91dc7e3e8851",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/images/README.md": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7",
+    "apps/study-client/docs/dd_screens/ME-11-HopThuHoTroHocVien/code.html": "54536f7794787f3c93772c54805c42712f2339434a4c7f58fd3611925b64b2d5",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11.md": "f59bd8c3023ee5d24b485ec0bb719526d311914976b095cbbd93afb396e377d0",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11_PLAN.md": "314277719e56643a916040ac0b3879043fd31483ee40bcc4ece43ac698f3e4e8",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11_markers.json": "293b1060cf30c411703f283d4e34a22a63207cc72d2788b7055e9874571b7175",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11_markers_overlay.svg": "bf86df2901048852c152b1db0301dc0a8612693bab76f1fee3051ea08679b944",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/screen.png": "2cbdc3691a241ee755ce6f422768472c943ddb352554f9ed9159df1cd5105272",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/screen_annotated.png": "8fc0ea097f96308a2e5a3e970aa86bcd8769b6ebc1a7776c3d4b91dc7e3e8851",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/code.html": "54536f7794787f3c93772c54805c42712f2339434a4c7f58fd3611925b64b2d5",
+    "apps/study-client/src/app/features/mentor/ME11/pages/me11-page.ts": "8dfc92ca397de884273ff5b40b9fce49d35d0b69726a731789374ee4f809c935",
+    "apps/study-client/src/app/features/mentor/ME11/pages/me11-page.html": "bfaff24ee80c3c804437ef8282ca31f56485b7ae50d3160ea0c041c0c881fb88",
+    "apps/study-client/src/app/features/mentor/ME11/pages/me11-page.css": "69015ef9a5f029e62727acbe96a53a514b0aaf959e0e4446c9a6de3e69204f32",
+    "apps/study-client/src/app/features/mentor/ME11/data-access/me11-support-inbox.service.ts": "d2918ff92aa6258740f5eedff22ed778978886a78474c70194b5be4faa69c833",
+    "apps/study-client/src/app/features/mentor/ME11/ui/README.md": "a82c64764a6b323e209b777bed30a52d6f26c293f78cf20a91e49ddb7e7a9126",
+    "apps/study-client/src/app/features/mentor/ME11/models/README.md": "2150c602e2bb9fe83fce88ea9b48fdcf18182c59acceae687ab1253168838c45",
+    "apps/study-client/src/app/features/mentor/mentor.route.ts": "e06357d47f5318efd79109ebd1b4aa4efd06898f19741cbbd0ebeb54b31a89e1",
+    "apps/study-client/src/app/features/mentor/mentor.route.spec.ts": "b4df002b58c815f8fe5f83c59959dce558834c308a05791fabe65d0e96727837",
+    "apps/study-server/app/api/v1.py": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf",
+    "apps/study-server/app/modules/mentor/api_58_mentor_support_requests/models.py": "aaf8be0beca598b91bdaa0c5f8626c54ef4d6045da4b9109d1af0fb411d0822c",
+    "apps/study-server/app/modules/mentor/api_58_mentor_support_requests/query.py": "d836c970d32a678144a056ac6cd31fef0a9d6f4ecd7d5ed1a622371ef372f080",
+    "apps/study-server/app/modules/mentor/api_58_mentor_support_requests/view.py": "94f0a67b1b49a11b0d393feee05258551485eaaa9b72b7e38861314d155a9b07",
+    "apps/study-server/tests/modules/mentor/api_58_mentor_support_requests/test_mentor_support_requests.py": "8bc23d1c4831eeafe8539c355e2fad1450719eb73bda3b77c98265964b795375",
+    "apps/study-server/docs/dd/58_mentor_support_requests/00_Cover.md": "79b36fde447e6e870445d31117fadec384c340badd16bc7e66d4f8be3664b8d6",
+    "apps/study-server/docs/dd/58_mentor_support_requests/02_Overview.md": "9458241f8f24315d6d178c1344f00df923731a074056f8c8c993897046499adc",
+    "apps/study-server/docs/dd/58_mentor_support_requests/03_Request.md": "4ff901467f3264ef5cae2b9c91f4efa7692256ac3ba3f322b10d0e7f120d5d50",
+    "apps/study-server/docs/dd/58_mentor_support_requests/04_Response.md": "ee29f6cb32c0038cbf2c1b0fcd3b8319acd8c7229100407052ffaa9e02cdcfba",
+    "apps/study-server/docs/dd/58_mentor_support_requests/05_Data_Mapping.md": "98fcf5e06df3bd5b2ce169cec24517d879178347db1b9e4fd803cd41ed5757fb",
+    "apps/study-server/docs/dd/58_mentor_support_requests/06_Error.md": "41be46e39d22c15a57c9a914a714413ea39c979b5608d1894555428a9acb5685",
+    "apps/study-server/docs/dd/58_mentor_support_requests/07_table.md": "8a5310cc25096038dad3653b9d99c68021d490261d354d69a580a538626e2e69",
+    "apps/study-server/docs/dd/58_mentor_support_requests/OPEN_QUESTIONS.md": "52d2217a881e866a20b83b2900462147a595f53d3d084090e452a5094d0a1b1c",
+    "apps/study-server/docs/dd/58_mentor_support_requests/PLAN_RESULT.md": "9a36a0eab18f22ab37d6239972ebaa55545d6fad63e334bc7ced79f06555b2e3",
+    "apps/study-server/docs/dd/58_mentor_support_requests/VERIFICATION_REPORT.md": "0e09f6d6215a9e16fc128818f7d0abab17a6b2f418869faa4239a524cc08488a"
+  }
+}

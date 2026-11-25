@@ -1,0 +1,16 @@
+{
+  "muc_dich": "Đối chiếu tính nhất quán giữa đặc tả UTC và workbook ST-08; không phải kết quả chạy ứng dụng.",
+  "hop_le": true,
+  "crc_workbook_sach": true,
+  "so_ca": {
+    "screen": 19,
+    "elements": 22,
+    "events": 9
+  },
+  "ma_ca_khop_json": true,
+  "trang_thai_cho_xac_nhan_chua_chay_va_ket_qua_trong": true,
+  "so_nguon_tham_chieu": 38,
+  "so_nguon_tham_chieu_khong_ton_tai": 0,
+  "so_cong_thuc_workbook": 622,
+  "loi": []
+}

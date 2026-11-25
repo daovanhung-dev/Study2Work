@@ -1,0 +1,39 @@
+{
+  "hop_le": true,
+  "kiem_tra": {
+    "ZIP hợp lệ": true,
+    "XML hợp lệ": true,
+    "Bốn tên trang tính đúng": true,
+    "Mã ca và trích dẫn khớp JSON": true,
+    "Mọi ca ở trạng thái Chưa chạy": true,
+    "Cột chạy thực tế để trống": true,
+    "153 công thức trạng thái đúng": true,
+    "Ba danh sách chọn trạng thái đúng": true,
+    "Không còn nội dung mẫu": true,
+    "Thuộc tính trợ năng còn nguyên": true,
+    "51 ca trong JSON": true,
+    "Không lộ phần giữ chỗ tự động": true,
+    "54/54 mã băm nguồn khớp": true
+  },
+  "so_ca": 51,
+  "trang_thai_ca": "Chưa chạy",
+  "so_cong_thuc": 153,
+  "vung_chon_trang_thai": {
+    "01. Bìa": [],
+    "02. Tổng quan": [
+      "O57:O80"
+    ],
+    "03. Thành phần": [
+      "O28:O46"
+    ],
+    "04. Sự kiện": [
+      "O15:O22"
+    ]
+  },
+  "ma_bam_nguon": {
+    "so_luong": 54,
+    "so_khop": 54
+  },
+  "ra_soat_tieng_viet": "Đã rà soát lời văn tiếng Việt; ghi rõ chênh lệch giữa xác nhận của người dùng và trạng thái trong repo; giữ nguyên API, route, field, enum, thuộc tính trợ năng và dẫn chiếu nguồn.",
+  "loi": []
+}

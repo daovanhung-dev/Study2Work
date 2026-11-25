@@ -1,0 +1,22 @@
+{
+  "screen_id": "GS-05",
+  "workbook": "UTC_GS-05_DanhGiaVaThaoLuanCongKhai.xlsx",
+  "integrity": "Đạt",
+  "sheet_names": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "ca_khop_spec_workbook": 60,
+  "ca_chua_chay": 60,
+  "ca_de_trong_cot_thuc_thi": 60,
+  "dong_co_du_3_cong_thuc": 60,
+  "tong_cong_thuc": 180,
+  "dropdown_trang_thai": 3,
+  "hash_nguon_da_xac_minh": "54/54",
+  "kiem_tra_aria_literal": 5,
+  "truy_vet_requirement_event_element": "Đạt",
+  "template_residue": "Không",
+  "loi": []
+}

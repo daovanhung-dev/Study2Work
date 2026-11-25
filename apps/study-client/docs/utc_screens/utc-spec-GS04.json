@@ -1,0 +1,2247 @@
+{
+  "metadata": {
+    "screen_id": "GS-04",
+    "screen_name": "Đề cương khóa học",
+    "module": "Khách / Khám phá",
+    "route": "/courses/:courseId?tab=curriculum",
+    "actor": "Khách theo AC-05; vai trò/chủ sở hữu cần xác nhận.",
+    "version": "0.1 — BẢN KẾ HOẠCH UTC",
+    "dd_version": "0.1 (2026-11-08); cập nhật rà soát nguồn 2026-11-17; kiểm tra UTC 2026-11-24",
+    "dd_status": "DISCREPANCY — người dùng xác nhận DD đã duyệt; GS-04 trong repo ghi BLOCKED và API #09 ghi bản nháp. Dùng DD làm chuẩn theo chỉ dẫn; giữ mở GS04-B01…B08.",
+    "runtime_status": "Rà soát tĩnh; không chạy ứng dụng, kiểm thử, biên dịch, trình duyệt, API triển khai hoặc cơ sở dữ liệu thật. Không nhận kết quả lịch sử trong DD là xác minh của tác vụ này.",
+    "author": "Chủ sở hữu chưa được chỉ định; bản kế hoạch do Codex biên soạn.",
+    "reviewer": "CẦN XÁC NHẬN",
+    "approver": "CẦN XÁC NHẬN",
+    "date": "2026-11-24",
+    "source_name": "DD GS-04, danh mục màn hình, bản mẫu Stitch và mã nguồn GS03Page cùng API #09 Study Server."
+  },
+  "overall": {
+    "objective": "Lập kế hoạch kiểm thử thẻ Đề cương của khóa học công khai: cổng #08, API #09, danh sách, trạng thái, điều hướng và các điểm chặn truy cập/thiết kế.",
+    "inputs": "CourseId trên /courses/:courseId; mở?tab=curriculum; #08 là prerequisite do GS03Page xử lý; #09 trả Page<Lesson>.",
+    "outputs": "Các trạng thái đang tải/đã tải/rỗng/không tìm thấy/lỗi theo mã nguồn hiện tại; danh sách hiện chỉ có title/order. Giao diện sau khi tải và chính sách xem bài chưa được duyệt.",
+    "main_flow": "Mở thẻ hoặc truy cập trực tiếp → giữ courseId dạng chuỗi → #08 xác nhận PUBLISHED → GS03Page gọi GET công khai #09 → xác thực cấu trúc bao phản hồi Page<Lesson> → hiển thị các trường title/order hoặc trạng thái rỗng; phân biệt phản hồi 404 với lỗi hệ thống. Không mở nội dung/video.",
+    "preconditions": "Dùng dữ liệu giả lập sau khi quyết định đang chặn được giải quyết. Đây là kế hoạch tĩnh; chưa chạy ứng dụng hoặc hệ thống tích hợp.",
+    "states": [
+      "Idle",
+      "Đang tải",
+      "Ready",
+      "Rỗng",
+      "Không tìm thấy",
+      "Lỗi"
+    ],
+    "security": "API #09 hiện công khai và lọc PUBLISHED nhưng trả content/video_url; không coi trạng thái đó là quyền xem. Không tạo xem trước, liên kết mở bài hoặc gọi ST-10/#22–#24.",
+    "out_of_scope": "Không tự chốt thiết kế danh sách đã tải, quyền xem trước, bộ nhớ đệm, tải ngay/tải khi chọn, lược đồ trực tiếp, 403, phân trang mới, tuyến GS04 riêng hoặc hành vi trình duyệt."
+  },
+  "apis": [
+    {
+      "id": "API-09",
+      "catalog_ref": "#09",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}/curriculum",
+      "request": "Công khai; không Bearer, thân yêu cầu hoặc tham số truy vấn. Course_id là đoạn đường dẫn; máy chủ hiện kiểm tra giá trị số trong giới hạn 64 bit có dấu.",
+      "response": "200 DESIGN_RESOURCE_RETRIEVED; Page<Lesson> một trang. Bài học hiện gồm id, course_id, title, content?, video_url?, order, status. Máy chủ chỉ lấy khóa học/bài học PUBLISHED; sắp sort_order ASC, id ASC. Có bài: page=1,size=total,total=total,total_pages=1; rỗng: items=[], page=1,size=0,total=0,total_pages=0.",
+      "errors": "404 DESIGN_RESOURCE_NOT_FOUND cho ID không hợp lệ hoặc khóa học thiếu/chưa công khai; 500 DESIGN_INTERNAL_ERROR khi truy vấn/ánh xạ lỗi. Không có nhánh 403 trong mã nguồn hiện tại.",
+      "auth": "Công khai, caller hiện không gắn Bearer; điều này không cấp quyền xem content/video_url hoặc mở bài học.",
+      "design_status": "DD API #09 còn Draft/blocked; visibility PUBLISHED là giả định, response không có cờ preview/quyền truy cập; lược đồ live và môi trường triển khai chưa xác minh.",
+      "source_ref": "apps/study-client/docs/list_endpoint.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/validate.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/models.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/query.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/view.py; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts",
+      "event_ids": [
+        "GS-04-EV-001",
+        "GS-04-EV-002",
+        "GS-04-EV-003",
+        "GS-04-EV-004"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "GS-04-YC-001",
+      "group": "Tuyến và định danh",
+      "description": "GS-04 là thẻ Đề cương trên tuyến /courses/:courseId?tab=curriculum do GS03Page quản lý; không có trang Angular GS04 riêng.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/guest.route.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": "Mã nguồn đã nối thẻ trong GS03; không chứng minh chạy trên trình duyệt."
+    },
+    {
+      "id": "GS-04-YC-002",
+      "group": "Tuyến và định danh",
+      "description": "Giữ courseId ở dạng chuỗi trên tuyến và yêu cầu; đường dẫn API #09 dùng course_id. Bộ kiểm tra máy chủ hiện kiểm tra giới hạn số nguyên 64 bit có dấu.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-server/app/modules/guest/api_09_courses_curriculum/validate.py; apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-003",
+      "group": "Điều phối",
+      "description": "Chỉ gọi #09 sau khi #08 xác nhận khóa học hợp lệ và PUBLISHED, đồng thời thẻ Đề cương đang được chọn.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-004",
+      "group": "API",
+      "description": "Gọi GET /api/v1/courses/{course_id}/curriculum công khai; không Bearer, thân yêu cầu hoặc tham số truy vấn.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/docs/list_endpoint.md; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/view.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-005",
+      "group": "API",
+      "description": "Chấp nhận cấu trúc bao phản hồi thành công/businessCode đúng và cấu trúc Page<Lesson> hợp lệ; dữ liệu trang hiện tại chỉ có một trang.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-006",
+      "group": "API",
+      "description": "Mỗi bài học phải qua kiểm tra kiểu dữ liệu hiện hành; status phải là PUBLISHED. Đây là quy tắc mã nguồn, không xác nhận chính sách truy cập đã duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-server/app/modules/guest/api_09_courses_curriculum/validate.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/models.py; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "DD API #09 vẫn gọi khả năng hiển thị PUBLISHED là giả định thiết kế."
+    },
+    {
+      "id": "GS-04-YC-007",
+      "group": "Danh sách",
+      "description": "API trả bài học theo sort_order tăng dần rồi id tăng dần; ứng dụng giữ thứ tự đó và sắp theo order tăng dần.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/app/modules/guest/api_09_courses_curriculum/query.py; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-008",
+      "group": "Danh sách",
+      "description": "Giao diện hiện chỉ chiếu title và order; không đưa content hoặc video_url vào phần nhìn thấy.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-009",
+      "group": "Bảo mật",
+      "description": "Không có liên kết/nút mở bài học; không phát nội dung/nội dung đa phương tiện và không chuyển khách sang ST-10 hoặc API #22–#24.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-010",
+      "group": "Trạng thái",
+      "description": "Khi đang tải, khu vực có role=status, aria-live=polite và aria-busy=true; đây là hiện trạng mã nguồn.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-011",
+      "group": "Trạng thái",
+      "description": "Phản hồi 200 hợp lệ với items=[] chuyển sang rỗng; trạng thái này tách khỏi lỗi API.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-012",
+      "group": "Trạng thái",
+      "description": "HTTP 404 từ #09 chuyển khu vực sang không tìm thấy; không đổi thành rỗng/403 và không lộ thân lỗi.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-013",
+      "group": "Trạng thái",
+      "description": "HTTP 500, lỗi mạng, cấu trúc bao phản hồi hoặc lược đồ sai hiển thị lỗi an toàn; không lộ chi tiết máy chủ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-014",
+      "group": "Thử lại",
+      "description": "Nút Thử lại hiện trong trạng thái lỗi; khi khóa học còn sẵn sàng và thẻ còn chọn, gọi lại #09 với cùng courseId.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-015",
+      "group": "Thẻ và đường dẫn",
+      "description": "Tab=curriculum mở khu vực; đổi thẻ cập nhật truy vấn và hủy yêu cầu HTTP #09 cũ để kết quả trễ không thay trạng thái thẻ mới.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-016",
+      "group": "Điều hướng",
+      "description": "Chọn Tổng quan trở về cùng courseId, bỏ tham số thẻ và giữ tham số truy vấn khác; mã nguồn không gọi lại #08 chỉ vì đổi thẻ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-017",
+      "group": "Điều phối / chênh lệch",
+      "description": "Danh mục màn hình yêu cầu tái dùng #08 từ bộ nhớ đệm; AC-05 mô tả gọi #08→#09→#10 ngay, còn F02 và mã nguồn hiện gọi #09 khi chọn thẻ. Chưa có quyết định hợp nhất.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-018",
+      "group": "Bộ nhớ đệm / truy cập trực tiếp",
+      "description": "Mã nguồn hiện không có bộ nhớ đệm phía máy khách; truy cập trực tiếp vào thẻ curriculum gọi #08 trước rồi mới #09. Khóa bộ nhớ đệm, độ mới và trường hợp không có bản lưu chưa có hợp đồng.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-019",
+      "group": "Giao diện / chênh lệch",
+      "description": "Ảnh và code Stitch chỉ mô tả trạng thái rỗng tĩnh; không đại diện cho đang tải/đã tải/lỗi, HTML ứng dụng hoặc phản hồi API rỗng.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/images/README.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/screen.png; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/screen_rendered.png; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-020",
+      "group": "Giao diện / điều hướng",
+      "description": "Bản mẫu có đường dẫn phân cấp, đăng nhập/đăng ký và chân trang liên kết; nút hành động (CTA) chi tiết có href=\"#\". Khung khách hiện hành khác và thẻ không có tuyến GS04 độc lập.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html; apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-021",
+      "group": "Phân trang",
+      "description": "API #09 không nhận tham số trang; phản hồi hiện là một trang, và giao diện không có điều khiển phân trang.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-server/app/modules/guest/api_09_courses_curriculum/query.py; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-022",
+      "group": "Lược đồ / môi trường",
+      "description": "DDL cũ dùng các trường BIGINT/name/content/video_url/sort_order/status; DDL V1-PILOT dùng UUID/title/summary/position/is_preview. Mã API #09 không truy vấn mô hình V1-PILOT; lược đồ lessons trên môi trường triển khai chưa được xác minh.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql; .agents/server-study/database.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-023",
+      "group": "Quản trị tài liệu",
+      "description": "Chủ sở hữu, người rà soát và người phê duyệt của DD/UTC chưa được ghi rõ trong nguồn; không tự gán tên.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/07-test-cases.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "notes": ""
+    },
+    {
+      "id": "GS-04-YC-024",
+      "group": "Giới hạn xác minh",
+      "description": "Trong tác vụ này chỉ rà soát tài liệu/mã nguồn và kiểm tra cấu trúc gói; không chạy ứng dụng, kiểm thử, biên dịch, trình duyệt, API triển khai hoặc DB thật.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/07-test-cases.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts; apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "GS-04-EL-001",
+      "marker": "#1",
+      "source_element_id": "GS04-EL-01",
+      "name": "Nhóm thương hiệu và điều hướng",
+      "type": "Nhóm điều hướng",
+      "position": "Ảnh (214,32)",
+      "properties": "Bản mẫu tĩnh: Study2Work, Trang chủ, Khóa học; khung ứng dụng khách trong mã nguồn có liên kết khác.",
+      "event_ids": [
+        "GS-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html",
+      "requirement_ids": [
+        "GS-04-YC-020"
+      ]
+    },
+    {
+      "id": "GS-04-EL-002",
+      "marker": "#2",
+      "source_element_id": "GS04-EL-02",
+      "name": "Liên kết đăng nhập/đăng ký",
+      "type": "Nhóm liên kết",
+      "position": "Ảnh (1311,32)",
+      "properties": "Bản mẫu tĩnh dùng /login và /register; không có phiên đăng nhập, đường dẫn gọi lại hay đường dẫn quay lại trong HTML.",
+      "event_ids": [
+        "GS-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html",
+      "requirement_ids": [
+        "GS-04-YC-020"
+      ]
+    },
+    {
+      "id": "GS-04-EL-003",
+      "marker": "#3",
+      "source_element_id": "GS04-EL-03",
+      "name": "Đường dẫn điều hướng tới đề cương",
+      "type": "Đường dẫn phân cấp",
+      "position": "Ảnh (244,96)",
+      "properties": "Bản mẫu có Trang chủ > Khóa học > Chi tiết khóa học > Đề cương; liên kết Chi tiết khóa học là #.",
+      "event_ids": [
+        "GS-04-EV-005",
+        "GS-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html",
+      "requirement_ids": [
+        "GS-04-YC-020"
+      ]
+    },
+    {
+      "id": "GS-04-EL-004",
+      "marker": "#4",
+      "source_element_id": "GS04-EL-04",
+      "name": "Tiêu đề trang Đề cương khóa học",
+      "type": "H1",
+      "position": "Ảnh (165,140)",
+      "properties": "Bản mẫu là chữ tĩnh; khu vực Angular hiện có H2 tĩnh, không gắn tên khóa học.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "requirement_ids": [
+        "GS-04-YC-019",
+        "GS-04-YC-020"
+      ]
+    },
+    {
+      "id": "GS-04-EL-005",
+      "marker": "#5",
+      "source_element_id": "GS04-EL-05",
+      "name": "Biểu tượng danh sách trong thẻ rỗng",
+      "type": "Biểu tượng trang trí",
+      "position": "Ảnh (720,529)",
+      "properties": "Biểu tượng toc chỉ trang trí; không biểu thị số bài học hay kết quả API.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html",
+      "requirement_ids": [
+        "GS-04-YC-019"
+      ]
+    },
+    {
+      "id": "GS-04-EL-006",
+      "marker": "#6",
+      "source_element_id": "GS04-EL-06",
+      "name": "Tiêu đề trạng thái rỗng",
+      "type": "Văn bản",
+      "position": "Ảnh (720,592)",
+      "properties": "Chữ tĩnh trong bản mẫu; khu vực hiện hành cũng có tiêu đề khi #09 thành công với danh sách rỗng.",
+      "event_ids": [
+        "GS-04-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "requirement_ids": [
+        "GS-04-YC-011",
+        "GS-04-YC-019"
+      ]
+    },
+    {
+      "id": "GS-04-EL-007",
+      "marker": "#7",
+      "source_element_id": "GS04-EL-07",
+      "name": "Thông báo danh sách đề cương rỗng",
+      "type": "Văn bản",
+      "position": "Ảnh (720,623)",
+      "properties": "Bản mẫu có bản sao tĩnh; Angular chỉ hiện bản sao này sau 200 hợp lệ với items=[].",
+      "event_ids": [
+        "GS-04-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "requirement_ids": [
+        "GS-04-YC-011",
+        "GS-04-YC-019"
+      ]
+    },
+    {
+      "id": "GS-04-EL-008",
+      "marker": "#8",
+      "source_element_id": "GS04-EL-08",
+      "name": "Liên kết quay lại chi tiết khóa học",
+      "type": "Nút hành động (CTA) điều hướng",
+      "position": "Ảnh (720,680)",
+      "properties": "Bản mẫu href=\"#\", không giữ courseId; hiện trạng tuyến truy vấn được điều khiển ở GS03Page.",
+      "event_ids": [
+        "GS-04-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "requirement_ids": [
+        "GS-04-YC-016",
+        "GS-04-YC-020"
+      ]
+    },
+    {
+      "id": "GS-04-EL-009",
+      "marker": "#9",
+      "source_element_id": "GS04-EL-09",
+      "name": "Thương hiệu chân trang",
+      "type": "Văn bản",
+      "position": "Ảnh (87,1112)",
+      "properties": "Study2Work là span, không phải liên kết.",
+      "event_ids": [
+        "GS-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html",
+      "requirement_ids": [
+        "GS-04-YC-020"
+      ]
+    },
+    {
+      "id": "GS-04-EL-010",
+      "marker": "#10",
+      "source_element_id": "GS04-EL-10",
+      "name": "Liên kết điều hướng chân trang",
+      "type": "Nhóm liên kết",
+      "position": "Ảnh (1268,1112)",
+      "properties": "Bản mẫu có /, /courses, /login, /register; không xác nhận tuyến khi chạy.",
+      "event_ids": [
+        "GS-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html",
+      "requirement_ids": [
+        "GS-04-YC-020"
+      ]
+    },
+    {
+      "id": "GS-04-EL-011",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-01",
+      "name": "Thẻ Đề cương trong GS03Page",
+      "type": "Nút thẻ",
+      "position": "Thanh thẻ GS03",
+      "properties": "Tab=curriculum chọn khu vực; truy vấn được ghi trên cùng tuyến /courses/:courseId.",
+      "event_ids": [
+        "GS-04-EV-001",
+        "GS-04-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md",
+      "requirement_ids": [
+        "GS-04-YC-001",
+        "GS-04-YC-015",
+        "GS-04-YC-016"
+      ]
+    },
+    {
+      "id": "GS-04-EL-012",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-02",
+      "name": "Tiêu đề khu vực đề cương",
+      "type": "H2",
+      "position": "Đầu khu vực",
+      "properties": "GS03CurriculumPanel có h2 Đề cương khóa học; không có khóa học title binding.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.ts",
+      "requirement_ids": [
+        "GS-04-YC-019"
+      ]
+    },
+    {
+      "id": "GS-04-EL-013",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-03",
+      "name": "Trạng thái đang tải",
+      "type": "Thông báo trạng thái",
+      "position": "Trong khu vực",
+      "properties": "Role=status, aria-live=polite, aria-busy=true; nội dung tải đề cương.",
+      "event_ids": [
+        "GS-04-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "requirement_ids": [
+        "GS-04-YC-010"
+      ]
+    },
+    {
+      "id": "GS-04-EL-014",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-04",
+      "name": "Trạng thái không tìm thấy",
+      "type": "Thông báo trạng thái",
+      "position": "Trong khu vực",
+      "properties": "404 được ánh xạ sang không tìm thấy; không hiển thị thân lỗi; không có thử lại ở trạng thái này.",
+      "event_ids": [
+        "GS-04-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "requirement_ids": [
+        "GS-04-YC-012"
+      ]
+    },
+    {
+      "id": "GS-04-EL-015",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-05",
+      "name": "Trạng thái lỗi và nút thử lại",
+      "type": "Cảnh báo và nút",
+      "position": "Trong khu vực",
+      "properties": "Role=alert; nội dung an toàn và nút Thử lại; không hiển thị chi tiết máy chủ.",
+      "event_ids": [
+        "GS-04-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "requirement_ids": [
+        "GS-04-YC-013",
+        "GS-04-YC-014"
+      ]
+    },
+    {
+      "id": "GS-04-EL-016",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-06",
+      "name": "Trạng thái rỗng sau phản hồi thành công",
+      "type": "Thẻ trạng thái",
+      "position": "Trong khu vực",
+      "properties": "Chỉ hiện khi trang hợp lệ và items=[]; riêng với không tìm thấy/lỗi.",
+      "event_ids": [
+        "GS-04-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "requirement_ids": [
+        "GS-04-YC-011"
+      ]
+    },
+    {
+      "id": "GS-04-EL-017",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-07",
+      "name": "Danh sách bài học đã tải",
+      "type": "Danh sách có thứ tự",
+      "position": "Trong khu vực",
+      "properties": "Ol aria-label=Danh sách bài học; mỗi dòng chỉ hiển thị order và title; không có liên kết/nút.",
+      "event_ids": [
+        "GS-04-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "requirement_ids": [
+        "GS-04-YC-007",
+        "GS-04-YC-008",
+        "GS-04-YC-009",
+        "GS-04-YC-021"
+      ]
+    },
+    {
+      "id": "GS-04-EL-018",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-08",
+      "name": "Ranh giới nội dung và quyền truy cập",
+      "type": "Ranh giới bảo mật",
+      "position": "Không có thao tác bài học",
+      "properties": "Phản hồi model có content/video_url nhưng mapper chỉ sao chép title/order; không mở bài học, phát nội dung đa phương tiện hoặc gọi ST-10.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md",
+      "requirement_ids": [
+        "GS-04-YC-008",
+        "GS-04-YC-009",
+        "GS-04-YC-023"
+      ]
+    },
+    {
+      "id": "GS-04-EL-019",
+      "marker": "—",
+      "source_element_id": "GS04-SRC-09",
+      "name": "Ngữ nghĩa trợ năng của trạng thái",
+      "type": "ARIA",
+      "position": "Khu vực/list",
+      "properties": "Đang tải/lỗi/rỗng có vai trò phù hợp; thứ tự hiển thị là danh sách có thứ tự và số thứ tự được ẩn khỏi trình đọc lặp.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "requirement_ids": [
+        "GS-04-YC-010",
+        "GS-04-YC-018"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "GS-04-EV-001",
+      "source_event_id": "GS04-EV-01",
+      "name": "Mở thẻ hoặc truy cập trực tiếp đề cương",
+      "trigger": "Chọn Đề cương trong GS03Page hoặc mở /courses/:courseId?tab=curriculum.",
+      "processing": "Giữ courseId dạng chuỗi; truy cập trực tiếp gọi #08 trước. Chỉ khi #08 hợp lệ/PUBLISHED và thẻ còn chọn, GS03Page mới gọi #09. Mã nguồn hiện chỉ tải khi chọn thẻ; chưa có bộ nhớ đệm.",
+      "api_ids": [
+        "API-09"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "element_ids": [
+        "GS-04-EL-011",
+        "GS-04-EL-012",
+        "GS-04-EL-013"
+      ]
+    },
+    {
+      "id": "GS-04-EV-002",
+      "source_event_id": "GS04-EV-02",
+      "name": "Nhận danh sách bài học",
+      "trigger": "#09 trả 200 với items có phần tử.",
+      "processing": "Kiểm tra cấu trúc bao phản hồi, phân trang và từng bài học; ánh xạ title/order, sắp theo order tăng dần. Không hiển thị content/video_url hoặc thao tác mở bài.",
+      "api_ids": [
+        "API-09"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "element_ids": [
+        "GS-04-EL-016",
+        "GS-04-EL-017",
+        "GS-04-EL-018"
+      ]
+    },
+    {
+      "id": "GS-04-EV-003",
+      "source_event_id": "GS04-EV-03",
+      "name": "Nhận đề cương rỗng",
+      "trigger": "#09 trả 200 hợp lệ với items=[].",
+      "processing": "Chuyển khu vực sang rỗng; không tạo dòng giả, thử lại hoặc bài học placeholder. Không coi hình tĩnh là phản hồi API.",
+      "api_ids": [
+        "API-09"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "element_ids": [
+        "GS-04-EL-006",
+        "GS-04-EL-007",
+        "GS-04-EL-016"
+      ]
+    },
+    {
+      "id": "GS-04-EV-004",
+      "source_event_id": "GS04-EV-04",
+      "name": "Phân loại lỗi #09",
+      "trigger": "#09 trả 404, 500, transport lỗi hoặc cấu trúc bao phản hồi/lược đồ không hợp lệ.",
+      "processing": "404 sang không tìm thấy; lỗi còn lại sang lỗi an toàn. Nút thử lại chỉ gọi #09 khi khóa học vẫn sẵn sàng và thẻ còn được chọn.",
+      "api_ids": [
+        "API-09"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-server/docs/dd/09_courses_curriculum/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "element_ids": [
+        "GS-04-EL-014",
+        "GS-04-EL-015",
+        "GS-04-EL-016"
+      ]
+    },
+    {
+      "id": "GS-04-EV-005",
+      "source_event_id": "GS04-EV-05",
+      "name": "Trở về Tổng quan",
+      "trigger": "Chọn thẻ Tổng quan trong GS03Page.",
+      "processing": "Cùng courseId; bỏ truy vấn thẻ nhưng giữ truy vấn khác; hủy yêu cầu HTTP curriculum đang chờ và không gọi lại #08/#09 chỉ vì đổi thẻ.",
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "element_ids": [
+        "GS-04-EL-008",
+        "GS-04-EL-011"
+      ]
+    },
+    {
+      "id": "GS-04-EV-006",
+      "source_event_id": "GS04-EV-06",
+      "name": "Đối chiếu điều hướng bản mẫu",
+      "trigger": "Chọn liên kết neo đầu trang/chân trang hoặc nút hành động (CTA) quay lại trong code.html tĩnh.",
+      "processing": "Đối chiếu đúng href trong bản mẫu; không xem liên kết neo href=\"#\" là tuyến đã nối. Khung ứng dụng Angular hiện hành là bằng chứng riêng.",
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html; apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "element_ids": [
+        "GS-04-EL-001",
+        "GS-04-EL-002",
+        "GS-04-EL-003",
+        "GS-04-EL-008",
+        "GS-04-EL-009",
+        "GS-04-EL-010"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "GS04-B01",
+      "description": "DD BLOCKED: chỉ có thiết kế trạng thái rỗng tĩnh; chưa duyệt giao diện đang tải/đã tải/lỗi và cấu trúc danh sách sau khi tải.",
+      "impact": "Không dùng ảnh tĩnh để kết luận trải nghiệm giao diện cho phản hồi API.",
+      "decision": "Nhóm sản phẩm/thiết kế duyệt các trạng thái và cập nhật DD.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_PLAN.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS04-B02",
+      "description": "API #09 DD bản nháp; khả năng hiển thị PUBLISHED là giả định; phản hồi công khai chứa content/video_url nhưng không có cờ xem trước/quyền truy cập.",
+      "impact": "Không được suy ra quyền xem hoặc thêm nút hành động (nút hành động (CTA))/mở bài học.",
+      "decision": "Nhóm kỹ thuật máy chủ/sản phẩm chốt phép chiếu dữ liệu và chính sách truy cập trước khi mở nội dung đa phương tiện.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-server/app/modules/guest/api_09_courses_curriculum/query.py; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS04-B03",
+      "description": "Danh mục màn hình yêu cầu tái dùng #08 từ bộ nhớ đệm, nhưng khóa bộ nhớ đệm/độ mới/trường hợp không có bản lưu/truy cập trực tiếp chưa có hợp đồng; mã nguồn hiện không có bộ nhớ đệm phía máy khách.",
+      "impact": "Không thể khẳng định việc tái sử dụng bộ nhớ đệm hoặc hành vi khi không có bản lưu.",
+      "decision": "Chốt quy tắc bộ nhớ đệm và truy cập trực tiếp, cập nhật AC/danh mục màn hình/DD.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS04-B04",
+      "description": "AC-05 mô tả gọi #08→#09→#10 ngay; F02 và mã nguồn hiện tại gọi #09 khi chọn thẻ.",
+      "impact": "Không tự chọn thứ tự gọi API hoặc đổi luồng điều phối.",
+      "decision": "Nhóm sản phẩm/kỹ thuật máy chủ duyệt gọi ngay hay tải theo thẻ được chọn, rồi đồng bộ tài liệu.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/list_screen.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS04-B05",
+      "description": "Trong DDL cũ, bảng lessons dùng BIGINT; V1-PILOT dùng UUID và bộ cột khác. API #09 hiện truy vấn mô hình cũ; lược đồ lessons trên môi trường triển khai chưa được xác minh.",
+      "impact": "Không coi file DDL nào là lược đồ đang triển khai hoặc lấy is_preview từ mô hình khác.",
+      "decision": "Chốt lược đồ và phép chiếu dữ liệu API; xác minh môi trường triển khai trước khi quyết định truy cập.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql; .agents/server-study/database.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS04-B06",
+      "description": "GS04 là thẻ truy vấn do GS03Page quản lý; liên kết quay lại trong bản mẫu vẫn href=\"#\" và khung ứng dụng thực tế khác đầu trang/chân trang trong ảnh.",
+      "impact": "Không coi liên kết tĩnh hoặc tên màn hình trong danh mục là tuyến độc lập đã chạy.",
+      "decision": "Nhóm sản phẩm và Web xác nhận ranh giới điều hướng, rồi cập nhật hợp đồng thiết kế/mã nguồn.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS04-B07",
+      "description": "Chủ sở hữu DD chưa được chỉ định; người rà soát và phê duyệt UTC cũng chưa có trong nguồn.",
+      "impact": "Gói chưa thể ghi nhận người phê duyệt hoặc trạng thái chính thức đã duyệt.",
+      "decision": "Ghi tên chủ sở hữu, người rà soát và người phê duyệt có căn cứ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/07-test-cases.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS04-B08",
+      "description": "Tác vụ này không chạy ứng dụng, kiểm thử, biên dịch, trình duyệt, API triển khai hoặc cơ sở dữ liệu thật.",
+      "impact": "Chưa có bằng chứng chạy mới cho các ca.",
+      "decision": "Sau khi điểm chặn được giải quyết, chạy bộ ca đã duyệt và lưu bằng chứng.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/07-test-cases.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts; apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "GS04-TS-001",
+        "requirement_ids": [
+          "GS-04-YC-001"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra ranh giới màn hình GS04",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "courseId=42; tab=curriculum. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Mở /courses/42?tab=curriculum.",
+          "Xác định tuyến/component sở hữu khu vực.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "GS04 là thẻ con do GS03Page quản lý; không có tuyến Angular riêng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/guest.route.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-002",
+        "requirement_ids": [
+          "GS-04-YC-002"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Giữ nguyên courseId dạng chuỗi",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "courseId=9223372036854775807. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Mở trực tiếp đường dẫn curriculum với ID lớn ở dạng chuỗi.",
+          "So sánh course_id gửi tới #09 với giá trị trên đường dẫn.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Không đổi ID qua JavaScript Number; hiện tại máy chủ kiểm tra số nguyên 64 bit có dấu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-server/app/modules/guest/api_09_courses_curriculum/validate.py; apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-003",
+        "requirement_ids": [
+          "GS-04-YC-003"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Chặn #09 đến sau #08",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "#08 đang chờ, lỗi, thiếu khóa học hoặc khóa học không PUBLISHED. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Mở trực tiếp thẻ curriculum.",
+          "Kiểm tra yêu cầu HTTP trước và sau khi #08 hoàn tất.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Không gọi #09 trước khi #08 xác nhận khóa học PUBLISHED; không gọi #09 nếu #08 lỗi/404.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-004",
+        "requirement_ids": [
+          "GS-04-YC-004"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Gọi #09 không xác thực",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "courseId giả lập hợp lệ; #08 PUBLISHED. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Chọn thẻ Đề cương.",
+          "Quan sát method, đường dẫn, headers và phần thân yêu cầu.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "GET #09 công khai, không có Bearer, phần thân yêu cầu hoặc tham số truy vấn; giữ nguyên course_id.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/docs/list_endpoint.md; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-005",
+        "requirement_ids": [
+          "GS-04-YC-005"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra cấu trúc bao phản hồi và Page<Lesson>",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "cấu trúc bao phản hồi thành công; dữ liệu trang một trang hợp lệ. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Trả success=true, DESIGN_RESOURCE_RETRIEVED và phân trang hợp lệ.",
+          "Quan sát trạng thái khu vực.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Chỉ ánh xạ cấu trúc bao phản hồi/lược đồ hợp lệ; phản hồi không hợp lệ đi tới lỗi an toàn.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-006",
+        "requirement_ids": [
+          "GS-04-YC-006"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Từ chối bài học không hợp lệ",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "items có title sai kiểu/status không PUBLISHED hoặc phân trang lệch. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Gửi phản hồi giả lập sai một trường mỗi lượt.",
+          "Kiểm tra khu vực và nội dung lỗi.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Không hiển thị item sai; hiện lỗi an toàn, không lộ phản hồi. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-server/app/modules/guest/api_09_courses_curriculum/validate.py; apps/study-server/app/modules/guest/api_09_courses_curriculum/models.py; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-007",
+        "requirement_ids": [
+          "GS-04-YC-007"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Sắp xếp danh sách theo order",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "Hai bài học giả lập trả về ngược thứ tự. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Trả items order 2 rồi order 1.",
+          "Quan sát thứ tự dòng hiển thị.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Dòng hiển thị theo order tăng dần; API nguồn tie-break theo sort_order rồi id.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/app/modules/guest/api_09_courses_curriculum/query.py; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-008",
+        "requirement_ids": [
+          "GS-04-YC-008"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Chỉ hiển thị title và order",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "bài học có content/video_url nhưng title/order hợp lệ. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Trả bài học có nội dung và video_url giả lập.",
+          "Quan sát DOM hiển thị.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Chỉ hiện title/order; không hiện content, đường dẫn video hoặc trường khác.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-009",
+        "requirement_ids": [
+          "GS-04-YC-009"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Không tạo thao tác mở bài",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "Không có bài học-liên kết/nút trong khu vực hiện hành. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Rà soát danh sách và các phần tử có thể nhấp.",
+          "Thử chỉ dùng bàn phím trên khu vực danh sách.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Không có nút hành động (CTA)/liên kết mở bài, phát nội dung đa phương tiện hoặc điều hướng ST-10 từ khách. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-010",
+        "requirement_ids": [
+          "GS-04-YC-010"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra trạng thái đang tải",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "Giữ yêu cầu HTTP #09 chưa hoàn tất. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Mở thẻ curriculum sau cổng #08.",
+          "Kiểm tra role, aria-live và aria-busy.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Hiện trạng thái tải với role=status, aria-live=polite, aria-busy=true theo mã nguồn.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-011",
+        "requirement_ids": [
+          "GS-04-YC-011"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Tách danh sách rỗng khỏi lỗi",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "200 hợp lệ, items=[], phân trang kích thước/tổng số/total_pages=0. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Trả phản hồi rỗng đúng cấu trúc bao phản hồi.",
+          "Quan sát bản sao/trạng thái và nút thử lại.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Hiện trạng thái rỗng riêng, không giả thành lỗi; thiết kế/copy vẫn chờ duyệt.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-012",
+        "requirement_ids": [
+          "GS-04-YC-012"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Tách 404 khỏi trạng thái rỗng",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "#09 trả 404 DESIGN_RESOURCE_NOT_FOUND. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Trả 404 có nội dung lỗi nội bộ giả lập.",
+          "Quan sát khu vực và đường dẫn.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Hiện không tìm thấy trong khu vực; không lộ phần thân phản hồi lỗi, không chuyển thành rỗng hoặc 403.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-013",
+        "requirement_ids": [
+          "GS-04-YC-013"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Xử lý lỗi an toàn",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "#09 trả 500, lỗi mạng hoặc cấu trúc bao phản hồi sai. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Trả từng loại lỗi giả lập.",
+          "Quan sát thông báo và nội dung trang.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Hiện lỗi chung; không lộ chi tiết máy chủ, không giả thành rỗng.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-014",
+        "requirement_ids": [
+          "GS-04-YC-014"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Thử lại #09 cùng courseId",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "Lỗi #09 khi khóa học PUBLISHED và thẻ Đề cương đang chọn. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Nhấn Thử lại.",
+          "Kiểm tra yêu cầu HTTP mới và phản hồi tiếp theo.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Gọi lại #09 với cùng courseId; không gọi lại #08; giao diện lỗi thành đã tải/rỗng theo phản hồi hợp lệ.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-015",
+        "requirement_ids": [
+          "GS-04-YC-015"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Đổi thẻ khi #09 đang chờ",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "yêu cầu HTTP curriculum đang pending. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Chọn thẻ khác trước khi phản hồi về.",
+          "Sau đó trả phản hồi curriculum cũ.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Hủy subscription cũ; phản hồi trễ không thay trạng thái thẻ hiện tại.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-016",
+        "requirement_ids": [
+          "GS-04-YC-016"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Quay về Tổng quan cùng khóa học",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "đường dẫn /courses/42?tab=curriculum&x=1. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Chọn Tổng quan.",
+          "Kiểm tra tuyến, truy vấn và yêu cầu HTTP.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Giữ courseId, bỏ thẻ, giữ x=1; không gọi lại #08/#09 chỉ do đổi thẻ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-017",
+        "requirement_ids": [
+          "GS-04-YC-017"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Giữ chênh lệch tải ngay/tải khi chọn chưa chốt",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "DD có AC-05 tải ngay; F02 và mã nguồn gọi tải khi chọn. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Đối chiếu thứ tự gọi theo DD, danh mục màn hình và mã nguồn hiện hành.",
+          "Không sửa expected để ép hai luồng giống nhau.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Ghi nhận chênh lệch; chỉ chốt điều phối sau quyết định nhóm sản phẩm/kỹ thuật máy chủ. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-018",
+        "requirement_ids": [
+          "GS-04-YC-018"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Không khẳng định tái dùng bộ nhớ đệm #08",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "Không có bộ nhớ đệm phía máy khách trong mã nguồn. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Mở trực tiếp tuyến curriculum trong luồng mã nguồn hiện hành.",
+          "Theo dõi #08 rồi #09.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Mô tả chính xác truy cập trực tiếp #08→#09; chưa tuyên bố tái sử dụng bộ nhớ đệm/độ mới/miss. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-019",
+        "requirement_ids": [
+          "GS-04-YC-019"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "So sánh khung ứng dụng và bản mẫu",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "bản mẫu có đầu trang/chân trang/login/register/đường dẫn phân cấp tĩnh. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Đối chiếu code.html với GuestSiteLayout và GS03Page.",
+          "Ghi rõ href=\"#\" của nút hành động (CTA) chi tiết.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Không coi href tĩnh, login/register hoặc chân trang bản mẫu là hành vi Angular đã nối. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/images/README.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/screen.png; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/screen_rendered.png; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-020",
+        "requirement_ids": [
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Không coi ảnh rỗng là API rỗng",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "Ảnh hiển thị hiển thị thẻ “Chưa có nội dung…”. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Đối chiếu markers, code.html và khu vực trạng thái ánh xạ.",
+          "Chỉ xác nhận rỗng khi chạy từ phản hồi 200 items=[].",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Ảnh là bản mẫu tĩnh; rỗng khi chạy chỉ đến từ API thành công rỗng. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html; apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-021",
+        "requirement_ids": [
+          "GS-04-YC-021"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Không tạo phân trang",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "#09 không có tham số truy vấn trang; trang hiện chỉ một trang. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Rà soát yêu cầu HTTP, trang metadata và UI controls.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Không gửi trang/kích thước truy vấn hoặc tạo điều khiển phân trang khi chưa có contract.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-server/app/modules/guest/api_09_courses_curriculum/query.py; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TS-022",
+        "requirement_ids": [
+          "GS-04-YC-022"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Giữ khác biệt DDL và trực tiếp lược đồ",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "Có cũ và V1-PILOT DDL trong checkout. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Đối chiếu các cột lessons được API truy vấn với từng DDL.",
+          "Không dùng DDL làm bằng chứng cơ sở dữ liệu triển khai.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Cũ/V1-PILOT không khớp; trực tiếp lessons vẫn chưa xác minh. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql; .agents/server-study/database.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-023",
+        "requirement_ids": [
+          "GS-04-YC-023"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Không suy diễn quyền xem từ PUBLISHED",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "bài học PUBLISHED có content/video_url trong phản hồi công khai. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Kiểm tra phản hồi/API filter và UI phép chiếu data.",
+          "Không bật liên kết, xem trước, video hoặc ST-10.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "PUBLISHED là filter hiện tại, chưa là quyền truy cập khách được phê duyệt. Quyết định thiết kế liên quan còn chờ xác nhận.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/07-test-cases.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TS-024",
+        "requirement_ids": [
+          "GS-04-YC-024"
+        ],
+        "target_id": "GS-04",
+        "group": "Toàn màn hình",
+        "title": "Giữ giới hạn xác minh và người duyệt",
+        "precondition": "Dùng môi trường giả lập sau khi điểm chặn liên quan được giải quyết; ca chưa chạy trong tác vụ này.",
+        "data": "UTC này là kế hoạch tĩnh; chủ sở hữu/người rà soát/người phê duyệt chưa rõ. Chỉ dùng dữ liệu giả lập, không dùng mã xác thực/thông tin nhận dạng cá nhân (PII)/dữ liệu thật.",
+        "steps": [
+          "Rà soát metadata và trạng thái từng ca.",
+          "Đối chiếu rằng không có kết quả chạy giả định.",
+          "Đối chiếu riêng DD chuẩn, mã nguồn hiện hành và chênh lệch; để trống kết quả thực tế trước khi chạy."
+        ],
+        "expected": "Tất cả ca Chưa chạy; không gán người duyệt hoặc xác nhận môi trường chưa có nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/07-test-cases.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts; apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "GS04-TC-001",
+        "requirement_ids": [
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nhóm thương hiệu và điều hướng",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Bản mẫu tĩnh: Study2Work, Trang chủ, Khóa học; khung ứng dụng khách trong mã nguồn có liên kết khác. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-002",
+        "requirement_ids": [
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Liên kết đăng nhập/đăng ký",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Bản mẫu tĩnh dùng /login và /register; không có phiên đăng nhập, đường dẫn gọi lại hay đường dẫn quay lại trong HTML. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-003",
+        "requirement_ids": [
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Đường dẫn điều hướng tới đề cương",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Bản mẫu có Trang chủ > Khóa học > Chi tiết khóa học > Đề cương; liên kết Chi tiết khóa học là #. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-004",
+        "requirement_ids": [
+          "GS-04-YC-019",
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Tiêu đề trang Đề cương khóa học",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Bản mẫu là chữ tĩnh; khu vực Angular hiện có H2 tĩnh, không gắn tên khóa học. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-005",
+        "requirement_ids": [
+          "GS-04-YC-019"
+        ],
+        "target_id": "GS-04-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Biểu tượng danh sách trong thẻ rỗng",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Biểu tượng toc chỉ trang trí; không biểu thị số bài học hay kết quả API. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-006",
+        "requirement_ids": [
+          "GS-04-YC-011",
+          "GS-04-YC-019"
+        ],
+        "target_id": "GS-04-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Tiêu đề trạng thái rỗng",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Chữ tĩnh trong bản mẫu; khu vực hiện hành cũng có tiêu đề khi #09 thành công với danh sách rỗng. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-007",
+        "requirement_ids": [
+          "GS-04-YC-011",
+          "GS-04-YC-019"
+        ],
+        "target_id": "GS-04-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thông báo danh sách đề cương rỗng",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Bản mẫu có bản sao tĩnh; Angular chỉ hiện bản sao này sau 200 hợp lệ với items=[]. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-008",
+        "requirement_ids": [
+          "GS-04-YC-016",
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Liên kết quay lại chi tiết khóa học",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Bản mẫu href=\"#\", không giữ courseId; hiện trạng tuyến truy vấn được điều khiển ở GS03Page. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-009",
+        "requirement_ids": [
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thương hiệu chân trang",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Study2Work là span, không phải liên kết. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-010",
+        "requirement_ids": [
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Liên kết điều hướng chân trang",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Bản mẫu có /, /courses, /login, /register; không xác nhận tuyến khi chạy. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-011",
+        "requirement_ids": [
+          "GS-04-YC-001",
+          "GS-04-YC-015",
+          "GS-04-YC-016"
+        ],
+        "target_id": "GS-04-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thẻ Đề cương trong GS03Page",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Tab=curriculum chọn khu vực; truy vấn được ghi trên cùng tuyến /courses/:courseId.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TC-012",
+        "requirement_ids": [
+          "GS-04-YC-019"
+        ],
+        "target_id": "GS-04-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Tiêu đề khu vực đề cương",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "GS03CurriculumPanel có h2 Đề cương khóa học; không có khóa học title binding.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TC-013",
+        "requirement_ids": [
+          "GS-04-YC-010"
+        ],
+        "target_id": "GS-04-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái đang tải",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Role=status, aria-live=polite, aria-busy=true; nội dung tải đề cương.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TC-014",
+        "requirement_ids": [
+          "GS-04-YC-012"
+        ],
+        "target_id": "GS-04-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái không tìm thấy",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "404 được ánh xạ sang không tìm thấy; không hiển thị thân lỗi; không có thử lại ở trạng thái này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TC-015",
+        "requirement_ids": [
+          "GS-04-YC-013",
+          "GS-04-YC-014"
+        ],
+        "target_id": "GS-04-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái lỗi và nút thử lại",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Role=alert; nội dung an toàn và nút Thử lại; không hiển thị chi tiết máy chủ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TC-016",
+        "requirement_ids": [
+          "GS-04-YC-011"
+        ],
+        "target_id": "GS-04-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái rỗng sau phản hồi thành công",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Chỉ hiện khi trang hợp lệ và items=[]; riêng với không tìm thấy/lỗi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TC-017",
+        "requirement_ids": [
+          "GS-04-YC-007",
+          "GS-04-YC-008",
+          "GS-04-YC-009",
+          "GS-04-YC-021"
+        ],
+        "target_id": "GS-04-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Danh sách bài học đã tải",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Ol aria-label=Danh sách bài học; mỗi dòng chỉ hiển thị order và title; không có liên kết/nút.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TC-018",
+        "requirement_ids": [
+          "GS-04-YC-008",
+          "GS-04-YC-009",
+          "GS-04-YC-023"
+        ],
+        "target_id": "GS-04-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Ranh giới nội dung và quyền truy cập",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Phản hồi model có content/video_url nhưng mapper chỉ sao chép title/order; không mở bài học, phát nội dung đa phương tiện hoặc gọi ST-10. Thiết kế còn chờ xác nhận; chỉ đối chiếu như bằng chứng mã nguồn/bản mẫu, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS04-TC-019",
+        "requirement_ids": [
+          "GS-04-YC-010",
+          "GS-04-YC-018"
+        ],
+        "target_id": "GS-04-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Ngữ nghĩa trợ năng của trạng thái",
+        "precondition": "Rà soát tĩnh hoặc môi trường giả lập sau khi quyết định liên quan được duyệt; chưa chạy.",
+        "data": "Dữ liệu giả lập; không dùng tài khoản, mã xác thực hoặc thông tin nhận dạng cá nhân (PII) thật.",
+        "steps": [
+          "Xác định thành phần theo ký hiệu/source_element_id và source_ref.",
+          "Đối chiếu nội dung, trạng thái, điều hướng và trợ năng với bằng chứng được trích.",
+          "Ghi nhận chênh lệch; không đánh dấu đạt khi thiết kế còn chờ xác nhận."
+        ],
+        "expected": "Đang tải/lỗi/rỗng có vai trò phù hợp; thứ tự hiển thị là danh sách có thứ tự và số thứ tự được ẩn khỏi trình đọc lặp.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "GS04-TE-001",
+        "requirement_ids": [
+          "GS-04-YC-001",
+          "GS-04-YC-002",
+          "GS-04-YC-003",
+          "GS-04-YC-004"
+        ],
+        "target_id": "GS-04-EV-001",
+        "group": "Sự kiện",
+        "title": "Chờ cổng #08",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "truy cập trực tiếp có tab=curriculum; #08 đang chờ. Không dùng dữ liệu thật.",
+        "steps": [
+          "Mở đường dẫn curriculum; kiểm tra #09 trước khi hoàn tất #08.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Không gọi #09 cho tới khi #08 xác nhận khóa học PUBLISHED.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TE-002",
+        "requirement_ids": [
+          "GS-04-YC-001",
+          "GS-04-YC-002",
+          "GS-04-YC-003",
+          "GS-04-YC-004"
+        ],
+        "target_id": "GS-04-EV-001",
+        "group": "Sự kiện",
+        "title": "Tải khi đã chọn thẻ",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "#08 thành công với khóa học PUBLISHED; truy vấn tab=curriculum. Không dùng dữ liệu thật.",
+        "steps": [
+          "Quan sát yêu cầu HTTP #09 và phản hồi trang hợp lệ.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Gọi GET công khai #09 sau cổng; giữ courseId dạng chuỗi.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TE-003",
+        "requirement_ids": [
+          "GS-04-YC-005",
+          "GS-04-YC-006",
+          "GS-04-YC-007",
+          "GS-04-YC-008",
+          "GS-04-YC-009"
+        ],
+        "target_id": "GS-04-EV-002",
+        "group": "Sự kiện",
+        "title": "Chiếu danh sách title/order",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "#09 200 có nhiều bài học hợp lệ, thứ tự phản hồi đảo. Không dùng dữ liệu thật.",
+        "steps": [
+          "Kiểm tra order tăng dần và nội dung DOM.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Chỉ hiện title/order; phản hồi content/video_url không hiển thị.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TE-004",
+        "requirement_ids": [
+          "GS-04-YC-011",
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EV-003",
+        "group": "Sự kiện",
+        "title": "200 rỗng là rỗng",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "items=[] và phân trang page=1,size=0,total=0,total_pages=0. Không dùng dữ liệu thật.",
+        "steps": [
+          "Trả cấu trúc bao phản hồi thành công đúng; quan sát khu vực.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Hiện rỗng, không thử lại và không tạo item giả.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md; apps/study-server/docs/dd/09_courses_curriculum/04_Response.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TE-005",
+        "requirement_ids": [
+          "GS-04-YC-012",
+          "GS-04-YC-013",
+          "GS-04-YC-014"
+        ],
+        "target_id": "GS-04-EV-004",
+        "group": "Sự kiện",
+        "title": "404 là không tìm thấy",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "#09 trả 404 DESIGN_RESOURCE_NOT_FOUND kèm thân phản hồi giả lập. Không dùng dữ liệu thật.",
+        "steps": [
+          "Quan sát khu vực, đường dẫn và nội dung hiển thị.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Hiện không tìm thấy; không lộ thân phản hồi, không đổi thành rỗng/403.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-server/docs/dd/09_courses_curriculum/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TE-006",
+        "requirement_ids": [
+          "GS-04-YC-012",
+          "GS-04-YC-013",
+          "GS-04-YC-014"
+        ],
+        "target_id": "GS-04-EV-004",
+        "group": "Sự kiện",
+        "title": "500/lỗi sai cấu trúc và thử lại",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "#09 trả 500 hoặc cấu trúc bao phản hồi sai khi thẻ đang chọn. Không dùng dữ liệu thật.",
+        "steps": [
+          "Quan sát thông báo; nhấn Thử lại; kiểm tra yêu cầu HTTP tiếp.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Hiện lỗi an toàn; thử lại gọi lại #09 cùng ID khi cổng #08 còn hợp lệ.",
+        "api_ids": [
+          "API-09"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-server/docs/dd/09_courses_curriculum/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TE-007",
+        "requirement_ids": [
+          "GS-04-YC-015",
+          "GS-04-YC-016"
+        ],
+        "target_id": "GS-04-EV-005",
+        "group": "Sự kiện",
+        "title": "Đổi về Tổng quan",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "/courses/42?tab=curriculum&x=1. Không dùng dữ liệu thật.",
+        "steps": [
+          "Chọn Tổng quan; kiểm tra đường dẫn, yêu cầu HTTP còn lại.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Giữ courseId và x=1, bỏ thẻ; không gọi lại #08/#09 chỉ do đổi thẻ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS04-TE-008",
+        "requirement_ids": [
+          "GS-04-YC-019",
+          "GS-04-YC-020"
+        ],
+        "target_id": "GS-04-EV-006",
+        "group": "Sự kiện",
+        "title": "Đối chiếu liên kết neo tĩnh",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này.",
+        "data": "code.html có href=\"#\", /, /courses, /login và /register. Không dùng dữ liệu thật.",
+        "steps": [
+          "Đọc HTML bản mẫu và đối chiếu với khung ứng dụng hiện hành; không mở ứng dụng khi chạy.",
+          "Quan sát đường dẫn, yêu cầu HTTP/phản hồi và trạng thái khu vực liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Chỉ ghi nhận nguyên văn href; không xác nhận router/phiên đăng nhập/đường dẫn quay lại. Hành vi điều hướng tĩnh còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html; apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  },
+  "source_hashes": [
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/00-overview.md",
+      "sha256": "e50cd11892ee47af1129eca98c4993cb1bba42f9cbaaa2fd0a0836fff273232d"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/01-ui-elements.md",
+      "sha256": "ea9bf697f748b7d00cd4205c653fc78d10011c6cad5c9de6ed5c1db019407aae"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/02-events.md",
+      "sha256": "1313e70534ee38f200f614b1ed0b4c373246b95ab88f31b0b1de6af142b26f8c"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/03-data-flow.md",
+      "sha256": "d9c5cb4156d6d673d227b141bd06e0d42d2524a1b2f65e00eb43d6629b46e033"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/04-api-integration.md",
+      "sha256": "4ca2d33038f554700be1224dcc63d6ea2951494282561303b9c525ccd75c0cd8"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/05-business-rules.md",
+      "sha256": "9d497d7cc2ea7aa5ac153047f43c77245f5f97ce91bf402b5e343e5f20109e1a"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/06-navigation.md",
+      "sha256": "ef0eec6ef695c020b9bbc31d2d045b21d5522c7bec3cbdb6f4d38e6e997f7b6a"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/07-test-cases.md",
+      "sha256": "7d26a6c66755748ee34868ce7ca36f2b5148251b598cad76d6e86a656c358db1"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/images/README.md",
+      "sha256": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/images/screen-clean.png",
+      "sha256": "4892375ec0fe6316e126b1eefe85ce05b0852079c6d666290e43c4a6f13b85c2"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/images/screen-numbered.png",
+      "sha256": "4d73c885efe8c225f3da653f76ff9aea9caef13646e6704ae112db5b7199f7ae"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-04-DeCuongKhoaHoc/code.html",
+      "sha256": "cb500b6794bc3336167dfce639506b99f438e789d64055717cedc1849b5be22c"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04.md",
+      "sha256": "19beee7ff79f48f7e62c7ac51c206289d9ebc6766ff749c85e3484b6cdf50ccd"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_PLAN.md",
+      "sha256": "77f8ce6d264ec921d7c9ada230bea6b96ec5a7bf86659be8dcf9a788d56b7b72"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers.json",
+      "sha256": "b26aae540ecf25cc3e3805f5d8f56163b133d7ed3ef2fa8d6efcf5b424df94c0"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/screen.png",
+      "sha256": "4892375ec0fe6316e126b1eefe85ce05b0852079c6d666290e43c4a6f13b85c2"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/screen_annotated.png",
+      "sha256": "4d73c885efe8c225f3da653f76ff9aea9caef13646e6704ae112db5b7199f7ae"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/screen_rendered.png",
+      "sha256": "d51151f45463b879cd149a808f33f35c862493e7b2dd9cf9202552e2ee3ee8a4"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/GS-04_markers_overlay.svg",
+      "sha256": "35b0b49c7e76cabe37fa7cd137e3994cfc438d96a870843332c10e4cd5127f94"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-04_de-cuong-khoa-hoc/code.html",
+      "sha256": "cb500b6794bc3336167dfce639506b99f438e789d64055717cedc1849b5be22c"
+    },
+    {
+      "path": "apps/study-client/docs/list_screen.md",
+      "sha256": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40"
+    },
+    {
+      "path": "apps/study-client/docs/list_endpoint.md",
+      "sha256": "e617e863960e5f0a1cdfb797e4222ca5cf7503992183b831ae6ac3f084036058"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/guest.route.ts",
+      "sha256": "00a2182ee9148c3c88ab859c2581d7ba7f824918af0e1ef0369c6ff4a439e7c0"
+    },
+    {
+      "path": "apps/study-client/src/app/app.routes.ts",
+      "sha256": "b0569672d1722393a95314564b97883f578c4ca51ef6212d0f8afb73fca21fa4"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "sha256": "04372e79a2380e282726e9bbaa6771a66c2ae09981fae4b7ae0e080fe405e5da"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "sha256": "9de65c84b254242648f8ffbed0f366479d285b77edbde0de50054e5f999e6407"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.css",
+      "sha256": "56fe040782ff41611241b855f86406cd56615f2584297db6deaf37d20f2858cb"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "sha256": "3d4d3f10a528333f102e19b972716b9ac1e80be2012ff2e9670e7f98b1e8e4df"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts",
+      "sha256": "eb9f8a4051f996b72cef10e5abf86c1eafaa7d665784fde35a9b70b951a29b32"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/data-access/gs03-curriculum.service.ts",
+      "sha256": "d865dcc82da78990a03b964191d0ea73fe93a3df4f3b3d86c68bdcbf6e634830"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/models/gs03-curriculum.models.ts",
+      "sha256": "7780c4138018be16508963a966d5c14e819b078c1d7b7f740821bba5c00545b4"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.ts",
+      "sha256": "5bf5b7f67075985c2b319a39522a085389462b7ddf08065dd7a4f82798582680"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.html",
+      "sha256": "8262f0d352015982fb99734b8ad7b8eec1b72b49d380678b0a5d7fa0a9c5202f"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/ui/gs03-curriculum-panel.css",
+      "sha256": "9e2ee958fbd5299b4ee5eaa56bf2c0658de1ee96f188e06bee6b62131862490d"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.ts",
+      "sha256": "6b3fd0cd6c5c42d19778e7afd31439f1a90895e71e7f9633a3abb72c2b75f730"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html",
+      "sha256": "4484ed10cff9e3b37cd6f0de66617690fab38263353060e7d455b0f7522f4379"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.css",
+      "sha256": "58c7836da5c4d95ef0c31bc62d8bd853503cdcf82b6966656e700939c6ce2344"
+    },
+    {
+      "path": "apps/study-server/docs/dd/09_courses_curriculum/00_Cover.md",
+      "sha256": "2e22253099581e754fba350f05042bdde2550c522693958130c9c20d67ce5bf8"
+    },
+    {
+      "path": "apps/study-server/docs/dd/09_courses_curriculum/02_Overview.md",
+      "sha256": "2365c58dc43b4f105a7ab05d21d18e854d120ce59a0a5ac5f97cc7b099416cfa"
+    },
+    {
+      "path": "apps/study-server/docs/dd/09_courses_curriculum/03_Request.md",
+      "sha256": "f097811049e318a0751593a32f30859b48ca70469416313faf7237e84a358c36"
+    },
+    {
+      "path": "apps/study-server/docs/dd/09_courses_curriculum/04_Response.md",
+      "sha256": "b312529ab12c7634f21f33018e2ace279245695144ca07fec0ab187df8b63bfc"
+    },
+    {
+      "path": "apps/study-server/docs/dd/09_courses_curriculum/05_Data_Mapping.md",
+      "sha256": "f1244dc576e6b336ab9376d88327e35c1ad99cd4f6f5df88472e45f7690bd14f"
+    },
+    {
+      "path": "apps/study-server/docs/dd/09_courses_curriculum/06_Error.md",
+      "sha256": "edf187cf858fd8223506ef7bbf1a719ac0d95967fb104facce582a367f3ffed2"
+    },
+    {
+      "path": "apps/study-server/docs/dd/09_courses_curriculum/07_table.md",
+      "sha256": "7a9429c828113f82d2b160a6e4c9f723378268f736fbfbe51296414e1cb2dc1a"
+    },
+    {
+      "path": "apps/study-server/app/api/v1.py",
+      "sha256": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_09_courses_curriculum/__init__.py",
+      "sha256": "8b9a01b7669257a1527f024e0c48b5cc768ba8f2e10ce8201f5b26cd6d5fd884"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_09_courses_curriculum/validate.py",
+      "sha256": "55deb434a0107b68311ada06377324ca62d67c6684269d209fdf90db3c9f763b"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_09_courses_curriculum/models.py",
+      "sha256": "c9142bf1e27996f129171c80d6f7f207898eab8264ff3d7fab54ebeb447981ac"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_09_courses_curriculum/query.py",
+      "sha256": "ee43569bebef09b29ad8f0b5f4d22b6a2cf9dacf18515d2ca009180727a9cce7"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_09_courses_curriculum/view.py",
+      "sha256": "c8989de97ce60cae619f07cf4f2ce83b32237cc357a392620351bdc34a3cac4f"
+    },
+    {
+      "path": "apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py",
+      "sha256": "6dc87a744f46a57823e666e2c9163a1f3cf7b07e279e0685b0aefb5d695df39a"
+    },
+    {
+      "path": "infra/postgres/study-server/DB.sql",
+      "sha256": "8beedb93d0eae21a2cc4d9851c48382dc9dd68a9cfecdf213ceba9bbf279cba2"
+    },
+    {
+      "path": "infra/postgres/02_study_db.sql",
+      "sha256": "2ff0e3c5c0b9c22d1da6e3853fc48333b16588a8a2854547949a7c830637809c"
+    },
+    {
+      "path": ".agents/server-study/database.md",
+      "sha256": "241ffa6650395ecbefc8b23bf9c1fa51873db46c9c314fef015dddc008278e3e"
+    }
+  ]
+}

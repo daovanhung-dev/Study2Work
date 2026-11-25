@@ -1,0 +1,3087 @@
+{
+  "metadata": {
+    "screen_id": "ST-03",
+    "screen_name": "Chỉnh sửa hồ sơ và ảnh đại diện",
+    "module": "Study Web — Khu vực học viên",
+    "route": "/student/profile/edit",
+    "actor": "Học viên có phiên đăng nhập hợp lệ; API #04/#13/#14 yêu cầu JWT Bearer có roles chứa STUDENT.",
+    "version": "1.0 — UTC bản chính thức theo yêu cầu; bộ ca chờ xác nhận do DD BLOCKED; mọi ca Chưa chạy",
+    "dd_version": "DD ST-03 v0.1 (2026-11-08), đối chiếu mã nguồn cập nhật đến 2026-11-20",
+    "dd_status": "BLOCKED — API/DB hiện chưa hỗ trợ lưu tiểu sử; ảnh Stitch có Gate G-03 khác với mã nguồn Angular; chính sách kho lưu trữ, lỗi một phần và một số quyết định giao diện chưa chốt.",
+    "runtime_status": "Đã đối chiếu tĩnh tuyến, template và lời gọi API #04/#13/#14 trong mã nguồn. Chưa chạy ứng dụng, trình duyệt, API trực tiếp, cơ sở dữ liệu hoặc Object Storage; môi trường chạy chưa xác minh.",
+    "author": "Chưa được DD ghi nhận",
+    "reviewer": "Chưa được DD ghi nhận",
+    "approver": "Chưa được DD ghi nhận",
+    "date": "2026-11-25",
+    "source_name": "DD ST-03, ảnh và bản đồ điểm đánh dấu Stitch, mã nguồn Angular Study Web, API Study Server, DDL bảng users.",
+    "baseline_authorization": "Người dùng xác nhận dùng DD trong kho làm nguồn chuẩn dù trạng thái hiện ghi BLOCKED. UTC giữ nguyên trạng thái này và không coi việc chọn nguồn chuẩn là quyết định đóng các điểm chặn.",
+    "release_readiness": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN. Đã lập ca cho ba lớp; chưa chạy ca, còn 6 điểm chặn. Cần người phụ trách quyết định các mục còn mở trước khi nghiệm thu.",
+    "discrepancy_note": "Ảnh Stitch tĩnh mô tả Gate G-03, khóa tải ảnh/lưu hồ sơ và thông tin chẩn đoán multipart/CDN; mã nguồn Angular hiện có tuyến và lời gọi #04/#13/#14, cho phép sửa họ tên/số điện thoại, tải ảnh riêng, lưu rồi tải lại #04. Tiểu sử bị khóa vì API/DB không hỗ trợ. Chưa xác minh trong trình duyệt hoặc môi trường triển khai."
+  },
+  "overall": {
+    "objective": "Lập bộ ca có truy vết để kiểm tra mở ST-03, tải hồ sơ, chỉnh trường được hỗ trợ, tải ảnh riêng, lưu và quay về ST-02; giữ riêng các điểm chưa thống nhất.",
+    "inputs": "Tuyến /student/profile/edit; phiên Học viên; phản hồi GET #04; các trường full_name, email, phone, avatar_url; tệp PNG/JPEG/WebP khi đổi ảnh.",
+    "outputs": "Hồ sơ hiển thị; POST #13 trả avatar_url; PUT #14 cập nhật full_name/phone/avatar_url; mã nguồn hiện gọi lại GET #04 rồi về /student/profile khi thành công.",
+    "main_flow": "Mở tuyến → GET #04 → chỉnh trường được hỗ trợ → nếu đổi ảnh thì chọn/xem trước và gọi POST #13 riêng → PUT #14 → GET #04 → chuyển về ST-02. Tiểu sử không được gửi hoặc lưu.",
+    "preconditions": "Có bản Study Web với tuyến ST-03; dùng dữ liệu giả và phiên STUDENT; API thật hoặc mô phỏng theo hợp đồng. Không dùng tài khoản, token hay thông tin cá nhân thật trong UTC.",
+    "states": [
+      "Đang tải hồ sơ",
+      "Đã tải hồ sơ",
+      "Có thay đổi",
+      "Đọc ảnh",
+      "Ảnh sẵn sàng tải",
+      "Đang tải ảnh",
+      "Ảnh đã tải",
+      "Lỗi ảnh",
+      "Đang lưu",
+      "Lỗi xác thực dữ liệu",
+      "Lỗi yêu cầu",
+      "Đã lưu, chờ tải lại",
+      "Đang tải lại",
+      "Tải lại lỗi",
+      "Quay về ST-02"
+    ],
+    "security": "Token Bearer chỉ nằm trong tiêu đề HTTP Authorization; API #04/#13/#14 yêu cầu vai trò STUDENT; phản hồi #04 chỉ chứa các trường hồ sơ được phép; URL không chứa token hoặc thông tin cá nhân (PII). Đây là mô tả theo mã nguồn, chưa phải kết quả kiểm thử trong môi trường chạy.",
+    "out_of_scope": "Lưu tiểu sử; thay đổi lược đồ/DB/kho lưu trữ; xác minh thông tin xác thực hoặc S3 thật; chứng nhận WCAG; quyết định thời hạn lưu giữ, dọn dẹp, thử lại hoặc tính nguyên tử giữa #13 và #14."
+  },
+  "apis": [
+    {
+      "id": "#04",
+      "method": "GET",
+      "path": "/api/v1/users/me",
+      "request": "Không có tham số đường dẫn, truy vấn hoặc phần thân; gửi Authorization: Bearer <access-token>.",
+      "response": "200 DESIGN_RESOURCE_RETRIEVED; data là UserProfile gồm id, full_name, email, role, avatar_url có thể null, phone có thể null, status, created_at, updated_at; không có bio.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED khi Bearer thiếu/sai hoặc không có bản ghi; 403 DESIGN_ACCESS_DENIED nếu thiếu role STUDENT; 500 DESIGN_INTERNAL_ERROR khi truy vấn, ánh xạ hoặc cấu hình token lỗi.",
+      "auth": "JWT Bearer; sub là ID số dương, roles phải chứa STUDENT. Mã nguồn hiện không đối chiếu role/status với dữ liệu DB mới nhất.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01; API #04 mã nguồn",
+      "event_ids": [
+        "ST03-EV-01",
+        "ST03-EV-06"
+      ]
+    },
+    {
+      "id": "#13",
+      "method": "POST",
+      "path": "/api/v1/users/me/avatar",
+      "request": "JSON có trường image chứa Data URL base64; nhận PNG/JPEG/WebP; giới hạn 5 MiB sau giải mã; Authorization: Bearer <access-token>; token phải có vai trò STUDENT.",
+      "response": "201 DESIGN_RESOURCE_CREATED; data.avatar_url. Ghi vào khóa đối tượng avatars/{user_id}; không cập nhật bảng users.",
+      "errors": "401/403; 422 DESIGN_VALIDATION_ERROR hoặc lỗi cấu trúc JSON khi Data URL, kiểu, kích thước hay chữ ký ảnh không hợp lệ; 500 DESIGN_INTERNAL_ERROR khi nhà cung cấp hoặc cấu hình kho lưu trữ lỗi. Không tự thử lại.",
+      "auth": "JWT Bearer; yêu cầu vai trò STUDENT trước khi kiểm tra ảnh hoặc ghi kho lưu trữ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05; #13 mã nguồn",
+      "event_ids": [
+        "ST03-EV-05"
+      ]
+    },
+    {
+      "id": "#14",
+      "method": "PUT",
+      "path": "/api/v1/users/me/profile",
+      "request": "JSON bắt buộc có full_name (string), phone (string|null), avatar_url (string|null); không có tham số đường dẫn/truy vấn; Authorization: Bearer <access-token>; token phải có vai trò STUDENT. Không lưu bio.",
+      "response": "200 DESIGN_RESOURCE_UPDATED; data là UserProfile sau câu lệnh UPDATE/RETURNING và xác nhận giao dịch. Mã nguồn ứng dụng hiện gọi GET #04 tiếp theo.",
+      "errors": "401/403; 422 khi cấu trúc hoặc giá trị không hợp lệ; 500 DESIGN_INTERNAL_ERROR và hoàn tác giao dịch DB. Không tự gửi lại thao tác ghi.",
+      "auth": "JWT Bearer; yêu cầu vai trò STUDENT; DB cập nhật theo ID người dùng lấy từ JWT.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06; #14 mã nguồn",
+      "event_ids": [
+        "ST03-EV-06"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-03-YC-001",
+      "description": "Theo AC-11, Học viên cần chỉnh sửa hồ sơ và theo dõi riêng việc tải ảnh với việc lưu hồ sơ.",
+      "group": "Nghiệp vụ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/00-overview.md — §1–2, AC-11",
+      "notes": "AC-11 có yêu cầu tiểu sử nhưng API/DB hiện chưa hỗ trợ; cần chốt phạm vi trường được phép lưu.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-002",
+      "description": "Màn ST-03 chỉ dành cho Học viên có phiên đăng nhập; yêu cầu bảo vệ vai trò được kiểm tra ở API.",
+      "group": "Quyền truy cập",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01 — tiền điều kiện",
+      "notes": "Bộ bảo vệ ở phía ứng dụng và cách chuyển trang khi phiên hết hạn chưa được chốt trong DD; API yêu cầu vai trò STUDENT.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-003",
+      "description": "Khi mở trang, ứng dụng gọi GET #04 để lấy hồ sơ trước khi cho phép chỉnh sửa.",
+      "group": "API / luồng",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01 — luồng và trạng thái hiện có",
+      "notes": "Đối chiếu mã nguồn; chưa xác minh trình duyệt/môi trường triển khai.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-004",
+      "description": "Nguồn #04 hiện có full_name, email, số điện thoại có thể nhận null và avatar_url có thể nhận null; phản hồi không có tiểu sử.",
+      "group": "Dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/04-api-integration.md — §2; API #04 mã nguồn",
+      "notes": "Thiết kế trạng thái sau khi tải hồ sơ và quyết định hiển thị trường vẫn cần duyệt; không đưa tiểu sử từ suy đoán.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-005",
+      "description": "Trong lúc tải #04, báo trạng thái; khi đọc lỗi, hiển thị lỗi và cho phép gọi lại #04.",
+      "group": "Trạng thái / lỗi",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — §3, trạng thái đang tải/yêu cầu lỗi",
+      "notes": "Hành vi này được xác nhận qua mã nguồn; chưa chạy ứng dụng trong môi trường kiểm thử.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-006",
+      "description": "Họ tên được loại khoảng trắng đầu/cuối, bắt buộc có nội dung và tối đa 150 ký tự; thay đổi chỉ gửi khi người dùng lưu.",
+      "group": "Nhập liệu",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-02; API #14 kiểm tra dữ liệu",
+      "notes": "Không có quy tắc định dạng tên bổ sung.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-007",
+      "description": "Email chỉ đọc trên màn ST-03; đặt tiêu điểm vào trường hoặc sao chép email không làm thay đổi hồ sơ.",
+      "group": "Nhập liệu",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-03",
+      "notes": "Không bao gồm luồng đổi email ngoài màn này.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-03-YC-008",
+      "description": "Số điện thoại có thể để trống (gửi null), bỏ khoảng trắng ở đầu và cuối, tối đa 20 ký tự; DD chưa quy định định dạng số.",
+      "group": "Nhập liệu / API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-04; API #14 kiểm tra dữ liệu",
+      "notes": "Mã nguồn hiện tại cho phép sửa; ảnh/đặc tả cũ từng mô tả bị khóa. Cần chốt chính sách định dạng số điện thoại.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-009",
+      "description": "Tiểu sử không thể sửa hoặc lưu vì API #04/#14 và DDL hiện hành không có trường này.",
+      "group": "Dữ liệu / API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2–3, G-03 / API #14",
+      "notes": "AC-11 yêu cầu tiểu sử nhưng mã nguồn không hỗ trợ; cần quyết định sản phẩm hoặc API/DB.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-010",
+      "description": "Chọn ảnh chỉ nhận PNG, JPEG hoặc WebP; tệp phải khác rỗng và không vượt 5 MiB.",
+      "group": "Tải ảnh",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05",
+      "notes": "Có kiểm tra phía ứng dụng và kiểm tra chữ ký/giới hạn giải mã phía máy chủ; môi trường chạy chưa xác minh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-011",
+      "description": "Chỉ thao tác “Tải ảnh lên” mới gọi POST #13 với JSON {image: Data URL}; API lưu đối tượng và không cập nhật DB hồ sơ.",
+      "group": "API / tác động phụ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05; API #13 mã nguồn",
+      "notes": "Mô tả Stitch cũ là multipart/CDN/Halted, khác hợp đồng mã nguồn JSON Data URL; cần đóng G-03.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-012",
+      "description": "Khi #13 thành công, URL trả về được giữ cho lần lưu hồ sơ tiếp theo; lỗi tải lên không được báo là đã lưu hồ sơ.",
+      "group": "Tải ảnh / trạng thái",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05; mã nguồn ứng dụng hiện tại",
+      "notes": "URL phải là HTTP(S) theo kiểm tra ứng dụng; hành vi kho lưu trữ thật chưa xác minh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-013",
+      "description": "PUT #14 hiện cập nhật full_name, số điện thoại và avatar_url; phần thân không có tiểu sử và không thể coi tiểu sử là đã lưu.",
+      "group": "API / dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06; API #14 mã nguồn",
+      "notes": "AC/catalog yêu cầu tiểu sử trong khi mã nguồn API bỏ qua trường thừa; cần người phụ trách quyết định hợp đồng.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-014",
+      "description": "API #14 bỏ khoảng trắng ở đầu và cuối của full_name, yêu cầu tên không rỗng và giới hạn 150 ký tự; phone/avatar_url có thể nhận null và được chuẩn hóa khoảng trắng; số điện thoại tối đa 20 ký tự.",
+      "group": "API / xác thực dữ liệu",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — hành vi hiện tại của máy chủ",
+      "notes": "API hiện không xác thực URI hoặc quyền sở hữu của avatar_url; UTC không tự thêm quy tắc này.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-015",
+      "description": "Sau #14 thành công, ứng dụng hiện gọi lại #04; chỉ khi lần đọc này thành công mới điều hướng về ST-02.",
+      "group": "Điều hướng / đồng bộ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06; 06-navigation.md §3",
+      "notes": "Danh mục màn hình yêu cầu tải lại hồ sơ; #14 đã trả UserProfile. Cần xác nhận luồng nào là chuẩn trước nghiệm thu.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-016",
+      "description": "Nếu #14 thành công nhưng #04 tải lại thất bại, giữ phản hồi #14 và chỉ cho thử lại GET #04, không gửi lại PUT.",
+      "group": "Lỗi / thử lại",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — trùng lặp/lỗi một phần",
+      "notes": "Mã nguồn ứng dụng giữ trạng thái savedAwaitingRefresh; chưa kiểm tra hành vi khi ứng dụng thực thi.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-017",
+      "description": "Tải ảnh qua #13 và lưu hồ sơ qua #14 là hai tác động riêng; nếu #14 lỗi, mã nguồn hiện không hoàn tác hoặc bù trừ tệp ảnh đã tải lên.",
+      "group": "Tác động phụ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, tính nhất quán giữa tải ảnh và cập nhật hồ sơ",
+      "notes": "Chưa có chính sách dọn dẹp, hoàn tác, ghi đè hoặc thử lại được duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-018",
+      "description": "Các liên kết quay về ST-02 điều hướng tới /student/profile và không đưa thông tin cá nhân (PII) vào URL.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-07; 06-navigation.md §3",
+      "notes": "Giữ dữ liệu chưa lưu/bộ nhớ đệm khi rời trang chưa được chốt.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-03-YC-019",
+      "description": "Đầu trang liên kết tới các tuyến đã khai báo; “Khóa học của tôi” hiện chưa có tuyến tương tác.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-08",
+      "notes": "Thiết kế phiên đăng nhập và trạng thái mục đang chọn chưa được chốt.",
+      "priority": "Thấp"
+    },
+    {
+      "id": "ST-03-YC-020",
+      "description": "Các mục Điều khoản dịch vụ, Chính sách bảo mật và Trợ giúp ở chân trang là nội dung tĩnh vì chưa xác định tuyến hoặc nội dung đích.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-09",
+      "notes": "Không tự gán đích liên kết.",
+      "priority": "Thấp"
+    },
+    {
+      "id": "ST-03-YC-021",
+      "description": "Token Bearer được gửi qua Authorization; URL không chứa token/thông tin cá nhân (PII); #04 chỉ trả các trường hồ sơ được phép, không có password_hash.",
+      "group": "Bảo mật / riêng tư",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, quy tắc 1–3",
+      "notes": "Đây là bằng chứng từ mã nguồn, chưa phải kết quả kiểm thử bảo mật trong môi trường thực thi.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-03-YC-022",
+      "description": "Bố cục ở các ngưỡng thích ứng hiện được định nghĩa trong CSS tại 1020 px và 680 px.",
+      "group": "Giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.css — media tham số truy vấn 1020px/680px",
+      "notes": "DD chưa chốt tiêu chí thích ứng; kiểm tra này là đề xuất dựa trên CSS hiện có.",
+      "priority": "Thấp"
+    },
+    {
+      "id": "ST-03-YC-023",
+      "description": "Các trường có nhãn/aria và một số focus-visible; nhãn “WCAG 2.1 AA” trên Stitch không chứng minh đã đánh giá trợ năng.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, quy tắc 8; 01-ui-elements.md §4",
+      "notes": "Cần tiêu chí bàn phím, tương phản và trình đọc màn hình được duyệt; môi trường chạy chưa xác minh.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-03-YC-024",
+      "description": "Ảnh Stitch Gate G-03 và mã nguồn Angular hiện tại là hai trạng thái giao diện khác nhau; phải xác định giao diện được duyệt trước nghiệm thu.",
+      "group": "Sai khác giữa thiết kế và mã nguồn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/00-overview.md — Mong đợi/hiện tại discrepancy; 05-business-rules.md §2",
+      "notes": "Ảnh tĩnh không phải môi trường chạy; mã nguồn Angular không tự đóng blocker thiết kế.",
+      "priority": "Cao"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-03-EL-001",
+      "marker": "#01 / ST03-EL-01",
+      "name": "Liên kết thương hiệu Study2Work",
+      "type": "Liên kết",
+      "position": "Đầu trang",
+      "properties": "Angular hiện điều hướng về /; Stitch dùng thẻ liên kết tĩnh.",
+      "event_ids": [
+        "ST03-EV-08"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #1; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-002",
+      "marker": "#02 / ST03-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm liên kết",
+      "position": "Đầu trang",
+      "properties": "Tuyến có mã nguồn: /, /student/progress, /student/discussions, /student/notifications; “Khóa học của tôi” chỉ là span aria-disabled.",
+      "event_ids": [
+        "ST03-EV-08"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #2; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-003",
+      "marker": "#03 / ST03-EL-03",
+      "name": "Tên tài khoản và vai trò học viên",
+      "type": "Thông tin",
+      "position": "Đầu trang",
+      "properties": "Tên lấy từ profile.full_name hoặc “Tài khoản”; nhãn vai trò là “Học viên”; Stitch dùng tên mẫu tĩnh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #3; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-004",
+      "marker": "#04 / ST03-EL-04",
+      "name": "Đường dẫn phân cấp",
+      "type": "Điều hướng",
+      "position": "Trên nội dung",
+      "properties": "Angular có liên kết Hệ thống và Hồ sơ cá nhân; Stitch mô tả đường dẫn phân cấp tĩnh.",
+      "event_ids": [
+        "ST03-EV-07"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #4; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-005",
+      "marker": "#05 / ST03-EL-05",
+      "name": "Nhãn trạng thái tiểu sử",
+      "type": "Nhãn trạng thái",
+      "position": "Trên nội dung",
+      "properties": "Angular hiển thị “Tiểu sử chưa thể chỉnh sửa”; Stitch ghi “Blocked (lược đồ Conflict)”.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #5; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-006",
+      "marker": "#06 / ST03-EL-06",
+      "name": "Biểu ngữ giới hạn tiểu sử",
+      "type": "Biểu ngữ",
+      "position": "Đầu nội dung",
+      "properties": "Angular mô tả các trường hỗ trợ và tiểu sử chỉ xem; Stitch cảnh báo Gate G-03 cho tải lên/lưu.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #6; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-007",
+      "marker": "#07 / ST03-EL-07",
+      "name": "Liên kết quay về hồ sơ trong biểu ngữ",
+      "type": "Liên kết",
+      "position": "Đầu nội dung",
+      "properties": "RouterLink tới /student/profile; không truyền dữ liệu cá nhân qua URL.",
+      "event_ids": [
+        "ST03-EV-07"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #7; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-008",
+      "marker": "#08 / ST03-EL-08",
+      "name": "Ảnh đại diện xem trước",
+      "type": "Ảnh / trạng thái",
+      "position": "Cột bên trái",
+      "properties": "Hiển thị ảnh an toàn hiện có hoặc ảnh xem trước đã chọn; văn bản gợi ý khi chưa có ảnh; Stitch có khóa/GATED.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #8; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-009",
+      "marker": "#09 / ST03-EL-09",
+      "name": "Nhãn tài khoản và tình trạng hồ sơ",
+      "type": "Nhãn dữ liệu",
+      "position": "Cột bên trái",
+      "properties": "Tên cập nhật theo #04; khi tải hiện trạng thái, khi chưa có dữ liệu hiện thông báo.",
+      "event_ids": [
+        "ST03-EV-01"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #9; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-010",
+      "marker": "#10 / ST03-EL-10",
+      "name": "Hướng dẫn tải ảnh",
+      "type": "Nội dung hướng dẫn",
+      "position": "Cột bên trái",
+      "properties": "Angular hướng dẫn định dạng PNG/JPEG/WebP, tối đa 5 MiB, tải riêng rồi lưu hồ sơ; Stitch có thẻ thông tin chẩn đoán API #13.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #10; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-011",
+      "marker": "#11 / ST03-EL-11",
+      "name": "Khu vực thao tác ảnh đại diện",
+      "type": "Nút / trạng thái",
+      "position": "Cột bên trái",
+      "properties": "Mã nguồn có nút “Chọn ảnh” và nút “Tải ảnh lên” xuất hiện khi ảnh sẵn sàng; khác nút vô hiệu hóa trong marker Stitch.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #11; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-012",
+      "marker": "#12 / ST03-EL-12",
+      "name": "Thông tin quyền riêng tư",
+      "type": "Thẻ thông tin",
+      "position": "Cột bên trái",
+      "properties": "Angular nói hồ sơ theo tài khoản đăng nhập và không hiển thị mật khẩu/thông tin đăng nhập; Stitch có thẻ “Chế độ an toàn”.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #12; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-013",
+      "marker": "#13 / ST03-EL-13",
+      "name": "Thẻ thông tin hồ sơ",
+      "type": "Thẻ / biểu mẫu",
+      "position": "Cột nội dung",
+      "properties": "Có tiêu đề, mô tả và các trạng thái tải/lỗi/biểu mẫu; Stitch là ảnh tĩnh.",
+      "event_ids": [
+        "ST03-EV-01"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #13; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-014",
+      "marker": "#14 / ST03-EL-14",
+      "name": "Trường họ và tên",
+      "type": "Trường nhập liệu",
+      "position": "Biểu mẫu",
+      "properties": "Bắt buộc; autocomplete=name; giới hạn 150; dữ liệu từ #04; loại khoảng trắng đầu/cuối trước khi #14.",
+      "event_ids": [
+        "ST03-EV-02",
+        "ST03-EV-06"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #14; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-015",
+      "marker": "#15 / ST03-EL-15",
+      "name": "Trường email chỉ đọc",
+      "type": "Trường chỉ đọc",
+      "position": "Biểu mẫu",
+      "properties": "Giá trị lấy từ #04; readonly=true; không có luồng cập nhật email ở màn này.",
+      "event_ids": [
+        "ST03-EV-03"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #15; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-016",
+      "marker": "#16 / ST03-EL-16",
+      "name": "Trường số điện thoại",
+      "type": "Trường nhập liệu",
+      "position": "Biểu mẫu",
+      "properties": "Cho phép để trống, maxlength 20, dữ liệu có thể nhận null; Angular bật sửa, trong khi ảnh Stitch mô tả bị vô hiệu hóa.",
+      "event_ids": [
+        "ST03-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #16; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-017",
+      "marker": "#17 / ST03-EL-17",
+      "name": "Trường tiểu sử chỉ xem",
+      "type": "Trường văn bản",
+      "position": "Biểu mẫu",
+      "properties": "Textarea bị vô hiệu hóa; API/DB mã nguồn không có tiểu sử nên không đưa vào phần thân #14.",
+      "event_ids": [
+        "ST03-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #17; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-018",
+      "marker": "#18 / ST03-EL-18",
+      "name": "Liên kết quay về hồ sơ dưới biểu mẫu",
+      "type": "Liên kết",
+      "position": "Cuối biểu mẫu",
+      "properties": "RouterLink tới /student/profile; không gửi thông tin cá nhân (PII) qua URL.",
+      "event_ids": [
+        "ST03-EV-07"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #18; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-019",
+      "marker": "#19 / ST03-EL-19",
+      "name": "Nút lưu thay đổi",
+      "type": "Nút gửi biểu mẫu",
+      "position": "Cuối biểu mẫu",
+      "properties": "Nút bị khóa khi chưa có thay đổi hoặc đang tải/đang lưu/đợi tải lại; khác marker Stitch mô tả bị vô hiệu hóa tĩnh.",
+      "event_ids": [
+        "ST03-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #19; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-020",
+      "marker": "#20 / ST03-EL-20",
+      "name": "Ghi chú trạng thái lưu và tải lại",
+      "type": "Ghi chú trạng thái",
+      "position": "Cuối biểu mẫu",
+      "properties": "Thông báo khi đang tải lại, đã lưu nhưng đang chờ xác nhận, hoặc cách thức tải lại sau khi lưu.",
+      "event_ids": [
+        "ST03-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #20; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-021",
+      "marker": "#21 / ST03-EL-21",
+      "name": "Thẻ bàn giao kỹ thuật trong Stitch",
+      "type": "Thông tin chẩn đoán tĩnh",
+      "position": "Phần dưới ảnh Stitch",
+      "properties": "Không có thẻ bàn giao kỹ thuật tương ứng trong Angular mẫu HTML hiện tại.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #21; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-022",
+      "marker": "#22 / ST03-EL-22",
+      "name": "Thông tin chẩn đoán API #13 trong Stitch",
+      "type": "Thông tin chẩn đoán tĩnh",
+      "position": "Phần dưới ảnh Stitch",
+      "properties": "Nội dung multipart/CDN/Halted của Stitch không phải hợp đồng API #13 hiện tại.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #22; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-023",
+      "marker": "#23 / ST03-EL-23",
+      "name": "Thông tin chẩn đoán API #14 trong Stitch",
+      "type": "Thông tin chẩn đoán tĩnh",
+      "position": "Phần dưới ảnh Stitch",
+      "properties": "Nội dung Stitch về thiếu tiểu sử/số điện thoại phải đối chiếu API #14 và DDL; không phải thông báo lỗi môi trường chạy.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #23; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-024",
+      "marker": "#24 / ST03-EL-24",
+      "name": "Thông báo chờ căn chỉnh DDL trong Stitch",
+      "type": "Thông tin chẩn đoán tĩnh",
+      "position": "Phần dưới ảnh Stitch",
+      "properties": "Thông báo thay đổi cấu trúc cơ sở dữ liệu trong Stitch là đề xuất; không chứng minh thay đổi cấu trúc cơ sở dữ liệu đã được duyệt hoặc chạy.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #24; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-025",
+      "marker": "#25 / ST03-EL-25",
+      "name": "Chân trang và nhãn WCAG trong Stitch",
+      "type": "Chân trang / nội dung",
+      "position": "Chân trang",
+      "properties": "Angular chỉ hiện Study2Work; không hiện bản quyền/WCAG nhãn của Stitch. Nhãn không là bằng chứng đánh giá.",
+      "event_ids": [
+        "ST03-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #25; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-026",
+      "marker": "#26 / ST03-EL-26",
+      "name": "Nhóm điều hướng chân trang",
+      "type": "Nhóm liên kết",
+      "position": "Chân trang",
+      "properties": "Angular hiện ba span tĩnh Điều khoản dịch vụ/Chính sách bảo mật/Trợ giúp; đích chưa có.",
+      "event_ids": [
+        "ST03-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #26; §3; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thành phần tương ứng"
+    },
+    {
+      "id": "ST-03-EL-027",
+      "marker": "",
+      "name": "Ô chọn tệp ảnh ẩn",
+      "type": "Ô chọn tệp",
+      "position": "Cột trái",
+      "properties": "Type=file; accept=image/png,image/jpeg,image/webp; change gọi selectAvatar.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — trường nhập #avatarFileInput"
+    },
+    {
+      "id": "ST-03-EL-028",
+      "marker": "",
+      "name": "Nút chọn ảnh",
+      "type": "Nút",
+      "position": "Cột trái",
+      "properties": "Mở bộ chọn tệp; bị khóa khi chưa tải xong hồ sơ, đang lưu/tải lại hoặc đang đọc/tải ảnh.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — nút Chọn ảnh"
+    },
+    {
+      "id": "ST-03-EL-029",
+      "marker": "",
+      "name": "Nút tải ảnh lên",
+      "type": "Nút",
+      "position": "Cột trái",
+      "properties": "Chỉ hiện khi avatarUploadState=sẵn sàng; thao tác gọi uploadAvatar; khóa khi đang lưu/tải lại.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — nút Tải ảnh lên"
+    },
+    {
+      "id": "ST-03-EL-030",
+      "marker": "",
+      "name": "Trạng thái xử lý ảnh",
+      "type": "Thông báo trạng thái",
+      "position": "Cột trái",
+      "properties": "Hiện Đang đọc ảnh…, Đang tải ảnh lên… hoặc Ảnh đã tải lên; chỉ là thông tin thao tác riêng, chưa phải hồ sơ đã lưu.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — role=status"
+    },
+    {
+      "id": "ST-03-EL-031",
+      "marker": "",
+      "name": "Cảnh báo lỗi ảnh",
+      "type": "Cảnh báo",
+      "position": "Cột trái",
+      "properties": "Hiện avatarError trong role=alert; khi lỗi tải/chọn ảnh không ghi nhận tải lên thành công.",
+      "event_ids": [
+        "ST03-EV-05"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — role=alert avatarError"
+    },
+    {
+      "id": "ST-03-EL-032",
+      "marker": "",
+      "name": "Trạng thái đang tải hồ sơ",
+      "type": "Thông báo trạng thái",
+      "position": "Thẻ hồ sơ",
+      "properties": "Khi profileLoading=true, hiện thông báo tải và khóa chỉnh sửa/tải lên/lưu.",
+      "event_ids": [
+        "ST03-EV-01"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — profileLoading"
+    },
+    {
+      "id": "ST-03-EL-033",
+      "marker": "",
+      "name": "Cảnh báo lỗi đọc hồ sơ",
+      "type": "Cảnh báo",
+      "position": "Thẻ hồ sơ",
+      "properties": "Khi profileError có giá trị, hiển thị thông báo trong role=alert cùng nút thử lại.",
+      "event_ids": [
+        "ST03-EV-01"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — profileError"
+    },
+    {
+      "id": "ST-03-EL-034",
+      "marker": "",
+      "name": "Nút thử tải hồ sơ lại",
+      "type": "Nút",
+      "position": "Trong cảnh báo hồ sơ",
+      "properties": "Gọi retryProfile và thực hiện GET #04; không gửi #14.",
+      "event_ids": [
+        "ST03-EV-01"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — retryProfile"
+    },
+    {
+      "id": "ST-03-EL-035",
+      "marker": "",
+      "name": "Ghi chú sau khi lưu",
+      "type": "Thông báo / trạng thái",
+      "position": "Cuối biểu mẫu",
+      "properties": "Phân biệt trạng thái đang tải lại, đã lưu nhưng chờ tải lại, và hướng dẫn chuỗi sau lưu.",
+      "event_ids": [
+        "ST03-EV-06"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — st03-lưu-note"
+    },
+    {
+      "id": "ST-03-EL-036",
+      "marker": "",
+      "name": "Cảnh báo lỗi lưu",
+      "type": "Cảnh báo",
+      "position": "Cuối biểu mẫu",
+      "properties": "Hiện saveError trong role=alert; lỗi không tự gọi lại #14.",
+      "event_ids": [
+        "ST03-EV-06"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — saveError"
+    },
+    {
+      "id": "ST-03-EL-037",
+      "marker": "",
+      "name": "Khóa thao tác trong khi lưu/tải lại",
+      "type": "Trạng thái biểu mẫu",
+      "position": "Biểu mẫu",
+      "properties": "Khi đang lưu/refreshingAfterSave/savedAwaitingRefresh, khóa các trường và nút để không gửi thao tác lặp.",
+      "event_ids": [
+        "ST03-EV-06"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — thuộc tính bị vô hiệu hóa"
+    },
+    {
+      "id": "ST-03-EL-038",
+      "marker": "",
+      "name": "Ghi chú bảo vệ dữ liệu",
+      "type": "Nội dung quyền riêng tư",
+      "position": "Cột trái",
+      "properties": "Nêu hồ sơ được tải theo tài khoản đăng nhập; mật khẩu/thông tin đăng nhập không hiển thị.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — hồ sơ-edit-an toàn-note"
+    },
+    {
+      "id": "ST-03-EL-039",
+      "marker": "",
+      "name": "Các mục tĩnh cuối trang",
+      "type": "Nhóm nội dung",
+      "position": "Chân trang",
+      "properties": "Điều khoản dịch vụ, Chính sách bảo mật, Trợ giúp được hiển thị dạng span, chưa có đích liên kết.",
+      "event_ids": [
+        "ST03-EV-09"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — chân trang nav"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST03-EV-01",
+      "name": "Mở trang và tải hồ sơ",
+      "trigger": "Mở tuyến /student/profile/edit hoặc thử tải hồ sơ lại.",
+      "element_ids": [
+        "ST-03-EL-009",
+        "ST-03-EL-013",
+        "ST-03-EL-032",
+        "ST-03-EL-033",
+        "ST-03-EL-034"
+      ],
+      "api_ids": [
+        "#04"
+      ],
+      "processing": "Đọc phiên Student qua bộ kết nối và gọi GET /api/v1/users/me; ánh xạ hồ sơ an toàn. Có trạng thái tải, lỗi và thử lại. Mã 401/403/500 theo hợp đồng; chưa xác minh trình duyệt, API hoặc DB triển khai.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01; apps/study-client/src/app/features/student/ST03/pages/st03-page.ts — loadProfile, retryProfile"
+    },
+    {
+      "id": "ST03-EV-02",
+      "name": "Thay đổi họ tên",
+      "trigger": "Nhập hoặc thay đổi trường full_name.",
+      "element_ids": [
+        "ST-03-EL-014"
+      ],
+      "api_ids": [],
+      "processing": "Cập nhật trạng thái; khi gửi biểu mẫu loại khoảng trắng đầu/cuối, từ chối rỗng và giới hạn 150 ký tự; không gọi API cho riêng thao tác nhập.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-02"
+    },
+    {
+      "id": "ST03-EV-03",
+      "name": "Tương tác với email chỉ đọc",
+      "trigger": "Đưa tiêu điểm vào trường email hoặc thử nhập nội dung.",
+      "element_ids": [
+        "ST-03-EL-015"
+      ],
+      "api_ids": [],
+      "processing": "Email chỉ đọc; giá trị không đổi và không phát sinh yêu cầu cập nhật.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-03"
+    },
+    {
+      "id": "ST03-EV-04",
+      "name": "Thay đổi số điện thoại và xem tiểu sử",
+      "trigger": "Nhập số điện thoại hoặc thử sửa trường tiểu sử.",
+      "element_ids": [
+        "ST-03-EL-016",
+        "ST-03-EL-017"
+      ],
+      "api_ids": [],
+      "processing": "Chuẩn hóa số điện thoại bằng cách bỏ khoảng trắng ở đầu và cuối; giá trị rỗng thành null; tối đa 20 ký tự và được gửi khi lưu. Tiểu sử bị vô hiệu hóa và không gửi qua #14.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-04"
+    },
+    {
+      "id": "ST03-EV-05",
+      "name": "Chọn và tải ảnh đại diện",
+      "trigger": "Chọn tệp trong bộ chọn tệp; sau khi đọc hợp lệ, bấm “Tải ảnh lên”.",
+      "element_ids": [
+        "ST-03-EL-008",
+        "ST-03-EL-010",
+        "ST-03-EL-011",
+        "ST-03-EL-027",
+        "ST-03-EL-028",
+        "ST-03-EL-029",
+        "ST-03-EL-030",
+        "ST-03-EL-031"
+      ],
+      "api_ids": [
+        "#13"
+      ],
+      "processing": "Ứng dụng kiểm tra kiểu MIME và kích thước tệp, đọc Data URL rồi chỉ gọi POST #13 sau khi người dùng bấm tải ảnh. Máy chủ kiểm tra phần thân, chữ ký và giới hạn kích thước trước khi lưu object; không cập nhật DB. Không tự thử lại hoặc khẳng định đã hoàn tác.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05"
+    },
+    {
+      "id": "ST03-EV-06",
+      "name": "Lưu hồ sơ và tải lại sau lưu",
+      "trigger": "Gửi biểu mẫu bằng nút “Lưu thay đổi”.",
+      "element_ids": [
+        "ST-03-EL-014",
+        "ST-03-EL-016",
+        "ST-03-EL-017",
+        "ST-03-EL-019",
+        "ST-03-EL-020",
+        "ST-03-EL-035",
+        "ST-03-EL-036",
+        "ST-03-EL-037"
+      ],
+      "api_ids": [
+        "#14",
+        "#04"
+      ],
+      "processing": "PUT #14 với full_name, phone, avatar_url; tiểu sử không được lưu. Khi #14 thành công, ứng dụng hiện gọi #04; chỉ điều hướng ST-02 sau #04 thành công. Lỗi tải lại chỉ thử lại #04; lỗi thao tác ghi không tự gửi lại.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06; apps/study-client/src/app/features/student/ST03/pages/st03-page.ts — saveProfile"
+    },
+    {
+      "id": "ST03-EV-07",
+      "name": "Quay về hồ sơ ST-02",
+      "trigger": "Bấm liên kết quay lại ở biểu ngữ, đường dẫn phân cấp hoặc cuối biểu mẫu.",
+      "element_ids": [
+        "ST-03-EL-004",
+        "ST-03-EL-007",
+        "ST-03-EL-018"
+      ],
+      "api_ids": [],
+      "processing": "Angular điều hướng tới /student/profile; không truyền thông tin cá nhân (PII) qua URL. Chính sách giữ hay bỏ thay đổi chưa lưu và bộ nhớ đệm chưa được chốt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-07; apps/study-client/src/app/features/student/ST03/pages/st03-page.html — RouterLink"
+    },
+    {
+      "id": "ST03-EV-08",
+      "name": "Dùng thương hiệu và điều hướng đầu trang",
+      "trigger": "Bấm logo hoặc một mục điều hướng đầu trang.",
+      "element_ids": [
+        "ST-03-EL-001",
+        "ST-03-EL-002"
+      ],
+      "api_ids": [],
+      "processing": "Logo về /; Tiến độ, Thảo luận, Thông báo dùng tuyến đã khai báo; “Khóa học của tôi” không tương tác vì chưa có tuyến ST-08. Không gọi API hồ sơ theo mô tả sự kiện.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-08"
+    },
+    {
+      "id": "ST03-EV-09",
+      "name": "Điều hướng cuối trang",
+      "trigger": "Thử chọn Điều khoản dịch vụ, Chính sách bảo mật hoặc Trợ giúp.",
+      "element_ids": [
+        "ST-03-EL-026",
+        "ST-03-EL-039"
+      ],
+      "api_ids": [],
+      "processing": "Angular hiện hiển thị các mục dạng span tĩnh; không có tuyến/nội dung đích. Không tự gán liên kết.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-09"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-03-BL-01",
+      "description": "G-03 API #13: ảnh Stitch mô tả gửi multipart qua CDN và trạng thái “Halted”; hợp đồng API/mã nguồn ứng dụng hiện dùng JSON chứa Data URL và lưu vào Object Storage.",
+      "impact": "Kỳ vọng về giao diện, yêu cầu gửi và cách lưu ảnh chưa thống nhất.",
+      "decision": "Người phụ trách chốt giao diện được duyệt, URL ảnh công khai, cách ghi đè, thử lại, dọn dẹp và chính sách lưu trữ.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, G-03 / API #13",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-03-BL-02",
+      "description": "AC-11 và danh mục màn hình yêu cầu tiểu sử nhưng API #04/#14 và DDL không có trường này; API #14 bỏ qua trường ngoài hợp đồng.",
+      "impact": "Không thể xác nhận tiểu sử được đọc, sửa hay lưu; phần thân #14 chưa thống nhất với AC.",
+      "decision": "Người phụ trách quyết định bỏ tiểu sử khỏi AC hoặc duyệt thay đổi API/DB và lược đồ; đồng thời chốt chính sách số điện thoại và ảnh đại diện.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, G-03 / API #14; DDL",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-03-BL-03",
+      "description": "Danh mục màn hình yêu cầu GET #04 sau PUT #14, trong khi #14 đã trả UserProfile và mã nguồn ứng dụng hiện gọi GET #04.",
+      "impact": "Quy tắc kết thúc thành công sau lưu và hành vi khi tải lại lỗi còn phụ thuộc quyết định này.",
+      "decision": "Chốt phản hồi #14 hay tải lại #04 là nguồn kết thúc luồng và hành vi khi tải lại lỗi.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06; 06-navigation.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-03-BL-04",
+      "description": "POST #13 ghi hoặc ghi đè đối tượng lưu trữ trước PUT #14; hai tác động không cùng giao dịch và không có bước bù trừ.",
+      "impact": "Có thể còn đối tượng lưu trữ mà hồ sơ không tham chiếu nếu lưu thất bại; thử lại có thể ghi đè cùng khóa.",
+      "decision": "Chốt chính sách thử lại, dọn dẹp, hoàn tác/ghi đè và thông báo lỗi một phần.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, tính nhất quán giữa tải ảnh và cập nhật hồ sơ",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-03-BL-05",
+      "description": "Ảnh Stitch khóa thao tác tải ảnh/lưu hồ sơ và có thông tin chẩn đoán tĩnh; mã nguồn Angular có tuyến, thao tác tải/lưu và trạng thái tương ứng.",
+      "impact": "Chưa xác định bản giao diện nào là chuẩn nghiệm thu.",
+      "decision": "Người phụ trách và người rà soát chốt thiết kế ST-03 được duyệt rồi cập nhật DD/ảnh hoặc mã nguồn tương ứng.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/00-overview.md — Mong đợi/hiện tại discrepancy; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-03-BL-06",
+      "description": "DDL trong kho mã nguồn không có tiểu sử; chưa xác minh lược đồ triển khai, thông tin xác thực Object Storage và hành vi của môi trường chạy.",
+      "impact": "Chưa thể xác nhận luồng đầu cuối với DB và kho lưu trữ thật.",
+      "decision": "Xác minh lược đồ và tích hợp kho lưu trữ trong môi trường kiểm thử được duyệt trước khi nghiệm thu.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, DDL/live lược đồ",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST-03-TC-MH-001",
+        "requirement_ids": [
+          "ST-03-YC-001",
+          "ST-03-YC-002",
+          "ST-03-YC-003"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Mở ST-03 với phiên Student hợp lệ",
+        "precondition": "Đã đưa ứng dụng Study Web vào môi trường kiểm thử; phiên STUDENT được mô phỏng; API #04 trả hồ sơ giả lập.",
+        "data": "Hồ sơ dữ liệu giả lập: full_name=Nguyễn An; email=an@example.invalid; phone=null; avatar_url=null.",
+        "steps": "1. Mở /student/profile/edit.\n2. Ghi nhận yêu cầu #04 và trạng thái trang.",
+        "expected": "Chờ xác nhận DD: Có một GET #04 tới /api/v1/users/me qua bộ kết nối; khi đang chờ hiện trạng thái tải và các thao tác sửa/lưu bị khóa. Không suy ra trình duyệt/môi trường chạy từ mã nguồn khi chưa chạy.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01/05/06"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-002",
+        "requirement_ids": [
+          "ST-03-YC-003",
+          "ST-03-YC-004",
+          "ST-03-YC-006",
+          "ST-03-YC-007",
+          "ST-03-YC-008"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Nạp hồ sơ thành công và ánh xạ trường được hỗ trợ",
+        "precondition": "API #04 trả HTTP 200 với DESIGN_RESOURCE_RETRIEVED và hồ sơ Student giả lập.",
+        "data": "full_name=Nguyễn An; email=an@example.invalid; phone=0912345678; avatar_url=https://example.invalid/a.png; không có tiểu sử.",
+        "steps": "1. Mở tuyến.\n2. Chờ #04 trả phản hồi.\n3. Đối chiếu tên, email, số điện thoại và ảnh với dữ liệu giả lập.",
+        "expected": "Chờ xác nhận DD: Tên/số điện thoại được đưa vào trường sửa; email hiện ở ô chỉ đọc; ảnh chỉ dùng nếu URL HTTP(S) hợp lệ; tiểu sử không được lấy từ API.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01/05/06",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.ts — loadProfile"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-003",
+        "requirement_ids": [
+          "ST-03-YC-004",
+          "ST-03-YC-008"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Nạp hồ sơ khi số điện thoại và avatar_url null",
+        "precondition": "API #04 trả hồ sơ hợp lệ, trong đó phone và avatar_url có giá trị null.",
+        "data": "phone=null; avatar_url=null; full_name=Nguyễn An.",
+        "steps": "1. Mở tuyến.\n2. Chờ phản hồi #04.\n3. Quan sát số điện thoại và vùng ảnh.",
+        "expected": "Số điện thoại được chuẩn hóa thành ô trống; ảnh đại diện hiển thị văn bản gợi ý; trang không tự tạo giá trị số điện thoại hoặc URL ảnh.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01/05/06"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-004",
+        "requirement_ids": [
+          "ST-03-YC-005"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Lỗi #04 cho phép thử tải lại",
+        "precondition": "API #04 lần đầu trả lỗi máy chủ; lần hai trả hồ sơ hợp lệ.",
+        "data": "Phản hồi lần đầu HTTP 500; lần hai HTTP 200; dữ liệu giả lập.",
+        "steps": "1. Mở tuyến.\n2. Ghi nhận thông báo lỗi và nút thử lại.\n3. Bấm thử lại một lần.",
+        "expected": "Lỗi #04 xuất hiện trong vùng role=alert; lần bấm thử lại gọi GET #04; khi phản hồi thành công trạng thái lỗi được thay bằng hồ sơ. Không gọi #13/#14 trong luồng đọc.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái yêu cầu lỗi",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.ts — retryProfile/loadProfile"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-005",
+        "requirement_ids": [
+          "ST-03-YC-002",
+          "ST-03-YC-021"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phiên không đúng vai trò Student",
+        "precondition": "Dựng phiên/token kiểm thử có vai trò khác STUDENT hoặc thiếu mệnh đề theo hợp đồng; dùng môi trường tích hợp/mô phỏng.",
+        "data": "Token giả trong bộ công cụ; không ghi token thật vào UTC.",
+        "steps": "1. Mở tuyến bằng phiên kiểm thử.\n2. Ghi nhận yêu cầu và kết quả.",
+        "expected": "Chờ xác nhận DD: API không trả dữ liệu hồ sơ Student khi thiếu hoặc sai quyền; không hiển thị dữ liệu cá nhân giả lập. Ghi nhận riêng cách ứng dụng xử lý 401/403 theo bộ kết nối; không tự thêm tuyến chuyển hướng ngoài hợp đồng.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01 — quyền và lỗi",
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, bảo mật 1–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-006",
+        "requirement_ids": [
+          "ST-03-YC-003",
+          "ST-03-YC-004"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phản hồi #04 sai mã hoặc cấu trúc dữ liệu",
+        "precondition": "Bản mô phỏng #04 trả HTTP thành công nhưng thiếu mã phản hồi chuẩn hoặc có trường data sai cấu trúc.",
+        "data": "Phản hồi thiếu DESIGN_RESOURCE_RETRIEVED hoặc thiếu email/full_name bắt buộc.",
+        "steps": "1. Mở tuyến.\n2. Trả phản hồi sai hợp đồng.\n3. Quan sát trang và yêu cầu phát sinh.",
+        "expected": "Hồ sơ không được đánh dấu đã tải; xuất hiện trạng thái lỗi; không bật thao tác sửa/lưu và không gọi #13/#14.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01 — phản hồi/lỗi",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.ts — loadProfile phản hồi guards"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-007",
+        "requirement_ids": [
+          "ST-03-YC-006"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Từ chối họ tên chỉ gồm khoảng trắng",
+        "precondition": "Hồ sơ đã tải; trường họ tên có thể nhập; API #14 được theo dõi.",
+        "data": "Nhập ba dấu cách rồi gửi biểu mẫu; không dùng dữ liệu thật.",
+        "steps": "1. Xóa họ tên hiện tại.\n2. Nhập ba dấu cách.\n3. Bấm “Lưu thay đổi”.",
+        "expected": "Thông báo lỗi họ tên bắt buộc được hiển thị; không gửi PUT #14.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-02"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-008",
+        "requirement_ids": [
+          "ST-03-YC-006",
+          "ST-03-YC-014"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Lưu họ tên sau khi bỏ khoảng trắng đầu/cuối",
+        "precondition": "Hồ sơ tải xong, không có tải lên đang chờ; theo dõi phần thân #14.",
+        "data": "Nhập “  Nguyễn An  ”; phone/ảnh đại diện giữ nguyên dữ liệu giả lập.",
+        "steps": "1. Nhập tên có khoảng trắng đầu/cuối.\n2. Bấm lưu.",
+        "expected": "Phần thân #14 gửi full_name đã loại khoảng trắng đầu/cuối thành “Nguyễn An”; không tự thêm quy tắc định dạng tên.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-02; ST03-EV-06"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-009",
+        "requirement_ids": [
+          "ST-03-YC-008",
+          "ST-03-YC-014"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Lưu số điện thoại rỗng theo hợp đồng có thể nhận null",
+        "precondition": "Hồ sơ tải xong; tên hợp lệ; theo dõi phần thân #14.",
+        "data": "Xóa số điện thoại hoặc nhập khoảng trắng.",
+        "steps": "1. Xóa nội dung số điện thoại.\n2. Bấm lưu khi có thay đổi khác hợp lệ hoặc số điện thoại là thay đổi duy nhất.",
+        "expected": "Nếu có thay đổi cần lưu, phần thân #14 chứa phone=null; không gửi chuỗi rỗng hoặc khoảng trắng.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-04; ST03-EV-06"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-010",
+        "requirement_ids": [
+          "ST-03-YC-010",
+          "ST-03-YC-011"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Chỉ tải ảnh sau thao tác xác nhận riêng",
+        "precondition": "Hồ sơ tải xong; tệp ảnh giả hợp lệ; ghi nhận yêu cầu mạng.",
+        "data": "Một PNG giả hợp lệ không vượt 5 MiB.",
+        "steps": "1. Chọn tệp PNG.\n2. Chờ xem trước.\n3. Chưa bấm “Tải ảnh lên”, quan sát yêu cầu.\n4. Bấm “Tải ảnh lên”.",
+        "expected": "Chờ xác nhận DD: Chọn tệp chỉ tạo xem trước, chưa gọi #13; lần bấm riêng gọi POST #13 với JSON chỉ có trường image chứa Data URL.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-011",
+        "requirement_ids": [
+          "ST-03-YC-010"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Chặn tệp rỗng, MIME không hỗ trợ và tệp vượt 5 MiB",
+        "precondition": "Hồ sơ tải xong; bộ chọn tệp kiểm soát được dữ liệu giả lập tệp.",
+        "data": "Các tệp giả: 0 byte PNG; text/plain; PNG lớn hơn 5 MiB.",
+        "steps": "1. Lần lượt chọn từng tệp.\n2. Quan sát trạng thái/lỗi và yêu cầu #13.",
+        "expected": "Tệp rỗng, MIME ngoài PNG/JPEG/WebP hoặc lớn hơn 5 MiB không chuyển sang trạng thái sẵn sàng tải; #13 không được gọi.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05 — trường nhập/lỗi"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-012",
+        "requirement_ids": [
+          "ST-03-YC-010",
+          "ST-03-YC-011"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Từ chối Data URL có chữ ký nội dung không khớp",
+        "precondition": "Dùng bản mô phỏng API #13 để kiểm tra dữ liệu phía máy chủ; không truy cập kho lưu trữ thật.",
+        "data": "Data URL khai MIME image/png nhưng chữ ký nhị phân không phải PNG.",
+        "steps": "1. Gửi dữ liệu giả lập qua luồng tải lên.\n2. Quan sát phản hồi và giao diện.",
+        "expected": "API trả 422 DESIGN_VALIDATION_ERROR theo hợp đồng; giao diện hiện lỗi tải ảnh; không hiện trạng thái ảnh đã tải và không tuyên bố hồ sơ đã lưu.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05 — lỗi chữ ký",
+          "apps/study-server/app/modules/student/api_13_users_me_avatar/validate.py — kiểm tra chữ ký ảnh"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-013",
+        "requirement_ids": [
+          "ST-03-YC-011",
+          "ST-03-YC-012"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Giữ URL tải lên thành công chờ lưu hồ sơ",
+        "precondition": "API #13 trả phản hồi thành công; API #14 chưa được gọi.",
+        "data": "data.avatar_url=https://example.invalid/avatar-test.png.",
+        "steps": "1. Chọn tệp hợp lệ và tải lên.\n2. Chờ #13 trả thành công.\n3. Ghi nhận ảnh xem trước và yêu cầu #14.",
+        "expected": "Giao diện báo ảnh đã tải lên và giữ URL để dùng khi lưu hồ sơ; chưa gọi #14 cho đến khi người dùng gửi biểu mẫu.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05 — đầu ra"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-014",
+        "requirement_ids": [
+          "ST-03-YC-013",
+          "ST-03-YC-014"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Phần thân lưu không chứa tiểu sử và chỉ dùng trường được hỗ trợ",
+        "precondition": "Hồ sơ tải xong; có thay đổi họ tên/số điện thoại hoặc URL ảnh; theo dõi phần thân #14.",
+        "data": "full_name=Nguyễn An mới; phone=null; avatar_url từ #13 hoặc URL hiện tại.",
+        "steps": "1. Thay đổi dữ liệu hỗ trợ.\n2. Bấm lưu.\n3. Đọc JSON yêu cầu #14.",
+        "expected": "Chờ xác nhận DD: PUT #14 chỉ chứa full_name, phone, avatar_url; phone/avatar_url có thể nhận null khi phù hợp; phần thân không coi tiểu sử là dữ liệu được lưu.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — phần thân",
+          "apps/study-client/src/app/features/student/ST03/data-access/st03-profile.service.ts — updateProfile"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-015",
+        "requirement_ids": [
+          "ST-03-YC-013",
+          "ST-03-YC-016"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Không gửi lại PUT sau lỗi thao tác ghi",
+        "precondition": "API #14 giả lập trả 500 sau gửi biểu mẫu; không dùng dữ liệu thật.",
+        "data": "Một lần gửi biểu mẫu, phản hồi #14 là DESIGN_INTERNAL_ERROR.",
+        "steps": "1. Thay đổi tên hợp lệ.\n2. Gửi biểu mẫu một lần.\n3. Chờ lỗi.\n4. Không bấm gửi biểu mẫu lần nữa; ghi nhận yêu cầu tự động.",
+        "expected": "Giao diện báo lỗi lưu; không tự gọi lại #14 và không hiển thị hồ sơ đã lưu thành công.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — lỗi và thử lại"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-016",
+        "requirement_ids": [
+          "ST-03-YC-015"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Điều hướng ST-02 sau PUT và GET thành công",
+        "precondition": "Bản mô phỏng #14 và #04 trả thành công liên tiếp.",
+        "data": "PUT trả DESIGN_RESOURCE_UPDATED; GET trả DESIGN_RESOURCE_RETRIEVED với hồ sơ mới.",
+        "steps": "1. Thay đổi trường hợp lệ.\n2. Gửi biểu mẫu.\n3. Quan sát thứ tự yêu cầu và URL cuối.",
+        "expected": "Chờ xác nhận DD: Thứ tự là PUT #14 rồi GET #04; chỉ sau GET thành công mới điều hướng tới /student/profile.",
+        "api_ids": [
+          "#14",
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — trình tự"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-017",
+        "requirement_ids": [
+          "ST-03-YC-015",
+          "ST-03-YC-016"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Chỉ thử lại GET khi tải lại sau lưu gặp lỗi",
+        "precondition": "PUT #14 đã thành công; GET #04 kế tiếp trả lỗi một lần rồi thành công.",
+        "data": "Ghi bộ đếm yêu cầu cho #14/#04.",
+        "steps": "1. Gửi biểu mẫu thay đổi hợp lệ.\n2. Cho #14 thành công và #04 lỗi.\n3. Bấm “Thử tải lại hồ sơ”.",
+        "expected": "Trang giữ hồ sơ trả từ #14; thao tác thử lại chỉ gọi #04, không gửi lại #14; chỉ chuyển về ST-02 sau GET thành công.",
+        "api_ids": [
+          "#14",
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — lỗi tải lại"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-018",
+        "requirement_ids": [
+          "ST-03-YC-017"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Không giả định tải lên hoàn tác khi lưu hồ sơ lỗi",
+        "precondition": "#13 thành công; #14 trả lỗi; dùng kho lưu trữ bản mô phỏng không ghi đối tượng thật.",
+        "data": "URL trả từ #13; #14 trả lỗi máy chủ.",
+        "steps": "1. Tải lên ảnh dữ liệu giả lập.\n2. Gửi biểu mẫu để gọi #14.\n3. Quan sát giao diện và mô phỏng kho lưu trữ.",
+        "expected": "Chờ xác nhận DD: giao diện không báo hồ sơ đã lưu; UTC ghi nhận tải lên là tác động phụ riêng. Không kỳ vọng xóa/hoàn tác đối tượng nếu chưa có quyết định được duyệt.",
+        "api_ids": [
+          "#13",
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, tính nhất quán giữa tải ảnh và cập nhật hồ sơ"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-019",
+        "requirement_ids": [
+          "ST-03-YC-018"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Quay về ST-02 không đưa thông tin cá nhân (PII) vào URL",
+        "precondition": "Hồ sơ đã tải; có thể ghi nhận URL và yêu cầu mạng trong công cụ dành cho nhà phát triển; có thể có thay đổi chưa lưu.",
+        "data": "URL hiện tại /student/profile/edit; dùng hồ sơ giả lập.",
+        "steps": "1. Bấm một liên kết quay về ST-02.\n2. Quan sát tuyến và URL.",
+        "expected": "Chờ xác nhận DD: URL đích là /student/profile; tham số truy vấn/đường dẫn không chứa tên, email, số điện thoại, URL ảnh đại diện hoặc token. Ghi nhận riêng việc giữ hay bỏ thay đổi chưa lưu; không tự đặt kỳ vọng.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-07",
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, bảo mật 1"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-020",
+        "requirement_ids": [
+          "ST-03-YC-019",
+          "ST-03-YC-020"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Không phát sinh yêu cầu hồ sơ khi điều hướng đầu trang/chân trang",
+        "precondition": "Trang đã mở; ghi nhận yêu cầu mạng trước và sau nhấn.",
+        "data": "Thử tuyến đầu trang có đích và mục chân trang tĩnh.",
+        "steps": "1. Bấm lần lượt các tuyến đầu trang đã khai báo.\n2. Quan sát các mục chân trang tĩnh.\n3. Ghi lại URL và API requests.",
+        "expected": "Chờ xác nhận DD: Liên kết đầu trang tới tuyến tương ứng; “Khóa học của tôi” và các mục chân trang không tự tạo tuyến/API khi mã nguồn hiện không khai báo đích.",
+        "api_ids": [
+          "#04",
+          "#13",
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-08/09"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-021",
+        "requirement_ids": [
+          "ST-03-YC-021"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Không đưa token hoặc thông tin cá nhân (PII) vào URL",
+        "precondition": "Dùng phiên giả lập và công cụ ghi yêu cầu trong môi trường kiểm thử.",
+        "data": "Hồ sơ có email/số điện thoại giả; token chỉ được cấp từ dữ liệu giả lập an toàn của bộ công cụ.",
+        "steps": "1. Mở ST-03 và thực hiện tải/lưu bằng dữ liệu giả lập.\n2. Ghi lại URL và tiêu đề HTTP của #04/#13/#14.",
+        "expected": "URL không chứa token hoặc thông tin cá nhân (PII); yêu cầu API gửi Bearer trong tiêu đề HTTP Authorization; phản hồi #04 không chứa password_hash. Không lưu token thật trong bảng tính/bằng chứng.",
+        "api_ids": [
+          "#04",
+          "#13",
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, quy tắc 1–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-022",
+        "requirement_ids": [
+          "ST-03-YC-022"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra bố cục ở các ngưỡng thích ứng",
+        "precondition": "Có trình duyệt kiểm thử và kích thước cửa sổ điều chỉnh được; tiêu chí cần được người rà soát duyệt trước.",
+        "data": "Kích thước cửa sổ: 1020 px, 680 px và nhỏ hơn 680 px.",
+        "steps": [
+          "1. Mở trang ở từng kích thước.",
+          "2. Quan sát điều hướng, cột nội dung, phần thông tin bên lề, nút biểu mẫu và chân trang."
+        ],
+        "expected": "Chờ xác nhận DD: Đề xuất đối chiếu các điểm ngắt 1020/680 px trong CSS; chưa có tiêu chí thiết kế tương ứng, không kết luận đạt WCAG hoặc nghiệm thu bố cục thích ứng.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.css — media tham số truy vấn 1020px/680px"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-MH-023",
+        "requirement_ids": [
+          "ST-03-YC-023"
+        ],
+        "target_id": "ST-03",
+        "group": "Toàn màn hình",
+        "title": "Rà soát bàn phím và nhãn trợ năng",
+        "precondition": "Chỉ thực hiện khi có tiêu chí trợ năng được duyệt; dùng trình duyệt hỗ trợ bàn phím và trình đọc màn hình.",
+        "data": "Không dùng nhãn WCAG trong ảnh Stitch làm bằng chứng.",
+        "steps": [
+          "1. Dùng bàn phím đi qua logo, liên kết, trường và nút.",
+          "2. Quan sát focus-visible, nhãn, trạng thái tải/lỗi và tên trợ năng của ảnh."
+        ],
+        "expected": "Chờ xác nhận DD: Ghi nhận từng kết quả theo tiêu chí người rà soát bổ sung; không tuyên bố tuân thủ WCAG chỉ từ mã nguồn tĩnh.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, quy tắc 8",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — nhãn/aria/vai trò"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST-03-TC-TP-001",
+        "requirement_ids": [
+          "ST-03-YC-019"
+        ],
+        "target_id": "ST-03-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Liên kết thương hiệu Study2Work",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Angular thương hiệu là liên kết có routerLink=\"/\" và trợ năng nhãn “Study2Work LMS — trang chủ”; ghi nhận khác thẻ liên kết tĩnh trong Stitch.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #1; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-002",
+        "requirement_ids": [
+          "ST-03-YC-019"
+        ],
+        "target_id": "ST-03-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nhóm điều hướng chính",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Bốn mục Trang chủ/Tiến độ/Thảo luận/Thông báo có tuyến; “Khóa học của tôi” hiển thị aria-disabled và không mở tuyến.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #2; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-003",
+        "requirement_ids": [
+          "ST-03-YC-004"
+        ],
+        "target_id": "ST-03-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Tên tài khoản và vai trò học viên",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Tên hiển thị theo profile.full_name hoặc “Tài khoản”; nhãn vai trò là “Học viên”, không dùng danh tính mẫu “Nguyễn Văn A”.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #3; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-004",
+        "requirement_ids": [
+          "ST-03-YC-018"
+        ],
+        "target_id": "ST-03-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Đường dẫn phân cấp",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: đường dẫn phân cấp hiện nhãn Hệ thống → Hồ sơ cá nhân → Chỉnh sửa hồ sơ; hai mục đầu có routerLink / và /student/profile.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #4; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-005",
+        "requirement_ids": [
+          "ST-03-YC-024",
+          "ST-03-YC-009"
+        ],
+        "target_id": "ST-03-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nhãn trạng thái tiểu sử",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Nhãn thực tế là “Tiểu sử chưa thể chỉnh sửa”; không hiển thị mã trạng thái/cờ tính năng “Blocked (lược đồ Conflict)”.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #5; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-006",
+        "requirement_ids": [
+          "ST-03-YC-024",
+          "ST-03-YC-001"
+        ],
+        "target_id": "ST-03-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Biểu ngữ giới hạn tiểu sử",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Biểu ngữ nêu có thể sửa họ tên/phone/ảnh đại diện và tiểu sử chỉ xem; không tuyên bố API #13 bị dừng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #6; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-007",
+        "requirement_ids": [
+          "ST-03-YC-018"
+        ],
+        "target_id": "ST-03-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Liên kết quay về hồ sơ trong biểu ngữ",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Bấm liên kết trong biểu ngữ điều hướng tới /student/profile và URL không thêm dữ liệu cá nhân.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #7; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-008",
+        "requirement_ids": [
+          "ST-03-YC-010",
+          "ST-03-YC-012",
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Ảnh đại diện xem trước",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Vùng ảnh hiển thị ảnh hồ sơ hợp lệ hoặc ảnh được chọn; nếu không có URL hợp lệ thì dùng văn bản gợi ý; không hiện lớp phủ GATED tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #8; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-009",
+        "requirement_ids": [
+          "ST-03-YC-003",
+          "ST-03-YC-004"
+        ],
+        "target_id": "ST-03-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nhãn tài khoản và tình trạng hồ sơ",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: nhãn mô tả hiển thị trạng thái tải, tên từ hồ sơ hoặc câu “Chưa có dữ liệu hồ sơ.” theo trạng thái.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #9; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-010",
+        "requirement_ids": [
+          "ST-03-YC-011",
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Hướng dẫn tải ảnh",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Hướng dẫn nêu PNG/JPEG/WebP, tối đa 5 MiB, tải lên rồi mới lưu; đây là luồng của mã nguồn hiện tại, khác thông tin chẩn đoán Stitch.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #10; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-011",
+        "requirement_ids": [
+          "ST-03-YC-010",
+          "ST-03-YC-011",
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Khu vực thao tác ảnh đại diện",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Khi hồ sơ sẵn sàng có thể chọn ảnh; nút Tải ảnh lên chỉ xuất hiện sau khi tệp hợp lệ được đọc, không khóa tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #11; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-012",
+        "requirement_ids": [
+          "ST-03-YC-021",
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thông tin quyền riêng tư",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Thẻ quyền riêng tư nói hồ sơ thuộc tài khoản đăng nhập và mật khẩu/thông tin đăng nhập không hiển thị.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #12; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-013",
+        "requirement_ids": [
+          "ST-03-YC-003",
+          "ST-03-YC-005"
+        ],
+        "target_id": "ST-03-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thẻ thông tin hồ sơ",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Thẻ có tiêu đề “Thông tin hồ sơ học viên”, mô tả email chỉ xem và các trường hỗ trợ; đang tải/lỗi được hiển thị riêng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #13; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-014",
+        "requirement_ids": [
+          "ST-03-YC-006"
+        ],
+        "target_id": "ST-03-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trường họ và tên",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Trường có nhãn Họ và tên, required, maxlength=150, autocomplete=name; nhập toàn khoảng trắng không thể lưu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #14; §3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-015",
+        "requirement_ids": [
+          "ST-03-YC-007"
+        ],
+        "target_id": "ST-03-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trường email chỉ đọc",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Email lấy từ #04 và có readonly=true; nhập thử không làm đổi giá trị.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #15; §3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-016",
+        "requirement_ids": [
+          "ST-03-YC-008"
+        ],
+        "target_id": "ST-03-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trường số điện thoại",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Số điện thoại là trường nhập tel có maxlength=20, cho trống; mã nguồn cho sửa, khác trạng thái bị vô hiệu hóa trong ảnh Stitch.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #16; §3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-017",
+        "requirement_ids": [
+          "ST-03-YC-009"
+        ],
+        "target_id": "ST-03-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trường tiểu sử chỉ xem",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Textarea tiểu sử bị vô hiệu hóa và cảnh báo rõ chỉ xem; tiểu sử không đi vào phần thân #14.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #17; §3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-018",
+        "requirement_ids": [
+          "ST-03-YC-018"
+        ],
+        "target_id": "ST-03-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Liên kết quay về hồ sơ dưới biểu mẫu",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Liên kết cuối biểu mẫu điều hướng /student/profile mà không đưa thông tin cá nhân (PII) vào URL.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #18; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-019",
+        "requirement_ids": [
+          "ST-03-YC-013",
+          "ST-03-YC-015",
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nút lưu thay đổi",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Nút chỉ bật khi có thay đổi hỗ trợ hợp lệ và không trong trạng thái chặn; lúc gửi biểu mẫu đổi nhãn sang “Đang lưu…”.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #19; §3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-020",
+        "requirement_ids": [
+          "ST-03-YC-015"
+        ],
+        "target_id": "ST-03-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Ghi chú trạng thái lưu và tải lại",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Ghi chú đổi sang “Đang tải lại hồ sơ đã lưu…” hoặc thông báo đã lưu/chờ xác nhận theo trạng thái; không phải thông tin chẩn đoán ánh xạ tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #20; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-021",
+        "requirement_ids": [
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-021",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thẻ bàn giao kỹ thuật trong Stitch",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Angular mẫu HTML không hiển thị thẻ bàn giao kỹ thuật; tuyến được hiển thị qua màn hình người dùng, không có thông tin chẩn đoán nhà phát triển.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #21; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-022",
+        "requirement_ids": [
+          "ST-03-YC-011",
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-022",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: thông tin chẩn đoán API #13 trong Stitch",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Angular mẫu HTML không hiển thị thông tin chẩn đoán multipart/CDN/Halted; #13 mã nguồn dùng JSON Data URL theo hợp đồng đang có.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #22; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-023",
+        "requirement_ids": [
+          "ST-03-YC-009",
+          "ST-03-YC-013"
+        ],
+        "target_id": "ST-03-EL-023",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: thông tin chẩn đoán API #14 trong Stitch",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Không hiển thị thông tin chẩn đoán API #14 của Stitch; ghi nhận tiểu sử vẫn chỉ xem và số điện thoại có giới hạn mã nguồn hiện tại.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #23; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-024",
+        "requirement_ids": [
+          "ST-03-YC-024",
+          "ST-03-YC-006"
+        ],
+        "target_id": "ST-03-EL-024",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thông báo chờ căn chỉnh DDL trong Stitch",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: Không coi đề xuất thay đổi cấu trúc cơ sở dữ liệu DDL trong Stitch là thay đổi cấu trúc cơ sở dữ liệu đã chạy; Angular mẫu HTML hiện không có thông báo này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #24; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-025",
+        "requirement_ids": [
+          "ST-03-YC-023",
+          "ST-03-YC-024"
+        ],
+        "target_id": "ST-03-EL-025",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: chân trang và nhãn WCAG trong Stitch",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: chân trang Angular hiện “Study2Work”; không có bản quyền/WCAG nhãn như Stitch; không kết luận đã đánh giá.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #25; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-026",
+        "requirement_ids": [
+          "ST-03-YC-020"
+        ],
+        "target_id": "ST-03-EL-026",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nhóm điều hướng chân trang",
+        "precondition": "Mở ST-03 với hồ sơ giả lập nếu cần; đối chiếu cấu trúc DOM và nội dung trong môi trường được duyệt.",
+        "data": "Hồ sơ kiểm thử giả lập; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "1. Mở màn / hoặc tạo trạng thái tương ứng.",
+          "2. Quan sát nhãn, trạng thái, thuộc tính và tuyến của thành phần."
+        ],
+        "expected": "Chờ xác nhận DD: chân trang hiện ba mục tĩnh; đích Điều khoản/riêng tư/trợ giúp chưa có, không tự coi là liên kết.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/01-ui-elements.md — marker #26; §3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-027",
+        "requirement_ids": [
+          "ST-03-YC-010"
+        ],
+        "target_id": "ST-03-EL-027",
+        "group": "Thành phần",
+        "title": "Kiểm tra bộ lọc của ô chọn ảnh",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Chờ xác nhận DD: DOM trường nhập type=file có accept=image/png,image/jpeg,image/webp; không có token/dữ liệu hồ sơ trong thuộc tính.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-028",
+        "requirement_ids": [
+          "ST-03-YC-010"
+        ],
+        "target_id": "ST-03-EL-028",
+        "group": "Thành phần",
+        "title": "Kiểm tra trạng thái nút Chọn ảnh",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Nút mở bộ chọn tệp khi hồ sơ đã tải và không bị khóa bởi thao tác khác; bị vô hiệu hóa khi đang tải, lưu hoặc tải lại hồ sơ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-029",
+        "requirement_ids": [
+          "ST-03-YC-011"
+        ],
+        "target_id": "ST-03-EL-029",
+        "group": "Thành phần",
+        "title": "Kiểm tra nút Tải ảnh lên theo trạng thái tệp",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Nút chỉ xuất hiện khi avatarUploadState=sẵn sàng; nhấn gọi uploadAvatar một lần.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-030",
+        "requirement_ids": [
+          "ST-03-YC-012"
+        ],
+        "target_id": "ST-03-EL-030",
+        "group": "Thành phần",
+        "title": "Kiểm tra thông báo tiến trình ảnh",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Thông báo dùng role=status; đang đọc/đang tải lên/đã tải lên có nội dung riêng và “đã tải lên” chưa đồng nghĩa hồ sơ đã lưu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-031",
+        "requirement_ids": [
+          "ST-03-YC-011"
+        ],
+        "target_id": "ST-03-EL-031",
+        "group": "Thành phần",
+        "title": "Kiểm tra cảnh báo lỗi ảnh",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Lỗi chọn/đọc/tải lên được đặt trong role=alert; không hiển thị trạng thái đã tải lên sau lỗi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-032",
+        "requirement_ids": [
+          "ST-03-YC-005"
+        ],
+        "target_id": "ST-03-EL-032",
+        "group": "Thành phần",
+        "title": "Kiểm tra trạng thái tải hồ sơ",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Khi #04 đang chờ, role=status hiện “Đang tải hồ sơ học viên…” và thao tác biểu mẫu bị khóa.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-033",
+        "requirement_ids": [
+          "ST-03-YC-005"
+        ],
+        "target_id": "ST-03-EL-033",
+        "group": "Thành phần",
+        "title": "Kiểm tra cảnh báo lỗi hồ sơ",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Khi GET lỗi, thông điệp nằm trong role=alert và có nút thử tải lại.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-034",
+        "requirement_ids": [
+          "ST-03-YC-005"
+        ],
+        "target_id": "ST-03-EL-034",
+        "group": "Thành phần",
+        "title": "Kiểm tra nút thử tải hồ sơ lại",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Nhấn gọi lại GET #04 đúng một lần; không gọi thao tác ghi #13/#14.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-035",
+        "requirement_ids": [
+          "ST-03-YC-015",
+          "ST-03-YC-016"
+        ],
+        "target_id": "ST-03-EL-035",
+        "group": "Thành phần",
+        "title": "Kiểm tra ghi chú trạng thái sau lưu",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Ghi chú phân biệt trạng thái đang tải lại, đã lưu chờ tải lại và hướng dẫn mặc định.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-036",
+        "requirement_ids": [
+          "ST-03-YC-016"
+        ],
+        "target_id": "ST-03-EL-036",
+        "group": "Thành phần",
+        "title": "Kiểm tra vùng cảnh báo lỗi lưu",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Khi #14 lỗi, saveError hiển thị trong role=alert và nút không tự gửi lại thao tác ghi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-037",
+        "requirement_ids": [
+          "ST-03-YC-015",
+          "ST-03-YC-016"
+        ],
+        "target_id": "ST-03-EL-037",
+        "group": "Thành phần",
+        "title": "Khóa các trường khi đang lưu hoặc chờ tải lại",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Trong đang lưu/refreshing/savedAwaitingRefresh, trường sửa và thao tác tải lên/lưu bị khóa theo điều kiện mẫu HTML.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-038",
+        "requirement_ids": [
+          "ST-03-YC-021"
+        ],
+        "target_id": "ST-03-EL-038",
+        "group": "Thành phần",
+        "title": "Kiểm tra nội dung quyền riêng tư",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Nội dung không hiển thị password hoặc thông tin đăng nhập; chỉ mô tả theo tài khoản đang đăng nhập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-039",
+        "requirement_ids": [
+          "ST-03-YC-020"
+        ],
+        "target_id": "ST-03-EL-039",
+        "group": "Thành phần",
+        "title": "Kiểm tra các mục cuối trang chưa có tuyến",
+        "precondition": "Trang đã khởi tạo đến trạng thái liên quan; dùng hồ sơ/tệp dữ liệu giả lập giả lập khi cần.",
+        "data": "Giá trị dữ liệu giả lập theo ca; không chứa tài khoản thật.",
+        "steps": [
+          "1. Mở trạng thái hoặc thao tác tương ứng.",
+          "2. Quan sát thuộc tính, thông báo hoặc yêu cầu."
+        ],
+        "expected": "Chờ xác nhận DD: Ba mục là span, không có href/routerLink hoặc đích điều hướng khi dùng chuột/bàn phím.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái/đang tải/tải lên/lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.html — mẫu HTML"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-040",
+        "requirement_ids": [
+          "ST-03-YC-006"
+        ],
+        "target_id": "ST-03-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra giới hạn họ tên 150 ký tự",
+        "precondition": "Hồ sơ đã tải; trường họ tên đang bật.",
+        "data": "150 ký tự thường, sau đó thử thêm ký tự thứ 151.",
+        "steps": [
+          "1. Nhập 150 ký tự.",
+          "2. Ghi nhận giá trị và trạng thái nút lưu.",
+          "3. Thử nhập ký tự thứ 151."
+        ],
+        "expected": "Giá trị tối đa giữ lại là 150 ký tự; giá trị 150 không vượt giới hạn phía máy chủ; không phát sinh yêu cầu trước khi gửi biểu mẫu.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-02"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-041",
+        "requirement_ids": [
+          "ST-03-YC-008"
+        ],
+        "target_id": "ST-03-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra giới hạn số điện thoại 20 ký tự",
+        "precondition": "Hồ sơ đã tải; trường số điện thoại đang bật.",
+        "data": "20 ký tự ASCII số; thử thêm ký tự thứ 21.",
+        "steps": [
+          "1. Nhập 20 ký tự.",
+          "2. Thử nhập ký tự thứ 21.",
+          "3. Gửi biểu mẫu khi có thay đổi hợp lệ và quan sát phần thân."
+        ],
+        "expected": "Tối đa 20 ký tự được giữ lại; ký tự thứ 21 không được giữ; phần thân #14 gửi giá trị số điện thoại đã loại khoảng trắng đầu/cuối hoặc null khi rỗng.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-TP-042",
+        "requirement_ids": [
+          "ST-03-YC-006"
+        ],
+        "target_id": "ST-03-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra trạng thái họ tên không thay đổi",
+        "precondition": "Hồ sơ đã tải; chưa sửa trường nào.",
+        "data": "Giữ nguyên full_name trả từ #04.",
+        "steps": [
+          "1. Mở biểu mẫu.",
+          "2. Không sửa trường hỗ trợ nào.",
+          "3. Quan sát nút lưu."
+        ],
+        "expected": "Nút “Lưu thay đổi” bị vô hiệu hóa khi không có thay đổi hỗ trợ; không gọi #14.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/03-data-flow.md — trạng thái chưa lưu",
+          "apps/study-client/src/app/features/student/ST03/pages/st03-page.ts — canSave"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST-03-TC-SK-001",
+        "requirement_ids": [
+          "ST-03-YC-003",
+          "ST-03-YC-004"
+        ],
+        "target_id": "ST03-EV-01",
+        "group": "Sự kiện",
+        "title": "Tải hồ sơ thành công",
+        "precondition": "Đã vào tuyến với phiên dữ liệu Student giả lập; #04 trả hồ sơ hợp lệ.",
+        "data": "Hồ sơ giả lập có full_name, email, phone và avatar_url.",
+        "steps": [
+          "1. Mở tuyến.",
+          "2. Chờ #04 trả 200.",
+          "3. So sánh trường với phản hồi."
+        ],
+        "expected": "Chờ xác nhận DD: hồ sơ được ánh xạ từ #04; trường tiểu sử không được tự tạo từ phản hồi.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-002",
+        "requirement_ids": [
+          "ST-03-YC-005"
+        ],
+        "target_id": "ST03-EV-01",
+        "group": "Sự kiện",
+        "title": "Lỗi đọc hồ sơ và thử lại",
+        "precondition": "#04 lần đầu lỗi, lần hai trả thành công.",
+        "data": "HTTP 500 sau đó HTTP 200, dữ liệu giả lập giả.",
+        "steps": [
+          "1. Mở tuyến.",
+          "2. Ghi nhận lỗi.",
+          "3. Bấm thử tải lại."
+        ],
+        "expected": "Lỗi hiển thị trong alert; thử lại gọi GET #04; không gọi API thao tác ghi.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-003",
+        "requirement_ids": [
+          "ST-03-YC-002"
+        ],
+        "target_id": "ST03-EV-01",
+        "group": "Sự kiện",
+        "title": "Yêu cầu API với vai trò không đủ quyền",
+        "precondition": "Dùng phản hồi hoặc token giả lập không có vai trò STUDENT; môi trường tích hợp/mô phỏng.",
+        "data": "Không dùng token thật.",
+        "steps": [
+          "1. Mở ST-03 bằng dữ liệu giả lập không đúng vai trò.",
+          "2. Ghi nhận phản hồi và trang."
+        ],
+        "expected": "Chờ xác nhận DD: API không trả hồ sơ Student; cách ứng dụng xử lý 401/403 cần theo hợp đồng xác thực đã duyệt.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-01 — tiền điều kiện/lỗi"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-004",
+        "requirement_ids": [
+          "ST-03-YC-006"
+        ],
+        "target_id": "ST03-EV-02",
+        "group": "Sự kiện",
+        "title": "Nhập họ tên hợp lệ và chờ lưu tường minh",
+        "precondition": "Hồ sơ đã tải; không có yêu cầu đang chạy.",
+        "data": "“  Nguyễn An  ”.",
+        "steps": [
+          "1. Nhập giá trị.",
+          "2. Kiểm tra phần thân chưa gửi khi chưa gửi biểu mẫu.",
+          "3. Bấm lưu ở ca sự kiện tương ứng."
+        ],
+        "expected": "Thay đổi cập nhật cục bộ trạng thái; giá trị gửi khi gửi biểu mẫu được loại khoảng trắng đầu/cuối; chỉ nhập không gọi #14.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-02"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-005",
+        "requirement_ids": [
+          "ST-03-YC-006"
+        ],
+        "target_id": "ST03-EV-02",
+        "group": "Sự kiện",
+        "title": "Từ chối họ tên rỗng sau loại khoảng trắng đầu/cuối",
+        "precondition": "Hồ sơ đã tải.",
+        "data": "Chuỗi rỗng và chuỗi chỉ gồm khoảng trắng.",
+        "steps": [
+          "1. Thay họ tên bằng khoảng trắng.",
+          "2. Gửi biểu mẫu."
+        ],
+        "expected": "Kiểm tra dữ liệu từ chối giá trị rỗng sau loại khoảng trắng đầu/cuối, thông báo được giữ trên biểu mẫu và #14 không được gọi.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-02"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-006",
+        "requirement_ids": [
+          "ST-03-YC-007"
+        ],
+        "target_id": "ST03-EV-03",
+        "group": "Sự kiện",
+        "title": "Không sửa được email",
+        "precondition": "Hồ sơ đã tải, email có giá trị từ #04.",
+        "data": "Email dữ liệu giả lập an@example.invalid.",
+        "steps": [
+          "1. Tiêu điểm trường email.",
+          "2. Thử nhập/xóa."
+        ],
+        "expected": "Giá trị email không thay đổi và thao tác không gọi #14.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-03"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-007",
+        "requirement_ids": [
+          "ST-03-YC-008",
+          "ST-03-YC-014"
+        ],
+        "target_id": "ST03-EV-04",
+        "group": "Sự kiện",
+        "title": "Lưu số điện thoại rỗng thành null",
+        "precondition": "Hồ sơ đã tải; tên hợp lệ; số điện thoại được sửa.",
+        "data": "Số điện thoại rỗng hoặc toàn khoảng trắng.",
+        "steps": [
+          "1. Xóa số điện thoại.",
+          "2. Gửi biểu mẫu khi có thay đổi hợp lệ.",
+          "3. Đọc phần thân #14."
+        ],
+        "expected": "Chờ xác nhận DD: phần thân có phone=null; không gửi chuỗi rỗng; tiểu sử không xuất hiện trong phần thân.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-008",
+        "requirement_ids": [
+          "ST-03-YC-008"
+        ],
+        "target_id": "ST03-EV-04",
+        "group": "Sự kiện",
+        "title": "Chặn số điện thoại vượt 20 ký tự",
+        "precondition": "Hồ sơ đã tải.",
+        "data": "21 ký tự số.",
+        "steps": [
+          "1. Nhập số điện thoại tới giới hạn.",
+          "2. Thử thêm ký tự vượt giới hạn.",
+          "3. Gửi biểu mẫu khi còn thay đổi hợp lệ."
+        ],
+        "expected": "Giá trị trường không vượt 20 ký tự; không có quy tắc định dạng số ngoài giới hạn được nêu.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-009",
+        "requirement_ids": [
+          "ST-03-YC-009"
+        ],
+        "target_id": "ST03-EV-04",
+        "group": "Sự kiện",
+        "title": "Tiểu sử không thể sửa hoặc lưu",
+        "precondition": "Hồ sơ đã tải; có thay đổi ở trường hỗ trợ.",
+        "data": "Thử nhập nội dung giả vào tiểu sử.",
+        "steps": [
+          "1. Tiêu điểm tiểu sử.",
+          "2. Thử nhập.",
+          "3. Gửi biểu mẫu thay đổi họ tên.",
+          "4. Đọc phần thân #14."
+        ],
+        "expected": "Chờ xác nhận DD: tiểu sử bị vô hiệu hóa; không nhận giá trị nhập; yêu cầu #14 không có tiểu sử. Việc bổ sung tiểu sử vào sản phẩm vẫn chờ quyết định.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-010",
+        "requirement_ids": [
+          "ST-03-YC-010"
+        ],
+        "target_id": "ST03-EV-05",
+        "group": "Sự kiện",
+        "title": "Chọn ảnh PNG/JPEG/WebP hợp lệ",
+        "precondition": "Hồ sơ đã tải; bộ chọn tệp hoạt động.",
+        "data": "Ba dữ liệu giả lập PNG/JPEG/WebP hợp lệ, mỗi tệp dưới 5 MiB.",
+        "steps": [
+          "1. Chọn từng dữ liệu giả lập.",
+          "2. Chờ đọc tệp.",
+          "3. Quan sát xem trước và yêu cầu."
+        ],
+        "expected": "Mỗi định dạng được đọc và xem trước; chưa gọi #13 trước khi bấm nút tải ảnh.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-011",
+        "requirement_ids": [
+          "ST-03-YC-010"
+        ],
+        "target_id": "ST03-EV-05",
+        "group": "Sự kiện",
+        "title": "Từ chối ảnh rỗng, MIME sai hoặc quá 5 MiB",
+        "precondition": "Hồ sơ đã tải; dữ liệu giả lập kiểm thử có thể chọn.",
+        "data": "0 byte; text/plain; ảnh >5 MiB.",
+        "steps": [
+          "1. Chọn từng tệp.",
+          "2. Ghi nhận lỗi và trạng thái tải lên."
+        ],
+        "expected": "Không tệp nào chuyển sang trạng thái sẵn sàng tải và không gọi #13.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-012",
+        "requirement_ids": [
+          "ST-03-YC-011"
+        ],
+        "target_id": "ST03-EV-05",
+        "group": "Sự kiện",
+        "title": "Phần thân #13 chỉ chứa Data URL dạng JSON",
+        "precondition": "Ảnh hợp lệ đã được chọn và đọc; nút tải đang hiện.",
+        "data": "Data URL giả lập, không dùng ảnh hoặc dữ liệu thật.",
+        "steps": [
+          "1. Bấm “Tải ảnh lên”.",
+          "2. Ghi yêu cầu phương thức, đường dẫn, kiểu nội dung và JSON phần thân."
+        ],
+        "expected": "Chờ xác nhận DD: Gửi POST /api/v1/users/me/avatar với phần thân JSON chỉ có image; không gửi multipart hoặc trường ngoài hợp đồng.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-013",
+        "requirement_ids": [
+          "ST-03-YC-011",
+          "ST-03-YC-012"
+        ],
+        "target_id": "ST03-EV-05",
+        "group": "Sự kiện",
+        "title": "Tải ảnh lên thành công",
+        "precondition": "API #13 dữ liệu giả lập trả 201 DESIGN_RESOURCE_CREATED.",
+        "data": "data.avatar_url=https://example.invalid/avatar.png.",
+        "steps": [
+          "1. Bấm tải ảnh.",
+          "2. Chờ phản hồi 201.",
+          "3. Quan sát trạng thái và xem trước."
+        ],
+        "expected": "URL trả về được giữ/hiển thị; thông báo nói ảnh đã tải nhưng chưa nói hồ sơ đã lưu; #14 chỉ chạy khi gửi biểu mẫu riêng.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05 — đầu ra"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-014",
+        "requirement_ids": [
+          "ST-03-YC-011"
+        ],
+        "target_id": "ST03-EV-05",
+        "group": "Sự kiện",
+        "title": "Tải ảnh lên gặp lỗi kiểm tra dữ liệu hoặc kho lưu trữ",
+        "precondition": "API #13 lần lượt trả 422 kiểm tra dữ liệu và 500 kho lưu trữ giả lập.",
+        "data": "Không dùng kho lưu trữ đối tượng thật.",
+        "steps": [
+          "1. Thử dữ liệu giả lập chữ ký sai.",
+          "2. Thử lỗi nhà cung cấp qua mô phỏng.",
+          "3. Quan sát thông báo và số lần yêu cầu."
+        ],
+        "expected": "Hiện lỗi tải lên; không báo thành công; không tự gửi lại #13.",
+        "api_ids": [
+          "#13"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-05 — lỗi/thử lại"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-015",
+        "requirement_ids": [
+          "ST-03-YC-013",
+          "ST-03-YC-014"
+        ],
+        "target_id": "ST03-EV-06",
+        "group": "Sự kiện",
+        "title": "Gửi phần thân #14 cho trường hỗ trợ",
+        "precondition": "Hồ sơ tải xong; có thay đổi hợp lệ.",
+        "data": "Full_name đã loại khoảng trắng đầu/cuối; phone string hoặc null; avatar_url string/null.",
+        "steps": [
+          "1. Thay đổi trường.",
+          "2. Gửi biểu mẫu.",
+          "3. Kiểm tra PUT #14."
+        ],
+        "expected": "Chờ xác nhận DD: phần thân có full_name, phone, avatar_url; không đưa tiểu sử vào phần thân; API phản hồi thành công chỉ được ghi khi 200 DESIGN_RESOURCE_UPDATED.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — yêu cầu/phản hồi"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-016",
+        "requirement_ids": [
+          "ST-03-YC-014"
+        ],
+        "target_id": "ST03-EV-06",
+        "group": "Sự kiện",
+        "title": "Từ chối tên rỗng hoặc trường vượt giới hạn",
+        "precondition": "Dùng mô phỏng/tích hợp cho API #14 validator.",
+        "data": "Full_name chỉ khoảng trắng hoặc số điện thoại >20; avatar_url có thể nhận null.",
+        "steps": [
+          "1. Gửi từng dữ liệu gửi qua kiểm thử bộ công cụ.",
+          "2. Ghi HTTP/mã nghiệp vụ."
+        ],
+        "expected": "Tên rỗng hoặc giá trị vượt giới hạn trả 422 theo hợp đồng; DB không được coi là đã cập nhật.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — lỗi kiểm tra dữ liệu"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-017",
+        "requirement_ids": [
+          "ST-03-YC-015"
+        ],
+        "target_id": "ST03-EV-06",
+        "group": "Sự kiện",
+        "title": "Tải lại hồ sơ bằng GET sau khi PUT thành công",
+        "precondition": "#14 và #04 mô phỏng đều trả thành công.",
+        "data": "Phản hồi #14 DESIGN_RESOURCE_UPDATED; #04 trả hồ sơ mới.",
+        "steps": [
+          "1. Gửi biểu mẫu thay đổi.",
+          "2. Ghi thứ tự yêu cầu.",
+          "3. Quan sát URL sau phản hồi."
+        ],
+        "expected": "Thứ tự PUT #14 rồi GET #04; sau GET thành công điều hướng /student/profile. Cần xác nhận chuỗi này là chuẩn nghiệp vụ.",
+        "api_ids": [
+          "#14",
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — trình tự"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-018",
+        "requirement_ids": [
+          "ST-03-YC-016"
+        ],
+        "target_id": "ST03-EV-06",
+        "group": "Sự kiện",
+        "title": "Lỗi tải lại không gửi lại thao tác ghi",
+        "precondition": "#14 thành công, #04 lỗi, thử lại #04 sau đó thành công.",
+        "data": "Đếm yêu cầu từng API.",
+        "steps": [
+          "1. Gửi biểu mẫu.",
+          "2. Cho #14 thành công và #04 thất bại.",
+          "3. Bấm thử tải lại hồ sơ."
+        ],
+        "expected": "Lần thử lại chỉ có GET #04; số lần PUT #14 vẫn là một; sau GET thành công tuyến tới ST-02.",
+        "api_ids": [
+          "#14",
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — tải lại/lỗi một phần"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-019",
+        "requirement_ids": [
+          "ST-03-YC-016"
+        ],
+        "target_id": "ST03-EV-06",
+        "group": "Sự kiện",
+        "title": "Lỗi thao tác ghi không tự được thử lại",
+        "precondition": "#14 mô phỏng trả 500.",
+        "data": "Một lần gửi biểu mẫu.",
+        "steps": [
+          "1. Thay đổi trường.",
+          "2. Gửi biểu mẫu.",
+          "3. Chờ lỗi và theo dõi yêu cầu thêm."
+        ],
+        "expected": "Có lỗi lưu; ứng dụng không tự gửi PUT #14 lần thứ hai và không hiển thị thông báo đã lưu.",
+        "api_ids": [
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-06 — không tự thử lại"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-020",
+        "requirement_ids": [
+          "ST-03-YC-015",
+          "ST-03-YC-017"
+        ],
+        "target_id": "ST03-EV-06",
+        "group": "Sự kiện",
+        "title": "Lưu lỗi sau tải lên giữ rõ trạng thái tác động phụ",
+        "precondition": "#13 thành công, #14 thất bại; kho lưu trữ được bản mô phỏng.",
+        "data": "Tải lên URL và lỗi PUT giả.",
+        "steps": [
+          "1. Tải ảnh lên.",
+          "2. Gửi biểu mẫu hồ sơ để PUT lỗi.",
+          "3. Quan sát giao diện và kho lưu trữ bản mô phỏng."
+        ],
+        "expected": "Chờ xác nhận DD: giao diện báo lưu thất bại; không giả định đối tượng đã xóa/hoàn tác. Chính sách dọn dẹp/ghi đè cần được người phụ trách chốt.",
+        "api_ids": [
+          "#13",
+          "#14"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/05-business-rules.md — §2, tính nhất quán giữa tải ảnh và cập nhật hồ sơ"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-021",
+        "requirement_ids": [
+          "ST-03-YC-018"
+        ],
+        "target_id": "ST03-EV-07",
+        "group": "Sự kiện",
+        "title": "Quay lại ST-02 bằng liên kết trong trang",
+        "precondition": "Trang đang ở /student/profile/edit.",
+        "data": "Không có thông tin cá nhân (PII) thật.",
+        "steps": [
+          "1. Bấm liên kết quay lại ở banner hoặc cuối biểu mẫu.",
+          "2. Quan sát tuyến."
+        ],
+        "expected": "Chờ xác nhận DD: tuyến chuyển tới /student/profile; URL không chứa tên/email/phone/ảnh đại diện URL.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-07"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-022",
+        "requirement_ids": [
+          "ST-03-YC-019"
+        ],
+        "target_id": "ST03-EV-08",
+        "group": "Sự kiện",
+        "title": "Đi tới tuyến đầu trang có khai báo",
+        "precondition": "Trang đã tải; router có các đích được nêu.",
+        "data": "/ ; /student/progress ; /student/discussions ; /student/notifications.",
+        "steps": [
+          "1. Bấm logo.",
+          "2. Quay lại ST-03 và bấm từng mục có tuyến."
+        ],
+        "expected": "Chờ xác nhận DD: Mỗi mục điều hướng đúng đường dẫn đã gắn trong mẫu HTML; không phát sinh thao tác ghi hồ sơ.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-08"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-023",
+        "requirement_ids": [
+          "ST-03-YC-019"
+        ],
+        "target_id": "ST03-EV-08",
+        "group": "Sự kiện",
+        "title": "Mục Khóa học của tôi không có hành vi tuyến",
+        "precondition": "Trang đã tải.",
+        "data": "Mục đầu trang “Khóa học của tôi”.",
+        "steps": [
+          "1. Thử tiêu điểm bằng bàn phím.",
+          "2. Thử nhấn.",
+          "3. Quan sát URL."
+        ],
+        "expected": "Chờ xác nhận DD: Mục được hiển thị aria-disabled và không điều hướng do ST-08 chưa có tuyến.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-08"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-03-TC-SK-024",
+        "requirement_ids": [
+          "ST-03-YC-020"
+        ],
+        "target_id": "ST03-EV-09",
+        "group": "Sự kiện",
+        "title": "Chân trang không tự điều hướng khi chưa có đích",
+        "precondition": "Trang đã tải; chân trang hiển thị.",
+        "data": "Điều khoản dịch vụ, Chính sách bảo mật, Trợ giúp.",
+        "steps": [
+          "1. Dùng chuột và bàn phím kiểm tra từng nhãn.",
+          "2. Quan sát URL và DOM."
+        ],
+        "expected": "Chờ xác nhận DD: Các mục là span tĩnh, không có href/routerLink; không tự gán đích liên kết hoặc gọi API.",
+        "api_ids": [
+          "#04"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-03-ChinhSuaHoSoAvatar/02-events.md — ST03-EV-09"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

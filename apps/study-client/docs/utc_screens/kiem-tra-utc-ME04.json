@@ -1,0 +1,26 @@
+{
+  "hop_le_ve_cau_truc": true,
+  "du_dieu_kien_phe_duyet": false,
+  "thong_tin": [
+    "32 yêu cầu, 60 thành phần, 21 sự kiện, 4 API",
+    "32 ca toàn màn hình, 60 ca thành phần, 21 ca sự kiện",
+    "Tổng ca: 113; yêu cầu được truy vết: 32/32"
+  ],
+  "loi": [],
+  "canh_bao": [
+    "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+  ],
+  "source_reference_audit": {
+    "source_ref_count": 26,
+    "hash_count": 26,
+    "all_refs_exist": true,
+    "all_hashes_match": true,
+    "missing_refs": [],
+    "hash_mismatches": []
+  },
+  "schema_audit": {
+    "schema": "utc-screen-skill/schema/utc-spec.schema.json",
+    "required_fields_checked": true,
+    "error_count": 0
+  }
+}

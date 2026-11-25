@@ -181,8 +181,9 @@ def object_sheet(s,items,cases,what):
         tc_name='CA KIỂM THỬ CHO TỪNG SỰ KIỆN'
     band(s,'A7:T7','Danh mục đối tượng theo tài liệu thiết kế')
     header(s,9,cols)
-    s.get_range('A10:I59').format.row_height=38;s.get_range('A10:I59').format.wrap_text=True
-    if len(items)>50: raise ValueError('Vượt 50 thành phần/sự kiện trong mẫu; cần mở rộng')
+    if len(items)>200: raise ValueError('Vượt 200 thành phần/sự kiện; cần mở rộng giới hạn workbook')
+    item_end=max(59,9+len(items))
+    s.get_range(f'A10:I{item_end}').format.row_height=38;s.get_range(f'A10:I{item_end}').format.wrap_text=True
     if items:
         rows=[]
         for it in items:
@@ -191,10 +192,13 @@ def object_sheet(s,items,cases,what):
             else:
                 rows.append([it.get('id',''),it.get('name',''),it.get('trigger',''),'; '.join(it.get('element_ids',[])), '; '.join(it.get('api_ids',[])),it.get('processing',''),it.get('design_status',''),it.get('source_ref','')])
         s.get_range_by_indexes(9,0,len(rows),len(cols)).values=rows
-    band(s,'A65:T65',tc_name)
-    merge(s,'A66:T66','Mỗi ca phải có dữ liệu cụ thể, bước lặp lại được, kỳ vọng kiểm chứng được và nguồn DD tương ứng.')
-    merge(s,'A67:T67','Nếu DD chưa chốt: đánh dấu “Chờ xác nhận”; không tự điền quyết định nghiệp vụ; không đánh dấu “Đạt”.')
-    case_table(s,71,270,cases)
+    case_title_row=max(65,item_end+6)
+    case_start=case_title_row+6
+    case_end=case_start+199
+    band(s,f'A{case_title_row}:T{case_title_row}',tc_name)
+    merge(s,f'A{case_title_row+1}:T{case_title_row+1}','Mỗi ca phải có dữ liệu cụ thể, bước lặp lại được, kỳ vọng kiểm chứng được và nguồn DD tương ứng.')
+    merge(s,f'A{case_title_row+2}:T{case_title_row+2}','Nếu DD chưa chốt: đánh dấu “Chờ xác nhận”; không tự điền quyết định nghiệp vụ; không đánh dấu “Đạt”.')
+    case_table(s,case_start,case_end,cases)
     s.freeze_panes.freeze_rows(9)
 
 def cover(s,spec):

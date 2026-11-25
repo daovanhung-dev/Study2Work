@@ -1,0 +1,53 @@
+{
+  "file": "apps/study-client/docs/utc_screens/UTC_GS-02_TimKiemKhoaHoc.xlsx",
+  "archive_valid": true,
+  "sheet_names": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "dimensions": [
+    "A1:W32",
+    "A1:W112",
+    "A1:W86",
+    "A1:W63"
+  ],
+  "counts": {
+    "requirements": 31,
+    "stitch_markers": 26,
+    "elements": 39,
+    "events": 24,
+    "apis": 2,
+    "blockers": 10,
+    "screen_cases": 31,
+    "component_cases": 39,
+    "event_cases": 32,
+    "total_cases": 102
+  },
+  "formula_count": 306,
+  "formula_per_case": true,
+  "dropdown_ranges": [
+    [
+      "O82:O112"
+    ],
+    [
+      "O48:O86"
+    ],
+    [
+      "O32:O63"
+    ]
+  ],
+  "all_cases_unrun": true,
+  "execution_fields_P_to_T_blank": true,
+  "all_ids_match_spec": true,
+  "source_hashes": {
+    "matched": 65,
+    "total": 65
+  },
+  "language": "Tiếng Việt; giữ nguyên định danh kỹ thuật, enum trạng thái và trích dẫn nguồn",
+  "runtime_preview_or_app_tests_run": false,
+  "approval_ready": false,
+  "issues": [],
+  "valid": true
+}

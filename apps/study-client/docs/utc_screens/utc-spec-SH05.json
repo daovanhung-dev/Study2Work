@@ -1,0 +1,2444 @@
+{
+  "metadata": {
+    "screen_id": "SH-05",
+    "screen_name": "Không đủ quyền / không thể xác thực",
+    "module": "Study Web — Phần dùng chung",
+    "route": "/forbidden",
+    "actor": "Người học Student gặp lỗi xác thực hoặc quyền; người mở trực tiếp thấy trạng thái trung tính",
+    "version": "1.0 — UTC chính thức theo DD hiện có; các ca chưa chạy",
+    "dd_version": "DD SH-05 hiện có; đối chiếu mã nguồn đến 2026-11-25",
+    "dd_status": "Người dùng xác nhận dùng toàn bộ DD đã cung cấp làm chuẩn, kể cả tài liệu có nhãn BLOCKED. DD SH-05 còn quyết định mở và có các đoạn bản ghi phiên bản mâu thuẫn về làm mới phiên, đường quay lại và nội dung phát hành.",
+    "runtime_status": "Mã nguồn có tuyến và luồng bàn giao một phần; mã nguồn kiểm thử đã được đọc nhưng không chạy trong lượt lập tài liệu này. Trình duyệt, API trực tiếp và bản triển khai chưa xác minh.",
+    "author": "Chưa ghi trong DD",
+    "reviewer": "Chưa ghi trong DD",
+    "approver": "Chưa ghi trong DD",
+    "date": "2026-11-25",
+    "source_name": "DD SH-05 và mã nguồn ứng dụng Study Web, Study Server",
+    "baseline_authorization": "Người dùng xác nhận toàn bộ DD hiện có là tài liệu chuẩn, kể cả DD có trạng thái BLOCKED. Giữ nguyên điểm chặn và sai khác; không tự xem quyết định nghiệp vụ chưa nêu là đã được chốt.",
+    "release_readiness": "Đã lập UTC chính thức để truy vết DD và mã nguồn; chưa thể ghi nhận nghiệm thu hay phê duyệt sản phẩm vì DD còn điểm chặn, khi chạy chưa xác minh và tất cả ca đều chưa chạy.",
+    "discrepancy_note": "DD có bản ghi phiên bản cũ nói API #04 trả 401 thì không làm mới phiên và không bàn giao returnTo; phần lớp gọi cập nhật và mã nguồn hiện tại có làm mới phiên R-X01 một lần, thử lại #04 một lần và truyền sh05ReturnTo. DD có đoạn nói 403 không có nút quay lại, nhưng HTML hiện hành luôn hiển thị “Quay lại”. Mã nguồn kiểm tra sơ bộ ký tự của đường dẫn nhưng chưa có danh sách đường dẫn cho phép. API #04 dùng cùng mã 401 cho danh tính không hợp lệ và không tìm thấy hồ sơ. Mẫu giao diện chứa dữ liệu mô phỏng, thông tin chẩn đoán và thẻ kỹ thuật không có trong giao diện Angular. Các điểm UX, đường dự phòng, tham số truy vấn nhạy cảm và hợp đồng SH-02/G-14 còn mở."
+  },
+  "overall": {
+    "objective": "Thông báo trạng thái xác thực hoặc quyền truy cập bằng nội dung an toàn; cho người dùng đường đi tiếp phù hợp khi có ngữ cảnh hợp lệ; hỗ trợ đối chiếu Trace ID thật khi có.",
+    "inputs": "Tuyến /forbidden nhận sh05Error và sh05ReturnTo trong trạng thái điều hướng trình duyệt sau khi StudentApiService xử lý API #04; trang cũng có đầu vào lỗi nội bộ để chuẩn hóa. Không lấy trạng thái lỗi từ chuỗi tham số truy vấn.",
+    "outputs": "Trạng thái trung tính khi thiếu ngữ cảnh hợp lệ; tiêu đề riêng cho 401/403, thông điệp an toàn; liên kết /login chỉ với bàn giao 401; liên kết Quay lại theo sh05ReturnTo; thẻ Trace ID khi có mã không mâu thuẫn và phản hồi sao chép.",
+    "main_flow": "ST-02/ST-03 gọi API #04. Theo mã nguồn hiện hành, 401 đầu tiên có thể gọi R-X01 một lần rồi thử lại API #04 một lần; 403 không làm mới phiên. Lỗi cuối hợp lệ được chuẩn hóa và chuyển tới /forbidden. SH05Page xác thực trạng thái, hiển thị nội dung an toàn và hành động hiện có.",
+    "preconditions": "Tuyến shared /forbidden đã đăng ký. API #04 là GET /api/v1/users/me; chỉ mã lỗi 401/DESIGN_AUTHENTICATION_REQUIRED hoặc 403/DESIGN_ACCESS_DENIED cùng thông điệp hợp lệ mới được chuẩn hóa thành ngữ cảnh SH-05. Chỉ đối chiếu bằng dữ liệu giả; không gọi API trực tiếp khi lập tài liệu.",
+    "states": [
+      "Trạng thái trung tính khi thiếu hoặc sai ngữ cảnh",
+      "401 — Không thể xác thực yêu cầu",
+      "403 — Bạn không có quyền truy cập",
+      "Có Trace ID hợp lệ",
+      "Không có Trace ID hoặc hai nguồn Trace ID mâu thuẫn",
+      "Sao chép Trace ID thành công",
+      "Sao chép Trace ID thất bại"
+    ],
+    "security": "Không hiển thị mã thông báo, dữ liệu hồ sơ, dấu vết ngăn xếp, SQL, lý do nội bộ hoặc dữ liệu tải tùy ý. Chỉ dùng thông điệp và mã lỗi được chuẩn hóa; không coi 401 là bằng chứng phiên đã hết hạn. Mã nguồn hiện không truyền mã thông báo trong URL; đường quay lại mới chỉ được lọc sơ bộ, chưa được giới hạn bằng danh sách đường dẫn cho phép đã duyệt.",
+    "out_of_scope": "Chốt nguyên nhân 401 khi thiếu hồ sơ; chính sách lưu phiên, xử lý kết quả làm mới phiên không rõ và cho phép thử lại; đường dự phòng/danh sách đường dẫn cho phép đường quay lại; nội dung phát hành cuối cùng; bộ phân tích và đích sau đăng nhập của SH-02/G-14; kết quả chạy trình duyệt, API trực tiếp, triển khai hoặc kiểm thử sản phẩm."
+  },
+  "apis": [
+    {
+      "id": "API-004",
+      "number": "04",
+      "method": "GET",
+      "path": "/api/v1/users/me",
+      "request": "Không có thân, tham số truy vấn hoặc tham số đường dẫn. Yêu cầu Bearer JWT truy cập; phía máy chủ yêu cầu vai trò STUDENT.",
+      "response": "HTTP 200 trả hồ sơ theo mô hình UserProfile. SH-05 không hiển thị hồ sơ. Lỗi 401 DESIGN_AUTHENTICATION_REQUIRED khi tiêu đề Authorization thiếu/sai hoặc danh tính không hợp lệ, hoặc không tìm thấy hồ sơ; 403 DESIGN_ACCESS_DENIED khi vai trò không đạt; 500 DESIGN_INTERNAL_ERROR khi xử lý dữ liệu lỗi. Cấu trúc phản hồi lỗi có success, businessCode, message, data, meta, traceId; phản hồi có thể có X-Trace-Id.",
+      "errors": "401, 403 và 500 theo mã lỗi nguồn; lỗi mạng hoặc cấu trúc phản hồi sai không được tự đổi thành 403. Phía ứng dụng chỉ chuyển lỗi 401/403 khi cặp HTTP status/businessCode khớp và thông điệp không rỗng.",
+      "auth": "Bearer JWT truy cập; phía máy chủ chỉ cho Student theo nguồn hiện tại.",
+      "design_status": "Đã xác nhận",
+      "event_ids": [
+        "SH-05-EV-001",
+        "SH-05-EV-002",
+        "SH-05-EV-003",
+        "SH-05-EV-008"
+      ],
+      "source_ref": "docs/lists/list_api.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/query.py; apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py"
+    },
+    {
+      "id": "R-X01",
+      "number": "R-X01 — ngoài danh mục API",
+      "method": "POST",
+      "path": "/api/v1/auth/refresh",
+      "request": "Mã nguồn hiện gọi với thân JSON {refresh_token}; mã thông báo là giá trị không thể suy ra nội dung, không đưa vào URL hoặc giao diện. Tuyến hiện không yêu cầu tiêu đề Authorization.",
+      "response": "Nguồn máy chủ hiện trả 200 với cặp mã thông báo mới và thông tin hồ sơ; mã làm mới phiên cũ bị thu hồi trong cùng giao dịch. 401 khi mã thông báo sai/hết hạn/đã dùng; 403 khi tài khoản không ACTIVE; 422 dữ liệu không hợp lệ; 500 lỗi nội bộ.",
+      "errors": "Đây là khả năng hiện có trong mã nguồn, không có mã API danh mục. Chính sách xử lý quá thời gian/kết quả xoay mã thông báo không rõ và lưu phiên vẫn là điểm chặn; không thử lại mù mã thông báo cũ.",
+      "auth": "Nguồn tuyến hiện không yêu cầu Bearer; mã làm mới phiên nằm trong JSON thân.",
+      "design_status": "Chờ xác nhận",
+      "event_ids": [
+        "SH-05-EV-003"
+      ],
+      "source_ref": "apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_03_auth_login/view.py; apps/study-server/app/modules/guest/api_03_auth_login/models.py; apps/study-server/app/modules/guest/api_03_auth_login/validate.py; apps/study-server/app/modules/guest/api_03_auth_login/query.py; apps/study-server/tests/modules/guest/api_03_auth_login/test_auth_login.py; apps/study-client/src/app/core/auth/student-session.service.ts"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SH-05-YC-001",
+      "description": "Tuyến /forbidden được đăng ký trong nhóm tuyến dùng chung.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/shared.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-002",
+      "description": "Chỉ bàn giao lỗi hợp lệ từ API #04 mới tạo trang 401/403; trang không gọi API #04 chỉ để tự dựng trạng thái.",
+      "group": "Luồng dữ liệu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-client/src/app/core/http/student-api.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-003",
+      "description": "Mã HTTP 401 chỉ được chuẩn hóa cùng DESIGN_AUTHENTICATION_REQUIRED; thông điệp phải là chuỗi không rỗng.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts; apps/study-client/src/app/core/auth/authorization-error.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-004",
+      "description": "Mã HTTP 403 chỉ được chuẩn hóa cùng DESIGN_ACCESS_DENIED; thông điệp phải là chuỗi không rỗng.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts; apps/study-client/src/app/core/auth/authorization-error.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-005",
+      "description": "Trạng thái 401 dùng lời nhắn trung tính, không khẳng định phiên đã hết hạn vì API #04 cũng dùng 401 khi không tìm thấy hồ sơ.",
+      "group": "Nội dung",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-006",
+      "description": "Trạng thái 403 không tiết lộ vai trò, bảng quyền truy cập hoặc lý do nội bộ.",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-007",
+      "description": "Trang chỉ hiển thị thông điệp đã chuẩn hóa; không hiển thị hồ sơ, mã thông báo, dấu vết ngăn xếp, SQL hay trường tùy ý.",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-008",
+      "description": "Tuyến trạng thái phải khớp đúng cặp kind/status và có thông điệp hợp lệ; sai trạng thái không được hiển thị như lỗi xác thực/quyền.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-009",
+      "description": "Mở trực tiếp tuyến không có trạng thái hợp lệ hiển thị thông báo trung tính, không gán nguyên nhân lỗi.",
+      "group": "Trạng thái rỗng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-010",
+      "description": "Trace ID chỉ lấy từ phản hồi thật; nếu thân và tiêu đề cùng có nhưng khác nhau thì không chọn tùy tiện một giá trị.",
+      "group": "Hỗ trợ",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-011",
+      "description": "Khi Trace ID thiếu hoặc mâu thuẫn, không hiển thị giá trị hay nút sao chép Trace ID.",
+      "group": "Hỗ trợ",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-012",
+      "description": "Theo mã nguồn hiện tại, HTTP 401 đầu tiên của đúng API #04 có thể gọi R-X01 một lần và thử lại GET #04 tối đa một lần.",
+      "group": "Phiên đăng nhập",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/src/app/core/http/student-api.service.spec.ts",
+      "notes": "Mã nguồn hiện thực; DD còn điểm chặn về nguyên nhân 401, lưu trữ và kết quả làm mới phiên không rõ."
+    },
+    {
+      "id": "SH-05-YC-013",
+      "description": "HTTP 403 từ API #04 không gọi R-X01 và không xóa phiên Student theo mã nguồn hiện tại.",
+      "group": "Phiên đăng nhập",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/http/student-api.service.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-014",
+      "description": "Nếu lần thử lại API #04 vẫn trả 401, dừng thử lại, kết thúc phiên cục bộ và chuyển lỗi hợp lệ tới SH-05.",
+      "group": "Phiên đăng nhập",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/src/app/core/http/student-api.service.spec.ts",
+      "notes": "Mã nguồn và kiểm thử mã nguồn thể hiện giới hạn một lần; sao chép/đích cuối cùng sau 401 vẫn là điểm chặn trong DD."
+    },
+    {
+      "id": "SH-05-YC-015",
+      "description": "Lỗi 5xx, mạng, cấu trúc phản hồi sai hoặc cặp status/businessCode không khớp không được giả thành 401/403 trên trang.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts; apps/study-client/src/app/core/http/student-api.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-016",
+      "description": "Liên kết Đăng nhập chỉ xuất hiện với bàn giao 401 đã được xác thực và đi tới /login; hiện không gắn returnTo.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-017",
+      "description": "Đường Quay lại phải là đường nội bộ an toàn theo chính sách đã duyệt; đường dự phòng cho tuyến trực tiếp hoặc không an toàn cần Product xác nhận.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+      "notes": "Mã nguồn hiện dùng kiểm tra ký tự và đường dự phòng /; chưa có danh sách đường dẫn cho phép hoặc quyết định đường dự phòng được duyệt."
+    },
+    {
+      "id": "SH-05-YC-018",
+      "description": "Nút sao chép chỉ sao chép Trace ID không mâu thuẫn; trạng thái thành công/thất bại được thông báo bằng vùng status.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-019",
+      "description": "Phản hồi clipboard thất bại vẫn để người dùng chọn mã thủ công và giữ nguyên trạng thái xác thực.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-020",
+      "description": "Các bộ chọn xem trước, dữ liệu chẩn đoán giả, JSON mẫu và thẻ kỹ thuật trong mẫu giao diện không được coi là giao diện khi chạy.",
+      "group": "Phạm vi giao diện",
+      "design_status": "Không áp dụng",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-021",
+      "description": "Liên kết và nút tương tác có tiêu điểm hiển thị; nút sao chép có kích thước tối thiểu 44×44 px theo mã nguồn hiện tại.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.css; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.css",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-022",
+      "description": "Bố cục Trace ID chuyển một cột ở màn hình rộng tối đa 479 px theo CSS; chưa được xác minh trực quan trên trình duyệt.",
+      "group": "Bố cục",
+      "design_status": "Chờ xác nhận",
+      "priority": "Thấp",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.css; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.css",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-023",
+      "description": "R-X01 là thao tác khi chạy ngoài danh mục API; không gộp định danh này với API #03 đăng nhập.",
+      "group": "Ranh giới API",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_03_auth_login/view.py; apps/study-client/src/app/core/auth/student-session.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-024",
+      "description": "Mọi ca kiểm thử ở gói này phải giữ trạng thái Chưa chạy cho đến khi có kết quả thực thi và bằng chứng.",
+      "group": "Trạng thái kiểm thử",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-025",
+      "description": "Nội dung và bố cục phát hành cuối cùng cần được Product/UX xác nhận do mẫu giao diện có nội dung kỹ thuật và cấu trúc khác trang Angular.",
+      "group": "Phê duyệt giao diện",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/07-test-cases.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-05-YC-026",
+      "description": "Khi cờ traceIdConflict là true, trang không được hiển thị Trace ID kể cả khi history.state chứa đồng thời một chuỗi traceId.",
+      "group": "Bảo mật và hỗ trợ",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+      "notes": "Bộ chuẩn hóa hiện đặt traceId=null khi nguồn mâu thuẫn; kiểm tra tuyến-trạng thái của trang chưa buộc traceId phải null khi cờ conflict=true."
+    }
+  ],
+  "elements": [
+    {
+      "id": "SH-05-EL-001",
+      "marker": "#1",
+      "source_element_id": "SH05-EL-01",
+      "name": "Thanh siêu dữ liệu bàn giao",
+      "type": "Chỉ có trong mẫu giao diện",
+      "position": "Dải trên cùng của ảnh mẫu",
+      "properties": "Ảnh ghi mã màn hình, tuyến và mô tả kỹ thuật API. Không có trong trang Angular; không đưa siêu dữ liệu kỹ thuật lên giao diện người dùng nếu chưa được duyệt.",
+      "event_ids": [
+        "SH-05-EV-008"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+    },
+    {
+      "id": "SH-05-EL-002",
+      "marker": "#2",
+      "source_element_id": "SH05-EL-02",
+      "name": "Nút xem trước HTTP 403",
+      "type": "Điều khiển chỉ có trong mẫu giao diện",
+      "position": "Bên trái thanh chọn trạng thái mẫu",
+      "properties": "Chỉ đổi dữ liệu cục bộ trong HTML thiết kế; không gọi API và không có trong Angular.",
+      "event_ids": [
+        "SH-05-EV-009"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+    },
+    {
+      "id": "SH-05-EL-003",
+      "marker": "#3",
+      "source_element_id": "SH05-EL-03",
+      "name": "Nút xem trước HTTP 401",
+      "type": "Điều khiển chỉ có trong mẫu giao diện",
+      "position": "Bên phải thanh chọn trạng thái mẫu",
+      "properties": "Chỉ đổi dữ liệu cục bộ trong HTML thiết kế; không gọi API và không có trong Angular.",
+      "event_ids": [
+        "SH-05-EV-009"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+    },
+    {
+      "id": "SH-05-EL-004",
+      "marker": "#4",
+      "source_element_id": "SH05-EL-04",
+      "name": "Tóm tắt trạng thái lỗi",
+      "type": "Khối trạng thái",
+      "position": "Đầu thẻ lỗi",
+      "properties": "Mã nguồn hiển thị trạng thái HTTP, tiêu đề riêng 401/403 và thông điệp đã chuẩn hóa. Không hiển thị điểm cuối hoặc lý do giả trong mẫu giao diện.",
+      "event_ids": [
+        "SH-05-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+    },
+    {
+      "id": "SH-05-EL-005",
+      "marker": "#5",
+      "source_element_id": "SH05-EL-05",
+      "name": "Thông báo ranh giới quyền API #04",
+      "type": "Thông báo kỹ thuật chỉ có trong mẫu giao diện",
+      "position": "Dưới phần mô tả trạng thái mẫu",
+      "properties": "Mẫu giao diện nêu vai trò nội bộ; không xuất hiện trong Angular và không được dùng để suy vai trò/quyền truy cập ở phía phía ứng dụng.",
+      "event_ids": [
+        "SH-05-EV-008"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+    },
+    {
+      "id": "SH-05-EL-006",
+      "marker": "#6",
+      "source_element_id": "SH05-EL-06",
+      "name": "Lưới chẩn đoán điều hướng",
+      "type": "Dữ liệu giả chỉ có trong mẫu giao diện",
+      "position": "Khối giữa cột trái của ảnh mẫu",
+      "properties": "Các lý do và chính sách hiển thị trong ảnh là giả lập, không có trong cấu trúc phản hồi API; không được coi là dữ liệu khi chạy.",
+      "event_ids": [
+        "SH-05-EV-008"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+    },
+    {
+      "id": "SH-05-EL-007",
+      "marker": "#7",
+      "source_element_id": "SH05-EL-07",
+      "name": "Vùng liên kết thao tác",
+      "type": "Nhóm liên kết",
+      "position": "Cuối thẻ lỗi",
+      "properties": "Angular hiện có liên kết Đăng nhập ở bàn giao 401 và liên kết Quay lại ở trạng thái có lỗi. Chính sách tuyến an toàn/đường dự phòng còn mở; nút làm mới phiên mẫu không có trong khi chạy.",
+      "event_ids": [
+        "SH-05-EV-004",
+        "SH-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts"
+    },
+    {
+      "id": "SH-05-EL-008",
+      "marker": "#8",
+      "source_element_id": "SH05-EL-08",
+      "name": "Nút sao chép mã hỗ trợ mẫu",
+      "type": "Nút chỉ có trong mẫu giao diện",
+      "position": "Cạnh nút quay lại trong ảnh mẫu",
+      "properties": "Ảnh dùng nhãn mã hỗ trợ nhưng không có trường mã hỗ trợ; Angular chỉ có một nút sao chép Trace ID.",
+      "event_ids": [
+        "SH-05-EV-009"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html"
+    },
+    {
+      "id": "SH-05-EL-009",
+      "marker": "#9",
+      "source_element_id": "SH05-EL-09",
+      "name": "Thẻ phản hồi HTTP và Trace ID mẫu",
+      "type": "Thẻ phản hồi chỉ có trong mẫu giao diện",
+      "position": "Cột phải phía trên ảnh mẫu",
+      "properties": "JSON, mốc thời gian, status và nhãn kỹ thuật trong ảnh là dữ liệu mô phỏng. Angular chỉ hiển thị Trace ID đã chuẩn hóa, không hiển thị phản hồi thô.",
+      "event_ids": [
+        "SH-05-EV-002",
+        "SH-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html"
+    },
+    {
+      "id": "SH-05-EL-010",
+      "marker": "#10",
+      "source_element_id": "SH05-EL-10",
+      "name": "Nút sao chép Trace ID",
+      "type": "Nút",
+      "position": "Trong thẻ Trace ID",
+      "properties": "Angular có một nút với nhãn Sao chép Trace ID, vùng bấm tối thiểu 44×44 px, tiêu điểm hiển thị và thông báo kết quả. Chỉ dùng mã thật không mâu thuẫn.",
+      "event_ids": [
+        "SH-05-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.css; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts"
+    },
+    {
+      "id": "SH-05-EL-011",
+      "marker": "#11",
+      "source_element_id": "SH05-EL-11",
+      "name": "Thẻ quy chuẩn bàn giao kỹ thuật",
+      "type": "Thẻ kỹ thuật chỉ có trong mẫu giao diện",
+      "position": "Cột phải phía dưới ảnh mẫu",
+      "properties": "Nội dung về làm mới phiên, phân vai và tiêu chuẩn là ghi chú bàn giao; không có trong trang Angular dành cho người dùng.",
+      "event_ids": [
+        "SH-05-EV-008"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+    },
+    {
+      "id": "SH-05-SRC-01",
+      "marker": "Mã nguồn 01",
+      "source_element_id": "SH05Page",
+      "name": "Khung trang và thẻ lỗi",
+      "type": "Khung giao diện",
+      "position": "Toàn trang, căn giữa theo CSS",
+      "properties": "Phần tử main có data-screen-id SH-05 và thẻ section liên kết tiêu đề bằng aria-labelledby; bố cục co giãn theo chiều rộng.",
+      "event_ids": [
+        "SH-05-EV-002",
+        "SH-05-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.css"
+    },
+    {
+      "id": "SH-05-SRC-02",
+      "marker": "Mã nguồn 02",
+      "source_element_id": "SH05Page",
+      "name": "Tiêu đề trạng thái xác thực",
+      "type": "Tiêu đề cấp 1",
+      "position": "Đầu thẻ lỗi",
+      "properties": "Với kind authentication-required/status 401, hiển thị “Không thể xác thực yêu cầu”; không khẳng định phiên hết hạn.",
+      "event_ids": [
+        "SH-05-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts"
+    },
+    {
+      "id": "SH-05-SRC-03",
+      "marker": "Mã nguồn 03",
+      "source_element_id": "SH05Page",
+      "name": "Tiêu đề trạng thái từ chối quyền",
+      "type": "Tiêu đề cấp 1",
+      "position": "Đầu thẻ lỗi",
+      "properties": "Với kind access-denied/status 403, hiển thị “Bạn không có quyền truy cập”.",
+      "event_ids": [
+        "SH-05-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+    },
+    {
+      "id": "SH-05-SRC-04",
+      "marker": "Mã nguồn 04",
+      "source_element_id": "SH05Page",
+      "name": "Thông điệp lỗi an toàn",
+      "type": "Vùng trạng thái",
+      "position": "Dưới tiêu đề",
+      "properties": "Hiển thị thông điệp đã được chuẩn hóa trong phần tử role=status; không in toàn bộ thân hoặc dữ liệu hồ sơ.",
+      "event_ids": [
+        "SH-05-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts"
+    },
+    {
+      "id": "SH-05-SRC-05",
+      "marker": "Mã nguồn 05",
+      "source_element_id": "SH05Page",
+      "name": "Liên kết Đăng nhập",
+      "type": "Liên kết điều hướng",
+      "position": "Trong thẻ lỗi, trước liên kết quay lại",
+      "properties": "Chỉ hiện khi trạng thái hợp lệ được bàn giao qua tuyến và kind là authentication-required; RouterLink đi tới /login, không gắn returnTo.",
+      "event_ids": [
+        "SH-05-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md"
+    },
+    {
+      "id": "SH-05-SRC-06",
+      "marker": "Mã nguồn 06",
+      "source_element_id": "SH05Page",
+      "name": "Liên kết Quay lại",
+      "type": "Liên kết điều hướng",
+      "position": "Cuối thẻ lỗi có trạng thái",
+      "properties": "Đích lấy từ sh05ReturnTo sau bộ lọc sơ bộ; đường dự phòng hiện là /. Không có danh sách đường dẫn cho phép tuyến được cấu hình trong nguồn đã đọc.",
+      "event_ids": [
+        "SH-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md"
+    },
+    {
+      "id": "SH-05-SRC-07",
+      "marker": "Mã nguồn 07",
+      "source_element_id": "SH05Page",
+      "name": "Trạng thái mở trực tiếp",
+      "type": "Trạng thái trung tính",
+      "position": "Thẻ lỗi khi không có trạng thái hợp lệ",
+      "properties": "Hiển thị tiêu đề “Không thể xác định trạng thái truy cập” và lời nhắc mở lại trang; không hiện liên kết đăng nhập hoặc Trace ID.",
+      "event_ids": [
+        "SH-05-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts"
+    },
+    {
+      "id": "SH-05-SRC-08",
+      "marker": "Mã nguồn 08",
+      "source_element_id": "SH05TraceCard",
+      "name": "Thẻ hiển thị Trace ID",
+      "type": "Thẻ hỗ trợ",
+      "position": "Cuối thẻ lỗi nếu có mã",
+      "properties": "Chỉ hiển thị khi trạng thái có traceId; hiển thị chuỗi mã và nút sao chép. Nếu thiếu hoặc xung đột, không truyền mã để dựng thẻ.",
+      "event_ids": [
+        "SH-05-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+    },
+    {
+      "id": "SH-05-SRC-09",
+      "marker": "Mã nguồn 09",
+      "source_element_id": "SH05TraceCard",
+      "name": "Bố cục thích ứng của thẻ Trace ID",
+      "type": "Quy tắc bố cục",
+      "position": "Thẻ Trace ID trên màn hình nhỏ",
+      "properties": "CSS chuyển các thành phần thành một cột ở chiều rộng tối đa 479 px; đây là bằng chứng tĩnh, chưa có xác minh hình ảnh khi chạy.",
+      "event_ids": [
+        "SH-05-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.css; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md"
+    }
+  ],
+  "events": [
+    {
+      "id": "SH-05-EV-001",
+      "source_event_id": "SH05-EV-01",
+      "name": "Nhận kết quả API #04 và xử lý 401/403",
+      "trigger": "ST-02 hoặc ST-03 nhận kết quả GET /users/me.",
+      "processing": "Chỉ với đúng API #04, 401 đầu tiên gọi R-X01 một lần rồi thử lại #04 một lần theo mã nguồn hiện hành. 403 không làm mới phiên. Lỗi cuối 401/403 chỉ chuyển trang khi cấu trúc phản hồi chuẩn hóa hợp lệ. 5xx/mạng không đổi thành lỗi quyền.",
+      "element_ids": [
+        "SH-05-EL-004",
+        "SH-05-EL-007",
+        "SH-05-SRC-01"
+      ],
+      "api_ids": [
+        "API-004",
+        "R-X01"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/http/student-api.service.spec.ts"
+    },
+    {
+      "id": "SH-05-EV-002",
+      "source_event_id": "SH05-EV-01",
+      "name": "Chuẩn hóa ngữ cảnh lỗi và dựng trạng thái trang",
+      "trigger": "Trang nhận trạng thái sh05Error qua history.state hoặc đầu vào lỗi nội bộ.",
+      "processing": "Chỉ chấp nhận cặp kind/status 401/authentication-required hoặc 403/access-denied, thông điệp không rỗng, traceId hợp lệ hoặc null và cờ conflict kiểu boolean. Nếu conflict=true thì traceId phải null; bộ kiểm tra tuyến-trạng thái hiện chưa ép điều kiện này. Trang hiển thị tiêu đề/thông điệp tương ứng; dữ liệu không khớp bị loại.",
+      "element_ids": [
+        "SH-05-EL-004",
+        "SH-05-EL-009",
+        "SH-05-SRC-01",
+        "SH-05-SRC-02",
+        "SH-05-SRC-03",
+        "SH-05-SRC-04",
+        "SH-05-SRC-08"
+      ],
+      "api_ids": [
+        "API-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts"
+    },
+    {
+      "id": "SH-05-EV-003",
+      "source_event_id": "SH05-EV-03",
+      "name": "Làm mới một lần và thử lại API #04",
+      "trigger": "Đúng API #04 trả HTTP 401 trước khi bàn giao tới SH-05.",
+      "processing": "StudentApiService gọi R-X01 qua StudentSessionService rồi gửi lại GET #04 tối đa một lần. Mã nguồn dùng chung lời gọi làm mới phiên đang chạy; thất bại kết thúc phiên cục bộ. Không áp dụng làm mới phiên khi phản hồi ban đầu là 403. Chính sách sản phẩm và kết quả không rõ vẫn là điểm chặn.",
+      "element_ids": [
+        "SH-05-EL-007"
+      ],
+      "api_ids": [
+        "API-004",
+        "R-X01"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/src/app/core/http/student-api.service.spec.ts; apps/study-server/app/modules/guest/api_03_auth_login/view.py"
+    },
+    {
+      "id": "SH-05-EV-004",
+      "source_event_id": "SH05-EV-04",
+      "name": "Chọn liên kết Đăng nhập",
+      "trigger": "Người dùng bấm Đăng nhập trên bàn giao 401 hợp lệ.",
+      "processing": "RouterLink chuyển đến /login. Trang hiện không truyền returnTo; diễn giải phản hồi đăng nhập thuộc luồng SH-02/G-14.",
+      "element_ids": [
+        "SH-05-EL-007",
+        "SH-05-SRC-05"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md"
+    },
+    {
+      "id": "SH-05-EV-005",
+      "source_event_id": "SH05-EV-05",
+      "name": "Chọn liên kết Quay lại",
+      "trigger": "Người dùng bấm Quay lại trên trạng thái lỗi hợp lệ.",
+      "processing": "RouterLink dùng sh05ReturnTo đã kiểm tra sơ bộ và mặc định /. Mã nguồn không chứng minh danh sách đường dẫn cho phép, loại bỏ tham số truy vấn nhạy cảm hay đường dự phòng đã được Product duyệt.",
+      "element_ids": [
+        "SH-05-EL-007",
+        "SH-05-SRC-06"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md"
+    },
+    {
+      "id": "SH-05-EV-006",
+      "source_event_id": "SH05-EV-06",
+      "name": "Sao chép Trace ID",
+      "trigger": "Người dùng bấm Sao chép Trace ID trong thẻ có mã.",
+      "processing": "Gọi Clipboard API đúng với traceId đang hiển thị; báo thành công hoặc hướng dẫn chọn mã thủ công qua role=status. Không đổi trạng thái xác thực.",
+      "element_ids": [
+        "SH-05-EL-010",
+        "SH-05-SRC-08"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html; apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts"
+    },
+    {
+      "id": "SH-05-EV-007",
+      "source_event_id": "SH05-EV-01",
+      "name": "Mở trực tiếp hoặc nhận trạng thái không hợp lệ",
+      "trigger": "Người dùng mở /forbidden khi không có trạng thái, hoặc thành phần nhận trạng thái không hợp lệ.",
+      "processing": "Thiếu hoặc trạng thái tuyến không hợp lệ dẫn tới thông báo trung tính. Theo mã nguồn hiện tại, đầu vào errorResponse nội bộ sai đặt cờ đã nhận đầu vào nhưng trạng thái rỗng, khiến nhánh giao diện không hiển thị; đây là sai khác cần xử lý, không phải hành vi được duyệt.",
+      "element_ids": [
+        "SH-05-SRC-01",
+        "SH-05-SRC-07"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html; apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts"
+    },
+    {
+      "id": "SH-05-EV-008",
+      "source_event_id": "SH05-EV-01",
+      "name": "Giữ lỗi dịch vụ ngoài trạng thái 401/403",
+      "trigger": "API trả 5xx, lỗi mạng, cấu trúc phản hồi sai hoặc status/businessCode không khớp.",
+      "processing": "Không dựng trang 401/403 từ phản hồi không chuẩn hóa; không hiển thị dữ liệu giả lập, lý do hoặc dữ liệu tải tùy ý. Lớp gọi hiện chỉ điều hướng khi bộ phân tích authorization trả trạng thái hợp lệ.",
+      "element_ids": [
+        "SH-05-EL-001",
+        "SH-05-EL-005",
+        "SH-05-EL-006",
+        "SH-05-EL-011",
+        "SH-05-SRC-01"
+      ],
+      "api_ids": [
+        "API-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts; apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md"
+    },
+    {
+      "id": "SH-05-EV-009",
+      "source_event_id": "SH05-EV-02 / SH05-EV-07",
+      "name": "Điều khiển xem trước trong HTML mẫu",
+      "trigger": "Người xem bấm nút đổi 401/403 hoặc nút làm mới phiên trong code.html.",
+      "processing": "Chỉ thay đổi mô phỏng cục bộ; không gửi API, không đổi phiên và không có trong Angular. Không dùng làm kết quả kiểm thử khi chạy.",
+      "element_ids": [
+        "SH-05-EL-002",
+        "SH-05-EL-003",
+        "SH-05-EL-008"
+      ],
+      "api_ids": [],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md; apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "SH05-B01",
+      "description": "DD nguồn ghi tuyến/lỗi-context bàn giao và xác thực manager còn là điểm chặn; mã nguồn hiện đã đăng ký /forbidden và nối bàn giao cho API #04, nhưng trạng thái khi chạy chưa xác minh.",
+      "impact": "Không đồng nhất giữa các bản ghi phiên bản DD; cần xác nhận phạm vi/sao chép và cách dùng tuyến trong bản phát hành.",
+      "decision": "Giữ bằng chứng mã nguồn là hiện trạng; không đổi trạng thái khi chạy hoặc yêu cầu phát hành đã duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+      "status": "Điểm chặn theo DD; mã nguồn đã nối một phần"
+    },
+    {
+      "id": "SH05-B02",
+      "description": "Chính sách phiên, lưu trữ, xử lý quá thời gian/kết quả xoay mã thông báo không rõ, phối hợp nhiều yêu cầu và hậu quả sau làm mới phiên vẫn được DD ghi là chưa chốt.",
+      "impact": "Không thể kết luận chính sách bảo mật/phiên đã được phê duyệt chỉ từ mã nguồn có R-X01.",
+      "decision": "Giữ nguyên gate; mô tả làm mới phiên/thử lại hiện tại như mã nguồn hiện tại, không tuyên bố đã chốt chính sách sản phẩm.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+      "status": "Điểm chặn chưa giải quyết"
+    },
+    {
+      "id": "SH05-B03",
+      "description": "Chưa có danh sách đường dẫn cho phép và tuyến đường dự phòng được Product duyệt cho mở trực tiếp hoặc khi đường trước không còn hợp lệ.",
+      "impact": "Đường Quay lại hiện dùng bộ lọc ký tự sơ bộ và mặc định /; tham số truy vấn nhạy cảm có thể còn nguyên.",
+      "decision": "Ghi đúng hành vi hiện tại và đánh dấu lựa chọn đích/đường dự phòng/tham số truy vấn nhạy cảm cần xác nhận.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+      "status": "Điểm chặn chưa giải quyết"
+    },
+    {
+      "id": "SH05-B04",
+      "description": "Không tìm thấy tài liệu BD/BRD hoặc bản chốt chính thức câu chữ 401/403 trong checkout được đọc.",
+      "impact": "Chưa thể coi nội dung hiển thị cuối cùng là sao chép sản phẩm đã duyệt.",
+      "decision": "Dùng đúng câu chữ trong mã nguồn như bằng chứng hiện hành; không gán tác giả hay người phê duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+      "status": "Không tìm thấy theo DD"
+    },
+    {
+      "id": "SH05-B05",
+      "description": "API #04 dùng cùng 401 cho danh tính không hợp lệ và hồ sơ Student không tồn tại; thiếu trường dữ liệu phân biệt nguyên nhân.",
+      "impact": "Không thể tự kết luận hết phiên hoặc chọn hành động khác nhau theo nguyên nhân.",
+      "decision": "Giữ lời nhắn trung tính; không suy luận nguyên nhân từ status đơn lẻ.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md",
+      "status": "Điểm chặn chưa giải quyết"
+    },
+    {
+      "id": "SH05-B06",
+      "description": "Chưa xác nhận thành phần mẫu giao diện nào thuộc giao diện người dùng cuối; ảnh có siêu dữ liệu, lý do, JSON mẫu, chính sách bàn giao và nút xem trước.",
+      "impact": "Bố cục/sao chép phát hành không thể được coi là đã phê duyệt chỉ từ mẫu giao diện.",
+      "decision": "Tách mốc mẫu giao diện khỏi thành phần Angular; yêu cầu xác nhận bố cục trước nghiệm thu giao diện.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+      "status": "Điểm chặn chưa giải quyết"
+    },
+    {
+      "id": "SH05-B07",
+      "description": "SH-02/G-14 còn khác biệt giữa danh mục API #03 và phản hồi thực thi; SH-05 không sở hữu bộ phân tích hay luồng hoàn tất đăng nhập.",
+      "impact": "Không thể xác minh luồng sau /login đến đích cuối hoặc return tuyến.",
+      "decision": "Chỉ ghi đích /login hiện có; không khẳng định bàn giao đăng nhập hoàn tất từ đầu đến cuối.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md",
+      "status": "Phụ thuộc chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "SH-05-TC-MH-001",
+        "requirement_ids": [
+          "SH-05-YC-001",
+          "SH-05-YC-002",
+          "SH-05-YC-003",
+          "SH-05-YC-005"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Bàn giao 401 cuối cùng mở trạng thái xác thực trung tính",
+        "precondition": "Đã đăng nhập Student; API #04 đã qua bước làm mới phiên/thử lại hiện có và trả 401 hợp lệ.",
+        "data": "Mã 401, DESIGN_AUTHENTICATION_REQUIRED, thông điệp không rỗng, traceId hợp lệ.",
+        "steps": [
+          "Mở luồng đọc hồ sơ Student.",
+          "Cho yêu cầu cuối cùng trả lỗi 401 hợp lệ.",
+          "Quan sát trang /forbidden."
+        ],
+        "expected": "Trang hiện tiêu đề “Không thể xác thực yêu cầu”, thông điệp thật và không nói phiên đã hết hạn; không hiển thị hồ sơ.",
+        "api_ids": [
+          "API-004",
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-002",
+        "requirement_ids": [
+          "SH-05-YC-001",
+          "SH-05-YC-002",
+          "SH-05-YC-004",
+          "SH-05-YC-006"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Bàn giao 403 hiển thị trạng thái từ chối quyền",
+        "precondition": "Đã đăng nhập Student; API #04 trả 403 với cấu trúc phản hồi đúng.",
+        "data": "403, DESIGN_ACCESS_DENIED, thông điệp an toàn; phiên đang hoạt động.",
+        "steps": [
+          "Gửi yêu cầu API #04.",
+          "Cho yêu cầu trả 403.",
+          "Quan sát trang và trạng thái phiên."
+        ],
+        "expected": "Trang hiện “Bạn không có quyền truy cập” và thông điệp; không gọi R-X01, không xóa phiên, không hiện vai trò hoặc lý do nội bộ.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-003",
+        "requirement_ids": [
+          "SH-05-YC-012",
+          "SH-05-YC-014"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "401 đầu tiên làm mới phiên và thử lại đúng một lần",
+        "precondition": "Phiên Student có mã làm mới phiên; yêu cầu đúng mô tả API API #04.",
+        "data": "Lần đầu GET #04 trả 401; R-X01 trả mã thông báo mới; GET thử lại trả 200.",
+        "steps": [
+          "Gửi GET #04.",
+          "Trả 401 lần đầu.",
+          "Xác nhận một POST R-X01 và mã thông báo mới.",
+          "Xác nhận một lần thử lại GET #04."
+        ],
+        "expected": "Theo mã nguồn hiện tại, có đúng một R-X01 và một lần thử lại #04; nếu trả 200 thì không mở SH-05. Chính sách lưu trữ/recovery vẫn cần xác nhận.",
+        "api_ids": [
+          "API-004",
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-004",
+        "requirement_ids": [
+          "SH-05-YC-012",
+          "SH-05-YC-014"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "401 ở lần thử lại kết thúc phiên và mở SH-05",
+        "precondition": "Phiên Student đang hoạt động; lần đầu #04 trả 401, R-X01 thành công.",
+        "data": "Lần thử lại #04 cũng trả 401 DESIGN_AUTHENTICATION_REQUIRED.",
+        "steps": [
+          "Thực hiện làm mới phiên một lần.",
+          "Cho lần thử lại #04 trả 401.",
+          "Kiểm tra phiên và số yêu cầu."
+        ],
+        "expected": "Phiên cục bộ kết thúc; không làm mới phiên lần nữa; lỗi hợp lệ được chuyển tới SH-05 với nội dung trung tính.",
+        "api_ids": [
+          "API-004",
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-005",
+        "requirement_ids": [
+          "SH-05-YC-012",
+          "SH-05-YC-013"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "403 ban đầu không gọi làm mới phiên",
+        "precondition": "Phiên Student hoạt động; yêu cầu API #04 đang chờ phản hồi.",
+        "data": "API #04 trả 403 DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Gửi GET #04.",
+          "Cho phản hồi là 403.",
+          "Theo dõi yêu cầu và phiên."
+        ],
+        "expected": "Không có POST R-X01; phiên còn hoạt động; trang nhận bàn giao 403 hợp lệ.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-006",
+        "requirement_ids": [
+          "SH-05-YC-012",
+          "SH-05-YC-014"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "R-X01 trả 401 thì không lặp mã thông báo cũ",
+        "precondition": "Phiên Student có mã làm mới phiên; API #04 vừa trả 401.",
+        "data": "R-X01 trả 401 DESIGN_AUTHENTICATION_REQUIRED.",
+        "steps": [
+          "Bắt đầu luồng 401.",
+          "Cho R-X01 trả 401.",
+          "Theo dõi phiên, điều hướng và số lần làm mới phiên."
+        ],
+        "expected": "Mã nguồn kết thúc phiên cục bộ; không gửi lại mã thông báo cũ; nếu cấu trúc phản hồi 401 hợp lệ thì bàn giao tới SH-05.",
+        "api_ids": [
+          "API-004",
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-server/app/modules/guest/api_03_auth_login/view.py",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-007",
+        "requirement_ids": [
+          "SH-05-YC-012",
+          "SH-05-YC-014"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "R-X01 trả 403 không bị đổi thành trạng thái 401",
+        "precondition": "Phiên Student có mã làm mới phiên; API #04 vừa trả 401.",
+        "data": "R-X01 trả 403 DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Bắt đầu luồng 401.",
+          "Cho R-X01 trả 403.",
+          "Quan sát trạng thái bàn giao cuối."
+        ],
+        "expected": "Không làm mới phiên lần nữa; nguồn hiện kết thúc phiên trong lỗi làm mới phiên và chuẩn hóa 403 đúng mã thành trạng thái từ chối quyền; chính sách/sao chép cuối còn cần xác nhận.",
+        "api_ids": [
+          "API-004",
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-server/app/modules/guest/api_03_auth_login/view.py",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-008",
+        "requirement_ids": [
+          "SH-05-YC-003",
+          "SH-05-YC-004",
+          "SH-05-YC-008",
+          "SH-05-YC-015"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Từ chối cặp HTTP status và businessCode không khớp",
+        "precondition": "Có thể cung cấp phản hồi HTTP giả trong môi trường kiểm thử.",
+        "data": "HTTP 401 kèm DESIGN_ACCESS_DENIED, hoặc HTTP 403 kèm DESIGN_AUTHENTICATION_REQUIRED.",
+        "steps": [
+          "Cung cấp từng cặp status/code sai.",
+          "Quan sát bộ chuẩn hóa và DOM."
+        ],
+        "expected": "Không tạo trạng thái 401/403 từ cặp không khớp; không hiển thị nội dung sai như lỗi quyền.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-009",
+        "requirement_ids": [
+          "SH-05-YC-002",
+          "SH-05-YC-015"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Lỗi máy chủ không mở SH-05",
+        "precondition": "Yêu cầu API #04 có thể trả lỗi HTTP.",
+        "data": "HTTP 500 DESIGN_INTERNAL_ERROR với thông điệp an toàn.",
+        "steps": [
+          "Gửi yêu cầu.",
+          "Cho phản hồi HTTP 500.",
+          "Quan sát điều hướng."
+        ],
+        "expected": "Lớp gọi không đổi lỗi 500 thành 401/403 và không điều hướng sang /forbidden bằng bàn giao authorization.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-010",
+        "requirement_ids": [
+          "SH-05-YC-002",
+          "SH-05-YC-015"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Lỗi mạng không bị trình bày như lỗi quyền",
+        "precondition": "Yêu cầu API #04 có thể bị ngắt mạng.",
+        "data": "Lỗi mạng không có status HTTP 401/403 hợp lệ.",
+        "steps": [
+          "Ngắt yêu cầu hoặc mô phỏng lỗi mạng.",
+          "Quan sát trạng thái và tuyến."
+        ],
+        "expected": "Không dựng tiêu đề 401/403 từ lỗi mạng; xử lý theo luồng lỗi dịch vụ chung bên ngoài SH-05.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-011",
+        "requirement_ids": [
+          "SH-05-YC-010",
+          "SH-05-YC-011"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Trace ID từ thân thật được hiển thị",
+        "precondition": "Có bàn giao 401/403 hợp lệ và traceId không xung đột.",
+        "data": "traceId: tr-a1; không có giá trị khác ở tiêu đề.",
+        "steps": [
+          "Mở trạng thái lỗi.",
+          "Đối chiếu chuỗi Trace ID hiển thị."
+        ],
+        "expected": "Thẻ chỉ hiển thị tr-a1; không tạo mốc thời gian hoặc mã chẩn đoán khác.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-012",
+        "requirement_ids": [
+          "SH-05-YC-010",
+          "SH-05-YC-011"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Dùng Trace ID tiêu đề khi thân không có mã",
+        "precondition": "Có bàn giao lỗi hợp lệ và phản hồi có X-Trace-Id.",
+        "data": "thân traceId vắng; X-Trace-Id là tr-h1a.",
+        "steps": [
+          "Chuẩn hóa phản hồi.",
+          "Mở trang và quan sát thẻ Trace ID."
+        ],
+        "expected": "Hiển thị tr-h1a; không tự thêm trường khác.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-013",
+        "requirement_ids": [
+          "SH-05-YC-010",
+          "SH-05-YC-011"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Ẩn Trace ID khi thân và tiêu đề mâu thuẫn",
+        "precondition": "Có bàn giao lỗi hợp lệ; cả hai nguồn Trace ID đều có.",
+        "data": "thân là trace-body; tiêu đề là trace-header.",
+        "steps": [
+          "Chuẩn hóa phản hồi.",
+          "Mở trang và tìm thẻ/nút sao chép."
+        ],
+        "expected": "Bộ chuẩn hóa đặt traceId null và cờ conflict; trang không hiển thị mã hoặc nút sao chép.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-014",
+        "requirement_ids": [
+          "SH-05-YC-009"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Mở trực tiếp tuyến khi không có trạng thái",
+        "precondition": "Mở /forbidden trực tiếp hoặc tải lại khi history không có trạng thái lỗi hợp lệ.",
+        "data": "Không có sh05Error hợp lệ.",
+        "steps": [
+          "Mở tuyến.",
+          "Quan sát tiêu đề, nội dung và hành động."
+        ],
+        "expected": "Hiển thị trạng thái trung tính; không tự gọi API #04, không hiện đăng nhập, Quay lại hoặc Trace ID.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-015",
+        "requirement_ids": [
+          "SH-05-YC-008",
+          "SH-05-YC-009"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Bỏ qua tuyến trạng thái sai cấu trúc",
+        "precondition": "Mở tuyến với history.state.sh05Error không hợp lệ.",
+        "data": "Ví dụ kind authentication-required nhưng status 403; thông điệp rỗng; hoặc traceId sai kiểu.",
+        "steps": [
+          "Nạp trạng thái lỗi từng trường hợp.",
+          "Quan sát nội dung trang."
+        ],
+        "expected": "Không hiển thị trạng thái 401/403 sai; đi vào trạng thái không có ngữ cảnh hợp lệ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-016",
+        "requirement_ids": [
+          "SH-05-YC-016"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Chỉ bàn giao 401 hợp lệ có liên kết Đăng nhập",
+        "precondition": "Trang đã nhận trạng thái tuyến hợp lệ qua bàn giao.",
+        "data": "Một trạng thái 401 và một trạng thái 403.",
+        "steps": [
+          "Mở từng trạng thái.",
+          "Kiểm tra liên kết điều hướng."
+        ],
+        "expected": "401 có RouterLink /login; 403 không có liên kết Đăng nhập; không có tham số truy vấn returnTo trên liên kết đăng nhập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-017",
+        "requirement_ids": [
+          "SH-05-YC-017"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Từ chối đích quay lại dạng bên ngoài hoặc bắt đầu bằng //",
+        "precondition": "Trang nhận trạng thái lỗi hợp lệ và returnTo không an toàn.",
+        "data": "sh05ReturnTo lần lượt là https://evil.example và //evil.example.",
+        "steps": [
+          "Mở trang với từng giá trị.",
+          "Kiểm tra href của Quay lại."
+        ],
+        "expected": "Bộ lọc hiện tại thay các giá trị này bằng /. Đây là kiểm tra mã nguồn, chưa xác nhận / là đường dự phòng sản phẩm được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-018",
+        "requirement_ids": [
+          "SH-05-YC-017"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra tham số truy vấn nhạy cảm trong đích quay lại",
+        "precondition": "Trang nhận trạng thái lỗi hợp lệ; nguồn điều hướng trước là URL nội bộ có tham số truy vấn.",
+        "data": "router.url dạng /student/profile?token=gia-tri-mau.",
+        "steps": [
+          "Gây bàn giao từ URL đã cho.",
+          "Kiểm tra sh05ReturnTo và href Quay lại."
+        ],
+        "expected": "DD yêu cầu loại tham số truy vấn có mã thông báo/PII; mã nguồn hiện chỉ kiểm tra tiền tố và một số ký tự, nên tham số truy vấn được giữ lại. Ghi nhận sai khác, không đánh dấu đạt chính sách an toàn.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-019",
+        "requirement_ids": [
+          "SH-05-YC-018",
+          "SH-05-YC-019"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Sao chép Trace ID thành công",
+        "precondition": "Thẻ Trace ID có traceId và Clipboard API dùng được.",
+        "data": "traceId là chuỗi giả lập tr-real-a1.",
+        "steps": [
+          "Bấm Sao chép Trace ID.",
+          "Chờ phản hồi giao diện."
+        ],
+        "expected": "Clipboard nhận đúng chuỗi đang hiển thị; vùng role=status báo “Đã sao chép Trace ID.”; trạng thái đăng nhập không đổi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-020",
+        "requirement_ids": [
+          "SH-05-YC-018",
+          "SH-05-YC-019"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Thông báo khi trình duyệt từ chối sao chép",
+        "precondition": "Thẻ Trace ID có traceId; Clipboard API bị từ chối hoặc không khả dụng.",
+        "data": "Lời gọi writeText bị reject hoặc clipboard thiếu writeText.",
+        "steps": [
+          "Bấm nút sao chép.",
+          "Quan sát thông báo và nội dung mã."
+        ],
+        "expected": "Vùng role=status hướng dẫn chọn mã để sao chép thủ công; Trace ID còn chọn được; trạng thái đăng nhập giữ nguyên.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-021",
+        "requirement_ids": [
+          "SH-05-YC-008",
+          "SH-05-YC-009"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Đầu vào lỗi nội bộ sai không để trang trống",
+        "precondition": "Thành phần được tạo và nhận errorResponse không chuẩn hóa qua đầu vào.",
+        "data": "HTTP 401 nhưng businessCode là DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Truyền đầu vào lỗi sai cặp status/code.",
+          "Quan sát DOM sau khi xử lý."
+        ],
+        "expected": "DD yêu cầu không trình bày lỗi sai như trạng thái xác thực; mã nguồn hiện bật errorInputReceived nhưng trạng thái null nên nhánh trung tính cũng bị ẩn. Đây là sai khác cần sửa/xác nhận, không phải kết quả đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-022",
+        "requirement_ids": [
+          "SH-05-YC-022"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu bố cục trên màn hình hẹp",
+        "precondition": "Có môi trường trình duyệt với khung nhìn hẹp.",
+        "data": "Chiều rộng 479 px và một khung nhìn rộng hơn.",
+        "steps": [
+          "Mở trạng thái có Trace ID.",
+          "Đổi khung nhìn xuống 479 px.",
+          "Quan sát cách xếp nội dung và khả năng cuộn."
+        ],
+        "expected": "CSS khai báo một cột ở mức 479 px; kết quả trực quan khi chạy chưa được xác minh, không đánh dấu đạt chỉ từ khai báo CSS.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.css",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.css",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-023",
+        "requirement_ids": [
+          "SH-05-YC-020",
+          "SH-05-YC-025"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu nội dung khi chạy với mốc mẫu giao diện",
+        "precondition": "Có tuyến Angular chạy và ảnh đã đánh số làm tài liệu đối chiếu.",
+        "data": "siêu dữ liệu bar, bộ chọn 401/403, chẩn đoán, JSON thô và chính sách thẻ trong ảnh là nội dung mẫu.",
+        "steps": [
+          "Mở trang Angular với trạng thái 403.",
+          "Tìm các phần kỹ thuật/mô phỏng của ảnh.",
+          "Đối chiếu các phần tử đang hiển thị."
+        ],
+        "expected": "Không coi bộ chọn, lý do giả, JSON thô hoặc thẻ chính sách mẫu là chức năng khi chạy; bố cục cuối vẫn chờ UX/Product xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-024",
+        "requirement_ids": [
+          "SH-05-YC-024",
+          "SH-05-YC-025"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Giữ trạng thái thực thi chưa chạy cho toàn bộ ca",
+        "precondition": "Đang lập và đóng gói UTC; chưa chạy kiểm thử sản phẩm hoặc kiểm thử trình duyệt.",
+        "data": "Toàn bộ ca trong utc-spec-SH05.json và các cột thực thi của workbook.",
+        "steps": [
+          "Đối chiếu số ca giữa JSON và workbook.",
+          "Kiểm tra trạng thái thực thi và các ô kết quả/bằng chứng/người/ngày."
+        ],
+        "expected": "Mọi ca giữ Chưa chạy; kết quả, bằng chứng, người kiểm thử và ngày kiểm thử để trống. Không ghi đạt khi chưa có lần chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-MH-025",
+        "requirement_ids": [
+          "SH-05-YC-010",
+          "SH-05-YC-011",
+          "SH-05-YC-026"
+        ],
+        "target_id": "SH-05",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị Trace ID khi cờ mâu thuẫn được bật",
+        "precondition": "History.state.sh05Error có cấu trúc đúng và traceIdConflict=true.",
+        "data": "Truyền đồng thời traceId là tr-a1 và traceIdConflict là true.",
+        "steps": [
+          "Mở trang bằng trạng thái điều hướng đã cho.",
+          "Quan sát thẻ Trace ID và nút sao chép."
+        ],
+        "expected": "DD yêu cầu không hiển thị mã khi nguồn mâu thuẫn; bộ chuẩn hóa phản hồi chuẩn đặt traceId=null, nhưng hàm kiểm tra tuyến-trạng thái hiện vẫn chấp nhận chuỗi traceId cùng cờ conflict=true. Ghi nhận sai khác, không đánh dấu đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "SH-05-TC-TP-001",
+        "requirement_ids": [
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EL-001",
+        "group": "Thành phần",
+        "title": "Thanh siêu dữ liệu mẫu không xuất hiện trong trang người dùng",
+        "precondition": "Mở một trạng thái 401 hoặc 403 hợp lệ.",
+        "data": "Ảnh mẫu có màn hình ID, tuyến và mô tả API.",
+        "steps": [
+          "Quan sát đầu trang Angular."
+        ],
+        "expected": "Trang không hiển thị thanh siêu dữ liệu bàn giao của mẫu giao diện.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-TP-002",
+        "requirement_ids": [
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EL-002",
+        "group": "Thành phần",
+        "title": "Nút xem trước 403 không có trong Angular",
+        "precondition": "Mở trang Angular.",
+        "data": "Ảnh mốc #2.",
+        "steps": [
+          "Tìm nút chọn xem trước HTTP 403."
+        ],
+        "expected": "Không có nút đổi chế độ 403; mẫu giao diện không được xem là chức năng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-TP-003",
+        "requirement_ids": [
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EL-003",
+        "group": "Thành phần",
+        "title": "Nút xem trước 401 không có trong Angular",
+        "precondition": "Mở trang Angular.",
+        "data": "Ảnh mốc #3.",
+        "steps": [
+          "Tìm nút chọn xem trước HTTP 401."
+        ],
+        "expected": "Không có nút đổi chế độ 401; mẫu giao diện không được xem là chức năng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-TP-004",
+        "requirement_ids": [
+          "SH-05-YC-003",
+          "SH-05-YC-004",
+          "SH-05-YC-005"
+        ],
+        "target_id": "SH-05-EL-004",
+        "group": "Thành phần",
+        "title": "Tóm tắt lỗi dùng đúng trạng thái đã chuẩn hóa",
+        "precondition": "Mở trạng thái 401 hợp lệ rồi trạng thái 403 hợp lệ.",
+        "data": "Hai trạng thái có status, kind, thông điệp hợp lệ.",
+        "steps": [
+          "Quan sát mã HTTP và tiêu đề ở mỗi trạng thái."
+        ],
+        "expected": "401 hiển thị tiêu đề xác thực; 403 hiển thị tiêu đề từ chối quyền; không hiển thị lý do hoặc điểm cuối giả lập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-005",
+        "requirement_ids": [
+          "SH-05-YC-006",
+          "SH-05-YC-007",
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EL-005",
+        "group": "Thành phần",
+        "title": "Thông báo ranh giới quyền nội bộ không xuất hiện",
+        "precondition": "Mở trạng thái 403.",
+        "data": "Ảnh mốc #5 có nội dung Student/Mentor/Admin.",
+        "steps": [
+          "Tìm thông báo vai trò chi tiết trong DOM hiển thị."
+        ],
+        "expected": "Không hiển thị bảng vai trò hoặc khẳng định về vai trò không có trong phản hồi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-TP-006",
+        "requirement_ids": [
+          "SH-05-YC-007",
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EL-006",
+        "group": "Thành phần",
+        "title": "Lưới lý do và chiến lược giả không xuất hiện",
+        "precondition": "Mở trạng thái 401 và 403.",
+        "data": "mẫu giao diện chứa lý do, recovery strategy, làm mới phiên constraint và chính sách.",
+        "steps": [
+          "Đối chiếu các ô chẩn đoán với trang hiện hành."
+        ],
+        "expected": "Không có lưới chẩn đoán hoặc lý do mô phỏng trên trang Angular.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-TP-007",
+        "requirement_ids": [
+          "SH-05-YC-016",
+          "SH-05-YC-017"
+        ],
+        "target_id": "SH-05-EL-007",
+        "group": "Thành phần",
+        "title": "Vùng hành động khớp trạng thái và ghi rõ hạn chế quay lại",
+        "precondition": "Mở bàn giao 401 rồi 403 hợp lệ.",
+        "data": "401/403 có cùng tuyến data; sh05ReturnTo là đường nội bộ thử nghiệm.",
+        "steps": [
+          "Kiểm tra liên kết trong hai trạng thái."
+        ],
+        "expected": "401 có /login và Quay lại; 403 có Quay lại theo mã nguồn. Ghi riêng rằng danh sách đường dẫn cho phép/đường dự phòng chưa được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-008",
+        "requirement_ids": [
+          "SH-05-YC-018",
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EL-008",
+        "group": "Thành phần",
+        "title": "Nút mã hỗ trợ giả không xuất hiện",
+        "precondition": "Mở trạng thái có Trace ID.",
+        "data": "Ảnh mốc #8 có nhãn mã phiên hỗ trợ.",
+        "steps": [
+          "Đếm các nút sao chép trong trang và kiểm tra nhãn."
+        ],
+        "expected": "Angular có một nút Sao chép Trace ID; không có trường mã hỗ trợ riêng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-TP-009",
+        "requirement_ids": [
+          "SH-05-YC-007",
+          "SH-05-YC-010",
+          "SH-05-YC-011",
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EL-009",
+        "group": "Thành phần",
+        "title": "Không hiển thị JSON phản hồi thô trong thẻ Trace ID",
+        "precondition": "Mở trạng thái lỗi có traceId thật.",
+        "data": "cấu trúc phản hồi chứa các trường dữ liệu giả lập dùng trong mẫu giao diện.",
+        "steps": [
+          "Quan sát toàn bộ thẻ Trace ID.",
+          "Tìm mốc thời gian, JSON thô, ngăn xếp, hồ sơ và lý do."
+        ],
+        "expected": "Chỉ có nhãn và Trace ID; không hiển thị tải dữ liệu thô, mốc thời gian mẫu hay dữ liệu nhạy cảm.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-010",
+        "requirement_ids": [
+          "SH-05-YC-018",
+          "SH-05-YC-021"
+        ],
+        "target_id": "SH-05-EL-010",
+        "group": "Thành phần",
+        "title": "Nút sao chép Trace ID có kích thước và nhãn đúng",
+        "precondition": "Mở trạng thái có traceId.",
+        "data": "Nút trong thẻ Trace ID hiện hành.",
+        "steps": [
+          "Kiểm tra nhãn truy cập và kích thước CSS tối thiểu."
+        ],
+        "expected": "Nhãn là Sao chép Trace ID; min-width/min-height CSS là 44 px; focus-visible có viền.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.css",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-011",
+        "requirement_ids": [
+          "SH-05-YC-006",
+          "SH-05-YC-020",
+          "SH-05-YC-025"
+        ],
+        "target_id": "SH-05-EL-011",
+        "group": "Thành phần",
+        "title": "Thẻ bàn giao kỹ thuật không xuất hiện trên trang người dùng",
+        "precondition": "Mở trạng thái 403.",
+        "data": "Ảnh mẫu có thẻ làm mới phiên, vai trò segregation và accessibility.",
+        "steps": [
+          "Tìm thẻ quy chuẩn bàn giao trong DOM."
+        ],
+        "expected": "Không hiển thị ghi chú kỹ thuật mẫu; nội dung phát hành tương lai vẫn cần UX/Product xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-TP-012",
+        "requirement_ids": [
+          "SH-05-YC-001",
+          "SH-05-YC-002",
+          "SH-05-YC-009"
+        ],
+        "target_id": "SH-05-SRC-01",
+        "group": "Thành phần",
+        "title": "Khung trang có định danh SH-05 và liên kết tiêu đề",
+        "precondition": "Mở trạng thái hợp lệ hoặc trạng thái trung tính.",
+        "data": "Phần tử main và section của SH05Page.",
+        "steps": [
+          "Kiểm tra data-screen-id và quan hệ aria-labelledby."
+        ],
+        "expected": "<main> có data-screen-id SH-05; <section> liên kết với <h1> qua sh05-title.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.css"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-013",
+        "requirement_ids": [
+          "SH-05-YC-003",
+          "SH-05-YC-005"
+        ],
+        "target_id": "SH-05-SRC-02",
+        "group": "Thành phần",
+        "title": "Tiêu đề 401 không khẳng định phiên đã hết hạn",
+        "precondition": "Mở trạng thái authentication-required/401.",
+        "data": "thông điệp hợp lệ.",
+        "steps": [
+          "Quan sát h1 và nội dung trang."
+        ],
+        "expected": "H1 là “Không thể xác thực yêu cầu”; trang không tự nói phiên hết hạn.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-014",
+        "requirement_ids": [
+          "SH-05-YC-004",
+          "SH-05-YC-006"
+        ],
+        "target_id": "SH-05-SRC-03",
+        "group": "Thành phần",
+        "title": "Tiêu đề 403 không làm lộ vai trò nội bộ",
+        "precondition": "Mở trạng thái access-denied/403.",
+        "data": "thông điệp API an toàn.",
+        "steps": [
+          "Quan sát h1 và phần mô tả."
+        ],
+        "expected": "H1 là “Bạn không có quyền truy cập”; không hiển thị chi tiết vai trò.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-015",
+        "requirement_ids": [
+          "SH-05-YC-003",
+          "SH-05-YC-004",
+          "SH-05-YC-007",
+          "SH-05-YC-015"
+        ],
+        "target_id": "SH-05-SRC-04",
+        "group": "Thành phần",
+        "title": "Thông điệp nằm trong vùng trạng thái và được lọc trước khi hiển thị",
+        "precondition": "Mở 401/403 hợp lệ rồi cung cấp cấu trúc phản hồi chứa trường thừa.",
+        "data": "cấu trúc phản hồi có thông điệp; data/stack/reason chứa chuỗi nhạy cảm giả.",
+        "steps": [
+          "Kiểm tra vùng role=status.",
+          "Tìm chuỗi nhạy cảm giả trong DOM."
+        ],
+        "expected": "Chỉ thông điệp đã chuẩn hóa được hiển thị; hồ sơ/ngăn xếp/lý do không được đưa sang trạng thái trình bày.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-016",
+        "requirement_ids": [
+          "SH-05-YC-016"
+        ],
+        "target_id": "SH-05-SRC-05",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng nhập chỉ xuất hiện cho 401 bàn giao",
+        "precondition": "Mở trạng thái hợp lệ qua history.state với status 401 và 403.",
+        "data": "Đường /login hiện hành.",
+        "steps": [
+          "Quan sát liên kết ở cả hai trạng thái.",
+          "Kiểm tra routerLink."
+        ],
+        "expected": "401 bàn giao có một liên kết /login; 403 không có liên kết đăng nhập; liên kết không kèm returnTo.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-017",
+        "requirement_ids": [
+          "SH-05-YC-017"
+        ],
+        "target_id": "SH-05-SRC-06",
+        "group": "Thành phần",
+        "title": "Liên kết Quay lại không được coi là danh sách đường dẫn cho phép đã duyệt",
+        "precondition": "Mở trạng thái lỗi với sh05ReturnTo thường và giá trị không hợp lệ.",
+        "data": "Đích gồm /student/home, //evil.example và /student/profile?token=gia-tri-mau.",
+        "steps": [
+          "Kiểm tra giá trị đầu vào và href được tạo.",
+          "So sánh với yêu cầu tuyến danh sách đường dẫn cho phép."
+        ],
+        "expected": "Mã nguồn thay bắt đầu bằng // bằng / nhưng giữ đường nội bộ có tham số truy vấn; ghi nhận thiếu danh sách đường dẫn cho phép và lọc tham số truy vấn, không đánh dấu chính sách an toàn là đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-018",
+        "requirement_ids": [
+          "SH-05-YC-008",
+          "SH-05-YC-009"
+        ],
+        "target_id": "SH-05-SRC-07",
+        "group": "Thành phần",
+        "title": "Trạng thái mở trực tiếp không bịa lỗi hoặc hành động",
+        "precondition": "Mở /forbidden khi thiếu history.state.sh05Error hợp lệ.",
+        "data": "Không có context hoặc context sai cặp.",
+        "steps": [
+          "Quan sát tiêu đề, thông điệp và liên kết."
+        ],
+        "expected": "Hiện trạng thái “Không thể xác định trạng thái truy cập” cùng hướng dẫn mở lại; không có đăng nhập, quay lại hoặc thẻ Trace ID.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-019",
+        "requirement_ids": [
+          "SH-05-YC-010",
+          "SH-05-YC-011",
+          "SH-05-YC-018",
+          "SH-05-YC-019"
+        ],
+        "target_id": "SH-05-SRC-08",
+        "group": "Thành phần",
+        "title": "Thẻ Trace ID chỉ có mã không mâu thuẫn và hỗ trợ sao chép",
+        "precondition": "Mở trạng thái lần lượt có trace ID, thiếu trace ID và conflict.",
+        "data": "Trace ID trong thân/tiêu đề giống nhau; thiếu; rồi khác nhau.",
+        "steps": [
+          "Kiểm tra thẻ và nút ở từng trạng thái.",
+          "Thử sao chép khi có mã."
+        ],
+        "expected": "Thẻ chỉ hiện với mã hợp lệ; thiếu hoặc xung đột thì ẩn; thao tác sao chép dùng chuỗi đang hiển thị.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-TP-020",
+        "requirement_ids": [
+          "SH-05-YC-022"
+        ],
+        "target_id": "SH-05-SRC-09",
+        "group": "Thành phần",
+        "title": "Thẻ Trace ID xếp một cột theo điểm ngắt CSS",
+        "precondition": "Mở trang có Trace ID trong trình duyệt.",
+        "data": "khung nhìn rộng 479 px hoặc nhỏ hơn.",
+        "steps": [
+          "Đổi chiều rộng cửa sổ.",
+          "Quan sát vị trí nút và chuỗi mã."
+        ],
+        "expected": "CSS đặt lưới một cột tại max-width 479 px; chưa có xác minh hình ảnh khi chạy nên chưa ghi nhận nghiệm thu responsive.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.css",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.css"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "SH-05-TC-SK-001",
+        "requirement_ids": [
+          "SH-05-YC-002",
+          "SH-05-YC-012",
+          "SH-05-YC-013",
+          "SH-05-YC-014"
+        ],
+        "target_id": "SH-05-EV-001",
+        "group": "Sự kiện",
+        "title": "Nhận 401 API #04 và hoàn tất đúng một lượt phục hồi",
+        "precondition": "Phiên Student đã xác thực; lớp gọi gọi đúng GET #04.",
+        "data": "401 lần đầu; R-X01 thành công; #04 thử lại 401 lần nữa.",
+        "steps": [
+          "Gửi yêu cầu hồ sơ.",
+          "Cho lần đầu trả 401.",
+          "Cho làm mới phiên thành công.",
+          "Cho lượt thử lại trả 401."
+        ],
+        "expected": "Có tối đa một R-X01 và một lần thử lại; phiên kết thúc; trạng thái lỗi cuối chỉ được chuyển khi cấu trúc phản hồi khớp.",
+        "api_ids": [
+          "API-004",
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-002",
+        "requirement_ids": [
+          "SH-05-YC-002",
+          "SH-05-YC-013"
+        ],
+        "target_id": "SH-05-EV-001",
+        "group": "Sự kiện",
+        "title": "Nhận 403 mà không làm mới phiên hoặc xóa phiên",
+        "precondition": "Phiên Student đã xác thực; lớp gọi gọi GET #04.",
+        "data": "403 DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Gửi GET #04.",
+          "Cho phản hồi 403.",
+          "Đếm yêu cầu làm mới phiên và kiểm tra phiên."
+        ],
+        "expected": "Không gọi R-X01; phiên còn hoạt động; lỗi được chuyển tới /forbidden nếu cấu trúc phản hồi hợp lệ.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-003",
+        "requirement_ids": [
+          "SH-05-YC-003",
+          "SH-05-YC-004",
+          "SH-05-YC-008",
+          "SH-05-YC-010"
+        ],
+        "target_id": "SH-05-EV-002",
+        "group": "Sự kiện",
+        "title": "Chuẩn hóa lỗi 401 có Trace ID từ tiêu đề",
+        "precondition": "Có HttpErrorResponse 401 hợp lệ, thân không có traceId.",
+        "data": "tiêu đề X-Trace-Id là trace-header.",
+        "steps": [
+          "Gọi hàm chuẩn hóa.",
+          "Kiểm tra trạng thái đầu ra."
+        ],
+        "expected": "Trạng thái là authentication-required/401; chỉ chứa thông điệp, trace-header và cờ conflict=false.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+          "apps/study-client/src/app/core/auth/authorization-error.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-004",
+        "requirement_ids": [
+          "SH-05-YC-004",
+          "SH-05-YC-008",
+          "SH-05-YC-010",
+          "SH-05-YC-011",
+          "SH-05-YC-015"
+        ],
+        "target_id": "SH-05-EV-002",
+        "group": "Sự kiện",
+        "title": "Loại cấu trúc phản hồi mâu thuẫn hoặc trường thừa",
+        "precondition": "Có lỗi HTTP được mô phỏng.",
+        "data": "Status/code sai cặp; hoặc thân success=true nhưng HTTP 401; kèm data/stack/reason.",
+        "steps": [
+          "Chuẩn hóa từng phản hồi.",
+          "Đối chiếu các trạng thái trả về."
+        ],
+        "expected": "Cặp sai hoặc cấu trúc phản hồi không phải lỗi trả null; trường data/stack/reason không được chép vào trạng thái trình bày.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-005",
+        "requirement_ids": [
+          "SH-05-YC-012",
+          "SH-05-YC-014",
+          "SH-05-YC-023"
+        ],
+        "target_id": "SH-05-EV-003",
+        "group": "Sự kiện",
+        "title": "Làm mới phiên R-X01 không bị hiểu thành API #03 đăng nhập",
+        "precondition": "API #04 trả 401; phía ứng dụng có mã làm mới phiên.",
+        "data": "yêu cầu R-X01 POST thân {refresh_token}; tuyến đăng nhập vẫn là API #03 riêng.",
+        "steps": [
+          "Quan sát mô tả API, method, path và thân yêu cầu làm mới phiên.",
+          "Đối chiếu mã API danh mục."
+        ],
+        "expected": "Mã nguồn gọi POST /auth/refresh bằng R-X01 ngoài danh mục; không gửi mã thông báo trong URL và không gộp với API #03.",
+        "api_ids": [
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-server/app/api/v1.py",
+          "apps/study-server/app/modules/guest/api_03_auth_login/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-006",
+        "requirement_ids": [
+          "SH-05-YC-012",
+          "SH-05-YC-014"
+        ],
+        "target_id": "SH-05-EV-003",
+        "group": "Sự kiện",
+        "title": "Không lặp làm mới phiên sau lỗi hoặc kết quả không rõ",
+        "precondition": "R-X01 đã được gọi trong flow 401.",
+        "data": "R-X01 trả lỗi hoặc yêu cầu quá thời gian.",
+        "steps": [
+          "Mô phỏng lỗi làm mới phiên.",
+          "Theo dõi lần gọi tiếp theo và phiên."
+        ],
+        "expected": "Không gửi lại mù cùng mã thông báo; mã nguồn kết thúc phiên khi làm mới phiên lỗi. Cách xử lý quá thời gian/kết quả xoay mã làm mới vẫn là điểm chặn, chưa kết luận chính sách đã duyệt.",
+        "api_ids": [
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+          "apps/study-server/app/modules/guest/api_03_auth_login/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-007",
+        "requirement_ids": [
+          "SH-05-YC-016"
+        ],
+        "target_id": "SH-05-EV-004",
+        "group": "Sự kiện",
+        "title": "Điều hướng đăng nhập không mang returnTo",
+        "precondition": "Trang ở bàn giao 401 hợp lệ.",
+        "data": "RouterLink /login.",
+        "steps": [
+          "Bấm Đăng nhập.",
+          "Kiểm tra URL và trạng thái điều hướng."
+        ],
+        "expected": "Đi tới /login; liên kết hiện không kèm returnTo. Kết quả sau đăng nhập thuộc SH-02/G-14.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-008",
+        "requirement_ids": [
+          "SH-05-YC-017"
+        ],
+        "target_id": "SH-05-EV-005",
+        "group": "Sự kiện",
+        "title": "Điều hướng quay lại giữ đúng giới hạn hiện tại",
+        "precondition": "Trang ở bàn giao 403 hợp lệ.",
+        "data": "Đích là /student/home; kiểm tra thêm //outside.example và tham số truy vấn mã thông báo.",
+        "steps": [
+          "Mở trạng thái.",
+          "Bấm Quay lại hoặc kiểm tra routerLink.",
+          "Quan sát đích."
+        ],
+        "expected": "Mã nguồn dùng đường nội bộ đã lọc sơ bộ và đường dự phòng / cho đích bắt đầu bằng //; tham số truy vấn nhạy cảm có thể còn. Không đánh giá danh sách đường dẫn cho phép là đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-009",
+        "requirement_ids": [
+          "SH-05-YC-018",
+          "SH-05-YC-019"
+        ],
+        "target_id": "SH-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Sao chép thành công chỉ gửi Trace ID đang hiển thị",
+        "precondition": "Thẻ Trace ID hiển thị một mã thật không xung đột; Clipboard API hoạt động.",
+        "data": "Clipboard.writeText được giả lập thành công.",
+        "steps": [
+          "Bấm nút.",
+          "Kiểm tra tham số Clipboard API và phản hồi."
+        ],
+        "expected": "Chỉ mã đang hiển thị được sao chép; vùng status báo thành công; không gửi mã trong URL hoặc đổi trạng thái đăng nhập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-010",
+        "requirement_ids": [
+          "SH-05-YC-018",
+          "SH-05-YC-019"
+        ],
+        "target_id": "SH-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Sao chép thất bại vẫn có hướng dẫn thủ công",
+        "precondition": "Thẻ Trace ID có mã; Clipboard API không dùng được hoặc từ chối.",
+        "data": "writeText reject hoặc clipboard không tồn tại.",
+        "steps": [
+          "Bấm nút.",
+          "Quan sát vùng status và chuỗi mã."
+        ],
+        "expected": "Trang báo không thể sao chép và hướng dẫn chọn mã thủ công; Trace ID vẫn chọn được.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.ts",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.html",
+          "apps/study-client/src/app/features/shared/SH05/ui/sh05-trace-card.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-011",
+        "requirement_ids": [
+          "SH-05-YC-008",
+          "SH-05-YC-009"
+        ],
+        "target_id": "SH-05-EV-007",
+        "group": "Sự kiện",
+        "title": "Mở trang khi không có tuyến trạng thái",
+        "precondition": "Router vào /forbidden mà history.state không có sh05Error.",
+        "data": "Không có trạng thái lỗi.",
+        "steps": [
+          "Khởi tạo trang.",
+          "Quan sát tiêu đề, thông điệp, các liên kết và yêu cầu mạng."
+        ],
+        "expected": "Hiện thông báo trung tính; không gọi API và không hiển thị action lỗi xác thực.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-012",
+        "requirement_ids": [
+          "SH-05-YC-008",
+          "SH-05-YC-009"
+        ],
+        "target_id": "SH-05-EV-007",
+        "group": "Sự kiện",
+        "title": "Phân biệt tuyến trạng thái sai với đầu vào thành phần sai",
+        "precondition": "Có hai cách cấp lỗi khác nhau cho thành phần.",
+        "data": "history.state sai kind/status; errorResponse đầu vào sai businessCode.",
+        "steps": [
+          "Thử tuyến trạng thái sai.",
+          "Thử đầu vào errorResponse sai.",
+          "So sánh DOM."
+        ],
+        "expected": "Tuyến trạng thái sai hiển thị trung tính; đầu vào thành phần sai hiện có thể làm trang trống do errorInputReceived=true. Ghi sai khác để xử lý, không đánh dấu đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.spec.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-013",
+        "requirement_ids": [
+          "SH-05-YC-002",
+          "SH-05-YC-015",
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EV-008",
+        "group": "Sự kiện",
+        "title": "Không ánh xạ lỗi dịch vụ thành 403",
+        "precondition": "API #04 không trả cấu trúc phản hồi lỗi xác thực hợp lệ.",
+        "data": "HTTP 500, lỗi mạng, JSON không hợp lệ hoặc code không khớp.",
+        "steps": [
+          "Gửi từng loại lỗi.",
+          "Kiểm tra có bàn giao /forbidden hay không.",
+          "Tìm nội dung mẫu giao diện giả."
+        ],
+        "expected": "Không dựng trạng thái 403 từ lỗi dịch vụ; không hiển thị dữ liệu giả lập hoặc chẩn đoán nội bộ.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-014",
+        "requirement_ids": [
+          "SH-05-YC-006",
+          "SH-05-YC-007",
+          "SH-05-YC-020",
+          "SH-05-YC-025"
+        ],
+        "target_id": "SH-05-EV-008",
+        "group": "Sự kiện",
+        "title": "Đối chiếu phần mẫu giao diện với trạng thái Angular hiện hành",
+        "precondition": "Có ảnh đã đánh số và trang Angular cùng trạng thái 403.",
+        "data": "mốc #5/#6/#9/#11 chứa thông tin vai trò, lý do, JSON và chính sách mẫu.",
+        "steps": [
+          "Mở trang Angular.",
+          "Đối chiếu các mốc và nội dung thực sự được hiển thị."
+        ],
+        "expected": "Chỉ giao diện mã nguồn hiện hành được ghi nhận; không tái dùng dữ liệu giả. Thành phần phát hành cuối cần xác nhận UX/Product.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-05-TC-SK-015",
+        "requirement_ids": [
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EV-009",
+        "group": "Sự kiện",
+        "title": "Không đưa bộ chọn xem trước vào khi chạy",
+        "precondition": "Trang Angular được nạp.",
+        "data": "mẫu giao diện có các nút đổi 401/403 và nút làm mới phiên giả lập.",
+        "steps": [
+          "Tìm control tương ứng trên giao diện Angular.",
+          "Kiểm tra dịch vụ yêu cầu không phát sinh từ thao tác xem trước giả."
+        ],
+        "expected": "Không có bộ chọn hoặc hành vi bộ hẹn giờ mô phỏng trong Angular; sự kiện chỉ thuộc code.html và không được tính là khi chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-SK-016",
+        "requirement_ids": [
+          "SH-05-YC-020"
+        ],
+        "target_id": "SH-05-EV-009",
+        "group": "Sự kiện",
+        "title": "Không tính mã mẫu là dữ liệu kiểm thử API thật",
+        "precondition": "Có code.html và mã nguồn API #04/R-X01.",
+        "data": "Trace tr_403_sec_study, mốc thời gian và lý do trong mẫu giao diện.",
+        "steps": [
+          "Đối chiếu các giá trị mẫu với cấu trúc phản hồi/mã nguồn API.",
+          "Kiểm tra UTC chỉ dùng dữ liệu giả ghi rõ."
+        ],
+        "expected": "Các giá trị mẫu giao diện không được tuyên bố là phản hồi thật hoặc kết quả kiểm thử; chỉ dùng dữ liệu giả lập tường minh trong ca.",
+        "api_ids": [
+          "API-004",
+          "R-X01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/04-api-integration.md",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-05_khong-du-quyen-session-het-han/SH-05_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-05-TC-SK-017",
+        "requirement_ids": [
+          "SH-05-YC-010",
+          "SH-05-YC-011",
+          "SH-05-YC-026"
+        ],
+        "target_id": "SH-05-EV-002",
+        "group": "Sự kiện",
+        "title": "Từ chối Trace ID khi cờ mâu thuẫn nhưng mã vẫn có",
+        "precondition": "Trang được mở bằng trạng thái điều hướng có dữ liệu SH-05.",
+        "data": "traceIdConflict=true cùng traceId=tr-a1.",
+        "steps": [
+          "Thiết lập history.state.sh05Error với hai giá trị trên.",
+          "Mở trang và kiểm tra thẻ Trace ID."
+        ],
+        "expected": "DD yêu cầu ẩn Trace ID nếu cờ conflict=true; bộ chuẩn hóa hiện tạo traceId=null nhưng hàm kiểm tra tuyến-trạng thái chưa ép điều kiện đó và có thể hiển thị mã. Ghi nhận sai khác, không đánh dấu đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-05-KhongDuQuyenSessionHetHan/03-data-flow.md",
+          "apps/study-client/src/app/features/shared/SH05/pages/sh05-page.ts",
+          "apps/study-client/src/app/features/shared/SH05/data-access/sh05-error-context.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

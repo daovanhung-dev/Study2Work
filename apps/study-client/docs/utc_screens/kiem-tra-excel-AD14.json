@@ -1,0 +1,32 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-14_SuaDoiTrangThaiXoaBaiHoc.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 192,
+  "loi": [],
+  "hop_le": true,
+  "kiem_toan_truy_vet_va_thuc_thi": {
+    "so_ca_trong_json": 120,
+    "so_ca_trong_workbook": 120,
+    "ma_ca_khop_json": true,
+    "so_cong_thuc_kiem_tra_dong_ca": 120,
+    "khong_cong_thuc_kiem_tra_o_dong_trong": true,
+    "tat_ca_ca_deu_chua_chay": true,
+    "cac_o_ket_qua_va_bang_chung_de_trong": true,
+    "so_lien_ket_yeu_cau_voi_ca": 428,
+    "so_yeu_cau_duoc_truy_vet": 20,
+    "so_marker_thiet_ke": 72,
+    "so_thanh_phan_chi_co_trong_ma_nguon": 12,
+    "so_cong_thuc_toan_workbook": 192
+  },
+  "kiem_tra_ngon_ngu": {
+    "ket_qua": "Đã rà soát 2 cảnh báo tự động; cả hai là từ “do” tiếng Việt dùng đúng ngữ cảnh, không phải cụm tiếng Anh.",
+    "so_canh_bao_da_ra_soat": 2,
+    "cum_can_ra_soat": [],
+    "ghi_chu": "Giữ nguyên tên trường, phương thức, endpoint, enum và mã định danh API theo hợp đồng nguồn."
+  }
+}

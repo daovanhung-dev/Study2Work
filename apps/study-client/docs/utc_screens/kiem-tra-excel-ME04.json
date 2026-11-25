@@ -1,0 +1,40 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_ME-04_TaiLenVaTaoBaiGiang.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 149,
+  "loi": [],
+  "hop_le": true,
+  "audit": {
+    "zip_crc_ok": true,
+    "xml_parse_ok": true,
+    "sheet_names": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "formula_count": 149,
+    "dropdown_count": 9,
+    "json_case_count": 113,
+    "xlsx_case_count": 113,
+    "case_ids_unique": true,
+    "case_ids_match": true,
+    "execution_status_counts": {
+      "Chưa chạy": 113
+    },
+    "execution_evidence_blank": true,
+    "source_ref_count": 26,
+    "source_hash_count": 26,
+    "source_refs_exist": true,
+    "source_hashes_match": true,
+    "missing_refs": [],
+    "hash_mismatches": [],
+    "validator_json_errors": [],
+    "validator_workbook_errors": []
+  }
+}

@@ -1,0 +1,4022 @@
+{
+  "metadata": {
+    "screen_id": "AD-25",
+    "screen_name": "Xuất báo cáo và theo dõi tiến trình",
+    "module": "Quản trị viên",
+    "route": "/admin/reports/export",
+    "actor": "Admin; report/analytics permission mapping cần xác nhận",
+    "version": "1.0",
+    "dd_version": "0.2",
+    "dd_status": "BLOCKED — tài liệu chuẩn; T041 chỉ duyệt quyết định được nêu rõ",
+    "runtime_status": "NOT VERIFIED; implementation PARTIAL",
+    "author": "CẦN XÁC NHẬN",
+    "reviewer": "CẦN XÁC NHẬN",
+    "approver": "CẦN XÁC NHẬN",
+    "date": "2026-11-24",
+    "source_name": "AD-25 DD 00–07, Stitch markers, current Study Client/AdminLayout, API catalog/DD #103/#18, T041 update"
+  },
+  "overall": {
+    "objective": "Lập kế hoạch UTC cho chọn format/phạm vi/kỳ, export gate, theo dõi Operation và tải tài liệu AD-25.",
+    "inputs": "Tuyến /admin/reports/export; lựa chọn cục bộ gồm CSV/XLSX/PDF, khóa học/học viên/tác động, tuần/tháng/tùy chỉnh.",
+    "outputs": "Trang hiện tại không gọi #103/#18; submit/download disabled; chưa tạo Operation hoặc tài liệu.",
+    "main_flow": "Mở tuyến → cấu hình cục bộ → chỉ gửi #103 sau khi duyệt yêu cầu/phản hồi, quyền và chính sách thử lại → chỉ dò #18 sau khi duyệt nơi tạo dữ liệu và ánh xạ trạng thái → tải theo hợp đồng đã duyệt.",
+    "preconditions": "Cần phiên Admin và chốt tuyến; quyền báo cáo theo AC-38 còn cần ánh xạ; môi trường chạy chưa được xác minh.",
+    "states": [
+      "INITIAL_STATIC",
+      "CONFIGURING_LOCAL",
+      "SUBMIT_BLOCKED_CURRENT",
+      "ACCEPTED (proposed)",
+      "PROCESSING (proposed)",
+      "READY_WITH_ARTIFACT (proposed)",
+      "FAILED/EXPIRED (proposed)",
+      "UNAUTHORIZED/FORBIDDEN (proposed)"
+    ],
+    "security": "Đích T041 quy định Operation UUID chỉ dành cho chủ sở hữu và liên kết có thời hạn một giờ; chưa có môi trường chạy tạo/tạo tệp/tải xuống. Nội dung RBAC/checksum/kiểm toán/cache/lưu giữ tĩnh không phải biện pháp kiểm soát.",
+    "out_of_scope": "Không tự tạo bộ lọc, giá trị mặc định, kiểm tra hợp lệ, worker, ánh xạ Operation, điểm cuối lưu trữ/tải xuống hoặc khẳng định về môi trường chạy."
+  },
+  "apis": [
+    {
+      "id": "API-103",
+      "catalog_ref": "#103",
+      "method": "GET",
+      "path": "/api/v1/admin/reports/community-impact/export",
+      "request": "Bộ lọc filters?:string và format?:string là tùy chọn; không có thân yêu cầu. Cách tuần tự hóa, giá trị mặc định và thử lại chưa được quyết định.",
+      "response": "Dòng trong danh mục: 202 DESIGN_OPERATION_ACCEPTED / ApiEnvelope<Report>; phần mô tả theo dõi ghi Operation. Sai khác chưa được giải quyết.",
+      "errors": "Catalog: 401/403/503/500; không có 400/422 added.",
+      "auth": "Bearer JWT/vai trò Admin trong danh mục; ánh xạ quyền báo cáo chưa được giải quyết.",
+      "design_status": "Chờ xác nhận; handler NOT FOUND",
+      "source_ref": "04-api-integration.md; list_api.md #103; API DD 103 OPEN_QUESTIONS",
+      "event_ids": [
+        "AD-25-EV-005"
+      ]
+    },
+    {
+      "id": "API-18",
+      "catalog_ref": "#18",
+      "method": "GET",
+      "path": "/api/v1/operations/{operation_id}",
+      "request": "Dòng danh mục ghi int64; tuyến hiện tại kiểm tra UUID. Chưa có bên tạo dữ liệu xuất hoặc ánh xạ.",
+      "response": "Mục tiêu T041: Operation UUID chỉ dành cho owner, có trạng thái PENDING|SUCCEEDED|FAILED. #18 hiện tại chỉ xử lý thông báo với QUEUED|FAILED|SENT.",
+      "errors": "Không suy diễn ánh xạ lỗi/trạng thái xuất dữ liệu từ tuyến thông báo.",
+      "auth": "Đích T041 chỉ dành cho chủ sở hữu; query #18 hiện tại giới hạn theo chủ sở hữu.",
+      "design_status": "Chờ xác nhận; current source notification-only",
+      "source_ref": "04-api-integration.md #18; API #18 DD; current api_18_operations source; T041",
+      "event_ids": [
+        "AD-25-EV-007"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "AD-25-YC-001",
+      "description": "Điều hướng trực tiếp tới /admin/reports/export hiển thị trang AD-25 trong Admin shell; source có route, runtime chưa xác minh.",
+      "group": "Điều hướng",
+      "source_ref": "06-navigation.md §1; admin.routes.ts",
+      "notes": "Nguồn tuyến-wired không chứng minh deployment.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-002",
+      "description": "AC-38 yêu cầu Admin có report/analytics permission; role/claim mapping phải được chốt.",
+      "group": "Phân quyền",
+      "source_ref": "00-overview.md § nguồn; 05-business-rules.md § B05",
+      "notes": "Không coi ADMIN badge/session là authorization proof.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-003",
+      "description": "Trang hiển thị tiêu đề và mô tả AD-25 theo definition của page.",
+      "group": "Giao diện",
+      "source_ref": "01-ui-elements.md; ad25-screen.ui.ts",
+      "notes": "Đối chiếu source hiện hành; runtime chưa xác minh.",
+      "priority": "Thấp",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-004",
+      "description": "Tập định dạng mục tiêu gồm CSV, XLSX và PDF.",
+      "group": "Chính sách T041",
+      "source_ref": "05-business-rules.md § đầu tài liệu",
+      "notes": "T041 duyệt tập giá trị; default/casing/MIME chưa duyệt.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD-25-YC-005",
+      "description": "Default format, casing, MIME/extension và unsupported-format response phải được chốt trước request.",
+      "group": "API #103",
+      "source_ref": "04-api-integration.md; 05-business-rules.md § B04",
+      "notes": "Không suy diễn từ lowercase radio values.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-006",
+      "description": "Scope controls hiện chỉ đổi local state; chưa gửi filters.",
+      "group": "Phạm vi báo cáo",
+      "source_ref": "02-events.md § EV-03; ad25-page.ts/html",
+      "notes": "Không coi local choices là server contract.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-007",
+      "description": "Filters serialization và mapping với #102, AD-24, checkbox scopes/presets phải được duyệt.",
+      "group": "API #103/#102",
+      "source_ref": "04-api-integration.md; 05-business-rules.md § B03",
+      "notes": "Không tự tạo query payload.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-008",
+      "description": "Week/month/custom hiện chỉ đổi local selection; custom không có date inputs.",
+      "group": "Khoảng thời gian",
+      "source_ref": "02-events.md § EV-04; 01-ui-elements.md",
+      "notes": "Không tính từ/to theo GMT+7 từ text tĩnh.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-009",
+      "description": "Biên ngày, timezone, default kỳ và custom behavior phải có contract.",
+      "group": "Khoảng thời gian",
+      "source_ref": "04-api-integration.md; 05-business-rules.md § B03",
+      "notes": "Không tự tạo date boundaries.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-010",
+      "description": "#103 catalog candidate là GET /api/v1/admin/reports/community-impact/export với filters?/format?, 202 và lỗi 401/403/503/500.",
+      "group": "API #103",
+      "source_ref": "04-api-integration.md; list_api.md #103",
+      "notes": "Hàm xử lý hiện tại NOT FOUND; không thêm 400/422.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-011",
+      "description": "202 response #103 phải được chốt giữa ApiEnvelope<Report> và Operation.",
+      "group": "API #103",
+      "source_ref": "04-api-integration.md § response; API #103 OPEN_QUESTIONS",
+      "notes": "Không hiển thị accepted task theo payload chưa chốt.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-012",
+      "description": "T041 duyệt target export Operation owner-only UUID với PENDING, SUCCEEDED, FAILED.",
+      "group": "Chính sách T041",
+      "source_ref": "05-business-rules.md § đầu tài liệu; T041",
+      "notes": "Policy target đã duyệt; producer/result chưa triển khai.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD-25-YC-013",
+      "description": "Poll #18/SH-07 chỉ khi #103 cấp UUID export và có mapping #18 cho export.",
+      "group": "Bàn giao thao tác",
+      "source_ref": "02-events.md § EV-07; 06-navigation.md §2",
+      "notes": "Current #18 source chỉ xử lý notification.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-014",
+      "description": "Không đồng nhất queued/processing/ready/failed/expired với Operation state khi mapping chưa duyệt.",
+      "group": "Ánh xạ trạng thái",
+      "source_ref": "00-overview.md § UI states; 03-data-flow.md",
+      "notes": "Không suy ra ready=succeeded.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-015",
+      "description": "T041 duyệt signed tài liệu link lifetime một giờ cho export.",
+      "group": "Chính sách T041",
+      "source_ref": "05-business-rules.md § đầu tài liệu; T041",
+      "notes": "Không chứng minh URL issuer/endpoint runtime.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD-25-YC-016",
+      "description": "Tải tài liệu chỉ mở khi result mapping, storage, authorization và download handler được chốt.",
+      "group": "Tải tài liệu",
+      "source_ref": "04-api-integration.md § download; 05-business-rules.md § B08",
+      "notes": "Hiện nút disabled, không có download API.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-017",
+      "description": "Back-to-AD-24 route hiện không truyền filters; continuity cần query contract.",
+      "group": "Điều hướng",
+      "source_ref": "06-navigation.md § E.2; 02-events.md § EV-08",
+      "notes": "Không tự serialize/restore.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-018",
+      "description": "SH-07 chỉ mở sau UUID export và status mapping; hiện callout không tương tác.",
+      "group": "Điều hướng",
+      "source_ref": "06-navigation.md §2; AC-38",
+      "notes": "AC-38 operation node không nối export edge.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-019",
+      "description": "Worker/RBAC L3/checksum/audit/cache/retention trong mockup không phải runtime controls.",
+      "group": "Bảo mật",
+      "source_ref": "00-overview.md § discrepancies; 05-business-rules.md",
+      "notes": "Không report các claims tĩnh là behavior.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-020",
+      "description": "Input groups cần label/group semantics; dynamic status cần accessible announcement khi có contract.",
+      "group": "Khả năng tiếp cận",
+      "source_ref": "06-navigation.md § E.3",
+      "notes": "Đối chiếu design guide.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-021",
+      "description": "Layout mục tiêu theo Study Web guide: Ocean tokens, system typography, responsive và visible focus.",
+      "group": "Trình bày",
+      "source_ref": "06-navigation.md § E.3; design guide",
+      "notes": "Mockup dùng cobalt/remote font; xác nhận UI acceptance.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-YC-022",
+      "description": "Không coi trạng thái dự kiến queued/processing/ready/failed/expired trong inventory là trạng thái runtime đã xác minh.",
+      "group": "Trạng thái",
+      "source_ref": "00-overview.md § UI states; 03-data-flow.md § state model",
+      "notes": "Inventory states là expected; mã nguồn hiện tại vẫn static/submit-blocked/download-disabled.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-25-EL-001",
+      "marker": "#1",
+      "source_element_id": "AD25-EL-01",
+      "name": "Thương hiệu Study2Work và cổng quản trị",
+      "type": "Văn bản",
+      "position": "Study2Work thương hiệu/portal mark, đầu trang left.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #1; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-002",
+      "marker": "#2",
+      "source_element_id": "AD25-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Điều hướng",
+      "position": "Chính nhóm điều hướng, đầu trang.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #2; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-003",
+      "marker": "#3",
+      "source_element_id": "AD25-EL-03",
+      "name": "Nhãn trạng thái hệ thống",
+      "type": "Nhãn",
+      "position": "Huy hiệu “SYSTEM NORMAL” ở đầu trang.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #3; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-004",
+      "marker": "#4",
+      "source_element_id": "AD25-EL-04",
+      "name": "Nút thông báo",
+      "type": "Nút",
+      "position": "Nút biểu tượng thông báo trên đầu trang.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #4; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-005",
+      "marker": "#5",
+      "source_element_id": "AD25-EL-05",
+      "name": "Danh tính và ảnh đại diện quản trị viên",
+      "type": "Văn bản",
+      "position": "Danh tính quản trị viên/avatar, đầu trang.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #5; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-006",
+      "marker": "#6",
+      "source_element_id": "AD25-EL-06",
+      "name": "Đường dẫn điều hướng hệ thống",
+      "type": "Điều hướng",
+      "position": "Global đường dẫn điều hướng.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #6; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-007",
+      "marker": "#7",
+      "source_element_id": "AD25-EL-07",
+      "name": "Nhãn xác minh RBAC",
+      "type": "Nhãn",
+      "position": "RBAC verification huy hiệu.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #7; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-008",
+      "marker": "#8",
+      "source_element_id": "AD25-EL-08",
+      "name": "Breadcrumb báo cáo",
+      "type": "Điều hướng",
+      "position": "Đường dẫn điều hướng cục bộ “Báo cáo & Thống kê > Xuất dữ liệu báo cáo”.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #8; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-009",
+      "marker": "#9",
+      "source_element_id": "AD25-EL-09",
+      "name": "Nhãn mã màn hình AD-25",
+      "type": "Nhãn",
+      "position": "Huy hiệu mã màn hình.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #9; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-010",
+      "marker": "#10",
+      "source_element_id": "AD25-EL-10",
+      "name": "Liên kết quay lại AD-24",
+      "type": "Liên kết",
+      "position": "“Quay lại báo cáo tác động (AD-24)” anchor.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #10; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-011",
+      "marker": "#11",
+      "source_element_id": "AD25-EL-11",
+      "name": "Tiêu đề trang",
+      "type": "Văn bản",
+      "position": "Tiêu đề trang cấp 1.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #11; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-012",
+      "marker": "#12",
+      "source_element_id": "AD25-EL-12",
+      "name": "Mô tả trang",
+      "type": "Văn bản",
+      "position": "Mô tả trang.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #12; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-013",
+      "marker": "#13",
+      "source_element_id": "AD25-EL-13",
+      "name": "Nhãn cụm worker",
+      "type": "Nhãn",
+      "position": "Worker-node huy hiệu.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #13; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-014",
+      "marker": "#14",
+      "source_element_id": "AD25-EL-14",
+      "name": "Thông báo chính sách bảo mật export",
+      "type": "Văn bản",
+      "position": "Biểu ngữ bảo mật xuất dữ liệu (khiên, tiêu đề và nội dung giải thích).",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #14; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-015",
+      "marker": "#15",
+      "source_element_id": "AD25-EL-15",
+      "name": "Nhãn RBAC L3",
+      "type": "Nhãn",
+      "position": "“TUÂN THỦ RBAC L3” badge, banner.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #15; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-016",
+      "marker": "#16",
+      "source_element_id": "AD25-EL-16",
+      "name": "Tiêu đề cấu hình export",
+      "type": "Văn bản",
+      "position": "Tiêu đề bảng cấu hình xuất data.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #16; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-017",
+      "marker": "#17",
+      "source_element_id": "AD25-EL-17",
+      "name": "Nhãn bước 1/2",
+      "type": "Nhãn",
+      "position": "“BƯỚC 1/2” label.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #17; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-018",
+      "marker": "#18",
+      "source_element_id": "AD25-EL-18",
+      "name": "Tiêu đề và hướng dẫn định dạng",
+      "type": "Văn bản",
+      "position": "Format khu vực tiêu đề/help.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #18; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-019",
+      "marker": "#19",
+      "source_element_id": "AD25-EL-19",
+      "name": "Tùy chọn định dạng CSV",
+      "type": "Văn bản",
+      "position": "CSV format thẻ/radio.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #19; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-020",
+      "marker": "#20",
+      "source_element_id": "AD25-EL-20",
+      "name": "Tùy chọn định dạng Excel XLSX",
+      "type": "Văn bản",
+      "position": "Excel/XLSX format thẻ/radio.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #20; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-021",
+      "marker": "#21",
+      "source_element_id": "AD25-EL-21",
+      "name": "Tùy chọn định dạng PDF",
+      "type": "Văn bản",
+      "position": "PDF format thẻ/radio.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #21; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-022",
+      "marker": "#22",
+      "source_element_id": "AD25-EL-22",
+      "name": "Tiêu đề và hướng dẫn phạm vi dữ liệu",
+      "type": "Văn bản",
+      "position": "Khu vực tiêu đề/hướng dẫn về phạm vi dữ liệu.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #22; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-023",
+      "marker": "#23",
+      "source_element_id": "AD25-EL-23",
+      "name": "Phạm vi tổng quan khóa học",
+      "type": "Văn bản",
+      "position": "Khóa học-tóm tắt hộp kiểm hàng.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #23; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-024",
+      "marker": "#24",
+      "source_element_id": "AD25-EL-24",
+      "name": "Phạm vi tiến độ học viên",
+      "type": "Văn bản",
+      "position": "Tiến độ học viên hộp kiểm hàng.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #24; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-025",
+      "marker": "#25",
+      "source_element_id": "AD25-EL-25",
+      "name": "Phạm vi tác động cộng đồng",
+      "type": "Văn bản",
+      "position": "Tác động cộng đồng hộp kiểm hàng.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #25; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-026",
+      "marker": "#26",
+      "source_element_id": "AD25-EL-26",
+      "name": "Tiêu đề khoảng thời gian và timezone",
+      "type": "Văn bản",
+      "position": "Tiêu đề mục khoảng thời gian và ghi chú múi giờ.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #26; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-027",
+      "marker": "#27",
+      "source_element_id": "AD25-EL-27",
+      "name": "Tùy chọn kỳ tuần hiện tại",
+      "type": "Văn bản",
+      "position": "“Tuần hiện tại” radio card.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #27; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-028",
+      "marker": "#28",
+      "source_element_id": "AD25-EL-28",
+      "name": "Tùy chọn kỳ tháng hiện tại",
+      "type": "Văn bản",
+      "position": "“Tháng hiện tại” radio card.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #28; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-029",
+      "marker": "#29",
+      "source_element_id": "AD25-EL-29",
+      "name": "Tùy chọn kỳ tùy chỉnh",
+      "type": "Văn bản",
+      "position": "“Tùy chỉnh kỳ” radio card.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #29; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-030",
+      "marker": "#30",
+      "source_element_id": "AD25-EL-30",
+      "name": "Ghi chú thời gian xử lý",
+      "type": "Văn bản",
+      "position": "Ghi chú về thời gian xử lý.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #30; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-031",
+      "marker": "#31",
+      "source_element_id": "AD25-EL-31",
+      "name": "Nút bắt đầu tạo tác vụ export",
+      "type": "Nút",
+      "position": "“Bắt đầu tạo tác vụ xuất file” submit button.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #31; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-032",
+      "marker": "#32",
+      "source_element_id": "AD25-EL-32",
+      "name": "Tiêu đề panel theo dõi tiến trình",
+      "type": "Văn bản",
+      "position": "Tiêu đề bảng tiến độ.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #32; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-033",
+      "marker": "#33",
+      "source_element_id": "AD25-EL-33",
+      "name": "Nhãn Monitor V2",
+      "type": "Nhãn",
+      "position": "“MONITOR V2” huy hiệu.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #33; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-034",
+      "marker": "#34",
+      "source_element_id": "AD25-EL-34",
+      "name": "Thẻ mã Operation",
+      "type": "Thẻ thông tin",
+      "position": "Operation ID thẻ.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #34; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-035",
+      "marker": "#35",
+      "source_element_id": "AD25-EL-35",
+      "name": "Thẻ trạng thái Operation",
+      "type": "Thẻ thông tin",
+      "position": "Trạng thái thao tác thẻ.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #35; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-036",
+      "marker": "#36",
+      "source_element_id": "AD25-EL-36",
+      "name": "Panel kết quả tải xuống rỗng",
+      "type": "Văn bản",
+      "position": "Kết quả trống/download bảng.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #36; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-037",
+      "marker": "#37",
+      "source_element_id": "AD25-EL-37",
+      "name": "Nút tải báo cáo đang vô hiệu hóa",
+      "type": "Nút",
+      "position": "“Tải tệp báo cáo” button.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #37; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-038",
+      "marker": "#38",
+      "source_element_id": "AD25-EL-38",
+      "name": "Thông báo chuyển tiếp SH-07",
+      "type": "Văn bản",
+      "position": "SH-07 queue handoff callout.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #38; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-039",
+      "marker": "#39",
+      "source_element_id": "AD25-EL-39",
+      "name": "Tiêu đề chính sách export",
+      "type": "Văn bản",
+      "position": "Tiêu đề mục chính sách xuất data.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #39; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-040",
+      "marker": "#40",
+      "source_element_id": "AD25-EL-40",
+      "name": "Thẻ chính sách signed URL",
+      "type": "Liên kết",
+      "position": "Thẻ chính sách liên kết đã ký.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #40; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-041",
+      "marker": "#41",
+      "source_element_id": "AD25-EL-41",
+      "name": "Thẻ chính sách audit log",
+      "type": "Thẻ thông tin",
+      "position": "Audit-log policy thẻ.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #41; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-042",
+      "marker": "#42",
+      "source_element_id": "AD25-EL-42",
+      "name": "Thẻ chính sách xóa file tạm",
+      "type": "Thẻ thông tin",
+      "position": "Tệp tạm deletion policy thẻ.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #42; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-043",
+      "marker": "#43",
+      "source_element_id": "AD25-EL-43",
+      "name": "Bản quyền cuối trang",
+      "type": "Văn bản",
+      "position": "Chân trang bản quyền.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #43; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-044",
+      "marker": "#44",
+      "source_element_id": "AD25-EL-44",
+      "name": "Liên kết chính sách riêng tư",
+      "type": "Liên kết",
+      "position": "Liên kết chân trang về chính sách quyền riêng tư.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #44; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-045",
+      "marker": "#45",
+      "source_element_id": "AD25-EL-45",
+      "name": "Liên kết tiêu chuẩn RBAC",
+      "type": "Liên kết",
+      "position": "Liên kết chân trang về tiêu chuẩn RBAC.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #45; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-046",
+      "marker": "#46",
+      "source_element_id": "AD25-EL-46",
+      "name": "Liên kết hỗ trợ hệ thống",
+      "type": "Liên kết",
+      "position": "Liên kết chân trang hỗ trợ hệ thống.",
+      "properties": "Theo dõi nội dung/thuộc tính trong DD mục C và ảnh đánh số; đây là mô tả thiết kế, không xác nhận runtime.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md § C, marker #46; screen-numbered.png"
+    },
+    {
+      "id": "AD-25-EL-047",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Angular chính landmark",
+      "type": "Khu vực",
+      "position": "Trang AD-25",
+      "properties": "Landmark main, data-screen-id=AD25; trang nguồn hiện hành.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-048",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Breadcrumb trên thanh công cụ",
+      "type": "Điều hướng",
+      "position": "Đầu trang",
+      "properties": "Nav Đường dẫn báo cáo, breadcrumb tĩnh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-049",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Nhãn mã màn hình",
+      "type": "Nhãn",
+      "position": "Đầu trang",
+      "properties": "Mã màn hình AD-25 · EXPORT TASK MANAGER.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-050",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Liên kết Angular quay lại AD-24",
+      "type": "Liên kết",
+      "position": "Toolbar",
+      "properties": "RouterLink tới /admin/reports/community-impact, không truyền filters.",
+      "event_ids": [
+        "AD-25-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-051",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Nhãn trạng thái API",
+      "type": "Nhãn trạng thái",
+      "position": "Hero",
+      "properties": "#103 chưa có handler; #18 chỉ phục vụ notification.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-052",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Thông báo trạng thái contract",
+      "type": "Thông báo",
+      "position": "Trên form",
+      "properties": "Role=status, nêu gate T041/#103/#18/tài liệu.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-053",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Panel cấu hình",
+      "type": "Khu vực",
+      "position": "Lưới cấu hình",
+      "properties": "Ba trườnget: format, scope, period.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-054",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Nhóm chọn định dạng",
+      "type": "Nhóm điều khiển",
+      "position": "Nhóm trường định dạng",
+      "properties": "CSV/XLSX/PDF; `selectedFormat` là biến cục bộ.",
+      "event_ids": [
+        "AD-25-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-055",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Nhóm chọn phạm vi",
+      "type": "Nhóm điều khiển",
+      "position": "Nhóm trường phạm vi",
+      "properties": "Khóa học/người học/tác động; `selectedScopes` là biến cục bộ.",
+      "event_ids": [
+        "AD-25-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-056",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Nhóm chọn khoảng thời gian",
+      "type": "Nhóm điều khiển",
+      "position": "Trườnget period",
+      "properties": "Week/month/custom; không tính ngày.",
+      "event_ids": [
+        "AD-25-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-057",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Ghi chú và nút gửi đang khóa",
+      "type": "Nút",
+      "position": "Cuối cấu hình",
+      "properties": "Ghi chú chưa gửi server và nút disabled.",
+      "event_ids": [
+        "AD-25-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-058",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Khu vực theo dõi tiến trình",
+      "type": "Khu vực",
+      "position": "Panel tiến trình",
+      "properties": "Tiêu đề theo dõi và SH-07 chưa kết nối.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-059",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Các thẻ Operation giữ chỗ",
+      "type": "Thẻ thông tin",
+      "position": "Panel tiến trình",
+      "properties": "ID/status tĩnh; không có Operation response.",
+      "event_ids": [
+        "AD-25-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-060",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Khu vực tải xuống giữ chỗ",
+      "type": "Khu vực",
+      "position": "Panel tiến trình",
+      "properties": "Empty result và nút tải disabled.",
+      "event_ids": [
+        "AD-25-EV-001",
+        "AD-25-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-061",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Thông báo chuyển tiếp hàng đợi",
+      "type": "Thông báo",
+      "position": "Panel tiến trình",
+      "properties": "Chỉ có thể mở SH-07 khi UUID export được map; hiện non-interactive.",
+      "event_ids": [
+        "AD-25-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-062",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Khu vực chính sách",
+      "type": "Khu vực",
+      "position": "Cuối trang",
+      "properties": "Contract yêu cầu, operation, tài liệu/download.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ad25-page.html"
+    },
+    {
+      "id": "AD-25-EL-063",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Thương hiệu vỏ quản trị viên đã xác thực",
+      "type": "Thương hiệu",
+      "position": "Quản trị viênLayout đầu trang",
+      "properties": "Study2Work/LMS/Admin Portal.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "admin-layout.html; AdminLayout session shell"
+    },
+    {
+      "id": "AD-25-EL-064",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Điều hướng chính quản trị viên đã xác thực",
+      "type": "Điều hướng",
+      "position": "Quản trị viênLayout đầu trang",
+      "properties": "5 RouterLink quản trị viên: overview/users/courses/moderation/reports.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "admin-layout.html; AdminLayout session shell"
+    },
+    {
+      "id": "AD-25-EL-065",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Liên kết trang thông báo",
+      "type": "Liên kết",
+      "position": "Quản trị viênLayout đầu trang",
+      "properties": "RouterLink /admin/notifications.",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "admin-layout.html; AdminLayout session shell"
+    },
+    {
+      "id": "AD-25-EL-066",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Hồ sơ và thao tác thoát phiên",
+      "type": "Phiên quản trị viên",
+      "position": "Quản trị viênLayout đầu trang",
+      "properties": "Thao tác session.profile() và signOut().",
+      "event_ids": [
+        "AD-25-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "admin-layout.html; AdminLayout session shell"
+    },
+    {
+      "id": "AD-25-EL-067",
+      "marker": "Không có — chỉ trong source Angular",
+      "source_element_id": "Angular source node",
+      "name": "Trạng thái phiên, vùng nội dung và chân trang",
+      "type": "Vỏ ứng dụng",
+      "position": "Quản trị viênLayout",
+      "properties": "Hàng trạng thái đã xác thực, router-outlet và chân trang bản quyền.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "admin-layout.html; AdminLayout session shell"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-25-EV-001",
+      "source_event_id": "EV-01",
+      "name": "Khởi tạo màn hình",
+      "trigger": "Mở /admin/reports/export.",
+      "processing": "Mã nguồn hiển thị trang từ dữ liệu cục bộ; không có yêu cầu #103/#18, khởi tạo truy vấn hoặc trạng thái đang tải.",
+      "element_ids": [
+        "AD-25-EL-034",
+        "AD-25-EL-035",
+        "AD-25-EL-036"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md § EV-01; ad25-page.html",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-002",
+      "source_event_id": "EV-02",
+      "name": "Chọn định dạng",
+      "trigger": "Thay đổi nút radio CSV/XLSX/PDF.",
+      "processing": "SelectedFormat thay đổi local; T041 duyệt tập format, mapping/default/MIME chưa chốt.",
+      "element_ids": [
+        "AD-25-EL-019",
+        "AD-25-EL-020",
+        "AD-25-EL-021"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md § EV-02; T041",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-003",
+      "source_event_id": "EV-03",
+      "name": "Chọn phạm vi",
+      "trigger": "Thay đổi hộp kiểm khóa học/learner/impact.",
+      "processing": "SelectedScopes thay đổi local; chưa serialize filters.",
+      "element_ids": [
+        "AD-25-EL-023",
+        "AD-25-EL-024",
+        "AD-25-EL-025"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md § EV-03; ad25-page.ts/html",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-004",
+      "source_event_id": "EV-04",
+      "name": "Chọn kỳ",
+      "trigger": "Thay đổi nút radio week/month/custom.",
+      "processing": "SelectedPeriod local; không tính ngày/timezone, custom không có date input.",
+      "element_ids": [
+        "AD-25-EL-027",
+        "AD-25-EL-028",
+        "AD-25-EL-029"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md § EV-04",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-005",
+      "source_event_id": "EV-05",
+      "name": "Bắt đầu export",
+      "trigger": "Kích hoạt điều khiển gửi; nút hiện đang vô hiệu hóa.",
+      "processing": "Không có API caller. #103 request/retry/response unresolved.",
+      "element_ids": [
+        "AD-25-EL-031"
+      ],
+      "api_ids": [
+        "API-103"
+      ],
+      "source_ref": "02-events.md § EV-05; 04-api-integration.md",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-006",
+      "source_event_id": "EV-06",
+      "name": "Tải tài liệu",
+      "trigger": "Kích hoạt tải xuống; nút hiện đang bị vô hiệu hóa.",
+      "processing": "Không có result, URL, storage hoặc download handler.",
+      "element_ids": [
+        "AD-25-EL-037"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md § EV-06; 05-business-rules.md § B08",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-007",
+      "source_event_id": "EV-07",
+      "name": "Handoff SH-07",
+      "trigger": "Conditional khi có UUID export; current callout tĩnh.",
+      "processing": "T041 target UUID/status đã duyệt; current #18 chỉ notification, chưa có export poll mapping.",
+      "element_ids": [
+        "AD-25-EL-038"
+      ],
+      "api_ids": [
+        "API-18"
+      ],
+      "source_ref": "02-events.md § EV-07; 06-navigation.md §2",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-008",
+      "source_event_id": "EV-08",
+      "name": "Quay lại AD-24",
+      "trigger": "Kích hoạt liên kết quay lại.",
+      "processing": "Current RouterLink tới AD-24 nhưng không truyền query filters.",
+      "element_ids": [
+        "AD-25-EL-010"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md § EV-08; 06-navigation.md §2",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-25-EV-009",
+      "source_event_id": "EV-09",
+      "name": "Shell/chân trang điều hướng",
+      "trigger": "Activate quản trị viên nav/notification/breadcrumb/chân trang.",
+      "processing": "Prototype anchors inert; current AdminLayout có route links/profile/đăng xuất/footer.",
+      "element_ids": [
+        "AD-25-EL-002",
+        "AD-25-EL-004",
+        "AD-25-EL-006",
+        "AD-25-EL-008",
+        "AD-25-EL-044",
+        "AD-25-EL-045",
+        "AD-25-EL-046"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md § EV-09; admin-layout.html",
+      "design_status": "Chờ xác nhận"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B01",
+      "description": "#103 202 response giữa ApiEnvelope<Report> và Operation, ID/type/error mapping chưa chốt.",
+      "impact": "Không parse accepted export thành pollable task.",
+      "decision": "API/product owner reconcile catalog, API DD và AC-38.",
+      "source_ref": "04-api-integration.md § response",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B02",
+      "description": "GET side effect/idempotency, duplicate submit, retry và cache semantics chưa chốt.",
+      "impact": "Không tự retry hoặc coi GET là idempotent.",
+      "decision": "API/security/product owner phê duyệt.",
+      "source_ref": "02-events.md § EV-05; 05-business-rules.md § B02",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B03",
+      "description": "Filters serialization và mapping scopes/preset với #102/AD-24 chưa chốt.",
+      "impact": "Không tạo filters/query hoặc claim dashboard equivalence.",
+      "decision": "Reporting/API #102/#103 owners duyệt.",
+      "source_ref": "04-api-integration.md; 05-business-rules.md § B03",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B04",
+      "description": "T041 duyệt CSV/XLSX/PDF; default/casing/MIME/extension/unsupported response vẫn mở.",
+      "impact": "Không suy luận các chi tiết format từ UI.",
+      "decision": "API/product owner chốt phần còn lại.",
+      "source_ref": "05-business-rules.md § B04",
+      "status": "Một phần đã duyệt theo T041"
+    },
+    {
+      "id": "B05",
+      "description": "Chưa chốt quyền báo cáo/phân tích, claim JWT và ánh xạ vai trò Admin.",
+      "impact": "Session/badge không thay authorization server.",
+      "decision": "Security/product/API owner xác nhận.",
+      "source_ref": "05-business-rules.md § B05; AC-38",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B06",
+      "description": "AC-38 status node không nối export edge; #18 export polling chưa được xác nhận.",
+      "impact": "Không poll hoặc handoff SH-07.",
+      "decision": "AC/API owners chốt edge/lifecycle.",
+      "source_ref": "05-business-rules.md § B06; AC-38",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B07",
+      "description": "T041 duyệt UUID owner-only/state; export producer/result mapping chưa tồn tại.",
+      "impact": "Không có export polling/SH-07 handoff.",
+      "decision": "Chốt/implement producer và #103/#18 mapping.",
+      "source_ref": "05-business-rules.md § B07; T041",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B08",
+      "description": "Tài liệu result/storage/download chưa implement; lifetime signed URL một giờ đã duyệt.",
+      "impact": "Giữ download disabled; không tuyên bố mockup security controls.",
+      "decision": "Chốt ExportAsset, URL, authorization, expiry, cleanup.",
+      "source_ref": "05-business-rules.md § B08; EV-06",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B09",
+      "description": "AD-24 filter transfer/restoration schema thiếu; back link không truyền query.",
+      "impact": "Không serialize/restore filter.",
+      "decision": "Chủ sở hữu AD-24/AD-25 phê duyệt lược đồ truy vấn.",
+      "source_ref": "05-business-rules.md § B09; 06-navigation.md § E.2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "B10",
+      "description": "Study Web guide vs mockup style/responsive behavior cần áp dụng thống nhất.",
+      "impact": "Giữ screenshot làm tham chiếu; kiểm thử UI cần design target.",
+      "decision": "Chủ sở hữu thiết kế xác nhận phông Ocean/phông hệ thống, thiết kế thích ứng và trạng thái tiêu điểm.",
+      "source_ref": "05-business-rules.md § B10; 06-navigation.md § E.3",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD25-TS-001",
+        "requirement_ids": [
+          "AD-25-YC-001"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Điều hướng trực tiếp tới /admin/reports/export hiển thị trang AD-25 trong quản trị viên shell; source có route, runtime chưa xác minh.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: nguồn tuyến-wired không chứng minh deployment.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "06-navigation.md §1; admin.routes.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-002",
+        "requirement_ids": [
+          "AD-25-YC-002"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "AC-38 yêu cầu quản trị viên có report/analytics permission; role/claim mapping phải được chốt.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không coi ADMIN badge/session là authorization proof.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md § nguồn; 05-business-rules.md § B05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-003",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Trang hiển thị tiêu đề và mô tả AD-25 theo definition của page.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Đối chiếu source hiện hành; runtime chưa xác minh.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md; ad25-screen.ui.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-004",
+        "requirement_ids": [
+          "AD-25-YC-004"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Tập định dạng mục tiêu gồm CSV, XLSX và PDF.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "T041 phê duyệt tập định dạng gồm CSV, XLSX và PDF; không khẳng định giá trị mặc định/cách viết/MIME.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md § đầu tài liệu"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD25-TS-005",
+        "requirement_ids": [
+          "AD-25-YC-005"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Default format, casing, MIME/extension và unsupported-format response phải được chốt trước request.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không suy diễn từ lowercase radio values.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "04-api-integration.md; 05-business-rules.md § B04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-006",
+        "requirement_ids": [
+          "AD-25-YC-006"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Scope controls hiện chỉ đổi local state; chưa gửi filters.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không coi local choices là server contract.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-03; ad25-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-007",
+        "requirement_ids": [
+          "AD-25-YC-007"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Filters serialization và mapping với #102, AD-24, checkbox scopes/presets phải được duyệt.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không tự tạo query payload.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "04-api-integration.md; 05-business-rules.md § B03"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-008",
+        "requirement_ids": [
+          "AD-25-YC-008"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Week/month/custom hiện chỉ đổi local selection; custom không có date inputs.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không tính từ/to theo GMT+7 từ text tĩnh.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-04; 01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-009",
+        "requirement_ids": [
+          "AD-25-YC-009"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Biên ngày, timezone, default kỳ và custom behavior phải có contract.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không tự tạo date boundaries.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "04-api-integration.md; 05-business-rules.md § B03"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-010",
+        "requirement_ids": [
+          "AD-25-YC-010"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "#103 catalog candidate là GET /api/v1/admin/reports/community-impact/export với filters?/format?, 202 và lỗi 401/403/503/500.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: hàm xử lý hiện tại NOT FOUND; không thêm 400/422.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "04-api-integration.md; list_api.md #103"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-011",
+        "requirement_ids": [
+          "AD-25-YC-011"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "202 response #103 phải được chốt giữa ApiEnvelope<Report> và Operation.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không hiển thị accepted task theo payload chưa chốt.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "04-api-integration.md § response; API #103 OPEN_QUESTIONS"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-012",
+        "requirement_ids": [
+          "AD-25-YC-012"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "T041 duyệt target export Operation owner-only UUID với PENDING, SUCCEEDED, FAILED.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Đích T041 là Operation UUID chỉ dành cho chủ sở hữu với trạng thái PENDING/SUCCEEDED/FAILED; không khẳng định có bộ tạo trong môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md § đầu tài liệu; T041"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD25-TS-013",
+        "requirement_ids": [
+          "AD-25-YC-013"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Poll #18/SH-07 chỉ khi #103 cấp UUID export và có mapping #18 cho export.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Current #18 source chỉ xử lý notification.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [
+          "API-18"
+        ],
+        "source_refs": [
+          "02-events.md § EV-07; 06-navigation.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-014",
+        "requirement_ids": [
+          "AD-25-YC-014"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Không đồng nhất queued/processing/ready/failed/expired với Operation state khi mapping chưa duyệt.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không suy ra ready=succeeded.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [
+          "API-18"
+        ],
+        "source_refs": [
+          "00-overview.md § UI states; 03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-015",
+        "requirement_ids": [
+          "AD-25-YC-015"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "T041 duyệt signed tài liệu liên kết lifetime một giờ cho export.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "T041 phê duyệt thời hạn liên kết ký là một giờ; không khẳng định bên cấp URL/môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md § đầu tài liệu; T041"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD25-TS-016",
+        "requirement_ids": [
+          "AD-25-YC-016"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Tải tài liệu chỉ mở khi result mapping, storage, authorization và download handler được chốt.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Hiện nút disabled, không có download API.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "04-api-integration.md § download; 05-business-rules.md § B08"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-017",
+        "requirement_ids": [
+          "AD-25-YC-017"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Back-to-AD-24 route hiện không truyền filters; continuity cần query contract.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không tự serialize/restore.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "06-navigation.md § E.2; 02-events.md § EV-08"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-018",
+        "requirement_ids": [
+          "AD-25-YC-018"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "SH-07 chỉ mở sau UUID export và status mapping; hiện callout không tương tác.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: AC-38 operation node không nối export edge.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "06-navigation.md §2; AC-38"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-019",
+        "requirement_ids": [
+          "AD-25-YC-019"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Worker/RBAC L3/checksum/audit/cache/retention trong mockup không phải runtime controls.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Không report các claims tĩnh là behavior.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md § discrepancies; 05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-020",
+        "requirement_ids": [
+          "AD-25-YC-020"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Input groups cần label/nhóm semantics; dynamic status cần accessible announcement khi có contract.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Đối chiếu design guide.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "06-navigation.md § E.3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-021",
+        "requirement_ids": [
+          "AD-25-YC-021"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Layout mục tiêu theo Study Web guide: Ocean tokens, system typography, responsive và visible focus.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Mockup dùng cobalt/remote font; xác nhận UI acceptance.; Không xem hành vi chưa được chốt là tiêu chí nghiệm thu và không thực thi trước khi được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "06-navigation.md § E.3; design guide"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TS-022",
+        "requirement_ids": [
+          "AD-25-YC-022"
+        ],
+        "target_id": "AD-25",
+        "group": "Toàn màn hình",
+        "title": "Không coi trạng thái dự kiến queued/processing/ready/failed/expired trong inventory là trạng thái runtime đã xác minh.",
+        "precondition": "Có thể tạo bản dựng kiểm thử Study Client; trong tác vụ tài liệu này không chạy kiểm thử ứng dụng.",
+        "data": "Chỉ dùng dữ liệu giả lập; không dùng báo cáo thật/PII.",
+        "steps": [
+          "Mở tuyến hoặc trạng thái liên quan đến yêu cầu này.",
+          "Quan sát giao diện, trạng thái, điều hướng và ranh giới request mạng.",
+          "Chỉ ghi nhận kết quả/bằng chứng thực tế sau khi có kiểm thử runtime được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: các nhãn trạng thái trong danh mục chưa có ánh xạ khi chạy; không gán queued/processing/ready/failed/expired thành trạng thái nguồn hiện tại.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md § status; 07-test-cases.md §1"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD25-TC-001",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Biểu trưng Study2Work và cổng quản trị",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-001; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Study2Work brand / portal mark với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #1; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-002",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhóm điều hướng chính",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-002; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Main navigation group với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #2; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-003",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn trạng thái hệ thống",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-003; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu System Normal status badge với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #3; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-004",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nút thông báo",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-004; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Notifications button với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #4; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-005",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Danh tính và ảnh đại diện quản trị viên",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-005; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Admin identity / avatar với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #5; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-006",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Breadcrumb hệ thống",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-006; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Global breadcrumb với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #6; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-007",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn xác minh RBAC",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-007; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu RBAC verification badge với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #7; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-008",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Breadcrumb báo cáo",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-008; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Local report breadcrumb với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #8; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-009",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn mã màn hình AD-25",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-009; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Screen ID badge: AD-25 với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #9; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-010",
+        "requirement_ids": [
+          "AD-25-YC-017"
+        ],
+        "target_id": "AD-25-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Liên kết quay lại AD-24",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-010; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Back-to-AD-24 anchor với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #10; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-011",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tiêu đề trang",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-011; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Page title với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #11; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-012",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Mô tả trang",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-012; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Page description với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #12; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-013",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn cụm worker",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-013; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Worker-node badge với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #13; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-014",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thông báo chính sách bảo mật export",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-014; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Export security policy banner với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #14; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-015",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn RBAC L3",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-015; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu RBAC L3 badge với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #15; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-016",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tiêu đề cấu hình export",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-016; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Export configuration panel title với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #16; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-017",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn bước 1/2",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-017; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Step 1/2 badge với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #17; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-018",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tiêu đề và hướng dẫn định dạng",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-018; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Format section heading và help với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #18; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-019",
+        "requirement_ids": [
+          "AD-25-YC-004"
+        ],
+        "target_id": "AD-25-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tùy chọn định dạng CSV",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-019; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu CSV format option với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #19; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-020",
+        "requirement_ids": [
+          "AD-25-YC-004"
+        ],
+        "target_id": "AD-25-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tùy chọn định dạng Excel XLSX",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-020; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Excel XLSX format option với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #20; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-021",
+        "requirement_ids": [
+          "AD-25-YC-004"
+        ],
+        "target_id": "AD-25-EL-021",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tùy chọn định dạng PDF",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-021; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu PDF format option với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #21; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-022",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-022",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tiêu đề và hướng dẫn phạm vi dữ liệu",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-022; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Dataset scope section heading và help với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #22; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-023",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-023",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Phạm vi tổng quan khóa học",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-023; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Course summary scope với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #23; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-024",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-024",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Phạm vi tiến độ học viên",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-024; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Learner progress scope với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #24; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-025",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-025",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Phạm vi tác động cộng đồng",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-025; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Community impact scope với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #25; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-026",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-026",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tiêu đề khoảng thời gian và timezone",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-026; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Time-range section heading và timezone với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #26; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-027",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-027",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tùy chọn kỳ tuần hiện tại",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-027; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Current week period option với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #27; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-028",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-028",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tùy chọn kỳ tháng hiện tại",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-028; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Current month period option với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #28; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-029",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-029",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tùy chọn kỳ tùy chỉnh",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-029; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Custom period option với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #29; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-030",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-030",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Ghi chú thời gian xử lý",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-030; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Processing-time note với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #30; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-031",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-031",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nút bắt đầu tạo tác vụ export",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-031; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Start export task button với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #31; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-032",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-032",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tiêu đề panel theo dõi tiến trình",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-032; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Progress panel heading với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #32; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-033",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-033",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn Monitor V2",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-033; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Monitor V2 badge với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #33; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-034",
+        "requirement_ids": [
+          "AD-25-YC-012"
+        ],
+        "target_id": "AD-25-EL-034",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thẻ mã Operation",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-034; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Operation ID card với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #34; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-035",
+        "requirement_ids": [
+          "AD-25-YC-012"
+        ],
+        "target_id": "AD-25-EL-035",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thẻ trạng thái Operation",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-035; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Operation status card với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #35; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-036",
+        "requirement_ids": [
+          "AD-25-YC-016"
+        ],
+        "target_id": "AD-25-EL-036",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Panel kết quả tải xuống rỗng",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-036; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Empty download-result panel với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #36; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-037",
+        "requirement_ids": [
+          "AD-25-YC-016"
+        ],
+        "target_id": "AD-25-EL-037",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nút tải báo cáo đang vô hiệu hóa",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-037; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Disabled download button với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #37; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-038",
+        "requirement_ids": [
+          "AD-25-YC-012"
+        ],
+        "target_id": "AD-25-EL-038",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thông báo chuyển tiếp SH-07",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-038; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu SH-07 queue handoff callout với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #38; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-039",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-039",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Tiêu đề chính sách export",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-039; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Export policy section heading với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #39; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-040",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-040",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thẻ chính sách signed URL",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-040; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Signed-link policy card với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #40; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-041",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-041",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thẻ chính sách audit log",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-041; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Audit-log policy card với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #41; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-042",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-042",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thẻ chính sách xóa file tạm",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-042; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Temporary-file deletion policy card với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #42; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-043",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-043",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Bản quyền cuối trang",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-043; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Footer copyright với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #43; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-044",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-044",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Liên kết chính sách riêng tư",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-044; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu Privacy-policy footer link với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #44; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-045",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-045",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Liên kết tiêu chuẩn RBAC",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-045; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu RBAC-standards footer link với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #45; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-046",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-046",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Liên kết hỗ trợ hệ thống",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-046; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Đối chiếu System-support footer link với marker/DD; actual UI có thể khác mã nguồn hiện tại. Chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md § C, marker #46; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-047",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-047",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular chính landmark",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-047; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Landmark main, data-screen-id=AD25; trang nguồn hiện hành. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-048",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-048",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Breadcrumb trên thanh công cụ",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-048; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: nav Đường dẫn báo cáo, breadcrumb tĩnh. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-049",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-049",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn mã màn hình",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-049; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Mã màn hình AD-25 · EXPORT TASK MANAGER. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-050",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-050",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Liên kết Angular quay lại AD-24",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-050; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: RouterLink tới /admin/reports/community-impact, không truyền filters. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-051",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-051",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhãn trạng thái API",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-051; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: #103 chưa có handler; #18 chỉ phục vụ notification. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-052",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-052",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thông báo trạng thái contract",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-052; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: role=status, nêu gate T041/#103/#18/tài liệu. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-053",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-053",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Panel cấu hình",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-053; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Ba fieldset: format, scope, period. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-054",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-054",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhóm chọn định dạng",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-054; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: CSV/XLSX/PDF; selectedFormat local signal. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-055",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-055",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhóm chọn phạm vi",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-055; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: course/learner/impact; selectedScopes local signal. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-056",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-056",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Nhóm chọn khoảng thời gian",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-056; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: week/month/custom; không tính ngày. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-057",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-057",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Ghi chú và nút gửi đang khóa",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-057; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Ghi chú chưa gửi server và nút disabled. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-058",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-058",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Khu vực theo dõi tiến trình",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-058; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Tiêu đề theo dõi và SH-07 chưa kết nối. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-059",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-059",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Các thẻ Operation giữ chỗ",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-059; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: ID/status tĩnh; không có Operation response. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-060",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-060",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Khu vực tải xuống giữ chỗ",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-060; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Empty result và nút tải disabled. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-061",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-061",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thông báo chuyển tiếp hàng đợi",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-061; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Chỉ có thể mở SH-07 khi UUID export được map; hiện non-interactive. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-062",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-062",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Khu vực chính sách",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-062; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Contract request, operation, tài liệu/download. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "ad25-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-063",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-063",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Thương hiệu vỏ quản trị viên đã xác thực",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-063; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Study2Work/LMS/Admin Portal. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-layout.html; AdminLayout session shell"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-064",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-064",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Điều hướng chính quản trị viên đã xác thực",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-064; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: 5 RouterLink Admin: overview/users/courses/moderation/reports. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-layout.html; AdminLayout session shell"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-065",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-065",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Liên kết trang thông báo",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-065; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: RouterLink /admin/notifications. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-layout.html; AdminLayout session shell"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-066",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-066",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Hồ sơ và thao tác thoát phiên",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-066; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: session.profile() và signOut() action. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-layout.html; AdminLayout session shell"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TC-067",
+        "requirement_ids": [
+          "AD-25-YC-003"
+        ],
+        "target_id": "AD-25-EL-067",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Trạng thái phiên, vùng nội dung và chân trang",
+        "precondition": "Trang được triển khai trong môi trường kiểm thử; chưa chạy trong task này.",
+        "data": "Đối tượng AD-25-EL-067; dữ liệu giả lập.",
+        "steps": [
+          "Định vị phần tử theo source_ref.",
+          "Kiểm tra nhãn/role/thuộc tính/trạng thái được mô tả.",
+          "Đối chiếu chênh lệch với nguồn đã duyệt."
+        ],
+        "expected": "Ghi nhận từ mã nguồn hiện tại: Authenticated status row, router-outlet, chân trang bản quyền. Chờ xác nhận DD trước khi dùng làm acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-layout.html; AdminLayout session shell"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD25-TE-001",
+        "requirement_ids": [
+          "AD-25-YC-001"
+        ],
+        "target_id": "AD-25-EV-001",
+        "group": "Sự kiện",
+        "title": "Khởi tạo route",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Mở /admin/reports/export.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Route/page source-wired; runtime chưa xác minh; mã nguồn hiện tại không gọi #103/#18.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-01; ad25-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-002",
+        "requirement_ids": [
+          "AD-25-YC-004"
+        ],
+        "target_id": "AD-25-EV-002",
+        "group": "Sự kiện",
+        "title": "Chọn format",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Chọn CSV, XLSX, PDF lần lượt.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: T041 duyệt tập format; selection local; default/casing/MIME chưa chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-02; T041"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-003",
+        "requirement_ids": [
+          "AD-25-YC-006"
+        ],
+        "target_id": "AD-25-EV-003",
+        "group": "Sự kiện",
+        "title": "Chọn scope",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Thay đổi course/learner/impact.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Local selectedScopes đổi; không serialize filters.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-03; ad25-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-004",
+        "requirement_ids": [
+          "AD-25-YC-008"
+        ],
+        "target_id": "AD-25-EV-004",
+        "group": "Sự kiện",
+        "title": "Chọn period",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Chọn week/month/custom.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Local selectedPeriod đổi; không tính date boundaries/timezone.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-04"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-005",
+        "requirement_ids": [
+          "AD-25-YC-010"
+        ],
+        "target_id": "AD-25-EV-005",
+        "group": "Sự kiện",
+        "title": "Cổng gửi yêu cầu",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Quan sát nút submit disabled; không gọi request.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Không có API caller; #103 contract unresolved.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "02-events.md § EV-05; 04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-006",
+        "requirement_ids": [
+          "AD-25-YC-016"
+        ],
+        "target_id": "AD-25-EV-006",
+        "group": "Sự kiện",
+        "title": "Tải xuống gate",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Quan sát button/result placeholder.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Button disabled; không có download URL/handler.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-06; 05-business-rules.md § B08"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận",
+        "trigger": "Kích hoạt tải xuống; nút hiện đang vô hiệu hóa."
+      },
+      {
+        "id": "AD25-TE-007",
+        "requirement_ids": [
+          "AD-25-YC-013"
+        ],
+        "target_id": "AD-25-EV-007",
+        "group": "Sự kiện",
+        "title": "SH-07 handoff gate",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Quan sát callout và source route.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Không có export handoff/poll; #18 mã nguồn hiện tại notification-only.",
+        "api_ids": [
+          "API-18"
+        ],
+        "source_refs": [
+          "02-events.md § EV-07; 06-navigation.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-008",
+        "requirement_ids": [
+          "AD-25-YC-017"
+        ],
+        "target_id": "AD-25-EV-008",
+        "group": "Sự kiện",
+        "title": "Điều hướng quay lại",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Mở AD-24 từ back RouterLink.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: RouterLink không truyền filters; continuity chưa duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-08; 06-navigation.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận",
+        "trigger": "Kích hoạt liên kết quay lại."
+      },
+      {
+        "id": "AD25-TE-009",
+        "requirement_ids": [
+          "AD-25-YC-018"
+        ],
+        "target_id": "AD-25-EV-009",
+        "group": "Sự kiện",
+        "title": "Điều hướng khung giao diện",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Ghi nhận đặc điểm các liên kết AdminLayout hiện tại.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Source có routes/profile/đăng xuất; runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md § EV-09; admin-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-010",
+        "requirement_ids": [
+          "AD-25-YC-010"
+        ],
+        "target_id": "AD-25-EV-005",
+        "group": "Sự kiện",
+        "title": "Không có nguồn triển khai #103",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Chỉ tìm trong các vị trí nguồn Study Server/API đã khai báo.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: không có #103 handler/source caller found; static bằng chứng từ mã nguồn chỉ.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "02-events.md § EV-05; 04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-011",
+        "requirement_ids": [
+          "AD-25-YC-011"
+        ],
+        "target_id": "AD-25-EV-005",
+        "group": "Sự kiện",
+        "title": "Phản hồi mâu thuẫn",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Compare API catalog endpoint row và Operation prose/API DD.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: cấu trúc payload 202 đang mâu thuẫn; không suy ra cấu trúc phản hồi được chấp nhận.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "02-events.md § EV-05; 04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-012",
+        "requirement_ids": [
+          "AD-25-YC-010"
+        ],
+        "target_id": "AD-25-EV-005",
+        "group": "Sự kiện",
+        "title": "Cổng thử lại GET/tính bất biến khi lặp",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Review API contract for side effect/retry semantics.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Unresolved; không có call/retry is made.",
+        "api_ids": [
+          "API-103"
+        ],
+        "source_refs": [
+          "02-events.md § EV-05; 04-api-integration.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-013",
+        "requirement_ids": [
+          "AD-25-YC-013"
+        ],
+        "target_id": "AD-25-EV-007",
+        "group": "Sự kiện",
+        "title": "Query UUID theo chủ sở hữu hiện tại của #18",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Mô tả tuyến/query/kết quả #18 hiện tại dựa trên mã nguồn.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: tuyến UUID hiện chỉ hỗ trợ tra cứu thông báo và giới hạn theo chủ sở hữu; chưa có ánh xạ để xuất dữ liệu.",
+        "api_ids": [
+          "API-18"
+        ],
+        "source_refs": [
+          "02-events.md § EV-07; 06-navigation.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD25-TE-014",
+        "requirement_ids": [
+          "AD-25-YC-014"
+        ],
+        "target_id": "AD-25-EV-007",
+        "group": "Sự kiện",
+        "title": "#18 — khóa ánh xạ trạng thái",
+        "precondition": "Chỉ kiểm tra tĩnh mã nguồn hoặc bản dựng kiểm thử đã duyệt; tác vụ này không chạy kiểm thử ứng dụng/API.",
+        "data": "Dữ liệu giả lập; không dùng dữ liệu thật hoặc gửi request mạng.",
+        "steps": [
+          "Đối chiếu trạng thái thông báo hiện tại với trạng thái đích T041.",
+          "Chỉ quan sát hành vi có căn cứ từ mã nguồn/hợp đồng đã duyệt.",
+          "Để trống kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: chưa có ánh xạ giữa QUEUED/FAILED/SENT và các trạng thái xuất PENDING/SUCCEEDED/FAILED.",
+        "api_ids": [
+          "API-18"
+        ],
+        "source_refs": [
+          "02-events.md § EV-07; 06-navigation.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  },
+  "source_hashes": [
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/00-overview.md",
+      "sha256": "3ded58db0d40ee2d72f0b094c54a8e901710b21a48a080913233ea180641c7ae"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/01-ui-elements.md",
+      "sha256": "d26100c49d8294207d3c4ff71b859f2c7804d0ef9ed0f2270adb296be7a5600b"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/02-events.md",
+      "sha256": "507de301a57cc3aadcd4f4116d1eb0967fbf89278d734bcbac2c2bf284942622"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/03-data-flow.md",
+      "sha256": "caff8646972fb56eaa6bf358ed5f724d402c6d64363a411362639cda72ee93b5"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/04-api-integration.md",
+      "sha256": "0e2df094c7b79d82ac1b38406ed22dbe0e6ba5da4f1b8c7d14ce9b3ec4f1c14f"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/05-business-rules.md",
+      "sha256": "774418a80f5e3787f1f527ff9ee1365062bbae3034ab24cce916f12a9909027c"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/06-navigation.md",
+      "sha256": "643f9bc5330959bb589856c12092be1602ae5a1afa66e06600964fc8c7be5f5d"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/07-test-cases.md",
+      "sha256": "cd53fff03ffd5226dd898457ebf4241ab178da1a99edd254d796f87d6d2e49d3"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/images/README.md",
+      "sha256": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/images/screen-clean.png",
+      "sha256": "5d90eabc1fcf154433771d58b91e814e6fc6a40e89933ffac9c5b0f35522b722"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/images/screen-numbered.png",
+      "sha256": "4444fc4ed60c4a93119bb66706e78db40bae45967726173b5bd33dfd4dd4247f"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/AD-25-XuatBaoCaoVaTheoDoiTienTrinh/code.html",
+      "sha256": "0cd68b7aba2052a35cf89289241cf125c64ca1c1cce9e23d5d0187c276a861be"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25_PLAN.md",
+      "sha256": "0bf37b42ee61b69578c34bde0284a33ac99aa40032b7df043927c66ceb0df6e4"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25.md",
+      "sha256": "dd470e7078aea09dc0ccc387f06297a4a13ab6996fce43d8a9098d8c4508c0f8"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25_markers.json",
+      "sha256": "707bc526c09a49491e2d0970464a5ba8716b81e4ed80e925b26830270819c17c"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25_markers_overlay.svg",
+      "sha256": "befdc3a32a9d272578dc955ab191abac29f6c96f8a92d6e207c358650d5fa8b7"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/screen.png",
+      "sha256": "5d90eabc1fcf154433771d58b91e814e6fc6a40e89933ffac9c5b0f35522b722"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/screen_annotated.png",
+      "sha256": "4444fc4ed60c4a93119bb66706e78db40bae45967726173b5bd33dfd4dd4247f"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/code.html",
+      "sha256": "0cd68b7aba2052a35cf89289241cf125c64ca1c1cce9e23d5d0187c276a861be"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/AD25/ui/ad25-screen.ui.ts",
+      "sha256": "ed737c3a13f2cc7054ed35b4edd4bc1a93b272947c52b3dd7febeeb317632555"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/AD25/pages/ad25-page.ts",
+      "sha256": "2340ad0c47188117d6fe87b6dd630fff5cf7cf9e13868516f2a2840d84191b3a"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/AD25/pages/ad25-page.html",
+      "sha256": "4255d73206b1cab204ec49d5fa140b94a377f4374287ee2b2f71c44dc6bf0396"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/AD25/pages/ad25-page.css",
+      "sha256": "56740ccd91dfa78904aa01abe0c1468c696fab0b64a31c54e79b4810613f35d9"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/AD25/pages/ad25-page.spec.ts",
+      "sha256": "3bd17712841e4be3e48cfc385e431055d3693c555ff5450cc56ed76b37477a46"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/AD25/data-access/ad25-api-boundary.ts",
+      "sha256": "2386b708b86f8712d110020893ef83f975958d04156f53c62d9d016d4bc092ee"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/AD25/models/ad25-screen.model.ts",
+      "sha256": "9d4effa266a622c324481be3515d192478ad96387123b1e44cdfa197c4dc34f7"
+    },
+    {
+      "path": "apps/study-client/src/app/features/admin/admin.routes.ts",
+      "sha256": "14bf88e5d2b71873e97faad0d40d9a3c16c2c6cc3e4ad2ab1f63b6cb52ea56f6"
+    },
+    {
+      "path": "apps/study-client/src/app/core/auth/admin-session.service.ts",
+      "sha256": "3da8d1a8a80c819ccbd64996cf63cd5863a9e2bfa278588afd6038b0d6aa2bc9"
+    },
+    {
+      "path": "apps/study-client/src/app/layouts/admin/admin-layout.ts",
+      "sha256": "24953f6ba99614e6600468a8cb138a670f857549d2ee12c6f8ed92698c717255"
+    },
+    {
+      "path": "apps/study-client/src/app/layouts/admin/admin-layout.html",
+      "sha256": "925ed7c6f353993c92d59f74dfc383fadf5ba03834b3ff0f7e71732afeacacad"
+    },
+    {
+      "path": "apps/study-client/src/app/layouts/admin/admin-layout.css",
+      "sha256": "cc32192e30934929a15bc48d33c7d3d7e5baf6dae8d66e3ccc307f2392dafac1"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/00_Cover.md",
+      "sha256": "86d5c59e32ebc5dc8328a921273f72f2a7dc0a9bc2c157830251e62e89addee2"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/01_Lich_su.md",
+      "sha256": "485b5264b05d8384cee8696313fe797eb22d85f685e5f148df6910f3dab6dd23"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/02_Overview.md",
+      "sha256": "bb154e4a59ebbe9c0f61cb24a3958bad2b09570f19c3cf5351fbc1c71dea7b16"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/03_Request.md",
+      "sha256": "ee9299dff5fe1910b50228f243e3a970e19400feec0ca4ac685e456b538bbe2e"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/04_Response.md",
+      "sha256": "831c3b041dd32c896c903564fc105756dc5c207f5e9030ee7a9bae2252772b03"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/05_Data_Mapping.md",
+      "sha256": "29e1f01798dfd0761ba59f08e2cf986369177161c130780c37aba269a6108409"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/06_Error.md",
+      "sha256": "559f5f4cb60c6545baf3d14dd4d4e402fe3a60059f50b3e81b08b325c7376c2a"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/07_table.md",
+      "sha256": "edbf0e2dba7779ed1f03de7a3fbc1c03719cb2c094eebadcb96fd2d6b292f30f"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/OPEN_QUESTIONS.md",
+      "sha256": "77d6d86a30642ad9e3be7c838e4dce232278086d24e4d12aee5b96f7dbe43dc8"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/PLAN_RESULT.md",
+      "sha256": "bd339cc642622fa55ed6030a61fcbb663b2ec7b7baa1d8683f42a7e20903f15b"
+    },
+    {
+      "path": "apps/study-server/docs/dd/103_admin_reports_community_impact_export/VERIFICATION_REPORT.md",
+      "sha256": "e635de2c982d5e4a0df80172452a112828f82879eafdfcb86019156a4b1cbe0d"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/00_Cover.md",
+      "sha256": "83fcb277fd4afb823450de79d4fdf5e224c177d1918026534514aabb36d31328"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/01_Lich_su.md",
+      "sha256": "2330d08b6c2a3efb9c40f04f30ae1ea7ce3567abb8c9e5b89b0ec332fcda2ba1"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/02_Overview.md",
+      "sha256": "833bf058a04f59213df2ddfdb35b924fe83b44602b1e5e36c4dd8fd840524cc1"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/03_Request.md",
+      "sha256": "da694cb3e0569d60bcb635349b3faca53ee8bc8608039dfa4476a34f375d7855"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/04_Response.md",
+      "sha256": "5de4880ac724e9afe4e1ed56f7919ec95f10ee6447e524cf9a734ac74431f306"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/05_Data_Mapping.md",
+      "sha256": "57a85bb1779efc6d9f30706792ec1dac1315c9fb372284d96379bd81f7f04bbf"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/06_Error.md",
+      "sha256": "848a58ef791bfcc8847f74469b1b18b0aa3e35e3800dff6637f9fe04e4b82555"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/07_table.md",
+      "sha256": "9f6a9526fcf762f908913dc6f12c80f4fea4dc77b91c657389dcbfc619503478"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md",
+      "sha256": "37be6c94d8bca85bbfca0693c73747a3f32365e80a4ab1798490b031be9b78c3"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/PLAN_RESULT.md",
+      "sha256": "1fed5fe561a6609c53acf8489157bba3d2a351e6cf62b1c2b00048f0315bf7c2"
+    },
+    {
+      "path": "apps/study-server/docs/dd/18_operations/VERIFICATION_REPORT.md",
+      "sha256": "83d564f7a9b402334f2e4811adfc96f4a75a76629f9fcb57776bb0753816b16a"
+    },
+    {
+      "path": "apps/study-server/app/api/v1.py",
+      "sha256": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf"
+    },
+    {
+      "path": "apps/study-server/app/modules/shared/api_18_operations/validate.py",
+      "sha256": "447747931abc16267b54fc5789872cbce1074d19e2f564a8a4b88220d8358568"
+    },
+    {
+      "path": "apps/study-server/app/modules/shared/api_18_operations/models.py",
+      "sha256": "e80cf38b0cafcd2c947faa25ae281378f7bb1e943a56887369c81ece03a72c9e"
+    },
+    {
+      "path": "apps/study-server/app/modules/shared/api_18_operations/view.py",
+      "sha256": "1f9936c8d68a99bfc7ddc618f6e97b2a9750b11527408cd82afa8db0bcac4ca7"
+    },
+    {
+      "path": "apps/study-server/app/modules/shared/api_18_operations/query.py",
+      "sha256": "e8cccd08d18a14087d33b90f6727f9d98a965c33d1ae6b044928d0871c6c3f77"
+    },
+    {
+      "path": "apps/study-server/tests/modules/shared/api_18_operations/test_operations.py",
+      "sha256": "edbb81ac9d2ecdf71c870e424ac2610a7e143fa9680118c7571ec1c3e4d52b1b"
+    },
+    {
+      "path": "docs/lists/list_api.md",
+      "sha256": "569e2a3c630d8f6af299125ec34db097ce34f4223af1bffd428c11af7b210600"
+    },
+    {
+      "path": "apps/study-server/docs/diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio",
+      "sha256": "55506fa59b745b5bba1d6740bdaf83724775ef3ec990e64878a0509368056b86"
+    },
+    {
+      "path": ".agents/server-study/apis/declared-routes.md",
+      "sha256": "98a1e6c418f06982bb5e9a690be4d4bf73de3d5766055e34392a4b340d200ab4"
+    },
+    {
+      "path": ".agents/server-study/tests.md",
+      "sha256": "e9a5c66a0ff127070041278368e8b0572dcb02f73cc5bf0d3a05ad04189032bb"
+    }
+  ]
+}

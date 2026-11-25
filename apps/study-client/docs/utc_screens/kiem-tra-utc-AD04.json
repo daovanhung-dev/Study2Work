@@ -1,0 +1,140 @@
+{
+  "screen_id": "AD-04",
+  "report_version": "1.0",
+  "created_date": "2026-11-23",
+  "release_status": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+  "officially_approved": false,
+  "executable_for_acceptance": false,
+  "decision": "DD v0.2 vẫn BLOCKED: API #70 body/role, permission, PII/lifecycle, schema/runtime, navigation và sign-off còn mở. Phát hành dưới dạng kế hoạch có truy vết; chưa sẵn sàng nghiệm thu.",
+  "user_statement": "Người dùng xác nhận tất cả DD đã được duyệt; workspace AD-04 hiện vẫn ghi BLOCKED và chưa có revision/sign-off AD-04 để đối chiếu. Không tự đóng blocker.",
+  "validation": {
+    "hop_le_ve_cau_truc": true,
+    "du_dieu_kien_phe_duyet": false,
+    "thong_tin": [
+      "15 yêu cầu, 40 thành phần, 6 sự kiện, 2 API",
+      "15 ca toàn màn hình, 40 ca thành phần, 12 ca sự kiện",
+      "Tổng ca: 67; yêu cầu được truy vết: 15/15"
+    ],
+    "loi": [],
+    "canh_bao": [
+      "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+    ]
+  },
+  "workbook_validation": {
+    "tep": "apps/study-client/docs/utc_screens/UTC_AD-04_ChinhSuaNguoiDung.xlsx",
+    "trang_tinh": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "so_cong_thuc": 622,
+    "loi": [],
+    "hop_le": true,
+    "execution_field_audit": {
+      "total_cases": 67,
+      "all_cases_chua_chay_and_O_to_S_blank": true,
+      "row_check_formula_count": 67,
+      "by_sheet": [
+        {
+          "sheet": "02. Tổng quan",
+          "case_count": 15,
+          "status_chua_chay": 15,
+          "rows_execution_fields_blank": 15,
+          "row_check_formulas": 15
+        },
+        {
+          "sheet": "03. Thành phần",
+          "case_count": 40,
+          "status_chua_chay": 40,
+          "rows_execution_fields_blank": 40,
+          "row_check_formulas": 40
+        },
+        {
+          "sheet": "04. Sự kiện",
+          "case_count": 12,
+          "status_chua_chay": 12,
+          "rows_execution_fields_blank": 12,
+          "row_check_formulas": 12
+        }
+      ]
+    }
+  },
+  "workbook_validation_report": "apps/study-client/docs/utc_screens/kiem-tra-excel-AD04.json",
+  "visual_review": {
+    "status": "NOT_RENDERED",
+    "result": "UTC workbook checker pass; chưa có Excel-capable renderer để xác nhận bố cục trực quan."
+  },
+  "blockers": [
+    {
+      "id": "AD04-BL-001",
+      "description": "API #70 catalog/AC không khai báo body; local full-replacement body/role allowlist are DERIVED.",
+      "impact": "Không chốt được editable fields, validation hoặc payload.",
+      "decision": "API/Product owner duyệt body, field ownership, role mapping, validation.",
+      "source_ref": "00-overview.md §API; 04-api-integration.md §2; 02-events.md §D EV-02/03",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD04-BL-002",
+      "description": "Claim ADMIN local chưa được xác nhận là AC-31 permission; tenant/scope/MFA/self-admin rules remain open.",
+      "impact": "Không xác minh actor có quyền đọc/ghi user.",
+      "decision": "Owner xác nhận permission, tenant boundary, MFA and role transition policy.",
+      "source_ref": "00-overview.md §Expected behavior; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD04-BL-003",
+      "description": "Email/phone PII, role/status enum, lifecycle, audit/retention/token side effects and adminNotes policy chưa chốt.",
+      "impact": "Không chốt profile presentation, fixture hay mutation acceptance.",
+      "decision": "Owner duyệt PII, enum/lifecycle, audit/token and notes policy.",
+      "source_ref": "01-ui-elements.md §3 #21–#33; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD04-BL-004",
+      "description": "Prototype USR-9281-VN and /details/cancel destinations do not match numeric user_id route; dirty confirmation unresolved.",
+      "impact": "Không chốt route handoff or discard behavior.",
+      "decision": "Product/design confirms numeric route, back/cancel, dirty confirmation/cache.",
+      "source_ref": "01-ui-elements.md §3 #9/#10/#35; 06-navigation.md §3–§4",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD04-BL-005",
+      "description": "Legacy BIGINT schema/deployment and authenticated runtime are not verified against target environment.",
+      "impact": "Không xác nhận API/DB compatibility.",
+      "decision": "DB/API owner verifies schema, grants, deployment and runtime.",
+      "source_ref": "00-overview.md §status; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD04-BL-006",
+      "description": "Static gate/audit/sync/SSO/compliance/RBAC/help claims have no supporting API/action contract.",
+      "impact": "Không test as real state or operation.",
+      "decision": "Design/security supplies source/contracts or removes unsupported claims/actions.",
+      "source_ref": "01-ui-elements.md §3 #3/#7/#11/#15/#22/#27/#29–#38; 02-events.md §D EV-05/06",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD04-BL-007",
+      "description": "PUT retry/idempotency, auth-vs-body order, saved-refresh-error UX and error detail schema remain partly unspecified.",
+      "impact": "Write failure/reconciliation expected results stay pending.",
+      "decision": "API/security/product aligns error schema and mutation/retry/auth order.",
+      "source_ref": "02-events.md §D EV-03; 04-api-integration.md §Response/errors",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD04-BL-008",
+      "description": "User stated all DDs approved, but AD-04 source overview/business/API remains BLOCKED and has no named sign-off artifact.",
+      "impact": "Cannot replace current release status or claim acceptance readiness.",
+      "decision": "Attach AD-04 signed revision and owner/reviewer/approver or close remaining decisions.",
+      "source_ref": "User reply 2026-11-23; 00-overview.md §status; 04-api-integration.md §2",
+      "status": "Cần đối chiếu hồ sơ"
+    }
+  ],
+  "artifacts": [
+    "apps/study-client/docs/utc_screens/utc-spec-AD04.json",
+    "apps/study-client/docs/utc_screens/UTC_AD-04_ChinhSuaNguoiDung.xlsx",
+    "apps/study-client/docs/utc_screens/kiem-tra-utc-AD04.json",
+    "apps/study-client/docs/utc_screens/kiem-tra-excel-AD04.json"
+  ]
+}

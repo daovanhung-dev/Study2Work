@@ -1,0 +1,32 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_ST-06_ThucHienThanhToan.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 622,
+  "loi": [],
+  "hop_le": true,
+  "doi_chieu_noi_dung": {
+    "tep": "apps/study-client/docs/utc_screens/UTC_ST-06_ThucHienThanhToan.xlsx",
+    "crc_zip": "Đạt",
+    "trang_tinh": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "so_cong_thuc": 622,
+    "tong_ca_json": 32,
+    "tong_ca_excel": 32,
+    "ma_ca_day_du_va_khong_trung": true,
+    "ca_da_chay": 0,
+    "o_ket_qua_bang_chung_ma_loi_nguoi_ngay_con_trong": [],
+    "yeu_cau_duoc_truy_vet": 13,
+    "thanh_phan_duoc_bao_phu": 14,
+    "su_kien_duoc_bao_phu": 6,
+    "nguon_khong_tim_thay": []
+  }
+}

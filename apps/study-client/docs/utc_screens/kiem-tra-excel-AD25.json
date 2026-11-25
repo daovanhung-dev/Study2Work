@@ -1,0 +1,27 @@
+{
+  "file": "apps/study-client/docs/utc_screens/UTC_AD-25_XuatBaoCaoVaTheoDoiTienTrinh.xlsx",
+  "tabs": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "requirements": 22,
+  "requirements_covered": 22,
+  "stitch_markers": 46,
+  "elements": 67,
+  "element_cases": 67,
+  "events": 9,
+  "event_cases": 14,
+  "screen_cases": 22,
+  "total_cases": 103,
+  "formula_count": 309,
+  "status_dropdown_ranges": 3,
+  "all_cases_unrun": true,
+  "actual_evidence_error_tester_date_blank": true,
+  "source_hashes": "63/63 matched",
+  "preview_rendered": false,
+  "preview_note": "artifact_tool is unavailable; canonical workbook generator stops on missing dependency.",
+  "issues": [],
+  "valid": true
+}

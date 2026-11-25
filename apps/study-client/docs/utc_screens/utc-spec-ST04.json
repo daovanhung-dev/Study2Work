@@ -1,0 +1,2191 @@
+{
+  "metadata": {
+    "screen_id": "ST-04",
+    "screen_name": "Kiểm tra ghi danh trước đăng ký",
+    "module": "Học viên — ghi danh khóa học",
+    "route": "/student/enroll/:courseId",
+    "actor": "Học viên đã đăng nhập theo AC-12",
+    "version": "UTC v0.1",
+    "dd_version": "DD v0.1",
+    "dd_status": "BLOCKED",
+    "runtime_status": "Chưa xác minh khi chạy hoặc triển khai",
+    "author": "Chưa được ghi trong DD",
+    "reviewer": "Chưa được ghi trong DD",
+    "approver": "Chưa được ghi trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md và apps/study-client/docs/screen_stitch/03_student/ST-04_kiem-tra-ghi-danh-truoc-dang-ky/ST-04.md",
+    "release_readiness": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+    "baseline_authorization": "Người dùng chỉ định dùng DD trong kho làm chuẩn kể cả khi DD BLOCKED; giữ nguyên blocker và không tự chốt hành vi còn mở.",
+    "discrepancy_note": "DD và mã nguồn khác nhau ở danh tính/API #15, trạng thái luồng #08/#15/#19/#20, JOIN #08, thanh toán, cấu trúc dữ liệu và giao diện; xem danh sách blocker."
+  },
+  "overall": {
+    "objective": "Kiểm tra màn hình trước khi ghi danh: đọc khóa học đã xuất bản, xác định đúng quyền học của học viên rồi đi tiếp theo nhánh được duyệt.",
+    "inputs": "CourseId trên đường dẫn; phiên học viên; phản hồi #08/#15; thao tác chọn ghi danh nếu đủ điều kiện.",
+    "outputs": "Trạng thái màn hình và điều hướng tương ứng; nhánh ghi danh có thể cần #19 rồi xác minh danh sách bằng #20.",
+    "main_flow": "AC-12 dự kiến học viên đăng nhập → #08 đọc khóa học PUBLISHED → #15 kiểm tra ghi danh → ACTIVE mở Khóa học của tôi; đủ điều kiện miễn phí thì #19 rồi #20; trả phí thì ST-05/#16, ST-06/#17 và #18 theo hợp đồng.",
+    "preconditions": "DD yêu cầu học viên đã đăng nhập và khóa học tồn tại. Đường dẫn hiện có trong Study Web nhưng không có bộ kiểm soát truy cập; cấu trúc dữ liệu, mã truy cập và môi trường triển khai chưa được xác minh.",
+    "states": [
+      "Đang tải",
+      "Không tìm thấy khóa học",
+      "Lỗi",
+      "Cần đăng nhập",
+      "Đã ghi danh",
+      "Chưa xác định được ghi danh",
+      "Miễn phí theo mã nguồn hiện tại",
+      "Thanh toán theo mã nguồn hiện tại",
+      "Đang gửi ghi danh",
+      "Lỗi tải lại danh sách"
+    ],
+    "security": "Không lấy userId từ máy khách để xác định ghi danh; #15 hiện dùng danh tính học viên ở máy chủ dù danh mục vẫn khai báo công khai. Không coi giá hoặc phản hồi từ trình duyệt trình duyệt là bằng chứng quyền học/thanh toán.",
+    "out_of_scope": "Không nghiệm thu giao dịch #16–#18, không xác minh môi trường thật/DB thật, không chạy trình duyệt/API/DB hoặc kiểm thử sản phẩm trong UTC này."
+  },
+  "apis": [
+    {
+      "id": "#08",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}",
+      "request": "Đường dẫn `course_id` dạng số nguyên int64; không có tham số truy vấn/thân. API công khai, không yêu cầu Bearer theo danh mục.",
+      "response": "200 `DESIGN_RESOURCE_RETRIEVED`; `data.items` chứa một khóa học đã xuất bản với các trường `id`, `title`, `description`, `thumbnail_url`, `price` dạng chuỗi thập phân, `status` và `mentor`; phân trang một mục.",
+      "errors": "404 `DESIGN_RESOURCE_NOT_FOUND` khi ID sai, khóa học không tồn tại hoặc chưa PUBLISHED. 500 `DESIGN_INTERNAL_ERROR` khi truy vấn hoặc ánh xạ thất bại. Mã nguồn dùng LEFT JOIN; thiếu dữ liệu mentor bị bộ ánh xạ báo lỗi.",
+      "auth": "công khai; không cần Bearer.",
+      "design_status": "Có mã nguồn hiện hành; khác biệt JOIN giữa DD API và mã nguồn.",
+      "source_ref": "apps/study-server/app/modules/guest/api_08_courses_detail/view.py; apps/study-server/app/modules/guest/api_08_courses_detail/query.py; apps/study-server/app/modules/guest/api_08_courses_detail/validate.py; apps/study-server/app/modules/shared/course_catalog/helpers.py; apps/study-server/app/modules/shared/course_catalog/models.py",
+      "event_ids": [
+        "ST-04-EV-002"
+      ]
+    },
+    {
+      "id": "#15",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}/enrollment-status",
+      "request": "Đường dẫn `course_id` dạng int64; danh mục khai báo công khai, không cần Bearer, nhưng caller và mã nguồn hiện dùng Bearer của học viên.",
+      "response": "Mã nguồn hiện trả ghi danh gồm id, user_id, course_id, trạng thái, enrolled_at và completed_at có thể null; truy vấn lấy bản ghi mới nhất của chính học viên theo id giảm dần.",
+      "errors": "Mã nguồn trả 404 chung khi thiếu/sai danh tính hoặc không có khóa học/ghi danh; vì vậy 404 không đủ để kết luận chưa ghi danh.",
+      "auth": "Mâu thuẫn: danh mục ghi công khai; mã nguồn hiện yêu cầu học viên danh tính qua Bearer.",
+      "design_status": "BLOCKED: chưa có quyết định danh tính, chọn bản ghi, tính duy nhất, danh sách giá trị trạng thái và ý nghĩa 404.",
+      "source_ref": "apps/study-server/app/modules/guest/api_15_courses_enrollment_status/view.py; apps/study-server/app/modules/guest/api_15_courses_enrollment_status/query.py; apps/study-server/app/modules/guest/api_15_courses_enrollment_status/validate.py; docs/lists/list_api.md — #15",
+      "event_ids": [
+        "ST-04-EV-003"
+      ]
+    },
+    {
+      "id": "#19",
+      "method": "POST",
+      "path": "/api/v1/courses/{course_id}/enrollments",
+      "request": "Bearer của học viên; `course_id` ở đường dẫn phải khớp với `course_id` trong JSON thân JSON.",
+      "response": "Mã nguồn hiện trả 201 `DESIGN_RESOURCE_CREATED` với ghi danh sau khi tạo; có ghi ghi danh ACTIVE và tiến độ bài học ban đầu trong cùng giao dịch.",
+      "errors": "Mã nguồn hiện có 401/403 cho lỗi xác thực/quyền, 404 khi khóa học không có/không xuất bản, 409 khi đã có ACTIVE hoặc chưa có đơn hàng PAID cho giá dương, 422 khi ID không hợp lệ/lệch, 500 khi lỗi data.",
+      "auth": "Bearer của học viên.",
+      "design_status": "Mã nguồn hiện có; chính sách miễn phí/trả phí, tính an toàn khi gửi lặp và nhánh downstream còn chờ duyệt.",
+      "source_ref": "apps/study-server/app/modules/student/api_19_courses_enrollments/view.py; apps/study-server/app/modules/student/api_19_courses_enrollments/query.py; apps/study-server/app/modules/student/api_19_courses_enrollments/validate.py; apps/study-server/app/api/v1.py — route #19",
+      "event_ids": [
+        "ST-04-EV-004"
+      ]
+    },
+    {
+      "id": "#20",
+      "method": "GET",
+      "path": "/api/v1/users/me/courses",
+      "request": "Bearer của học viên; ST-04 gọi `status=ACTIVE&page=1`.",
+      "response": "Mã nguồn hiện trả danh sách khóa học của học viên, phân trang; thứ tự ghi danh mới nhất trước. Máy khách kiểm tra kích thước trang 20 và khóa học dự kiến có trạng thái ACTIVE trước khi điều hướng.",
+      "errors": "Lỗi xác thực/quyền hoặc phản hồi/khung phản hồi không hợp lệ làm máy khách không xác nhận được danh sách; #20 lỗi sau #19 chuyển sang trạng thái tải lại riêng.",
+      "auth": "Bearer của học viên.",
+      "design_status": "Có mã nguồn hiện hành; DD xác nhận nhánh mong muốn nhưng đường dẫn payload và nghiệm thu còn chờ duyệt.",
+      "source_ref": "apps/study-server/app/modules/student/api_20_users_me_courses/view.py; apps/study-server/app/modules/student/api_20_users_me_courses/query.py; apps/study-server/app/modules/student/api_20_users_me_courses/validate.py; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — refreshMyCourses",
+      "event_ids": [
+        "ST-04-EV-004"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-04-YC-001",
+      "description": "Mở màn hình với mã khóa học trên đường dẫn và xử lý mã không hợp lệ theo hợp đồng đã duyệt.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md — §3; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-01",
+      "notes": "Cần chốt ID số hay slug và quy tắc trả lỗi.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-002",
+      "description": "Chỉ học viên đã đăng nhập được thực hiện bước kiểm tra quyền học theo AC-12.",
+      "group": "Xác thực",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md — AC-12, §4; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md",
+      "notes": "Đường dẫn hiện không có bộ kiểm soát truy cập; phải chốt đăng nhập và quay lại màn hình.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-003",
+      "description": "Đọc thông tin khóa học đã xuất bản trước khi kiểm tra ghi danh bằng API #08.",
+      "group": "API #08",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02; apps/study-server/app/modules/guest/api_08_courses_detail/view.py",
+      "notes": "DD API #08 mô tả INNER JOIN; mã nguồn hiện dùng LEFT JOIN rồi báo lỗi ánh xạ nếu thiếu mentor.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-004",
+      "description": "Phân biệt khóa học không tìm thấy/chưa xuất bản với lỗi đọc hoặc ánh xạ data.",
+      "group": "Trạng thái",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02; apps/study-client/src/app/features/student/ST04/pages/st04-page.html",
+      "notes": "Nội dung, đích và hành động của màn hình lỗi chưa được DD chốt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-005",
+      "description": "Chỉ kết luận trạng thái ghi danh khi #15 xác định đúng học viên và đúng bản ghi ghi danh.",
+      "group": "API #15",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md",
+      "notes": "Chưa có quyết định danh tính, bản ghi được chọn, tính duy nhất hoặc danh sách giá trị trạng thái.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-006",
+      "description": "Nếu học viên có ghi danh ACTIVE, mở danh sách khóa học của tôi theo AC-12.",
+      "group": "Quyền học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md — §3; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView",
+      "notes": "Không thể nghiệm thu cho tới khi danh tính và cách chọn ghi danh được duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-007",
+      "description": "Chỉ tạo ghi danh sau khi máy chủ xác nhận chưa ghi danh và khóa học đủ điều kiện miễn phí.",
+      "group": "Miễn phí",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+      "notes": "Ngưỡng giá, eligibility, đơn vị tiền tệ và ý nghĩa #15 404 đang mở; không coi giá là bằng chứng quyền học.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-008",
+      "description": "Không suy ra tiền tệ, miễn phí hoặc thanh toán thành công chỉ từ giá hiển thị của #08.",
+      "group": "Giá khóa học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+      "notes": "Đơn vị tiền tệ, làm tròn, thời điểm chốt giá và giá trị hợp lệ cần được duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-009",
+      "description": "Gửi yêu cầu #19 chỉ sau thao tác rõ ràng và xác nhận phía máy chủ; sau đó kiểm tra kết quả qua #20.",
+      "group": "Ghi danh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04; apps/study-server/app/modules/student/api_19_courses_enrollments/view.py",
+      "notes": "Chống lặp, tranh chấp ghi danh, trả phí và lỗi sau mutation cần hợp đồng.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-010",
+      "description": "Chuyển nhánh trả phí qua luồng thanh toán đã được máy chủ xác nhận trước khi tạo ghi danh.",
+      "group": "Thanh toán",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md — §1, §3; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+      "notes": "Trình tự #16–#18, bằng chứng thanh toán và điều kiện gọi #19 chưa chốt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-011",
+      "description": "Xác minh khóa học xuất hiện ở trạng thái ACTIVE qua #20 sau khi #19 thành công hoặc có xung đột.",
+      "group": "Xác nhận quyền học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — refreshMyCourses",
+      "notes": "Cần xác nhận bảng ánh xạ xung đột #19/#20 và nội dung sau khi xác minh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-012",
+      "description": "Hiển thị lỗi xác thực, truy vấn, bảng ánh xạ và xung đột theo trạng thái không gây hiểu nhầm đã ghi danh.",
+      "group": "Lỗi và thử lại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-01…EV-04; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts",
+      "notes": "404 của #15 đang mơ hồ; chính sách thử lại/chuyển hướng chưa đủ hợp đồng.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-04-YC-013",
+      "description": "Nút quay lại danh sách khóa học mở `/courses` theo bảng ánh xạ bản mẫu.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #11; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md",
+      "notes": "Đường dẫn đích và việc giữ ngữ cảnh cần xác nhận theo ứng dụng hiện hành.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-04-YC-014",
+      "description": "Các liên kết thương hiệu, đầu trang, đường dẫn điều hướng và chân trang mở đúng đích đã khai báo trong bản mẫu.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #1–#5, #12–#13; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md",
+      "notes": "Thiết kế bản mẫu chưa khớp hướng dẫn màu/chữ và điều hướng thích ứng với kích thước màn hình.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-04-YC-015",
+      "description": "Thông báo tải, lỗi và thay đổi trạng thái phải có cách tiếp cận trình đọc màn hình và bàn phím được duyệt.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #2, #6–#10; apps/study-client/src/app/features/student/ST04/pages/st04-page.html",
+      "notes": "Phạm vi thông báo, vị trí lấy nét và menu điện thoại chưa có quyết định thiết kế.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-04-YC-016",
+      "description": "Xác minh API với đúng cấu trúc dữ liệu và môi trường được triển khai trước khi nghiệm thu nghiệp vụ.",
+      "group": "Môi trường và dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md — §2; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "notes": "Không thể suy ra cấu trúc dữ liệu đang triển khai từ DDL trong kho.",
+      "priority": "Cao"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-04-EL-001",
+      "marker": "ST04-EL-01",
+      "name": "Liên kết thương hiệu Study2Work",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên trái",
+      "properties": "Trong bản mẫu trỏ về `/`; phần tử tĩnh, không lấy dữ liệu từ API.",
+      "event_ids": [
+        "ST-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #1 / ST04-EL-01"
+    },
+    {
+      "id": "ST-04-EL-002",
+      "marker": "ST04-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm liên kết",
+      "position": "Đầu trang, giữa",
+      "properties": "Gồm Trang chủ `/`, Khóa học `/courses`, Khóa học của tôi `/student/courses`, Tiến độ `/student/progress`. Bản mẫu ẩn nhóm dưới điểm ngắt `md`; chưa thấy menu thay thế.",
+      "event_ids": [
+        "ST-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #2 / ST04-EL-02"
+    },
+    {
+      "id": "ST-04-EL-003",
+      "marker": "ST04-EL-03",
+      "name": "Liên kết Đăng nhập",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Trong bản mẫu trỏ `/login`; ngữ cảnh công khai này chưa thống nhất với tiền điều kiện học viên đã đăng nhập của AC-12.",
+      "event_ids": [
+        "ST-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #3 / ST04-EL-03"
+    },
+    {
+      "id": "ST-04-EL-004",
+      "marker": "ST04-EL-04",
+      "name": "Liên kết Đăng ký",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Trong bản mẫu trỏ `/register`; chỉ là điều hướng tĩnh.",
+      "event_ids": [
+        "ST-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #4 / ST04-EL-04"
+    },
+    {
+      "id": "ST-04-EL-005",
+      "marker": "ST04-EL-05",
+      "name": "Đường dẫn điều hướng Trang chủ > Khóa học > Kiểm tra ghi danh",
+      "type": "Điều hướng đường dẫn điều hướng",
+      "position": "Bên dưới đầu trang",
+      "properties": "Nhãn màn hình hiện tại là văn bản; không mang mã khóa học hoặc bộ lọc.",
+      "event_ids": [
+        "ST-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #5 / ST04-EL-05"
+    },
+    {
+      "id": "ST-04-EL-006",
+      "marker": "ST04-EL-06",
+      "name": "Biểu tượng xác minh",
+      "type": "Biểu tượng trang trí",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Biểu tượng Material Symbols tĩnh; không đại diện cho kết quả API. HTML bản mẫu chưa khai báo rõ `aria-hidden` hoặc văn bản thay thế.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #6 / ST04-EL-06"
+    },
+    {
+      "id": "ST-04-EL-007",
+      "marker": "ST04-EL-07",
+      "name": "Thẻ trạng thái",
+      "type": "Vùng nội dung",
+      "position": "Giữa màn hình",
+      "properties": "Khung bố cục chứa biểu tượng, tiêu đề, thông báo và nút quay lại; bản mẫu không gắn `role=status` hoặc `role=alert`.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #7 / ST04-EL-07"
+    },
+    {
+      "id": "ST-04-EL-008",
+      "marker": "ST04-EL-08",
+      "name": "Tiêu đề Kiểm tra ghi danh",
+      "type": "Tiêu đề H1",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Tiêu đề tĩnh trong bản mẫu; không lấy tên khóa học từ API.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #8 / ST04-EL-08"
+    },
+    {
+      "id": "ST-04-EL-009",
+      "marker": "ST04-EL-09",
+      "name": "Thông báo Chưa thể xác nhận thông tin ghi danh",
+      "type": "Thông báo",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Nội dung tĩnh; không phải thông điệp lỗi hoặc mã nghiệp vụ từ API #15.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #9 / ST04-EL-09"
+    },
+    {
+      "id": "ST-04-EL-010",
+      "marker": "ST04-EL-10",
+      "name": "Giải thích chưa xác định được trạng thái",
+      "type": "Văn bản giải thích",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Bản mẫu khuyên quay lại hoặc thử sau nhưng không có nút thử lại.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #10 / ST04-EL-10"
+    },
+    {
+      "id": "ST-04-EL-011",
+      "marker": "ST04-EL-11",
+      "name": "Nút Quay lại danh sách khóa học",
+      "type": "Liên kết dạng nút",
+      "position": "Dưới thông báo",
+      "properties": "Liên kết trỏ `/courses`; không truyền mã khóa học hoặc bộ lọc.",
+      "event_ids": [
+        "ST-04-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #11 / ST04-EL-11"
+    },
+    {
+      "id": "ST-04-EL-012",
+      "marker": "ST04-EL-12",
+      "name": "Wordmark Study2Work ở chân trang",
+      "type": "Văn bản thương hiệu",
+      "position": "Chân trang, bên trái",
+      "properties": "Văn bản tĩnh, không phải liên kết.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #12 / ST04-EL-12"
+    },
+    {
+      "id": "ST-04-EL-013",
+      "marker": "ST04-EL-13",
+      "name": "Nhóm liên kết chân trang",
+      "type": "Nhóm liên kết",
+      "position": "Chân trang, bên phải",
+      "properties": "Gồm Trang chủ `/`, Khóa học `/courses`, Đăng nhập `/login`, Đăng ký `/register`; không có trạng thái theo phiên.",
+      "event_ids": [
+        "ST-04-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #13 / ST04-EL-13"
+    },
+    {
+      "id": "ST-04-SRC-EL-014",
+      "marker": "",
+      "name": "Trạng thái đang kiểm tra khóa học",
+      "type": "Trạng thái tải",
+      "position": "Nội dung chính",
+      "properties": "Hiển thị tiêu đề và dòng “Đang kiểm tra thông tin khóa học…”; vùng nội dung đánh dấu trạng thái tải.",
+      "event_ids": [
+        "ST-04-EV-001",
+        "ST-04-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh loading; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView"
+    },
+    {
+      "id": "ST-04-SRC-EL-015",
+      "marker": "",
+      "name": "Thông tin khóa học hiện tại",
+      "type": "Nội dung động",
+      "position": "Trong thẻ ghi danh",
+      "properties": "Hiển thị thông tin khóa học từ #08 ở các nhánh đã nạp khóa học; giá được dùng để rẽ nhánh ở mã nguồn hiện tại, chưa chứng minh tiền tệ hoặc quyền học.",
+      "event_ids": [
+        "ST-04-EV-002",
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nội dung course; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — course signal"
+    },
+    {
+      "id": "ST-04-SRC-EL-016",
+      "marker": "",
+      "name": "Trạng thái không tìm thấy khóa học",
+      "type": "Trạng thái lỗi dữ liệu",
+      "position": "Nội dung chính",
+      "properties": "Khi #08 trả 404, mã nguồn hiện hiển thị “Không tìm thấy khóa học” và giải thích khóa học không tồn tại hoặc chưa xuất bản.",
+      "event_ids": [
+        "ST-04-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh not-found; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView"
+    },
+    {
+      "id": "ST-04-SRC-EL-017",
+      "marker": "",
+      "name": "Trạng thái cần đăng nhập",
+      "type": "Trạng thái phiên",
+      "position": "Nội dung chính",
+      "properties": "Khi học viên API báo cần đăng nhập hoặc trả 401/403, mã nguồn hiện hiển thị liên kết `/login`; đích quay lại sau đăng nhập chưa có hợp đồng.",
+      "event_ids": [
+        "ST-04-EV-001",
+        "ST-04-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh login-required; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — mapStudentRequestError"
+    },
+    {
+      "id": "ST-04-SRC-EL-018",
+      "marker": "",
+      "name": "Nhánh đã ghi danh",
+      "type": "Trạng thái quyền học",
+      "position": "Nội dung chính",
+      "properties": "Mã nguồn hiện mở nhánh này khi #15 trả ghi danh có `status=ACTIVE`; nút hành động mở `/student/courses`. Quy tắc danh tính và chọn bản ghi còn lệch danh mục.",
+      "event_ids": [
+        "ST-04-EV-003",
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh already-enrolled; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView"
+    },
+    {
+      "id": "ST-04-SRC-EL-019",
+      "marker": "",
+      "name": "Nhánh chưa xác định được ghi danh",
+      "type": "Trạng thái cần xác nhận",
+      "position": "Nội dung chính",
+      "properties": "Mã nguồn hiện giữ trạng thái này cho phản hồi #15 hợp lệ nhưng không phải `ACTIVE`; có nút “Kiểm tra lại”. Ý nghĩa các trạng thái khác `ACTIVE` chưa được chốt.",
+      "event_ids": [
+        "ST-04-EV-003",
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh enrollment-unresolved; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView"
+    },
+    {
+      "id": "ST-04-SRC-EL-020",
+      "marker": "",
+      "name": "Nhánh khóa học miễn phí",
+      "type": "Trạng thái rẽ nhánh",
+      "position": "Nội dung chính",
+      "properties": "Sau #15 trả 404, mã nguồn hiện coi giá dạng số bằng 0 là nhánh miễn phí và chỉ gọi #19 sau thao tác rõ ràng của người dùng. Đây là hành vi hiện tại, chưa phải quy tắc đã duyệt.",
+      "event_ids": [
+        "ST-04-EV-003",
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh free; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — price branch, enrollForFree"
+    },
+    {
+      "id": "ST-04-SRC-EL-021",
+      "marker": "",
+      "name": "Liên kết sang thanh toán",
+      "type": "Liên kết nhánh trả phí",
+      "position": "Nội dung chính",
+      "properties": "Mã nguồn hiện chuyển sang `/student/checkout/:courseId`; API #16/#17/#18 không được nối trong ST-04 và hợp đồng thanh toán còn mở.",
+      "event_ids": [
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh paid; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — nhánh giá dương"
+    },
+    {
+      "id": "ST-04-SRC-EL-022",
+      "marker": "",
+      "name": "Trạng thái đang gửi yêu cầu ghi danh",
+      "type": "Trạng thái gửi",
+      "position": "Nội dung chính",
+      "properties": "Sau khi người dùng chọn ghi danh miễn phí, hiển thị “Đang tạo quyền học miễn phí…” trong khi gọi #19.",
+      "event_ids": [
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh submitting; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — enrollForFree"
+    },
+    {
+      "id": "ST-04-SRC-EL-023",
+      "marker": "",
+      "name": "Nút thử lại kiểm tra",
+      "type": "Nút thao tác",
+      "position": "Trong trạng thái chưa xác định hoặc lỗi",
+      "properties": "Gọi lại luồng nạp trạng thái; #15 404 vẫn có nhiều nghĩa ở mã nguồn hiện tại.",
+      "event_ids": [
+        "ST-04-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nút retryCheck; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — retryCheck"
+    },
+    {
+      "id": "ST-04-SRC-EL-024",
+      "marker": "",
+      "name": "Trạng thái không tải được danh sách sau ghi danh",
+      "type": "Trạng thái đồng bộ",
+      "position": "Nội dung chính",
+      "properties": "Sau #19 thành công nhưng #20 lỗi, thông báo yêu cầu tải lại; nút thử lại gọi #20 mà không gửi lại #19.",
+      "event_ids": [
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh refresh-error; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — retryMyCoursesRefresh"
+    },
+    {
+      "id": "ST-04-SRC-EL-025",
+      "marker": "",
+      "name": "Trạng thái lỗi kiểm tra hoặc ghi danh",
+      "type": "Trạng thái lỗi",
+      "position": "Nội dung chính",
+      "properties": "Hiển thị khi kiểm tra, gửi hoặc ánh xạ phản hồi lỗi; nút “Kiểm tra lại” chạy lại luồng kiểm tra hiện tại.",
+      "event_ids": [
+        "ST-04-EV-002",
+        "ST-04-EV-003",
+        "ST-04-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh error; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — error handlers"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-04-EV-001",
+      "name": "Khởi tạo đường dẫn và kiểm tra ngữ cảnh học viên",
+      "trigger": "Mở `/student/enroll/:courseId` hoặc đổi mã courseId trên đường dẫn.",
+      "processing": "Đọc nguyên tham số đường dẫn. Mã nguồn hiện từ chối ID không phải số nguyên dương an toàn trước khi gọi #08. AC-12 yêu cầu học viên đăng nhập, nhưng đường dẫn không có bộ kiểm soát truy cập và luồng quay lại sau đăng nhập chưa chốt.",
+      "element_ids": [
+        "ST-04-SRC-EL-014",
+        "ST-04-SRC-EL-017"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-01; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — route param và kiểm tra ID"
+    },
+    {
+      "id": "ST-04-EV-002",
+      "name": "Đọc khóa học đã xuất bản qua API #08",
+      "trigger": "Có courseId hợp lệ khi mở màn hình hoặc thử kiểm tra lại.",
+      "processing": "Gọi GET #08 công khai. Mã nguồn chỉ lấy PUBLISHED; 200 cho `Course`; 404 cho ID sai/không có/chưa xuất bản; 500 khi truy vấn hoặc bộ ánh xạ lỗi. Máy khách hiện phân thành đang tải, không tìm thấy hoặc lỗi. API chỉ đọc, không sửa ghi danh.",
+      "element_ids": [
+        "ST-04-SRC-EL-014",
+        "ST-04-SRC-EL-015",
+        "ST-04-SRC-EL-016",
+        "ST-04-SRC-EL-025"
+      ],
+      "api_ids": [
+        "#08"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02; apps/study-server/app/modules/guest/api_08_courses_detail/view.py; apps/study-server/app/modules/guest/api_08_courses_detail/query.py; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+    },
+    {
+      "id": "ST-04-EV-003",
+      "name": "Kiểm tra ghi danh qua API #15",
+      "trigger": "Sau khi #08 trả khóa học PUBLISHED.",
+      "processing": "Danh mục mô tả công khai, không cần Bearer; mã nguồn hiện gọi bằng Bearer của học viên. Mã nguồn xác minh học viên, trả bản ghi mới nhất của người gọi. ACTIVE vào nhánh đã ghi danh; phản hồi hợp lệ khác ACTIVE vào chưa xác định; 404 hiện bị máy khách hiểu là không có ghi danh để rẽ nhánh, dù máy chủ dùng 404 chung cho danh tính/khóa học/ghi danh.",
+      "element_ids": [
+        "ST-04-SRC-EL-017",
+        "ST-04-SRC-EL-018",
+        "ST-04-SRC-EL-019",
+        "ST-04-SRC-EL-020",
+        "ST-04-SRC-EL-023",
+        "ST-04-SRC-EL-025"
+      ],
+      "api_ids": [
+        "#15"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03; apps/study-server/app/modules/guest/api_15_courses_enrollment_status/view.py; apps/study-server/app/modules/guest/api_15_courses_enrollment_status/query.py; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+    },
+    {
+      "id": "ST-04-EV-004",
+      "name": "Rẽ nhánh quyền học và xác nhận ghi danh",
+      "trigger": "Sau kết quả #15; thao tác ghi danh miễn phí chỉ xảy ra khi người dùng bấm nút hành động.",
+      "processing": "AC-12 dự kiến ACTIVE → Khóa học của tôi; chưa ghi danh và đủ điều kiện miễn phí → #19 rồi xác nhận #20; nhánh trả phí → ST-05/#16 và ST-06/#17, có #18. Mã nguồn hiện dùng giá bằng 0 để hiện nút hành động miễn phí, gọi #19 sau bấm, rồi kiểm tra #20; nhánh giá dương chỉ mở trang thanh toán. Không coi giá hay phản hồi từ trình duyệt phía trình duyệt là bằng chứng thanh toán.",
+      "element_ids": [
+        "ST-04-SRC-EL-018",
+        "ST-04-SRC-EL-020",
+        "ST-04-SRC-EL-021",
+        "ST-04-SRC-EL-022",
+        "ST-04-SRC-EL-024",
+        "ST-04-SRC-EL-025"
+      ],
+      "api_ids": [
+        "#19",
+        "#20"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+    },
+    {
+      "id": "ST-04-EV-005",
+      "name": "Quay lại danh sách khóa học",
+      "trigger": "Chọn nút quay lại trong bản mẫu.",
+      "processing": "Bản mẫu dùng liên kết `/courses`, không gửi courseId hoặc bộ lọc; đường dẫn đích trong ứng dụng chưa được xác minh.",
+      "element_ids": [
+        "ST-04-EL-011"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-05; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #11"
+    },
+    {
+      "id": "ST-04-EV-006",
+      "name": "Điều hướng ở đầu trang, đường dẫn điều hướng và chân trang",
+      "trigger": "Chọn một liên kết trong đầu trang, đường dẫn điều hướng hoặc chân trang.",
+      "processing": "Dùng các đích liên kết tĩnh được ghi trong bảng ánh xạ mốc; xác nhận đích, trạng thái phiên và cách hiển thị menu trên màn hình hẹp sau khi có quyết định giao diện và xác minh đường dẫn.",
+      "element_ids": [
+        "ST-04-EL-001",
+        "ST-04-EL-002",
+        "ST-04-EL-003",
+        "ST-04-EL-004",
+        "ST-04-EL-005",
+        "ST-04-EL-013"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-06; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #1–#5, #13"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-04-BL-01",
+      "description": "API #15 được mô tả công khai, không cần Bearer nhưng cần trả ghi danh thuộc một học viên; yêu cầu không mang danh tính trong hợp đồng danh mục.",
+      "impact": "Không thể xác nhận an toàn “đã ghi danh” cho đúng học viên.",
+      "decision": "Người phụ trách API/nhóm sản phẩm chốt nguồn danh tính và sửa đồng bộ danh mục, API, AC-12, máy khách.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md — §2; docs/lists/list_api.md — #15",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-02",
+      "description": "Semantics 404 của #15 gộp lỗi danh tính, khóa học và không có ghi danh; máy khách hiện dùng 404 để rẽ nhánh giá.",
+      "impact": "Có thể nhầm lỗi quyền hoặc dữ liệu với chưa ghi danh.",
+      "decision": "Chốt mã/trạng thái riêng và bảng ánh xạ giao diện trước khi xác nhận nhánh.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03; apps/study-server/app/modules/guest/api_15_courses_enrollment_status/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-03",
+      "description": "Chưa chốt tính duy nhất, cách chọn ghi danh khi có nhiều bản ghi và danh sách giá trị trạng thái hợp lệ.",
+      "impact": "Kết quả mới nhất theo id ở mã nguồn hiện tại có thể không tương đương quy tắc nghiệp vụ được duyệt.",
+      "decision": "Người phụ trách máy chủ/nhóm sản phẩm xác nhận ràng buộc dữ liệu, thứ tự chọn và các trạng thái được chấp nhận.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md — §2; infra/postgres/study-server/DB.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-04",
+      "description": "Giá khóa học chưa xác định đơn vị tiền tệ, ngưỡng miễn phí, eligibility hoặc thời điểm giá có hiệu lực.",
+      "impact": "Giá bằng 0/dương chưa đủ để chứng minh quyền miễn phí hoặc nghĩa vụ thanh toán.",
+      "decision": "Chốt mô hình giá và điều kiện quyền học phía máy chủ.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md — §2; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-05",
+      "description": "Luồng trả phí #16–#18 và xác nhận thanh toán phía máy chủ chưa hoàn chỉnh; #19 phải kiểm tra quyền học.",
+      "impact": "Không được mở ghi danh chỉ dựa vào phản hồi từ trình duyệt hoặc giá hiển thị.",
+      "decision": "Chốt thứ tự #16/#17/#18, bằng chứng thanh toán và điều kiện gọi #19.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md — §1; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-06",
+      "description": "Chưa chốt tính an toàn khi gửi lặp/trùng handling và cách xử lý xung đột #19 rồi đồng bộ #20.",
+      "impact": "Người dùng có thể thấy trạng thái chưa rõ sau khi mutation đã thành công.",
+      "decision": "Người phụ trách API/nhóm sản phẩm chốt thử lại, xung đột, xác minh và thông điệp người dùng.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04; apps/study-server/app/modules/student/api_19_courses_enrollments/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-07",
+      "description": "AC-12 yêu cầu học viên đăng nhập trong khi đường dẫn không có bộ kiểm soát truy cập; liên kết đăng nhập của bản mẫu không có quy tắc quay lại.",
+      "impact": "Không rõ trang xử lý phiên hết hạn, sai vai trò và tiếp tục sau đăng nhập ra sao.",
+      "decision": "Chốt bộ kiểm soát truy cập, điểm đến đăng nhập và return path.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md — AC-12, §3; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-08",
+      "description": "Bản mẫu tĩnh có thông báo không thể xác nhận và không có thử lại phần tử điều khiển nhưng mã nguồn Angular hiện có nhiều trạng thái động.",
+      "impact": "Bố cục, nội dung, khả năng tiếp cận và menu thích ứng với kích thước màn hình chưa được duyệt thống nhất.",
+      "decision": "Người phụ trách thiết kế/nhóm sản phẩm duyệt giao diện trạng thái, aria/vị trí lấy nét, điểm ngắt và khác biệt với hướng dẫn màu/chữ.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — §3; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md — §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-09",
+      "description": "DDL legacy dùng ID BIGINT; DDL V1-PILOT dùng UUID/versioned ghi danh. Chưa có bằng chứng live cấu trúc dữ liệu hoặc môi trường triển khai.",
+      "impact": "Chưa thể xác nhận kiểu ID, migration, dữ liệu và compatibility trong môi trường kiểm thử.",
+      "decision": "Người phụ trách máy chủ xác nhận cấu trúc dữ liệu/deployment đang chạy và nguồn kiểm thử được duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md — §2; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-04-BL-10",
+      "description": "DD chưa ghi tên người phụ trách, reviewer và approver cụ thể cho các quyết định còn mở.",
+      "impact": "Không thể truy vết ai có quyền chốt blocker.",
+      "decision": "Bổ sung người chịu trách nhiệm vào DD trước khi nghiệm thu chính thức.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/00-overview.md — metadata; apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST04-MH-001",
+        "requirement_ids": [
+          "ST-04-YC-001",
+          "ST-04-YC-003"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Mở màn hình với courseId số nguyên hợp lệ",
+        "precondition": "Có đường dẫn `/student/enroll/:courseId` và API #08 khả dụng.",
+        "data": "courseId=`42`; khóa học 42 có PUBLISHED.",
+        "steps": [
+          "Mở đường dẫn với `42`.",
+          "Theo dõi trạng thái ban đầu và yêu cầu API #08."
+        ],
+        "expected": "Mã nguồn kiểm tra ID dương an toàn, hiển thị trạng thái tải, gọi #08 công khai rồi chuyển sang kiểm tra ghi danh khi nhận khóa học PUBLISHED. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-01, EV-02",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-002",
+        "requirement_ids": [
+          "ST-04-YC-001",
+          "ST-04-YC-004"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Từ chối courseId rỗng, chữ hoặc ngoài miền số an toàn",
+        "precondition": "Mở màn hình với tham số đường dẫn không hợp lệ.",
+        "data": "`abc`, `0`, số âm, số vượt Number.MAX_SAFE_INTEGER.",
+        "steps": [
+          "Mở lần lượt đường dẫn với từng giá trị.",
+          "Ghi lại API nào được gọi và trạng thái hiển thị."
+        ],
+        "expected": "Mã nguồn hiện chuyển sang lỗi trước khi gọi #08 nếu ID không phải số nguyên dương an toàn; hành vi này chưa được chốt trong DD. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-01",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — toSafeCourseId"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-003",
+        "requirement_ids": [
+          "ST-04-YC-003",
+          "ST-04-YC-004"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị khóa học đã xuất bản",
+        "precondition": "API #08 trả thành công cho khóa học PUBLISHED.",
+        "data": "200 với `data.items` chứa id 42 và giá dạng chuỗi.",
+        "steps": [
+          "Mở đường dẫn với 42.",
+          "Chờ phản hồi #08.",
+          "Quan sát tên, giá và trạng thái tiếp theo."
+        ],
+        "expected": "Máy khách hiện giữ thông tin khóa học và tiếp tục gọi #15; không kết luận quyền học chỉ từ dữ liệu khóa học. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-004",
+        "requirement_ids": [
+          "ST-04-YC-004"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Xử lý #08 trả 404",
+        "precondition": "Khóa học không tồn tại, ID sai hoặc chưa xuất bản.",
+        "data": "404 `DESIGN_RESOURCE_NOT_FOUND`.",
+        "steps": [
+          "Mở đường dẫn với ID tương ứng.",
+          "Quan sát tiêu đề và thông báo."
+        ],
+        "expected": "Mã nguồn hiện hiển thị “Không tìm thấy khóa học” cùng giải thích khóa học không tồn tại hoặc chưa xuất bản; phân biệt từng nguyên nhân chưa được DD chốt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-005",
+        "requirement_ids": [
+          "ST-04-YC-004",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Xử lý #08 trả lỗi máy chủ hoặc lỗi ánh xạ",
+        "precondition": "`Course` truy vấn hoặc bộ ánh xạ trả lỗi.",
+        "data": "500 `DESIGN_INTERNAL_ERROR`.",
+        "steps": [
+          "Mở đường dẫn với dữ liệu kiểm thử gây lỗi đã được duyệt.",
+          "Quan sát thông báo và nút thử lại nếu có."
+        ],
+        "expected": "Mã nguồn hiện chuyển tới lỗi chung và nút kiểm tra lại; cách diễn đạt, thử lại và phân biệt lỗi chưa được DD chốt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-006",
+        "requirement_ids": [
+          "ST-04-YC-002",
+          "ST-04-YC-005"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Yêu cầu đăng nhập khi #15 không có phiên học viên hợp lệ",
+        "precondition": "#08 đã tải; phiên học viên thiếu hoặc hết hạn.",
+        "data": "Bearer của học viên thiếu hoặc API trả 401/403.",
+        "steps": [
+          "Mở đường dẫn khi chưa đăng nhập.",
+          "Quan sát trạng thái và liên kết đăng nhập."
+        ],
+        "expected": "Mã nguồn hiện hiển thị trạng thái login-required và `/login`; đường dẫn bộ kiểm soát truy cập, thông điệp lỗi và return path chưa thống nhất với AC-12. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-01, EV-03",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-007",
+        "requirement_ids": [
+          "ST-04-YC-005",
+          "ST-04-YC-006"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Rẽ nhánh khi #15 trả ghi danh ACTIVE",
+        "precondition": "#08 thành công và phản hồi #15 có ghi danh `ACTIVE`.",
+        "data": "Enrollment thuộc đúng học viên và khóa học 42; dữ liệu kiểm thử danh tính cần được xác nhận.",
+        "steps": [
+          "Mở đường dẫn với học viên đã đăng nhập.",
+          "Cho #15 trả `ACTIVE`.",
+          "Quan sát trạng thái và nút hành động."
+        ],
+        "expected": "Mã nguồn hiện hiển thị nhánh đã ghi danh và liên kết `/student/courses`; danh tính/quy tắc chọn của #15 chưa được hợp đồng danh mục chốt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03, EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-008",
+        "requirement_ids": [
+          "ST-04-YC-005",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Không kết luận 404 của #15 là chưa ghi danh nếu chưa xác định nguyên nhân",
+        "precondition": "#08 thành công; #15 có thể trả 404 do nhiều điều kiện.",
+        "data": "404 do không ghi danh; 404 do danh tính hoặc dữ liệu khóa học không hợp lệ.",
+        "steps": [
+          "Chạy từng dữ liệu kiểm thử theo nguyên nhân do máy chủ xác định.",
+          "So sánh trạng thái của máy khách hiện tại."
+        ],
+        "expected": "Ghi nhận máy khách hiện coi #15 404 là chưa có ghi danh và tiếp tục nhánh theo giá; máy chủ mã nguồn dùng 404 chung, vì vậy kết luận nghiệp vụ phải chờ hợp đồng được sửa. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03",
+          "apps/study-server/app/modules/guest/api_15_courses_enrollment_status/view.py",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-009",
+        "requirement_ids": [
+          "ST-04-YC-005",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái chưa xác định cho ghi danh không ACTIVE",
+        "precondition": "#15 trả ghi danh hợp lệ cùng trạng thái khác ACTIVE.",
+        "data": "Trạng thái ví dụ `PENDING` chỉ dùng nếu máy chủ dữ liệu kiểm thử xác nhận có giá trị này.",
+        "steps": [
+          "Mở đường dẫn với khóa học đã tải.",
+          "Cho #15 trả trạng thái khác ACTIVE.",
+          "Quan sát trạng thái và nút kiểm tra lại."
+        ],
+        "expected": "Mã nguồn hiện hiển thị trạng thái chưa xác định và nút kiểm tra lại; danh sách giá trị và cách xử lý trạng thái chưa ACTIVE cần được chốt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-010",
+        "requirement_ids": [
+          "ST-04-YC-007",
+          "ST-04-YC-008"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị nhánh có giá bằng không sau #15 404",
+        "precondition": "#08 thành công; #15 trả 404 và giá parse thành 0.",
+        "data": "`price=\"0\"`; ý nghĩa 404 đang tranh chấp.",
+        "steps": [
+          "Mở đường dẫn bằng dữ liệu kiểm thử đã duyệt.",
+          "Cho #08 trả giá 0 và #15 trả 404.",
+          "Quan sát nút hành động; chưa bấm."
+        ],
+        "expected": "Mã nguồn hiện hiển thị nhánh miễn phí; chưa xem đây là đủ điều kiện ghi danh cho tới khi 404, đơn vị tiền tệ và eligibility được duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03, EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-011",
+        "requirement_ids": [
+          "ST-04-YC-008",
+          "ST-04-YC-010"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị nhánh giá dương",
+        "precondition": "#08 thành công; #15 trả 404 theo flow hiện tại.",
+        "data": "`price=\"100000\"`; đơn vị tiền tệ và quyền học chưa có hợp đồng.",
+        "steps": [
+          "Mở đường dẫn với dữ liệu kiểm thử đã duyệt.",
+          "Quan sát nút hành động trang thanh toán.",
+          "Không xác nhận giao dịch thanh toán."
+        ],
+        "expected": "Mã nguồn hiện liên kết sang trang thanh toán; không gọi API thanh toán từ ST-04 và không coi giá là bằng chứng thanh toán. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-012",
+        "requirement_ids": [
+          "ST-04-YC-008",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Xử lý giá thiếu, âm hoặc không chuyển được thành số",
+        "precondition": "API #08 trả `price` thiếu, không hợp lệ hoặc âm.",
+        "data": "`null`, chuỗi không phải số, `-1`.",
+        "steps": [
+          "Mở đường dẫn với từng phản hồi.",
+          "Quan sát trạng thái, nút hành động và API tiếp theo."
+        ],
+        "expected": "Mã nguồn hiện không mở nhánh ghi danh hợp lệ khi giá không parse được; phản hồi thân thiện và quy tắc miền giá chưa được chốt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-013",
+        "requirement_ids": [
+          "ST-04-YC-007",
+          "ST-04-YC-009"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Không gửi #19 trước thao tác rõ ràng của người dùng",
+        "precondition": "Mã nguồn hiển thị nhánh miễn phí.",
+        "data": "Giá 0; #15 phản hồi 404; chưa nhấn nút.",
+        "steps": [
+          "Mở màn hình.",
+          "Chờ mọi yêu cầu ban đầu hoàn tất.",
+          "Kiểm tra danh sách yêu cầu mạng."
+        ],
+        "expected": "Mã nguồn hiện chỉ gọi #08/#15; #19 chưa được gửi cho tới khi nhấn nút hành động miễn phí. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15",
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-014",
+        "requirement_ids": [
+          "ST-04-YC-007",
+          "ST-04-YC-009"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Gửi #19 sau khi người dùng chọn ghi danh miễn phí",
+        "precondition": "Mã nguồn hiển thị nút hành động miễn phí và dữ liệu kiểm thử được duyệt.",
+        "data": "`Course` id 42; Bearer của học viên; thân JSON course_id=42.",
+        "steps": [
+          "Nhấn nút hành động ghi danh miễn phí một lần.",
+          "Theo dõi yêu cầu #19 và trạng thái đang gửi."
+        ],
+        "expected": "Mã nguồn gửi POST #19 sau thao tác; path/thân JSON cùng courseId và trạng thái đổi sang submitting; hợp lệ nghiệp vụ còn chờ quyền học hợp đồng. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts",
+          "apps/study-client/src/app/features/student/ST04/data-access/st04-enrollment.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-015",
+        "requirement_ids": [
+          "ST-04-YC-009",
+          "ST-04-YC-011"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Xác nhận qua #20 sau #19 thành công",
+        "precondition": "#19 trả ghi danh cho cùng khóa học.",
+        "data": "201 `DESIGN_RESOURCE_CREATED`; khóa học id 42.",
+        "steps": [
+          "Cho #19 trả thành công.",
+          "Quan sát yêu cầu #20 với `status=ACTIVE` và `page=1`.",
+          "Kiểm tra điều kiện điều hướng."
+        ],
+        "expected": "Mã nguồn hiện gọi #20 và chỉ điều hướng khi phản hồi hợp lệ có khóa học 42 ở trạng thái ACTIVE trong trang; thời điểm chạy chưa chạy. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-016",
+        "requirement_ids": [
+          "ST-04-YC-009",
+          "ST-04-YC-011",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Đối soát xung đột #19 bằng #20",
+        "precondition": "#19 trả HTTP 409.",
+        "data": "409 trùng/quyền học xung đột; dữ liệu #20 được máy chủ xác nhận.",
+        "steps": [
+          "Cho #19 trả 409.",
+          "Quan sát #20 được gọi để đối soát.",
+          "Kiểm tra trạng thái theo kết quả #20."
+        ],
+        "expected": "Mã nguồn hiện gọi #20 khi #19 trả 409; diễn giải xung đột và UX cuối cùng còn chờ hợp đồng nghiệp vụ. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-017",
+        "requirement_ids": [
+          "ST-04-YC-011",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Cho phép tải lại #20 sau khi kiểm tra danh sách thất bại",
+        "precondition": "#19 đã thành công nhưng #20 lỗi.",
+        "data": "#20 trả lỗi mạng/500 ở lần đầu.",
+        "steps": [
+          "Cho #19 thành công và #20 thất bại.",
+          "Nhấn “Tải lại danh sách khóa học”.",
+          "Kiểm tra chỉ #20 được gọi lại."
+        ],
+        "expected": "Mã nguồn hiện chuyển sang refresh-lỗi và nút tải lại gọi #20 riêng; #19 không bị gửi lại khi thử lại. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-018",
+        "requirement_ids": [
+          "ST-04-YC-005",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Xử lý phản hồi không hợp lệ hoặc sai courseId",
+        "precondition": "API trả khung phản hồi sai, ghi danh sai cấu trúc dữ liệu hoặc course_id khác đường dẫn.",
+        "data": "Mã phản hồi thành công nhưng dữ liệu thiếu/sai kiểu hoặc course_id khác 42.",
+        "steps": [
+          "Mở đường dẫn với dữ liệu kiểm thử lỗi.",
+          "Cho #15 hoặc #19 trả dữ liệu không khớp.",
+          "Quan sát thông báo và điều hướng."
+        ],
+        "expected": "Mã nguồn từ chối phản hồi không hợp lệ và không xác nhận quyền học; cách báo lỗi chính xác cần được DD duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15",
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03, EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-019",
+        "requirement_ids": [
+          "ST-04-YC-010",
+          "ST-04-YC-009"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Không gọi #19 trực tiếp từ nhánh trả phí",
+        "precondition": "Giá dương và đường dẫn trang thanh toán được hiển thị.",
+        "data": "Giá dương; #16–#18 chưa là hợp đồng đầy đủ trong ST-04.",
+        "steps": [
+          "Mở nhánh giá dương.",
+          "Theo dõi yêu cầu #19.",
+          "Chọn liên kết trang thanh toán nếu có."
+        ],
+        "expected": "Mã nguồn hiện chỉ điều hướng trang thanh toán; không tạo ghi danh từ ST-04 trên nhánh này. Thanh toán phải được máy chủ xác minh trước khi ghi danh. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-020",
+        "requirement_ids": [
+          "ST-04-YC-013"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Quay lại danh sách khóa học",
+        "precondition": "Bản mẫu hoặc phiên bản được duyệt hiển thị nút hành động quay lại.",
+        "data": "Liên kết `/courses`.",
+        "steps": [
+          "Chọn nút “Quay lại danh sách khóa học”.",
+          "Quan sát URL đích và truy vấn/ngữ cảnh."
+        ],
+        "expected": "Bản mẫu khai báo `/courses` và không giữ courseId/bộ lọc; đường dẫn trong thời điểm chạy cần xác minh.  Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #11",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-021",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra liên kết đầu trang, đường dẫn điều hướng và chân trang",
+        "precondition": "Bản mẫu hiển thị đủ các vùng điều hướng.",
+        "data": "Các đích liên kết theo mốc #1–#5, #12–#13.",
+        "steps": [
+          "Chọn từng liên kết.",
+          "Kiểm tra URL đích và cách mở trên máy tính/điện thoại."
+        ],
+        "expected": "Các đích phải khớp mốc sau khi người phụ trách duyệt; khả năng truy cập và thích ứng với kích thước màn hình chưa được thời điểm chạy xác minh. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #1–#5, #12–#13",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-022",
+        "requirement_ids": [
+          "ST-04-YC-015"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Thông báo trạng thái cho hỗ trợ truy cập",
+        "precondition": "Trang đang tải, có lỗi hoặc đổi nhánh.",
+        "data": "Trình đọc màn hình; bàn phím; vùng hiển thị hẹp.",
+        "steps": [
+          "Điều hướng bằng bàn phím.",
+          "Dùng trình đọc màn hình để nghe nội dung tải/lỗi.",
+          "Kiểm tra vị trí lấy nét sau đổi trạng thái."
+        ],
+        "expected": "Chỉ tiêu aria-live/aria-busy hiện có cần được đối chiếu quyết định khả năng tiếp cận; bản mẫu chưa khai báo vai trò trạng thái cho thẻ. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #6–#10",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-023",
+        "requirement_ids": [
+          "ST-04-YC-016",
+          "ST-04-YC-001"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Dùng đúng kiểu ID và cấu trúc dữ liệu của môi trường kiểm thử",
+        "precondition": "Có môi trường và dữ liệu kiểm thử do người phụ trách xác nhận.",
+        "data": "Đối chiếu ID BIGINT legacy với UUID ở DDL V1-PILOT.",
+        "steps": [
+          "Xác nhận cấu hình môi trường được cấp.",
+          "Đối chiếu ID đường dẫn/yêu cầu/DB.",
+          "Không suy ra kết quả từ DDL khác môi trường."
+        ],
+        "expected": "Ca chỉ chạy sau khi máy chủ xác nhận cấu trúc dữ liệu triển khai; hiện chưa có bằng chứng live cấu trúc dữ liệu hoặc môi trường được duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md — §2",
+          "infra/postgres/study-server/DB.sql",
+          "infra/postgres/02_study_db.sql"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-MH-024",
+        "requirement_ids": [
+          "ST-04-YC-003",
+          "ST-04-YC-004"
+        ],
+        "target_id": "ST-04",
+        "group": "Toàn màn hình",
+        "title": "Xử lý khóa học thiếu thông tin mentor khi #08 ánh xạ",
+        "precondition": "Bản ghi khóa học có mentor null/không đầy đủ.",
+        "data": "Dữ liệu kiểm thử #08 mà truy vấn trả thiếu mentor; chưa dùng dữ liệu thật.",
+        "steps": [
+          "Gọi #08 qua dữ liệu kiểm thử kiểm thử được duyệt.",
+          "Quan sát mã lỗi và giao diện."
+        ],
+        "expected": "Mã nguồn hiện truy vấn LEFT JOIN và bộ ánh xạ trả lỗi 500 khi mentor thiếu; DD API mô tả INNER JOIN nên khác biệt cần được chốt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02",
+          "apps/study-server/app/modules/shared/course_catalog/helpers.py",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST04-TP-001",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04-EL-001",
+        "group": "Thành phần",
+        "title": "Liên kết thương hiệu Study2Work",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Các nhãn và đích liên kết được ghi trong bảng ánh xạ mốc.",
+        "steps": [
+          "Mở bản mẫu ở máy tính và màn hình hẹp.",
+          "Kiểm tra nội dung, đích liên kết và khả năng thao tác bằng bàn phím."
+        ],
+        "expected": "Nhãn và đích liên kết khớp bảng ánh xạ mốc; trạng thái thích ứng với kích thước màn hình/phiên được ghi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #1 / ST04-EL-01",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-002",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04-EL-002",
+        "group": "Thành phần",
+        "title": "Nhóm điều hướng chính",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Các nhãn và đích liên kết được ghi trong bảng ánh xạ mốc.",
+        "steps": [
+          "Mở bản mẫu ở máy tính và màn hình hẹp.",
+          "Kiểm tra nội dung, đích liên kết và khả năng thao tác bằng bàn phím."
+        ],
+        "expected": "Nhãn và đích liên kết khớp bảng ánh xạ mốc; trạng thái thích ứng với kích thước màn hình/phiên được ghi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #2 / ST04-EL-02",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-003",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04-EL-003",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng nhập",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Các nhãn và đích liên kết được ghi trong bảng ánh xạ mốc.",
+        "steps": [
+          "Mở bản mẫu ở máy tính và màn hình hẹp.",
+          "Kiểm tra nội dung, đích liên kết và khả năng thao tác bằng bàn phím."
+        ],
+        "expected": "Nhãn và đích liên kết khớp bảng ánh xạ mốc; trạng thái thích ứng với kích thước màn hình/phiên được ghi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #3 / ST04-EL-03",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-004",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04-EL-004",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng ký",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Các nhãn và đích liên kết được ghi trong bảng ánh xạ mốc.",
+        "steps": [
+          "Mở bản mẫu ở máy tính và màn hình hẹp.",
+          "Kiểm tra nội dung, đích liên kết và khả năng thao tác bằng bàn phím."
+        ],
+        "expected": "Nhãn và đích liên kết khớp bảng ánh xạ mốc; trạng thái thích ứng với kích thước màn hình/phiên được ghi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #4 / ST04-EL-04",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-005",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04-EL-005",
+        "group": "Thành phần",
+        "title": "Đường dẫn điều hướng Trang chủ > Khóa học > Kiểm tra ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Các nhãn và đích liên kết được ghi trong bảng ánh xạ mốc.",
+        "steps": [
+          "Mở bản mẫu ở máy tính và màn hình hẹp.",
+          "Kiểm tra nội dung, đích liên kết và khả năng thao tác bằng bàn phím."
+        ],
+        "expected": "Nhãn và đích liên kết khớp bảng ánh xạ mốc; trạng thái thích ứng với kích thước màn hình/phiên được ghi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #5 / ST04-EL-05",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-006",
+        "requirement_ids": [
+          "ST-04-YC-015"
+        ],
+        "target_id": "ST-04-EL-006",
+        "group": "Thành phần",
+        "title": "Biểu tượng xác minh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Biểu tượng trang trí verified_user.",
+        "steps": [
+          "Quan sát biểu tượng ở thẻ trạng thái.",
+          "Kiểm tra cây khả năng tiếp cận."
+        ],
+        "expected": "Biểu tượng không được hiểu là bằng chứng đã xác minh ghi danh; cách ẩn với trình đọc màn hình chờ quyết định. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #6 / ST04-EL-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-007",
+        "requirement_ids": [
+          "ST-04-YC-012",
+          "ST-04-YC-015"
+        ],
+        "target_id": "ST-04-EL-007",
+        "group": "Thành phần",
+        "title": "Thẻ trạng thái",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Bản mẫu hiển thị trạng thái không xác nhận tĩnh.",
+        "steps": [
+          "Mở bản mẫu tĩnh.",
+          "Kiểm tra thứ tự tiêu đề, thông báo và văn bản giải thích.",
+          "Đối chiếu khả năng tiếp cận."
+        ],
+        "expected": "Nội dung bản mẫu được phân biệt với lỗi API #15; vai trò/live announcement chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #7 / ST04-EL-07",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-008",
+        "requirement_ids": [
+          "ST-04-YC-012",
+          "ST-04-YC-015"
+        ],
+        "target_id": "ST-04-EL-008",
+        "group": "Thành phần",
+        "title": "Tiêu đề Kiểm tra ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Bản mẫu hiển thị trạng thái không xác nhận tĩnh.",
+        "steps": [
+          "Mở bản mẫu tĩnh.",
+          "Kiểm tra thứ tự tiêu đề, thông báo và văn bản giải thích.",
+          "Đối chiếu khả năng tiếp cận."
+        ],
+        "expected": "Nội dung bản mẫu được phân biệt với lỗi API #15; vai trò/live announcement chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #8 / ST04-EL-08",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-009",
+        "requirement_ids": [
+          "ST-04-YC-012",
+          "ST-04-YC-015"
+        ],
+        "target_id": "ST-04-EL-009",
+        "group": "Thành phần",
+        "title": "Thông báo Chưa thể xác nhận thông tin ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Bản mẫu hiển thị trạng thái không xác nhận tĩnh.",
+        "steps": [
+          "Mở bản mẫu tĩnh.",
+          "Kiểm tra thứ tự tiêu đề, thông báo và văn bản giải thích.",
+          "Đối chiếu khả năng tiếp cận."
+        ],
+        "expected": "Nội dung bản mẫu được phân biệt với lỗi API #15; vai trò/live announcement chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #9 / ST04-EL-09",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-010",
+        "requirement_ids": [
+          "ST-04-YC-012",
+          "ST-04-YC-015"
+        ],
+        "target_id": "ST-04-EL-010",
+        "group": "Thành phần",
+        "title": "Giải thích chưa xác định được trạng thái",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Bản mẫu hiển thị trạng thái không xác nhận tĩnh.",
+        "steps": [
+          "Mở bản mẫu tĩnh.",
+          "Kiểm tra thứ tự tiêu đề, thông báo và văn bản giải thích.",
+          "Đối chiếu khả năng tiếp cận."
+        ],
+        "expected": "Nội dung bản mẫu được phân biệt với lỗi API #15; vai trò/live announcement chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #10 / ST04-EL-10",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-011",
+        "requirement_ids": [
+          "ST-04-YC-013"
+        ],
+        "target_id": "ST-04-EL-011",
+        "group": "Thành phần",
+        "title": "Nút Quay lại danh sách khóa học",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Liên kết `/courses`.",
+        "steps": [
+          "Mở màn hình bản mẫu.",
+          "Tìm nút hành động ở cuối thẻ trạng thái.",
+          "Kiểm tra nhãn, đích liên kết và trạng thái vị trí lấy nét."
+        ],
+        "expected": "Bản mẫu hiển thị đúng nhãn và đích liên kết `/courses`; không gửi courseId hoặc bộ lọc. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #11"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-012",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04-EL-012",
+        "group": "Thành phần",
+        "title": "Wordmark Study2Work ở chân trang",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Các nhãn và đích liên kết được ghi trong bảng ánh xạ mốc.",
+        "steps": [
+          "Mở bản mẫu ở máy tính và màn hình hẹp.",
+          "Kiểm tra nội dung, đích liên kết và khả năng thao tác bằng bàn phím."
+        ],
+        "expected": "Nhãn và đích liên kết khớp bảng ánh xạ mốc; trạng thái thích ứng với kích thước màn hình/phiên được ghi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #12 / ST04-EL-12",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-013",
+        "requirement_ids": [
+          "ST-04-YC-014"
+        ],
+        "target_id": "ST-04-EL-013",
+        "group": "Thành phần",
+        "title": "Nhóm liên kết chân trang",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Các nhãn và đích liên kết được ghi trong bảng ánh xạ mốc.",
+        "steps": [
+          "Mở bản mẫu ở máy tính và màn hình hẹp.",
+          "Kiểm tra nội dung, đích liên kết và khả năng thao tác bằng bàn phím."
+        ],
+        "expected": "Nhãn và đích liên kết khớp bảng ánh xạ mốc; trạng thái thích ứng với kích thước màn hình/phiên được ghi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #13 / ST04-EL-13",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-014",
+        "requirement_ids": [
+          "ST-04-YC-003"
+        ],
+        "target_id": "ST-04-SRC-EL-014",
+        "group": "Thành phần",
+        "title": "Trạng thái đang kiểm tra khóa học",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Đường dẫn có `courseId` hợp lệ.",
+        "steps": [
+          "Mở đường dẫn hợp lệ.",
+          "Quan sát trước khi API phản hồi.",
+          "Kiểm tra aria-busy/aria-live."
+        ],
+        "expected": "Hiển thị nội dung tải trong khi #08/#15 đang xử lý và không hiển thị kết quả đã ghi danh trước phản hồi. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh loading; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-015",
+        "requirement_ids": [
+          "ST-04-YC-003",
+          "ST-04-YC-008"
+        ],
+        "target_id": "ST-04-SRC-EL-015",
+        "group": "Thành phần",
+        "title": "Thông tin khóa học hiện tại",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "200 #08 có `title` và `price`.",
+        "steps": [
+          "Mở đường dẫn với dữ liệu kiểm thử #08.",
+          "So sánh nội dung và giá hiển thị với phản hồi."
+        ],
+        "expected": "Dữ liệu hiển thị khớp phản hồi #08; không gắn đơn vị tiền tệ hoặc kết luận quyền học chỉ từ giá. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nội dung course; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — course signal",
+          "apps/study-server/app/modules/shared/course_catalog/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-016",
+        "requirement_ids": [
+          "ST-04-YC-004"
+        ],
+        "target_id": "ST-04-SRC-EL-016",
+        "group": "Thành phần",
+        "title": "Trạng thái không tìm thấy khóa học",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "GET #08 trả 404.",
+        "steps": [
+          "Cho #08 trả 404.",
+          "Quan sát nội dung và các yêu cầu tiếp theo."
+        ],
+        "expected": "Hiển thị tiêu đề không tìm thấy khóa học và không gọi #15/#19 sau khi #08 thất bại. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh not-found; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-017",
+        "requirement_ids": [
+          "ST-04-YC-002"
+        ],
+        "target_id": "ST-04-SRC-EL-017",
+        "group": "Thành phần",
+        "title": "Trạng thái cần đăng nhập",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "StudentApiService báo thiếu phiên hoặc trả 401/403.",
+        "steps": [
+          "Mở đường dẫn với phiên thiếu/hết hạn.",
+          "Quan sát tiêu đề, nội dung và liên kết `/login`."
+        ],
+        "expected": "Hiển thị yêu cầu đăng nhập; đường dẫn return và thời hạn phiên chờ được duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh login-required; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — mapStudentRequestError",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-018",
+        "requirement_ids": [
+          "ST-04-YC-006"
+        ],
+        "target_id": "ST-04-SRC-EL-018",
+        "group": "Thành phần",
+        "title": "Nhánh đã ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "#15 trả ghi danh ACTIVE.",
+        "steps": [
+          "Nạp khóa học.",
+          "Cho #15 trả ACTIVE.",
+          "Kiểm tra nội dung và đích nút hành động."
+        ],
+        "expected": "Hiển thị nhánh đã ghi danh và nút hành động `/student/courses` chỉ sau phản hồi ACTIVE. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh already-enrolled; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-019",
+        "requirement_ids": [
+          "ST-04-YC-005",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04-SRC-EL-019",
+        "group": "Thành phần",
+        "title": "Nhánh chưa xác định được ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "#15 trả Enrollment hợp lệ nhưng trạng thái không ACTIVE.",
+        "steps": [
+          "Cho #15 trả trạng thái đã được máy chủ dữ liệu kiểm thử xác nhận.",
+          "Kiểm tra nội dung và nút thử lại."
+        ],
+        "expected": "Hiển thị trạng thái chưa xác định; không tạo ghi danh; nhãn kiểm tra lại theo mã nguồn hiện tại. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh enrollment-unresolved; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — loadEnrollmentView"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-020",
+        "requirement_ids": [
+          "ST-04-YC-007",
+          "ST-04-YC-008"
+        ],
+        "target_id": "ST-04-SRC-EL-020",
+        "group": "Thành phần",
+        "title": "Nhánh khóa học miễn phí",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "`price=0`; #15 trả 404.",
+        "steps": [
+          "Nạp dữ liệu kiểm thử giá 0 và 404 #15.",
+          "Quan sát nội dung.",
+          "Kiểm tra yêu cầu chưa có #19."
+        ],
+        "expected": "Mã nguồn hiện hiển thị nút hành động miễn phí; không gọi #19 trước khi người dùng chọn nút hành động; tính hợp lệ nghiệp vụ chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh free; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — price branch, enrollForFree"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-021",
+        "requirement_ids": [
+          "ST-04-YC-010"
+        ],
+        "target_id": "ST-04-SRC-EL-021",
+        "group": "Thành phần",
+        "title": "Liên kết sang thanh toán",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Giá dương; nhánh trang thanh toán.",
+        "steps": [
+          "Nạp dữ liệu kiểm thử giá dương.",
+          "Kiểm tra đích liên kết trang thanh toán và yêu cầu phát sinh."
+        ],
+        "expected": "Hiển thị điều hướng trang thanh toán hiện tại; không gọi #19 hoặc coi giá là bằng chứng thanh toán. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh paid; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — nhánh giá dương"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-022",
+        "requirement_ids": [
+          "ST-04-YC-009"
+        ],
+        "target_id": "ST-04-SRC-EL-022",
+        "group": "Thành phần",
+        "title": "Trạng thái đang gửi yêu cầu ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Người dùng bấm nút hành động miễn phí; #19 đang chờ.",
+        "steps": [
+          "Nhấn nút hành động một lần.",
+          "Quan sát trạng thái khi #19 đang chờ."
+        ],
+        "expected": "Hiển thị trạng thái đang gửi trong lúc xử lý; kết quả ghi danh chưa được xác nhận cho tới #20. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh submitting; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — enrollForFree"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-023",
+        "requirement_ids": [
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04-SRC-EL-023",
+        "group": "Thành phần",
+        "title": "Nút thử lại kiểm tra",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "Trạng thái chưa xác định hoặc lỗi.",
+        "steps": [
+          "Hiển thị chưa xác định/lỗi.",
+          "Nhấn Kiểm tra lại.",
+          "Quan sát yêu cầu và trạng thái."
+        ],
+        "expected": "Nút gọi lại luồng kiểm tra theo mã nguồn; 404 của #15 vẫn không được diễn giải là bằng chứng chắc chắn. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nút retryCheck; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — retryCheck"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-024",
+        "requirement_ids": [
+          "ST-04-YC-011"
+        ],
+        "target_id": "ST-04-SRC-EL-024",
+        "group": "Thành phần",
+        "title": "Trạng thái không tải được danh sách sau ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "#19 thành công; #20 lần đầu lỗi.",
+        "steps": [
+          "Cho #19 thành công và #20 lỗi.",
+          "Nhấn Tải lại danh sách khóa học.",
+          "Kiểm tra yêu cầu mới."
+        ],
+        "expected": "Hiển thị thông báo tải lại; nhấn thử lại chỉ gọi #20, không gửi lại #19. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh refresh-error; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — retryMyCoursesRefresh"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-TP-025",
+        "requirement_ids": [
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04-SRC-EL-025",
+        "group": "Thành phần",
+        "title": "Trạng thái lỗi kiểm tra hoặc ghi danh",
+        "precondition": "Mở trạng thái/dữ liệu kiểm thử tương ứng với thành phần.",
+        "data": "API trả lỗi hoặc khung phản hồi không hợp lệ.",
+        "steps": [
+          "Cho một API liên quan trả lỗi hoặc dữ liệu không hợp lệ.",
+          "Quan sát trạng thái, nội dung và yêu cầu thử lại."
+        ],
+        "expected": "Hiển thị lỗi chung hiện có; không tuyên bố đã ghi danh; cách phân loại lỗi chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.html — nhánh error; apps/study-client/src/app/features/student/ST04/pages/st04-page.ts — error handlers"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST04-SK-001",
+        "requirement_ids": [
+          "ST-04-YC-001",
+          "ST-04-YC-002"
+        ],
+        "target_id": "ST-04-EV-001",
+        "group": "Khởi tạo và phiên",
+        "title": "Tải đường dẫn hợp lệ và không hợp lệ",
+        "precondition": "Ứng dụng có đường dẫn hiện hành và dữ liệu kiểm thử phiên học viên.",
+        "data": "`courseId` hợp lệ hoặc không hợp lệ; phiên học viên hợp lệ hoặc thiếu.",
+        "steps": [
+          "Mở đường dẫn với từng dữ liệu kiểm thử.",
+          "Kiểm tra kiểm tra ID, trạng thái ban đầu và bộ kiểm soát truy cập/đăng nhập."
+        ],
+        "expected": "ID hợp lệ đi vào luồng tải; ID không hợp lệ bị từ chối theo mã nguồn hiện tại. AC-12/bộ kiểm soát truy cập và return path vẫn chờ duyệt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-01",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-SK-002",
+        "requirement_ids": [
+          "ST-04-YC-003",
+          "ST-04-YC-004"
+        ],
+        "target_id": "ST-04-EV-002",
+        "group": "Đọc khóa học",
+        "title": "Kiểm tra kết quả #08 theo trạng thái",
+        "precondition": "API #08 có dữ liệu kiểm thử khả dụng.",
+        "data": "200 PUBLISHED, 404, 500, mentor thiếu.",
+        "steps": [
+          "Mở đường dẫn.",
+          "Trả từng phản hồi #08.",
+          "Ghi trạng thái và yêu cầu kế tiếp."
+        ],
+        "expected": "200 tiếp tục #15; 404 hiển thị không tìm thấy; 500/bộ ánh xạ lỗi hiển thị lỗi theo mã nguồn. Khác biệt LEFT JOIN/INNER JOIN chờ chốt. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-02",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/view.py",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-SK-003",
+        "requirement_ids": [
+          "ST-04-YC-005",
+          "ST-04-YC-006",
+          "ST-04-YC-012"
+        ],
+        "target_id": "ST-04-EV-003",
+        "group": "Kiểm tra ghi danh",
+        "title": "Đối chiếu danh tính, trạng thái và 404 của #15",
+        "precondition": "#08 trả khóa học PUBLISHED; học viên mã truy cập và API #15 có dữ liệu kiểm thử được duyệt.",
+        "data": "ACTIVE, trạng thái khác ACTIVE, 404 do mỗi nguyên nhân, 401/403/500.",
+        "steps": [
+          "Mở đường dẫn.",
+          "Trả từng phản hồi #15.",
+          "Kiểm tra trạng thái và có/không có yêu cầu #19."
+        ],
+        "expected": "Chỉ ghi nhận hành vi mã nguồn hiện tại; ACTIVE mở nhánh đã ghi danh, trạng thái khác ACTIVE chưa xác định, 404 đang bị coi là chưa có ghi danh dù nguyên nhân không phân biệt được. Không duyệt nghiệp vụ cho tới khi blocker được giải quyết. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#15"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-03",
+          "apps/study-server/app/modules/guest/api_15_courses_enrollment_status/view.py",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-SK-004",
+        "requirement_ids": [
+          "ST-04-YC-007",
+          "ST-04-YC-008",
+          "ST-04-YC-010",
+          "ST-04-YC-009",
+          "ST-04-YC-011"
+        ],
+        "target_id": "ST-04-EV-004",
+        "group": "Rẽ nhánh và ghi danh",
+        "title": "Kiểm tra nhánh ACTIVE, miễn phí và trả phí",
+        "precondition": "Có dữ liệu kiểm thử #08/#15/#19/#20 và quyết định phía máy chủ.",
+        "data": "`ACTIVE`; `price=0`; giá dương; #19 thành công/409; #20 thành công/lỗi.",
+        "steps": [
+          "Chạy từng nhánh với dữ liệu kiểm thử.",
+          "Theo dõi API và điều hướng.",
+          "Ghi rõ nhánh nào chỉ là hiện tại mã nguồn."
+        ],
+        "expected": "Mã nguồn hiện dùng #19 sau click ở nhánh giá 0, #20 để xác nhận, và trang thanh toán ở nhánh giá dương. Không kết luận miễn phí/thanh toán nếu chưa có hợp đồng máy chủ. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [
+          "#08",
+          "#15",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-04",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/05-business-rules.md",
+          "apps/study-client/src/app/features/student/ST04/pages/st04-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-SK-005",
+        "requirement_ids": [
+          "ST-04-YC-013"
+        ],
+        "target_id": "ST-04-EV-005",
+        "group": "Quay lại",
+        "title": "Kiểm tra nút hành động quay lại danh sách",
+        "precondition": "Bản mẫu và đường dẫn `/courses` khả dụng trong môi trường được duyệt.",
+        "data": "Liên kết `/courses`.",
+        "steps": [
+          "Nhấn nút hành động quay lại.",
+          "Ghi URL đích và trạng thái truy vấn."
+        ],
+        "expected": "Bản mẫu trỏ `/courses`, không giữ mã khóa học; đường dẫn thực tế cần xác minh. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-05",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #11"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST04-SK-006",
+        "requirement_ids": [
+          "ST-04-YC-014",
+          "ST-04-YC-015"
+        ],
+        "target_id": "ST-04-EV-006",
+        "group": "Shell và điều hướng",
+        "title": "Kiểm tra liên kết đầu trang, đường dẫn điều hướng và chân trang",
+        "precondition": "Bản mẫu được xem ở máy tính và vùng hiển thị hẹp.",
+        "data": "`đích liên kết` mốc #1–#5, #13.",
+        "steps": [
+          "Điều hướng qua từng liên kết.",
+          "Kiểm tra vị trí lấy nét, điểm ngắt, đích."
+        ],
+        "expected": "Các nhãn/đích liên kết phải khớp bảng ánh xạ mốc sau duyệt; đích thời điểm chạy, trạng thái phiên và menu thích ứng với kích thước màn hình còn chờ xác nhận. Kết quả nghiệm thu vẫn chờ xác nhận theo DD BLOCKED.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/02-events.md — EV-06",
+          "apps/study-client/docs/dd_screens/ST-04-KiemTraGhiDanhTruocDangKy/01-ui-elements.md — marker #1–#5, #13"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

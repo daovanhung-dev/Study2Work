@@ -1,0 +1,2241 @@
+{
+  "metadata": {
+    "screen_id": "SH-02",
+    "screen_name": "Đăng nhập",
+    "module": "Study Web — Phần dùng chung",
+    "route": "/login",
+    "actor": "Khách chưa đăng nhập",
+    "version": "1.0 — Bộ UTC chính thức theo bản DD hiện có; chưa chạy ca",
+    "dd_version": "SH-02 DD 0.4; đối chiếu mã nguồn đến 2026-11-24",
+    "dd_status": "Tổng quan và phần API mới nhất chọn mã nguồn #03 hiện tại; một số câu hỏi mở trong trang quy tắc còn mâu thuẫn với lựa chọn đó.",
+    "runtime_status": "Mã nguồn Angular nối /login, gửi #03, phân vai trò và chỉ gọi #04 cho STUDENT. Chưa xác minh hoạt động trên trình duyệt, API/CSDL trực tiếp hoặc môi trường triển khai; các ca UTC chưa chạy.",
+    "author": "Chưa được ghi trong DD",
+    "reviewer": "Chưa được ghi trong DD",
+    "approver": "Chưa được ghi trong DD",
+    "date": "2026-11-24",
+    "source_name": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md và các trang DD SH-02; đối chiếu mã nguồn Study Web",
+    "baseline_authorization": "Người dùng xác nhận bản DD SH-02 hiện có là tài liệu chuẩn kể cả khi tài liệu ghi trạng thái bị chặn. Giữ nguyên mọi câu hỏi mở và sai khác, không tự phê duyệt.",
+    "release_readiness": "Đủ cấu trúc và truy vết để làm bộ UTC chính thức theo DD hiện có; chưa đủ căn cứ nghiệm thu/phát hành vì ca chưa chạy và các sai khác trong DD còn chờ xử lý.",
+    "discrepancy_note": "Mục tích hợp API mới nhất chọn #03 HTTP 200/LoginData; câu hỏi D01 và trích đoạn cũ còn ghi 201/chỉ có UserProfile. Nhánh #04/401 trong DD còn chờ chính sách nhưng mã nguồn làm mới R-X01 một lần rồi thử lại #04. DD yêu cầu chuyển tiêu điểm tới trường lỗi 422 nhưng SH02Page không chuyển tiêu điểm tường minh. Mật khẩu hiện được xóa sau thành công nhưng được giữ lại khi lỗi; thời điểm xóa còn chờ chính sách riêng tư."
+  },
+  "overall": {
+    "objective": "Cho khách nhập email và mật khẩu, xử lý lỗi đăng nhập và chuyển tới khu vực phù hợp sau khi xác minh phản hồi theo vai trò.",
+    "inputs": "Email và mật khẩu do khách nhập tại /login; phản hồi #03; với STUDENT, phản hồi #04.",
+    "outputs": "Lỗi cục bộ hoặc tại trường; phiên theo vai trò; chuyển tới /student, /mentor, /admin, /forbidden hoặc /register theo nhánh được mô tả.",
+    "main_flow": "Khách mở /login → nhập email/mật khẩu → gửi POST #03 một lần → nhận lỗi hoặc tiếp nhận phiên theo vai trò → chỉ STUDENT gọi GET #04 và so khớp vai trò/email → chuyển tới tuyến tương ứng.",
+    "preconditions": "Tuyến /login đã được đăng ký trong nhóm tuyến dùng chung. Thực thi cần API/môi trường kiểm thử và dữ liệu giả lập; chưa kiểm tra dịch vụ trực tiếp trong lượt lập tài liệu.",
+    "states": [
+      "Ban đầu",
+      "Đang kiểm tra biểu mẫu",
+      "Đang gửi",
+      "Lỗi thông tin đăng nhập 401",
+      "Tài khoản không hoạt động 403",
+      "Lỗi dữ liệu 422",
+      "Lỗi mạng hoặc máy chủ",
+      "Đang xác minh hồ sơ học viên",
+      "Đăng nhập thành công theo vai trò"
+    ],
+    "security": "Gửi mật khẩu trong thân JSON #03, không trong địa chỉ; không gắn Bearer vào yêu cầu đăng nhập. Không hiển thị mật khẩu/token trong lỗi hoặc tuyến. Dùng dữ liệu giả lập, không dùng thông tin đăng nhập thật. Mã nguồn bộ phiên giữ token cục bộ trong bộ nhớ.",
+    "out_of_scope": "Không kiểm thử quên mật khẩu, returnTo, xác minh email/OTP, lưu token bền vững, cấp quyền vai trò trên máy chủ, cơ sở dữ liệu trực tiếp hoặc môi trường triển khai. Không suy đoán chính sách nghiệp vụ còn chờ xác nhận."
+  },
+  "apis": [
+    {
+      "id": "API-003",
+      "number": "03",
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "request": "Công khai, không Bearer. Application/json: {email: string, password: string}. SH02Page loại khoảng trắng đầu/cuối email; mật khẩu giữ nguyên. Không có tham số truy vấn hoặc dữ liệu bổ sung trong thân yêu cầu.",
+      "response": "Theo nguồn #03 được chọn trong mục tích hợp API 2026-11-21: HTTP 200; success=true; businessCode=DESIGN_RESOURCE_RETRIEVED; data gồm id, full_name, email, role, avatar_url, phone, status, created_at, updated_at, access_token, refresh_token, token_type=\"bearer\", expires_in, refresh_expires_in.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED cho email/mật khẩu không đúng; 403 DESIGN_ACCESS_DENIED khi trạng thái không ACTIVE; 422 DESIGN_VALIDATION_ERROR kèm meta.fieldErrors; 500 DESIGN_INTERNAL_ERROR. Không tự gửi lại khi mất phản hồi.",
+      "auth": "Không yêu cầu đăng nhập; không gắn Authorization.",
+      "design_status": "Đã xác nhận",
+      "event_ids": [
+        "SH-02-EV-004",
+        "SH-02-EV-005",
+        "SH-02-EV-006",
+        "SH-02-EV-007",
+        "SH-02-EV-008",
+        "SH-02-EV-009"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; docs/lists/list_api.md #03; apps/study-server/app/modules/guest/api_03_auth_login/; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+    },
+    {
+      "id": "API-004",
+      "number": "04",
+      "method": "GET",
+      "path": "/api/v1/users/me",
+      "request": "Không có phần thân, tham số truy vấn hoặc tham số đường dẫn. Một tiêu đề Authorization: Bearer <access_token>; chỉ dùng phiên STUDENT.",
+      "response": "HTTP 200 DESIGN_RESOURCE_RETRIEVED; data có id, full_name, email, role, avatar_url, phone, status, created_at, updated_at. Không có permissions, bio hoặc token.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED cho vai trò không phải STUDENT; 500 DESIGN_INTERNAL_ERROR. Cả lỗi xác thực/claim và hồ sơ không tồn tại đều có thể là 401.",
+      "auth": "Bearer JWT có vai trò STUDENT; kiểm tra mã nguồn hiện xác thực claim trước khi truy vấn.",
+      "design_status": "Đã xác nhận",
+      "event_ids": [
+        "SH-02-EV-010",
+        "SH-02-EV-011",
+        "SH-02-EV-012"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; docs/lists/list_api.md #04; apps/study-server/app/modules/student/api_04_users_me/; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+    },
+    {
+      "id": "API-RX01",
+      "number": "R-X01",
+      "method": "POST",
+      "path": "/api/v1/auth/refresh",
+      "request": "Theo mã nguồn client: thân JSON {refresh_token: string}; do phiên học viên gửi. Không đưa token lên địa chỉ.",
+      "response": "Theo mã nguồn phiên học viên: tiếp nhận phong bì xác thực mới khi thành công; thay cặp token trong bộ quản lý phiên.",
+      "errors": "Phiên học viên dọn dữ liệu cục bộ nếu làm mới thất bại. Hành vi này không có mã API trong danh mục; nhánh áp dụng mọi #04/401 còn mâu thuẫn trong DD.",
+      "auth": "Không có Bearer; cần refresh token hiện có trong phiên học viên.",
+      "design_status": "Chờ xác nhận",
+      "event_ids": [
+        "SH-02-EV-011"
+      ],
+      "source_ref": "apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md §3.4; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md SH02-D09"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SH-02-YC-001",
+      "description": "Mở tuyến đăng nhập cho khách, không yêu cầu phiên trước đó.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/src/app/features/shared/shared.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-002",
+      "description": "Hiển thị nhận diện, tiêu đề và hướng dẫn đăng nhập theo màn hình SH-02.",
+      "group": "Giao diện",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-003",
+      "description": "Nhận email bắt buộc; kiểm tra định dạng và bỏ khoảng trắng đầu/cuối trước khi gửi.",
+      "group": "Biểu mẫu",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-004",
+      "description": "Nhận mật khẩu bắt buộc; giữ nguyên chuỗi người dùng nhập, kể cả khoảng trắng ở hai đầu.",
+      "group": "Biểu mẫu",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-005",
+      "description": "Cho phép hiện hoặc ẩn mật khẩu mà không đổi giá trị và không gửi biểu mẫu.",
+      "group": "Biểu mẫu",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-006",
+      "description": "Khóa nút và hai trường trong khi gửi; chặn gửi lặp.",
+      "group": "Biểu mẫu",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-007",
+      "description": "Gửi đúng một POST #03 với thân JSON chỉ gồm email và password; không gửi Bearer hoặc thông tin đăng nhập trên địa chỉ.",
+      "group": "Tích hợp",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-008",
+      "description": "Chỉ chấp nhận phản hồi #03 HTTP 200, success=true và businessCode=DESIGN_RESOURCE_RETRIEVED cùng dữ liệu hồ sơ/token hợp lệ.",
+      "group": "Tích hợp",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-009",
+      "description": "Kết thúc các phiên cũ rồi tiếp nhận phản hồi đăng nhập vào bộ quản lý phiên đúng vai trò.",
+      "group": "Phiên đăng nhập",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-010",
+      "description": "Chỉ gọi GET #04 cho STUDENT và gửi Bearer token trong đúng tiêu đề Authorization.",
+      "group": "Tích hợp",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts; apps/study-client/src/app/core/http/student-api.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-011",
+      "description": "So khớp role=STUDENT và email hồ sơ #04 với phiên vừa đăng nhập trước khi chuyển tới /student.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-012",
+      "description": "Với vai trò MENTOR hợp lệ, chuyển tới /mentor và không gọi API #04 dành cho học viên.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-013",
+      "description": "Với vai trò ADMIN hợp lệ, chuyển tới /admin và không gọi API #04 dành cho học viên.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-014",
+      "description": "Với lỗi #03/401, hiển thị thông báo chung về thông tin đăng nhập và không gọi làm mới phiên.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-015",
+      "description": "Với lỗi #03/403 do tài khoản không hoạt động, hiển thị thông báo riêng an toàn và không gọi #04.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-016",
+      "description": "Với lỗi #03/422, gắn lỗi email/mật khẩu theo meta.fieldErrors; cho phép sửa và gửi lại có chủ ý.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-017",
+      "description": "Với lỗi mạng, HTTP 500, phản hồi sai cấu trúc hoặc vai trò không hỗ trợ, hiển thị lỗi an toàn và không gửi lại tự động.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-018",
+      "description": "Cung cấp liên kết đăng ký tới /register; SH-02 không gửi dữ liệu biểu mẫu sang tuyến đăng ký.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/shared.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-019",
+      "description": "Không đưa mật khẩu hoặc token vào địa chỉ, văn bản lỗi hay điều hướng. Chỉ gửi mật khẩu trong thân yêu cầu #03.",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-020",
+      "description": "Không đọc hoặc mang theo returnTo; chức năng quên mật khẩu nằm ngoài phạm vi SH-02 hiện tại.",
+      "group": "Phạm vi",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-021",
+      "description": "Khi #04 trả 401, mã nguồn phía client gọi R-X01 một lần rồi thử lại #04 một lần; nhánh này vẫn mâu thuẫn với bảng quyết định chờ xác nhận trong DD.",
+      "group": "Khôi phục phiên",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md",
+      "notes": "Kiểm thử theo dữ liệu giả lập; chưa chạy trong lượt lập tài liệu."
+    },
+    {
+      "id": "SH-02-YC-022",
+      "description": "Nếu #04 không xác minh được hồ sơ hoặc trả lỗi cuối cùng, dọn phiên học viên theo mã nguồn; không coi đây là xác minh môi trường triển khai.",
+      "group": "Khôi phục phiên",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-02-YC-023",
+      "description": "Xử lý việc xóa mật khẩu sau kết quả đăng nhập theo chính sách riêng tư đã duyệt; mã nguồn hiện chỉ xóa sau khi luồng thành công hoàn tất.",
+      "group": "Bảo mật",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md SH02-EV-02; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md",
+      "notes": "Lỗi 401/403/422/500 hiện giữ giá trị mật khẩu trong ô; DD để thời điểm xóa chờ quyết định."
+    }
+  ],
+  "elements": [
+    {
+      "id": "SH-02-EL-001",
+      "marker": "#1",
+      "source_element_id": "SH02-EL-01",
+      "name": "Nhận diện Study2Work",
+      "type": "Nhóm thương hiệu",
+      "position": "Đầu thẻ đăng nhập.",
+      "properties": "Tên Study2Work, biểu tượng và dòng Study LMS; nội dung tĩnh, không có liên kết/handler trong HTML hiện tại.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+    },
+    {
+      "id": "SH-02-EL-002",
+      "marker": "#2",
+      "source_element_id": "SH02-EL-02",
+      "name": "Tiêu đề và lời hướng dẫn",
+      "type": "Tiêu đề và đoạn văn",
+      "position": "Dưới nhận diện thương hiệu.",
+      "properties": "Một tiêu đề cấp một “Đăng nhập” và lời hướng dẫn; không gọi API.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+    },
+    {
+      "id": "SH-02-EL-003",
+      "marker": "#3",
+      "source_element_id": "SH02-EL-03",
+      "name": "Vùng cảnh báo chung",
+      "type": "Vùng thông báo",
+      "position": "Giữa lời giới thiệu và biểu mẫu; ẩn khi chưa có lỗi.",
+      "properties": "Có role=alert và aria-live=assertive; hiện tiêu đề cùng thông báo an toàn khi phát sinh lỗi. Marker #3 đặt tại vùng trống của ảnh sạch; không phải nhãn email.",
+      "event_ids": [
+        "SH-02-EV-005",
+        "SH-02-EV-006",
+        "SH-02-EV-007",
+        "SH-02-EV-008",
+        "SH-02-EV-009",
+        "SH-02-EV-010",
+        "SH-02-EV-011",
+        "SH-02-EV-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json; apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    },
+    {
+      "id": "SH-02-EL-004",
+      "marker": "#4",
+      "source_element_id": "SH02-EL-04",
+      "name": "Trường email",
+      "type": "Ô nhập email",
+      "position": "Trường đầu tiên trong biểu mẫu.",
+      "properties": "Type=email, name=email, required, autocomplete=email; placeholder name@example.com. SH02Page loại bỏ khoảng trắng đầu/cuối email trước khi kiểm tra/gửi. Lỗi trường nối bằng aria-describedby.",
+      "event_ids": [
+        "SH-02-EV-002",
+        "SH-02-EV-004",
+        "SH-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json; apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    },
+    {
+      "id": "SH-02-EL-005",
+      "marker": "#5",
+      "source_element_id": "SH02-EL-05",
+      "name": "Trường mật khẩu",
+      "type": "Ô nhập mật khẩu",
+      "position": "Dưới trường email.",
+      "properties": "Name=password, required, autocomplete=current-password; mặc định bị che. Chặn chuỗi toàn khoảng trắng nhưng giữ nguyên chuỗi gửi đi. Lỗi trường nối bằng aria-describedby. Mã nguồn hiện xóa mật khẩu khi luồng đăng nhập thành công; khi luồng lỗi, giá trị vẫn còn trong ô.",
+      "event_ids": [
+        "SH-02-EV-002",
+        "SH-02-EV-003",
+        "SH-02-EV-004",
+        "SH-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json; apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md"
+    },
+    {
+      "id": "SH-02-EL-006",
+      "marker": "#6",
+      "source_element_id": "SH02-EL-06",
+      "name": "Nút hiện hoặc ẩn mật khẩu",
+      "type": "Nút chuyển trạng thái",
+      "position": "Bên phải trường mật khẩu.",
+      "properties": "Type=button; nhãn trợ năng thay đổi giữa Hiện mật khẩu và Ẩn mật khẩu; aria-pressed phản ánh trạng thái; không gửi biểu mẫu.",
+      "event_ids": [
+        "SH-02-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json; apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    },
+    {
+      "id": "SH-02-EL-007",
+      "marker": "#7",
+      "source_element_id": "SH02-EL-07",
+      "name": "Nút đăng nhập",
+      "type": "Nút gửi biểu mẫu",
+      "position": "Bên dưới hai trường nhập.",
+      "properties": "Type=submit; đổi nhãn khi đang gửi; bị khóa trong lúc chờ; submit gọi SH02LoginService.",
+      "event_ids": [
+        "SH-02-EV-004",
+        "SH-02-EV-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json; apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+    },
+    {
+      "id": "SH-02-EL-008",
+      "marker": "#8",
+      "source_element_id": "SH02-EL-08",
+      "name": "Liên kết đăng ký",
+      "type": "Liên kết nội bộ",
+      "position": "Cuối thẻ đăng nhập.",
+      "properties": "Href=/register; tuyến hiện tại ánh xạ tới SH03Page. SH-02 không gọi API đăng ký.",
+      "event_ids": [
+        "SH-02-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json; apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/shared.route.ts"
+    },
+    {
+      "id": "SH-02-EL-S01",
+      "marker": "Không có marker trong ảnh",
+      "source_element_id": "SOURCE-01",
+      "name": "Lỗi gắn với trường email",
+      "type": "Thông báo lỗi dưới ô nhập",
+      "position": "Chỉ hiện khi phản hồi có lỗi trường email.",
+      "properties": "Nội dung lấy từ meta.fieldErrors đầu tiên phù hợp; aria-invalid=true và aria-describedby nối tới thông báo. Khi nhập lại lỗi email được xóa.",
+      "event_ids": [
+        "SH-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md"
+    },
+    {
+      "id": "SH-02-EL-S02",
+      "marker": "Không có marker trong ảnh",
+      "source_element_id": "SOURCE-02",
+      "name": "Lỗi gắn với trường mật khẩu",
+      "type": "Thông báo lỗi dưới ô nhập",
+      "position": "Chỉ hiện khi phản hồi có lỗi trường password.",
+      "properties": "Nội dung lấy từ meta.fieldErrors đầu tiên phù hợp; aria-invalid=true và aria-describedby nối tới thông báo. Khi nhập lại lỗi mật khẩu được xóa.",
+      "event_ids": [
+        "SH-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md"
+    },
+    {
+      "id": "SH-02-EL-S03",
+      "marker": "Không có marker trong ảnh",
+      "source_element_id": "SOURCE-03",
+      "name": "Trạng thái đang gửi",
+      "type": "Trạng thái biểu mẫu",
+      "position": "Khi yêu cầu đăng nhập đang chờ.",
+      "properties": "Form aria-busy=true; hai ô nhập và các nút bị khóa; finalize trả biểu mẫu về trạng thái rảnh. Không có tự gửi lại.",
+      "event_ids": [
+        "SH-02-EV-004",
+        "SH-02-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    },
+    {
+      "id": "SH-02-EL-S04",
+      "marker": "Không có marker trong ảnh",
+      "source_element_id": "SOURCE-04",
+      "name": "Khung biểu mẫu đăng nhập",
+      "type": "Biểu mẫu",
+      "position": "Phần giữa thẻ, chứa email, mật khẩu và nút gửi.",
+      "properties": "Ngăn gửi mặc định của trình duyệt; submit handler gọi reportValidity, loại bỏ khoảng trắng đầu/cuối email, giữ mật khẩu, xóa thông báo cũ và không gửi khi còn lỗi cục bộ.",
+      "event_ids": [
+        "SH-02-EV-002",
+        "SH-02-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "SH-02-EV-001",
+      "source_event_id": "SH02-EV-01",
+      "name": "Mở SH-02",
+      "trigger": "Điều hướng tới /login khi chưa có phiên.",
+      "processing": "Tuyến /login trong nhóm tuyến dùng chung hiển thị SH02Page, không cần API để dựng biểu mẫu. Mã nguồn tuyến không đọc returnTo.",
+      "element_ids": [
+        "SH-02-EL-001",
+        "SH-02-EL-002",
+        "SH-02-EL-S04"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md; apps/study-client/src/app/features/shared/shared.route.ts"
+    },
+    {
+      "id": "SH-02-EV-002",
+      "source_event_id": "SH02-EV-02",
+      "name": "Nhập và sửa email, mật khẩu",
+      "trigger": "Nhập hoặc thay đổi giá trị trong hai ô.",
+      "processing": "Lưu giá trị tại biểu mẫu; email được loại bỏ khoảng trắng ở hai đầu lúc submit, mật khẩu giữ nguyên. Lỗi riêng của trường bị xóa khi người dùng nhập lại. Chưa có gọi mạng khi gõ. Mã nguồn hiện chỉ xóa mật khẩu sau khi luồng thành công; khi lỗi, giá trị vẫn còn. DD để quyết định thời điểm xóa chờ xác nhận.",
+      "element_ids": [
+        "SH-02-EL-004",
+        "SH-02-EL-005",
+        "SH-02-EL-S01",
+        "SH-02-EL-S02",
+        "SH-02-EL-S04"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+    },
+    {
+      "id": "SH-02-EV-003",
+      "source_event_id": "SH02-EV-03",
+      "name": "Hiện hoặc ẩn mật khẩu",
+      "trigger": "Bấm hoặc kích hoạt bàn phím tại nút mắt.",
+      "processing": "Đổi password/text, giữ nguyên giá trị; cập nhật aria-label/aria-pressed; không gửi biểu mẫu.",
+      "element_ids": [
+        "SH-02-EL-005",
+        "SH-02-EL-006"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+    },
+    {
+      "id": "SH-02-EV-004",
+      "source_event_id": "SH02-EV-04",
+      "name": "Gửi đăng nhập",
+      "trigger": "Gửi bằng nút hoặc Enter khi biểu mẫu hợp lệ.",
+      "processing": "Chặn gửi lặp; loại bỏ khoảng trắng đầu/cuối email; từ chối thiếu email/sai định dạng/ mật khẩu toàn khoảng trắng tại kiểm tra cục bộ; xóa lỗi cũ; gọi #03 đúng một lần; không tự thử lại khi lỗi mạng.",
+      "element_ids": [
+        "SH-02-EL-004",
+        "SH-02-EL-005",
+        "SH-02-EL-007",
+        "SH-02-EL-S03",
+        "SH-02-EL-S04"
+      ],
+      "api_ids": [
+        "API-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+    },
+    {
+      "id": "SH-02-EV-005",
+      "source_event_id": "SH02-EV-05",
+      "name": "Xử lý lỗi kiểm tra trường #03/422",
+      "trigger": "Nhận HTTP 422 từ yêu cầu đăng nhập.",
+      "processing": "Đọc meta.fieldErrors; nối lỗi email/mật khẩu phù hợp vào đúng trường; xóa lỗi khi nhập lại. Nếu không ánh xạ được, hiển thị lỗi chung. Mã nguồn không tự chuyển di chuyển tiêu điểm tới trường sai dù DD mô tả yêu cầu này.",
+      "element_ids": [
+        "SH-02-EL-003",
+        "SH-02-EL-004",
+        "SH-02-EL-005",
+        "SH-02-EL-S01",
+        "SH-02-EL-S02"
+      ],
+      "api_ids": [
+        "API-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    },
+    {
+      "id": "SH-02-EV-006",
+      "source_event_id": "SH02-EV-06",
+      "name": "Xử lý thông tin đăng nhập sai #03/401",
+      "trigger": "Nhận 401 DESIGN_AUTHENTICATION_REQUIRED từ #03.",
+      "processing": "Hiển thị thông báo chung; không tiết lộ email có tồn tại hay không; không gọi refresh hoặc #04; cho phép người dùng thử lại bằng thao tác mới.",
+      "element_ids": [
+        "SH-02-EL-003",
+        "SH-02-EL-007"
+      ],
+      "api_ids": [
+        "API-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    },
+    {
+      "id": "SH-02-EV-007",
+      "source_event_id": "SH02-EV-07",
+      "name": "Xử lý tài khoản không hoạt động #03/403",
+      "trigger": "Nhận 403 DESIGN_ACCESS_DENIED từ #03.",
+      "processing": "Hiển thị thông báo tài khoản chưa được phép đăng nhập; ở lại trang; không gọi #04 hoặc R-X01.",
+      "element_ids": [
+        "SH-02-EL-003",
+        "SH-02-EL-007"
+      ],
+      "api_ids": [
+        "API-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+    },
+    {
+      "id": "SH-02-EV-008",
+      "source_event_id": "SH02-EV-08",
+      "name": "Xử lý lỗi máy chủ, mạng hoặc phản hồi sai cấu trúc #03",
+      "trigger": "Nhận HTTP 500, lỗi kết nối hoặc phản hồi không dùng được.",
+      "processing": "Hiển thị lỗi an toàn, không đưa nội dung máy chủ thô lên trang; không dùng token từ phản hồi không hợp lệ; không tự gửi lại POST.",
+      "element_ids": [
+        "SH-02-EL-003",
+        "SH-02-EL-007",
+        "SH-02-EL-S03"
+      ],
+      "api_ids": [
+        "API-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+    },
+    {
+      "id": "SH-02-EV-009",
+      "source_event_id": "SH02-EV-09",
+      "name": "Xử lý đăng nhập thành công và phân nhánh vai trò",
+      "trigger": "Nhận phong bì thành công #03.",
+      "processing": "Chỉ chấp nhận HTTP 200, mã thành công và vai trò STUDENT/MENTOR/ADMIN; kết thúc các phiên cũ rồi tiếp nhận phong bì vào bộ quản lý phiên tương ứng. Student tiếp tục #04; Mentor/Admin đi thẳng tới tuyến riêng. Phần mô tả cũ trong DD còn giữ một số điều kiện chặn vai trò.",
+      "element_ids": [
+        "SH-02-EL-007",
+        "SH-02-EL-003"
+      ],
+      "api_ids": [
+        "API-003",
+        "API-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md"
+    },
+    {
+      "id": "SH-02-EV-010",
+      "source_event_id": "SH02-EV-10",
+      "name": "Tải và xác minh hồ sơ học viên #04",
+      "trigger": "Sau khi nhận vai trò STUDENT, gọi GET /users/me.",
+      "processing": "Gửi Bearer; chỉ chấp nhận phong bì thành công đúng mã, vai trò STUDENT và email khớp phiên. Khi thành công chuyển /student; nếu sai khác thì dọn phiên và hiện lỗi.",
+      "element_ids": [
+        "SH-02-EL-003",
+        "SH-02-EL-007"
+      ],
+      "api_ids": [
+        "API-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+    },
+    {
+      "id": "SH-02-EV-011",
+      "source_event_id": "SH02-EV-11",
+      "name": "Làm mới khi #04 trả 401",
+      "trigger": "GET #04 trả HTTP 401.",
+      "processing": "Mã nguồn StudentApiService gọi R-X01 một lần và thử lại #04 một lần. Nếu lỗi vẫn còn, phiên học viên bị dọn. DD có mục SH02-D09/EV-11 yêu cầu quyết định phân biệt nguyên nhân và chính sách; giữ sai khác này, không tuyên bố đã được phê duyệt nghiệp vụ.",
+      "element_ids": [
+        "SH-02-EL-003"
+      ],
+      "api_ids": [
+        "API-004",
+        "API-RX01"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts"
+    },
+    {
+      "id": "SH-02-EV-012",
+      "source_event_id": "SH02-EV-12",
+      "name": "Xử lý #04 trả 403, 500 hoặc lỗi mạng",
+      "trigger": "GET #04 trả lỗi cuối cùng hoặc lỗi kết nối.",
+      "processing": "Với 403, StudentApiService điều hướng tới /forbidden theo SH-05 và SH02LoginService dọn phiên học viên; với 500/mạng, hiện lỗi an toàn, không gửi lại #03. Nhánh thử lại #04 sau 500/mạng chưa được xác nhận.",
+      "element_ids": [
+        "SH-02-EL-003",
+        "SH-02-EL-007"
+      ],
+      "api_ids": [
+        "API-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+    },
+    {
+      "id": "SH-02-EV-013",
+      "source_event_id": "SH02-EV-13",
+      "name": "Chuyển tới đăng ký",
+      "trigger": "Kích hoạt liên kết Đăng ký ngay.",
+      "processing": "Điều hướng nội bộ tới /register; không gọi API từ SH-02 và không truyền thông tin đăng nhập trong địa chỉ.",
+      "element_ids": [
+        "SH-02-EL-008"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html; apps/study-client/src/app/features/shared/shared.route.ts"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B-01",
+      "description": "Phần tổng quan/API hiện chọn phản hồi #03 HTTP 200 với LoginData; phần quy tắc và trích đoạn lịch sử vẫn nói contract 201 chỉ có UserProfile.",
+      "impact": "Người đọc có thể chọn nhầm phản hồi để nghiệm thu; mã nguồn Study Web hiện chấp nhận HTTP 200 và dữ liệu hồ sơ kèm token.",
+      "decision": "Dùng phần tích hợp API chọn hợp đồng theo mã nguồn hiện tại ngày 2026-11-21 làm cơ sở lập ca; giữ cảnh báo cho tới khi phần câu hỏi mở trong DD được đồng bộ.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md §2–3.2; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md SH02-D01; apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-02",
+      "description": "DD có nội dung trái chiều về chính sách #04/401: sự kiện/API cảnh báo chưa có bộ phân biệt và yêu cầu quyết định; mã nguồn StudentApiService lại làm mới bằng R-X01 một lần rồi thử lại #04 một lần.",
+      "impact": "Kết quả kỳ vọng cho tình huống #04/401 chưa nhất quán giữa các phần DD và mã nguồn hiện tại.",
+      "decision": "Đưa hành vi mã nguồn vào ca riêng, đánh dấu chờ xác nhận nghiệp vụ; không biến ca này thành phê duyệt chính sách.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md SH02-EV-11; apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md §3.3–3.4; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md SH02-D09; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-03",
+      "description": "DD yêu cầu di chuyển tiêu điểm tới trường lỗi đầu tiên ở nhánh 422; SH02Page hiện chỉ gắn lỗi và thuộc tính aria, không di chuyển tiêu điểm tường minh.",
+      "impact": "Khả năng truy cập bàn phím của nhánh lỗi 422 chưa khớp hoàn toàn với kỳ vọng DD.",
+      "decision": "Giữ ca kiểm tra tiêu điểm ở trạng thái chờ; ghi nhận khác biệt theo mã nguồn, không đánh dấu đạt nếu chưa có quyết định hoặc cập nhật.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md SH02-EV-05; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-04",
+      "description": "Mã R-X01 có trong mã nguồn và được gọi trong nhánh #04/401 nhưng chưa có mã API trong danh mục; lượt này không xác minh môi trường triển khai.",
+      "impact": "Không thể xác nhận phản hồi trực tiếp của R-X01, cơ sở dữ liệu, thời hạn token hoặc hành vi trên môi trường thật.",
+      "decision": "Chỉ lập ca theo hợp đồng/mã nguồn đã ghi trong DD; không chạy API thật và không tự cấp mã catalog cho R-X01.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md §3.4; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-05",
+      "description": "DD chưa chốt thời điểm xóa mật khẩu sau kết quả đăng nhập; mã nguồn chỉ xóa sau thành công và giữ mật khẩu khi lỗi.",
+      "impact": "Cách giữ mật khẩu trong biểu mẫu sau 401/403/422/500 có ảnh hưởng riêng tư và chưa có chính sách được duyệt.",
+      "decision": "Đưa vào ca đối chiếu riêng; giữ trạng thái chờ xác nhận, không tự đặt quy tắc xóa.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md SH02-EV-02; apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts; apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md SH02-D02",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "SH-02-TC-MH-001",
+        "requirement_ids": [
+          "SH-02-YC-001",
+          "SH-02-YC-002"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Mở /login với vai trò khách",
+        "precondition": "Chưa có phiên đăng nhập.",
+        "data": "Mở trực tiếp /login.",
+        "steps": [
+          "Mở /login.",
+          "Ghi nhận tuyến, màn hình và yêu cầu phiên."
+        ],
+        "expected": "Nhóm tuyến dùng chung ánh xạ /login tới SH02Page; biểu mẫu hiển thị cho khách; không gọi API chỉ để dựng trang.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/src/app/features/shared/shared.route.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-002",
+        "requirement_ids": [
+          "SH-02-YC-002",
+          "SH-02-YC-003",
+          "SH-02-YC-004",
+          "SH-02-YC-005",
+          "SH-02-YC-006"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị biểu mẫu ở trạng thái ban đầu",
+        "precondition": "Trang vừa mở.",
+        "data": "Không nhập data.",
+        "steps": [
+          "Kiểm tra tiêu đề, lời hướng dẫn và hai ô nhập.",
+          "Kiểm tra mật khẩu mặc định bị che và nút đăng nhập đang rảnh."
+        ],
+        "expected": "Hiển thị tiêu đề Đăng nhập, email và mật khẩu rỗng; mật khẩu bị che; không có cảnh báo lỗi khi chưa phát sinh lỗi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-003",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-004",
+          "SH-02-YC-006",
+          "SH-02-YC-007"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Từ chối biểu mẫu trống tại trình duyệt",
+        "precondition": "Trang đang rảnh.",
+        "data": "Email rỗng; mật khẩu rỗng.",
+        "steps": [
+          "Bấm Đăng nhập.",
+          "Ghi nhận thông báo kiểm tra cục bộ và số yêu cầu."
+        ],
+        "expected": "Kiểm tra bắt buộc chặn gửi; #03 không được gọi; không điều hướng.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-004",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-004",
+          "SH-02-YC-006",
+          "SH-02-YC-007",
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Từ chối email sai định dạng hoặc mật khẩu toàn khoảng trắng",
+        "precondition": "Trang đang rảnh.",
+        "data": "Lần lượt nhập email không đúng định dạng; sau đó nhập email hợp lệ và mật khẩu chỉ có khoảng trắng.",
+        "steps": [
+          "Gửi từng bộ data.",
+          "Ghi nhận trạng thái cục bộ và số lần gọi #03."
+        ],
+        "expected": "Email sai định dạng hoặc mật khẩu toàn khoảng trắng bị chặn bởi kiểm tra biểu mẫu; không gọi #03.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-005",
+        "requirement_ids": [
+          "SH-02-YC-007",
+          "SH-02-YC-008",
+          "SH-02-YC-009",
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-019"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Đăng nhập học viên và xác minh hồ sơ thành công",
+        "precondition": "Biểu mẫu hợp lệ; phản hồi giả lập của #03 có HTTP 200, mã thành công và vai trò STUDENT.",
+        "data": "Email student@example.test; mật khẩu giả lập; #04 trả vai trò STUDENT và cùng email.",
+        "steps": [
+          "Gửi một lần.",
+          "Ghi nhận #03, #04, tiêu đề Authorization và tuyến cuối."
+        ],
+        "expected": "#03 được gọi một lần bằng thân email/mật khẩu, không Bearer; phản hồi vào phiên STUDENT; #04 được gọi bằng Bearer; email và vai trò khớp; chuyển tới /student.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-006",
+        "requirement_ids": [
+          "SH-02-YC-007",
+          "SH-02-YC-008",
+          "SH-02-YC-009",
+          "SH-02-YC-012",
+          "SH-02-YC-013"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Đăng nhập vai trò MENTOR thành công",
+        "precondition": "Phản hồi giả lập #03 hợp lệ với vai trò MENTOR.",
+        "data": "Bộ đăng nhập người hướng dẫn thử nghiệm.",
+        "steps": [
+          "Gửi một lần.",
+          "Ghi nhận phiên được chọn, yêu cầu #04 và tuyến cuối."
+        ],
+        "expected": "Chọn phiên MENTOR và chuyển tới /mentor; không gọi API #04 dành cho STUDENT.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-007",
+        "requirement_ids": [
+          "SH-02-YC-007",
+          "SH-02-YC-008",
+          "SH-02-YC-009",
+          "SH-02-YC-013"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Đăng nhập vai trò quản trị viên thành công",
+        "precondition": "Phản hồi giả lập #03 hợp lệ với vai trò ADMIN.",
+        "data": "Bộ đăng nhập quản trị viên thử nghiệm.",
+        "steps": [
+          "Gửi một lần.",
+          "Ghi nhận phiên được chọn, yêu cầu #04 và tuyến cuối."
+        ],
+        "expected": "Chọn phiên ADMIN và chuyển tới /admin; không gọi API #04 dành cho STUDENT.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-008",
+        "requirement_ids": [
+          "SH-02-YC-014",
+          "SH-02-YC-015",
+          "SH-02-YC-017"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt 401 và 403 của yêu cầu đăng nhập",
+        "precondition": "Mỗi lần chạy dùng một phản hồi lỗi riêng của #03.",
+        "data": "Lượt A: 401 DESIGN_AUTHENTICATION_REQUIRED. Lượt B: 403 DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Chạy từng lượt với cùng một biểu mẫu hợp lệ.",
+          "So sánh thông báo, số yêu cầu tiếp theo và tuyến."
+        ],
+        "expected": "401 hiện thông báo thông tin đăng nhập chung; 403 hiện thông báo tài khoản chưa được phép đăng nhập; cả hai ở SH-02, không gọi #04 hoặc R-X01.",
+        "api_ids": [
+          "API-003",
+          "API-RX01",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-009",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-004",
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Ánh xạ lỗi kiểm tra 422 về đúng trường",
+        "precondition": "Phản hồi #03 có meta.fieldErrors cho email và password.",
+        "data": "Hai lỗi trường trong cùng phản hồi giả lập.",
+        "steps": [
+          "Gửi biểu mẫu hợp lệ.",
+          "Ghi nhận aria-invalid, thông báo cạnh từng ô và aria-describedby.",
+          "Nhập lại từng trường."
+        ],
+        "expected": "Email và mật khẩu nhận đúng lỗi tương ứng; khi nhập lại lỗi riêng bị xóa. DD yêu cầu chuyển tiêu điểm tới trường sai đầu tiên; SH02Page hiện không gọi.focus() để chuyển tiêu điểm, nên ghi nhận sai khác và không đánh dấu đạt phần này.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-010",
+        "requirement_ids": [
+          "SH-02-YC-007",
+          "SH-02-YC-014",
+          "SH-02-YC-015",
+          "SH-02-YC-016",
+          "SH-02-YC-017",
+          "SH-02-YC-019"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Xử lý lỗi máy chủ hoặc mạng khi đăng nhập",
+        "precondition": "Lặp lại với HTTP 500, lỗi mạng và phản hồi sai cấu trúc của #03.",
+        "data": "Không dùng tài khoản hoặc token thật.",
+        "steps": [
+          "Gửi một lần cho mỗi biến thể.",
+          "Ghi số yêu cầu, cảnh báo và dữ liệu xuất hiện trên màn hình."
+        ],
+        "expected": "Hiện lỗi an toàn; không lộ thân phản hồi thô, mật khẩu hay token; không tự gửi lại và không gọi #04/R-X01.",
+        "api_ids": [
+          "API-003",
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-011",
+        "requirement_ids": [
+          "SH-02-YC-008",
+          "SH-02-YC-009",
+          "SH-02-YC-017"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Từ chối vai trò không được hỗ trợ",
+        "precondition": "Phản hồi #03 có phong bì thành công nhưng vai trò lạ hoặc thiếu.",
+        "data": "role=UNKNOWN hoặc không có vai trò.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Ghi nhận phiên cũ, tuyến và yêu cầu tiếp theo."
+        ],
+        "expected": "Không chấp nhận vai trò; không gọi #04; hiện lỗi an toàn; không điều hướng tới tuyến theo vai trò không xác định.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-012",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-017",
+          "SH-02-YC-022"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Dừng khi hồ sơ #04 không khớp phiên đăng nhập",
+        "precondition": "#03 trả vai trò STUDENT; #04 trả email khác hoặc vai trò khác STUDENT.",
+        "data": "Email phiên student@example.test; email hoặc vai trò trong #04 không khớp.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Ghi nhận #04, dữ liệu phiên sau xử lý và tuyến cuối."
+        ],
+        "expected": "Không chuyển /student; báo không xác minh được hồ sơ; StudentSessionService kết thúc phiên cục bộ.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-013",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-021"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Làm mới phiên một lần khi #04 trả 401 rồi thử lại",
+        "precondition": "#03 trả STUDENT; access token còn hiệu lực; #04 lần đầu trả 401; R-X01 và lần #04 tiếp theo thành công.",
+        "data": "Phản hồi giả lập theo đúng thứ tự #03 → #04/401 → R-X01 → #04/200.",
+        "steps": [
+          "Đăng nhập học viên.",
+          "Ghi nhận thứ tự và số lần gọi từng API."
+        ],
+        "expected": "Mã nguồn hiện tại gọi R-X01 một lần, thử lại #04 một lần và sau khi vai trò/email khớp chuyển /student. DD vẫn có câu hỏi mở về chính sách này; ghi nhận hành vi mã nguồn, không xem như quyết định đã duyệt.",
+        "api_ids": [
+          "API-003",
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-014",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-021",
+          "SH-02-YC-022"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Dừng phiên khi làm mới hoặc lần đọc #04 tiếp theo thất bại",
+        "precondition": "#04 ban đầu trả 401; làm mới thất bại hoặc lần #04 thử lại tiếp tục lỗi.",
+        "data": "Phản hồi giả lập 401 cuối cùng.",
+        "steps": [
+          "Thực hiện luồng đăng nhập học viên.",
+          "Ghi nhận số lần #03/#04/R-X01 và trạng thái phiên."
+        ],
+        "expected": "Không lặp vô hạn và không gửi lại #03; phiên học viên bị dọn theo mã nguồn. Đích điều hướng/thông báo cuối cần được ghi nhận theo lỗi cụ thể.",
+        "api_ids": [
+          "API-003",
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-015",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-017",
+          "SH-02-YC-022"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Xử lý #04 trả 403, 500 hoặc lỗi mạng",
+        "precondition": "#03 thành công cho STUDENT; biến thể lỗi xảy ra trên #04.",
+        "data": "Lượt A: 403; lượt B: 500; lượt C: lỗi mạng.",
+        "steps": [
+          "Chạy riêng từng biến thể.",
+          "Ghi tuyến cuối, phiên và số lần gửi #03/#04."
+        ],
+        "expected": "Theo mã nguồn, HTTP 403 chuyển tới /forbidden và dọn phiên học viên; 500/mạng không gửi lại #03, giữ thông báo lỗi an toàn; không tự xác nhận thử lại #04.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-016",
+        "requirement_ids": [
+          "SH-02-YC-018",
+          "SH-02-YC-020"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến đăng ký từ SH-02",
+        "precondition": "Trang đăng nhập đang hiển thị.",
+        "data": "Không điền dữ liệu đăng nhập.",
+        "steps": [
+          "Kích hoạt Đăng ký ngay bằng chuột và bàn phím trong hai lượt riêng.",
+          "Ghi tuyến và yêu cầu phát sinh."
+        ],
+        "expected": "Điều hướng nội bộ tới /register; SH02Page không gọi API đăng ký và không đưa dữ liệu đăng nhập vào địa chỉ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-017",
+        "requirement_ids": [
+          "SH-02-YC-020"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Không mang theo returnTo hoặc mở chức năng ngoài phạm vi",
+        "precondition": "Mở /login kèm tham số returnTo không an toàn giả lập.",
+        "data": "returnTo=https://evil.example hoặc //evil.example.",
+        "steps": [
+          "Mở /login?returnTo=....",
+          "Kiểm tra tuyến sau khi đăng nhập giả lập và các liên kết trên trang."
+        ],
+        "expected": "SH02Page không đọc hoặc chuyển tiếp returnTo; không có điều khiển quên mật khẩu. Ghi nhận phạm vi DD, không kiểm tra chuyển hướng ở tuyến bảo vệ khác.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-018",
+        "requirement_ids": [
+          "SH-02-YC-006",
+          "SH-02-YC-007",
+          "SH-02-YC-008"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Chặn gửi lặp khi yêu cầu #03 đang chờ",
+        "precondition": "Giữ phản hồi #03 ở trạng thái chờ.",
+        "data": "Một bộ email/mật khẩu hợp lệ.",
+        "steps": [
+          "Gửi biểu mẫu rồi bấm nút hoặc Enter lần nữa khi đang chờ.",
+          "Ghi số lần gọi #03 và trạng thái điều khiển."
+        ],
+        "expected": "Chỉ một yêu cầu #03; nút và hai ô nhập bị khóa; aria-busy=true; khi kết thúc yêu cầu, trạng thái gửi trở về rảnh.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-MH-019",
+        "requirement_ids": [
+          "SH-02-YC-004",
+          "SH-02-YC-023"
+        ],
+        "target_id": "SH-02",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu thời điểm xóa mật khẩu sau lỗi",
+        "precondition": "Một bộ thông tin đăng nhập giả lập; #03 lần lượt trả lỗi.",
+        "data": "Lượt riêng cho mỗi phản hồi lỗi của #03.",
+        "steps": [
+          "Gửi biểu mẫu ở từng lượt.",
+          "Ghi nhận giá trị mật khẩu sau khi thông báo lỗi xuất hiện."
+        ],
+        "expected": "Mã nguồn hiện giữ mật khẩu trong ô sau lỗi và chỉ xóa khi luồng thành công hoàn tất. DD chưa chốt chính sách này; giữ trạng thái chờ, không xem hành vi hiện tại là quyết định được duyệt.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "SH-02-TC-TP-001",
+        "requirement_ids": [
+          "SH-02-YC-002"
+        ],
+        "target_id": "SH-02-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu nhận diện Study2Work",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Ảnh sạch và trang hiện tại.",
+        "steps": [
+          "Rà soát marker #1."
+        ],
+        "expected": "Có biểu tượng, Study2Work và Study LMS; phần này là tĩnh, không có đích bấm được.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/images/screen-numbered.png",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-002",
+        "requirement_ids": [
+          "SH-02-YC-002"
+        ],
+        "target_id": "SH-02-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu tiêu đề và lời hướng dẫn",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Ảnh sạch và trang hiện tại.",
+        "steps": [
+          "Rà soát marker #2."
+        ],
+        "expected": "Một tiêu đề cấp một “Đăng nhập” và lời hướng dẫn phù hợp; không phát sinh API.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/images/screen-numbered.png",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-003",
+        "requirement_ids": [
+          "SH-02-YC-014",
+          "SH-02-YC-015",
+          "SH-02-YC-016",
+          "SH-02-YC-017"
+        ],
+        "target_id": "SH-02-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu vùng cảnh báo chung",
+        "precondition": "Trang mới mở, sau đó tạo lần lượt phản hồi lỗi giả lập.",
+        "data": "401, 403, 422 không ánh xạ được, 500.",
+        "steps": [
+          "Quan sát lúc ban đầu.",
+          "Tạo từng lỗi và ghi nội dung vùng thông báo."
+        ],
+        "expected": "Ẩn lúc chưa có lỗi; khi hiện có role=alert và nội dung an toàn. Marker #3 ứng với vùng trống ngay trên email trong ảnh thiết kế.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/images/screen-numbered.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-004",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra trường email và khả năng truy cập",
+        "precondition": "Trang đang rảnh.",
+        "data": "email sai định dạng; email có khoảng trắng đầu/cuối.",
+        "steps": [
+          "Nhập từng giá trị và gửi.",
+          "Kiểm tra type, required, autocomplete, aria-invalid và aria-describedby."
+        ],
+        "expected": "Ô nhập có type=email, required, autocomplete=email; email được loại bỏ khoảng trắng ở hai đầu trước khi gửi; lỗi trường gắn đúng khi server trả lỗi trường.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-005",
+        "requirement_ids": [
+          "SH-02-YC-004",
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra trường mật khẩu",
+        "precondition": "Trang đang rảnh.",
+        "data": "Mật khẩu mẫu chỉ dùng trong kiểm thử.",
+        "steps": [
+          "Nhập và gửi từng bộ.",
+          "Ghi giá trị được giữ và thân yêu cầu khi hợp lệ."
+        ],
+        "expected": "Mặc định type=password và autocomplete=current-password; chuỗi mật khẩu không bị loại bỏ khoảng trắng khi gửi; chuỗi toàn khoảng trắng bị chặn; nội dung lỗi được nối đúng trường.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-006",
+        "requirement_ids": [
+          "SH-02-YC-005"
+        ],
+        "target_id": "SH-02-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra nút hiện hoặc ẩn mật khẩu",
+        "precondition": "Trang đang rảnh với mật khẩu thử nghiệm.",
+        "data": "Giá trị mật khẩu chỉ dùng trong kiểm thử.",
+        "steps": [
+          "Kích hoạt nút bằng chuột rồi bàn phím.",
+          "Kiểm tra type, aria-label, aria-pressed, giá trị và số yêu cầu."
+        ],
+        "expected": "Kiểu hiển thị đổi qua lại; giá trị không đổi; nhãn trợ năng và aria-pressed cập nhật; không gửi biểu mẫu hoặc gọi API.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-007",
+        "requirement_ids": [
+          "SH-02-YC-006",
+          "SH-02-YC-007"
+        ],
+        "target_id": "SH-02-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra nút đăng nhập và trạng thái chờ",
+        "precondition": "Giữ phản hồi #03 ở trạng thái chờ.",
+        "data": "Dữ liệu đăng nhập giả lập hợp lệ.",
+        "steps": [
+          "Gửi biểu mẫu rồi thử kích hoạt nút thêm lần nữa."
+        ],
+        "expected": "Nút bị vô hiệu hóa khi đang gửi và đổi nhãn thành Đang đăng nhập…; chỉ có một yêu cầu POST #03.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-008",
+        "requirement_ids": [
+          "SH-02-YC-018",
+          "SH-02-YC-020"
+        ],
+        "target_id": "SH-02-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra liên kết đăng ký",
+        "precondition": "SH-02 đang hiển thị.",
+        "data": "Kích hoạt href /register.",
+        "steps": [
+          "Kiểm tra địa chỉ đích và tuyến đích."
+        ],
+        "expected": "Liên kết có nhãn Đăng ký ngay, đích /register; router hiện ánh xạ SH03Page; không có API từ SH-02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-009",
+        "requirement_ids": [
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02-EL-S01",
+        "group": "Thành phần",
+        "title": "Kiểm tra lỗi email được xóa khi sửa",
+        "precondition": "Đang có lỗi email từ phản hồi 422.",
+        "data": "Nhập email mới.",
+        "steps": [
+          "Ghi thuộc tính lỗi trước khi nhập.",
+          "Thay đổi giá trị email."
+        ],
+        "expected": "EmailError được xóa; nếu không có lỗi password còn lại thì không giữ aria-invalid/aria-describedby cho email.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-010",
+        "requirement_ids": [
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02-EL-S02",
+        "group": "Thành phần",
+        "title": "Kiểm tra lỗi mật khẩu được xóa khi sửa",
+        "precondition": "Đang có lỗi mật khẩu từ phản hồi 422.",
+        "data": "Nhập mật khẩu mới.",
+        "steps": [
+          "Ghi thuộc tính lỗi trước khi nhập.",
+          "Thay đổi giá trị mật khẩu."
+        ],
+        "expected": "PasswordError được xóa; nội dung mật khẩu không xuất hiện trong thông báo.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-011",
+        "requirement_ids": [
+          "SH-02-YC-006",
+          "SH-02-YC-007"
+        ],
+        "target_id": "SH-02-EL-S03",
+        "group": "Thành phần",
+        "title": "Kiểm tra trạng thái biểu mẫu đang gửi",
+        "precondition": "Yêu cầu #03 đang chờ.",
+        "data": "Một yêu cầu giả lập.",
+        "steps": [
+          "Quan sát aria-busy, trạng thái bị vô hiệu hóa của hai ô nhập và nút.",
+          "Hoàn tất hoặc làm yêu cầu lỗi."
+        ],
+        "expected": "Aria-busy=true và điều khiển bị vô hiệu hóa trong lúc chờ; finalize() đặt isSubmitting=false khi yêu cầu kết thúc.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-TP-012",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-004",
+          "SH-02-YC-006",
+          "SH-02-YC-007"
+        ],
+        "target_id": "SH-02-EL-S04",
+        "group": "Thành phần",
+        "title": "Kiểm tra biểu mẫu chặn gửi không hợp lệ",
+        "precondition": "Trang đang rảnh.",
+        "data": "Email trống/sai định dạng; mật khẩu trống/toàn khoảng trắng.",
+        "steps": [
+          "Gửi từng trường hợp.",
+          "Ghi số yêu cầu và trạng thái lỗi."
+        ],
+        "expected": "ReportValidity chặn gửi; không phát sinh POST #03 cho dữ liệu cục bộ không hợp lệ.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "SH-02-TC-SK-001",
+        "requirement_ids": [
+          "SH-02-YC-001",
+          "SH-02-YC-002"
+        ],
+        "target_id": "SH-02-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở tuyến /login cho khách",
+        "precondition": "Chưa đăng nhập.",
+        "data": "Mở /login.",
+        "steps": [
+          "Mở trực tiếp tuyến.",
+          "Quan sát thành phần SH02Page và số API."
+        ],
+        "expected": "SH02Page hiển thị trong nhóm tuyến dùng chung; không yêu cầu đăng nhập và không gọi API để render.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/src/app/features/shared/shared.route.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-002",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-004",
+          "SH-02-YC-007"
+        ],
+        "target_id": "SH-02-EV-002",
+        "group": "Sự kiện",
+        "title": "Chuẩn hóa email nhưng giữ nguyên mật khẩu",
+        "precondition": "Trang đang rảnh.",
+        "data": "Email có khoảng trắng ngoài; mật khẩu có khoảng trắng ngoài.",
+        "steps": [
+          "Nhập hai giá trị.",
+          "Gửi biểu mẫu hợp lệ.",
+          "Kiểm tra thân yêu cầu #03."
+        ],
+        "expected": "Email được loại bỏ khoảng trắng đầu/cuối trước khi gửi; mật khẩu giữ nguyên chính xác; thân yêu cầu chỉ có email/mật khẩu.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-003",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-004"
+        ],
+        "target_id": "SH-02-EV-002",
+        "group": "Sự kiện",
+        "title": "Không gọi API khi nhập liệu",
+        "precondition": "Trang đang rảnh.",
+        "data": "Nhập và sửa hai ô nhiều lần.",
+        "steps": [
+          "Gõ vào email và mật khẩu.",
+          "Theo dõi yêu cầu mạng."
+        ],
+        "expected": "Không gọi API cho đến khi người dùng gửi biểu mẫu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-004",
+        "requirement_ids": [
+          "SH-02-YC-005"
+        ],
+        "target_id": "SH-02-EV-003",
+        "group": "Sự kiện",
+        "title": "Hiện rồi ẩn mật khẩu bằng bàn phím",
+        "precondition": "Có mật khẩu thử nghiệm trong ô.",
+        "data": "Một chuỗi không nhạy cảm dùng riêng cho kiểm thử.",
+        "steps": [
+          "Đưa tiêu điểm tới nút hiện/ẩn.",
+          "Kích hoạt hai lần bằng bàn phím."
+        ],
+        "expected": "Đổi type text/password, giữ nguyên giá trị và cập nhật nhãn trợ năng; không gửi form.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-005",
+        "requirement_ids": [
+          "SH-02-YC-006",
+          "SH-02-YC-007",
+          "SH-02-YC-017"
+        ],
+        "target_id": "SH-02-EV-004",
+        "group": "Sự kiện",
+        "title": "Gửi đúng một lần và không gửi lại khi mạng lỗi",
+        "precondition": "Trang hợp lệ; giữ yêu cầu ở trạng thái chờ.",
+        "data": "Một bộ credential giả lập; sau đó trả lỗi mạng.",
+        "steps": [
+          "Gửi hai lần khi yêu cầu còn chờ.",
+          "Trả lỗi mạng và theo dõi số POST."
+        ],
+        "expected": "Trong lúc chờ chỉ một POST; lỗi mạng không kích hoạt thử lại tự động.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-006",
+        "requirement_ids": [
+          "SH-02-YC-007",
+          "SH-02-YC-019"
+        ],
+        "target_id": "SH-02-EV-004",
+        "group": "Sự kiện",
+        "title": "Không gửi thông tin đăng nhập trong URL hoặc Authorization",
+        "precondition": "Trang hợp lệ; API kiểm thử ghi yêu cầu.",
+        "data": "Email và mật khẩu giả lập.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Kiểm tra URL, query, header và thân yêu cầu."
+        ],
+        "expected": "Thông tin chỉ có trong thân JSON của #03; không có Bearer hoặc credential trong URL/query.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-007",
+        "requirement_ids": [
+          "SH-02-YC-003",
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02-EV-005",
+        "group": "Sự kiện",
+        "title": "Gắn lỗi trường cho email và mật khẩu",
+        "precondition": "#03 đã được gửi.",
+        "data": "meta.fieldErrors có field=email và field=password.",
+        "steps": [
+          "Trả lỗi 422.",
+          "So sánh lỗi từng trường."
+        ],
+        "expected": "Mỗi lỗi hiện dưới đúng ô; aria-invalid và aria-describedby khớp; không hiển thị dữ liệu phản hồi thô.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-008",
+        "requirement_ids": [
+          "SH-02-YC-016"
+        ],
+        "target_id": "SH-02-EV-005",
+        "group": "Sự kiện",
+        "title": "Ghi nhận trường nhận tiêu điểm sau lỗi 422",
+        "precondition": "Phản hồi 422 có lỗi ở cả email và mật khẩu.",
+        "data": "Bàn phím và phản hồi 422 có lỗi ở cả email, mật khẩu.",
+        "steps": [
+          "Trả lỗi 422.",
+          "Ghi lại phần tử tiêu điểm sau phản hồi."
+        ],
+        "expected": "DD yêu cầu chuyển tiêu điểm tới trường sai đầu tiên; mã SH02Page hiện không gọi.focus() để chuyển tiêu điểm. Ghi sai khác và chờ đồng bộ DD/mã nguồn trước khi nghiệm thu.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-009",
+        "requirement_ids": [
+          "SH-02-YC-014",
+          "SH-02-YC-019"
+        ],
+        "target_id": "SH-02-EV-006",
+        "group": "Sự kiện",
+        "title": "401 không tiết lộ email có tồn tại hay không",
+        "precondition": "#03 đã nhận yêu cầu.",
+        "data": "401 DESIGN_AUTHENTICATION_REQUIRED với thông báo máy chủ chung.",
+        "steps": [
+          "Trả 401 cho email không tồn tại.",
+          "Lặp lại với mật khẩu sai.",
+          "So sánh thông điệp và yêu cầu tiếp theo."
+        ],
+        "expected": "Dùng cùng thông báo chung; không gọi refresh, #04 hoặc tự thử lại.",
+        "api_ids": [
+          "API-003",
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-010",
+        "requirement_ids": [
+          "SH-02-YC-015",
+          "SH-02-YC-017"
+        ],
+        "target_id": "SH-02-EV-007",
+        "group": "Sự kiện",
+        "title": "403 tài khoản bị chặn không gọi #04",
+        "precondition": "#03 đã nhận yêu cầu.",
+        "data": "403 DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Trả 403.",
+          "Ghi cảnh báo, tuyến và yêu cầu tiếp theo."
+        ],
+        "expected": "Hiện thông báo riêng an toàn; ở lại SH-02; không gọi #04/R-X01.",
+        "api_ids": [
+          "API-003",
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-011",
+        "requirement_ids": [
+          "SH-02-YC-008",
+          "SH-02-YC-017",
+          "SH-02-YC-019"
+        ],
+        "target_id": "SH-02-EV-008",
+        "group": "Sự kiện",
+        "title": "500 hoặc phản hồi sai cấu trúc không tạo phiên",
+        "precondition": "#03 đã nhận yêu cầu.",
+        "data": "HTTP 500 hoặc thân phản hồi thành công sai cấu trúc.",
+        "steps": [
+          "Trả từng biến thể.",
+          "Kiểm tra thông báo, phiên và số yêu cầu."
+        ],
+        "expected": "Hiện lỗi chung an toàn; không nhận token từ thân phản hồi sai cấu trúc; không tự thử lại.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-012",
+        "requirement_ids": [
+          "SH-02-YC-008",
+          "SH-02-YC-009"
+        ],
+        "target_id": "SH-02-EV-009",
+        "group": "Sự kiện",
+        "title": "Chỉ chấp nhận phong bì thành công được chỉ định",
+        "precondition": "Tạo phản hồi thử nghiệm theo từng trường hợp.",
+        "data": "HTTP 200 đúng mã; HTTP 201; sai businessCode; thiếu phong bì dữ liệu; thiếu vai trò/không hỗ trợ.",
+        "steps": [
+          "Chạy từng phản hồi.",
+          "Ghi phiên và tuyến sau xử lý."
+        ],
+        "expected": "Chỉ HTTP 200, success=true, businessCode đúng và vai trò được hỗ trợ mới tiếp tục; nhánh không phù hợp không được điều hướng.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-013",
+        "requirement_ids": [
+          "SH-02-YC-009",
+          "SH-02-YC-012",
+          "SH-02-YC-013"
+        ],
+        "target_id": "SH-02-EV-009",
+        "group": "Sự kiện",
+        "title": "Chọn phiên và tuyến theo ba vai trò",
+        "precondition": "Có phản hồi #03 hợp lệ.",
+        "data": "Ba phản hồi lần lượt STUDENT, MENTOR, ADMIN.",
+        "steps": [
+          "Gửi từng phản hồi.",
+          "Kiểm tra bộ phiên được gọi, #04 và tuyến."
+        ],
+        "expected": "Vai trò STUDENT dùng phiên học viên, gọi #04 rồi tới /student; Vai trò MENTOR/ADMIN dùng phiên tương ứng, bỏ qua #04 và tới /mentor hoặc /admin.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-014",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011"
+        ],
+        "target_id": "SH-02-EV-010",
+        "group": "Sự kiện",
+        "title": "#04 xác minh email và vai trò trước khi vào /student",
+        "precondition": "#03 thành công cho STUDENT.",
+        "data": "#04 phong bì thành công; vai trò STUDENT; email trùng phiên.",
+        "steps": [
+          "Gửi đăng nhập.",
+          "Kiểm tra tiêu đề Authorization và data."
+        ],
+        "expected": "GET #04 chỉ có Bearer; vai trò/email khớp thì chuyển /student; không tự sinh permissions hoặc bio.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-015",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-022"
+        ],
+        "target_id": "SH-02-EV-010",
+        "group": "Sự kiện",
+        "title": "Từ chối hồ sơ #04 không khớp",
+        "precondition": "#03 thành công cho STUDENT.",
+        "data": "#04 trả vai trò sai hoặc email sai.",
+        "steps": [
+          "Cho #04 trả từng sai khác.",
+          "Kiểm tra kết quả điều hướng và phiên cục bộ."
+        ],
+        "expected": "Ném lỗi STUDENT_PROFILE_MISMATCH; dọn phiên học viên; không chuyển /student.",
+        "api_ids": [
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-016",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-021"
+        ],
+        "target_id": "SH-02-EV-011",
+        "group": "Sự kiện",
+        "title": "Thử R-X01 và #04 lại tối đa một lần",
+        "precondition": "#04 lần đầu trả 401; phản hồi refresh và lần #04 sau được điều khiển.",
+        "data": "Lần #04 đầu 401; một lần R-X01; một lần #04 lại.",
+        "steps": [
+          "Ghi thứ tự yêu cầu.",
+          "Cho lần #04 sau thành công."
+        ],
+        "expected": "Theo mã nguồn, R-X01 được gọi đúng một lần và #04 được thử lại đúng một lần; sau phản hồi thành công thì xác minh vai trò/email. DD còn mâu thuẫn về chính sách; không xem là phê duyệt.",
+        "api_ids": [
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-017",
+        "requirement_ids": [
+          "SH-02-YC-021",
+          "SH-02-YC-022"
+        ],
+        "target_id": "SH-02-EV-011",
+        "group": "Sự kiện",
+        "title": "Không lặp lại khi làm mới phiên hoặc lần đọc lại thất bại",
+        "precondition": "#04 đầu trả 401; làm mới phiên hoặc lần đọc lại trả lỗi.",
+        "data": "Lỗi refresh hoặc #04 401 lần hai.",
+        "steps": [
+          "Chạy từng nhánh.",
+          "Đếm API và kiểm tra session."
+        ],
+        "expected": "Không có vòng lặp; phiên học viên bị dọn theo mã nguồn; #03 không gửi lại.",
+        "api_ids": [
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-018",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-022"
+        ],
+        "target_id": "SH-02-EV-012",
+        "group": "Sự kiện",
+        "title": "#04 403 điều hướng tới trang không đủ quyền",
+        "precondition": "Đăng nhập học viên thành công.",
+        "data": "#04 trả 403 DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Trả 403.",
+          "Ghi tuyến và phiên cục bộ."
+        ],
+        "expected": "StudentApiService chuyển tới /forbidden; SH02LoginService dọn phiên học viên; không gọi refresh theo nhánh 403.",
+        "api_ids": [
+          "API-004",
+          "API-RX01"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-019",
+        "requirement_ids": [
+          "SH-02-YC-010",
+          "SH-02-YC-011",
+          "SH-02-YC-017",
+          "SH-02-YC-022"
+        ],
+        "target_id": "SH-02-EV-012",
+        "group": "Sự kiện",
+        "title": "#04 500 hoặc mạng không gửi lại #03",
+        "precondition": "Đăng nhập học viên thành công.",
+        "data": "#04 trả 500 hoặc lỗi kết nối.",
+        "steps": [
+          "Trả lỗi.",
+          "Ghi số lần #03/#04 và thông báo."
+        ],
+        "expected": "Không gửi lại #03; hiển thị lỗi an toàn; không kết luận thử lại #04 được cho phép nếu DD chưa chốt.",
+        "api_ids": [
+          "API-003",
+          "API-004"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/features/shared/SH02/data-access/sh02-login.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-020",
+        "requirement_ids": [
+          "SH-02-YC-018",
+          "SH-02-YC-019",
+          "SH-02-YC-020"
+        ],
+        "target_id": "SH-02-EV-013",
+        "group": "Sự kiện",
+        "title": "Chuyển tới /register mà không gửi credential",
+        "precondition": "SH-02 hiển thị.",
+        "data": "Kích hoạt liên kết bằng chuột hoặc bàn phím.",
+        "steps": [
+          "Kích hoạt Đăng ký ngay.",
+          "Ghi tuyến, URL và yêu cầu mạng."
+        ],
+        "expected": "Tới /register; không gọi API đăng ký và không đưa email/mật khẩu/token vào URL.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-021",
+        "requirement_ids": [
+          "SH-02-YC-001",
+          "SH-02-YC-020"
+        ],
+        "target_id": "SH-02-EV-001",
+        "group": "Sự kiện",
+        "title": "Không mang theo returnTo khi mở tuyến",
+        "precondition": "Mở /login kèm tham số returnTo bất kỳ.",
+        "data": "returnTo=/admin hoặc URL tuyệt đối giả lập.",
+        "steps": [
+          "Mở tuyến có query.",
+          "Quan sát giá trị router state sau khi đăng nhập mô phỏng."
+        ],
+        "expected": "SH02Page không đọc returnTo; ca ghi đúng phạm vi hiện tại, không kiểm thử các guard khác.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-02-TC-SK-022",
+        "requirement_ids": [
+          "SH-02-YC-004",
+          "SH-02-YC-023"
+        ],
+        "target_id": "SH-02-EV-002",
+        "group": "Sự kiện",
+        "title": "Ghi nhận việc giữ mật khẩu sau lỗi",
+        "precondition": "Biểu mẫu hợp lệ, chưa gửi.",
+        "data": "Một mật khẩu chỉ dùng trong kiểm thử; phản hồi #03 lỗi.",
+        "steps": [
+          "Gửi yêu cầu.",
+          "Ghi nhận giá trị ô mật khẩu sau khi lỗi được hiển thị."
+        ],
+        "expected": "Giá trị mật khẩu vẫn còn sau nhánh lỗi; mã nguồn xóa giá trị chỉ sau khi luồng thành công. Thời điểm xóa là quyết định riêng tư còn chờ xác nhận.",
+        "api_ids": [
+          "API-003"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/02-events.md",
+          "apps/study-client/src/app/features/shared/SH02/pages/sh02-page.ts",
+          "apps/study-client/docs/dd_screens/SH-02-DangNhap/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

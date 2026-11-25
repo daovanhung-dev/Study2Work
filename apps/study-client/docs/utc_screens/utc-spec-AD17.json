@@ -1,0 +1,3182 @@
+{
+  "metadata": {
+    "screen_id": "AD-17",
+    "screen_name": "Thống kê bài kiểm tra",
+    "module": "Quản trị (Admin)",
+    "route": "/admin/quizzes/:quizId/statistics",
+    "actor": "Theo AC-35, tác nhân là Admin có quyền quiz-management (quản lý bài kiểm tra); chưa có bằng chứng quyền này được ánh xạ vào guard ADMIN dùng chung.",
+    "version": "0.1 — BẢN KẾ HOẠCH UTC",
+    "dd_version": "DD màn hình v0.1 (chuyển đổi ngày 2026-11-08), nguồn ghi DD BLOCKED; API #91 Draft — Needs Confirmation (bản nháp — chờ xác nhận).",
+    "dd_status": "DD BLOCKED (bị chặn): lược đồ phản hồi, định nghĩa và chính sách chỉ số, quyền quiz-management, schema dữ liệu và ngữ nghĩa trạng thái rỗng/đã có dữ liệu còn mở.",
+    "runtime_status": "Đã đối chiếu DD, ảnh, route Angular, client API và mã nguồn API #91; chưa xác minh trên trình duyệt, dịch vụ đã triển khai hoặc cơ sở dữ liệu trực tiếp.",
+    "author": "Lập kế hoạch UTC; cần người rà soát",
+    "reviewer": "Chưa được xác định",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-24",
+    "source_name": "DD AD-17 mục 00–07; 33 dấu mốc và hai ảnh; kế hoạch, tường thuật, JSON dấu mốc và HTML Stitch; tuyến, trang, mẫu giao diện, dịch vụ, kiểu dữ liệu, bộ định dạng, client API và kiểm thử Angular; danh mục/API DD/mã nguồn/kiểm thử #91; sơ đồ AC-35 và ngữ cảnh cơ sở data.",
+    "approval_note": "Dùng DD AD-17 trong repository làm nguồn chuẩn nội dung. Nguồn hiện ghi DD BLOCKED và API #91 Draft — Needs Confirmation; chưa có căn cứ xác nhận các điểm chặn đã được giải quyết. Gói này là kế hoạch truy vết, không phải kết quả chạy hay phê duyệt."
+  },
+  "overall": {
+    "objective": "Bao phủ 33 dấu mốc Stitch và 15 thành phần chỉ có trong Angular; tách biệt catalog #91 với DTO thống kê cục bộ, đồng thời giữ mọi công thức và chính sách chưa duyệt ở trạng thái chờ xác nhận.",
+    "inputs": "QuizId dạng chuỗi; Bearer token của phiên Admin; phản hồi API #91 theo catalog hoặc DTO cục bộ hiện tại; lỗi HTTP 401/403/404/500 và lỗi mạng.",
+    "outputs": "Trạng thái tải, dữ liệu thống kê được chiếu từ DTO cục bộ hoặc lỗi; ba liên kết về AD-15; các điểm chặn của hợp đồng và nội dung chưa xác minh.",
+    "main_flow": "AD-15 tạo liên kết thống kê khi ID Quiz nằm trong miền số nguyên an toàn → AD-17 kiểm tra quizId dương theo signed int64 → lấy Bearer token và gọi GET #91 chỉ với tham số đường dẫn → hiển thị phép chiếu hiện tại hoặc lỗi. Catalog khai báo ApiEnvelope<Quiz>, khác DTO cục bộ AdminQuizStatistics; chưa có ánh xạ được duyệt.",
+    "states": [
+      "Bản mẫu tĩnh (prototype-placeholder)",
+      "Đang tải (loading)",
+      "Đã nạp phép chiếu cục bộ (loaded)",
+      "Lỗi (error)",
+      "Không có dữ liệu (no-data) — ngữ nghĩa chưa duyệt",
+      "Có số liệu (ready) — hợp đồng chưa duyệt",
+      "Chưa xác thực (unauthorized)",
+      "Không đủ quyền (forbidden)",
+      "Không tìm thấy Quiz (not-found)",
+      "Lỗi dịch vụ (service-error)",
+      "Lỗi kết nối (network-error)",
+      "Đang kiểm tra kết nối trong bản mẫu (connection-checking)",
+      "Phản hồi timer tĩnh trong bản mẫu (connection-feedback)"
+    ],
+    "preconditions": "AC-35 yêu cầu Admin có quyền quiz-management (quản lý bài kiểm tra); chưa xác nhận quyền này tương ứng với role ADMIN cục bộ. Chỉ dùng dữ liệu giả hoặc tổng hợp, không dùng thông tin người học thật.",
+    "security": "Máy khách lấy Bearer token từ phiên Admin; không gửi `user_id` hay vai trò do máy khách tự khai. API #91 hiện dùng cơ chế kiểm tra vai trò ADMIN nhưng chưa chứng minh quyền AC-35. Không trả về các hàng câu trả lời hoặc thông tin nhận dạng người học.",
+    "out_of_scope": "Phê duyệt schema, chỉ số hoặc quyền; xác minh schema hay dịch vụ trực tiếp; xác nhận tác vụ nền, thăm dò định kỳ, làm mới hoặc thử lại; bổ sung phổ điểm, tỷ lệ hoàn thành hay thời lượng; xác minh giao diện trên trình duyệt."
+  },
+  "requirements": [
+    {
+      "id": "AD-17-YC-001",
+      "description": "Quyền truy cập theo AC-35: tác nhân Admin cần quyền quiz-management (quản lý bài kiểm tra). Chưa có căn cứ cho thấy quyền này được ánh xạ vào guard ADMIN dùng chung.",
+      "group": "Điều kiện truy cập",
+      "source_ref": "AC-35; AD-17 00-overview.md; API #91 OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — quyền còn điểm chặn",
+      "notes": "Không xem role ADMIN hoặc badge RBAC là bằng chứng quyền nghiệp vụ."
+    },
+    {
+      "id": "AD-17-YC-002",
+      "description": "Đường dẫn /admin/quizzes/:quizId/statistics được đăng ký tới AD17Page; AD-15 có liên kết mở trang thống kê. Chưa xác minh trên trình duyệt.",
+      "group": "Điều hướng",
+      "source_ref": "06-navigation.md; admin.routes.ts; admin.routes.spec.ts; AD15 renderer/template",
+      "priority": "Cao",
+      "design_status": "Có bằng chứng mã nguồn; môi trường chưa xác minh",
+      "notes": "AD-15 chỉ tạo liên kết khi ID thỏa Number.isSafeInteger; giới hạn này hẹp hơn miền int64."
+    },
+    {
+      "id": "AD-17-YC-003",
+      "description": "AD17Page chỉ nhận quizId là chuỗi chữ số dương, tối đa 19 ký tự và không vượt giới hạn signed int64; chuỗi hợp lệ được giữ nguyên khi gửi.",
+      "group": "Tuyến và dữ liệu vào",
+      "source_ref": "02-events.md EV-01; AD17 ad17-page.ts; API #91 validate.py",
+      "priority": "Cao",
+      "design_status": "Có bằng chứng mã nguồn; chưa chạy",
+      "notes": "Không gửi ID thiếu, 0, có dấu, khoảng trắng, số thập phân, số mũ hoặc vượt giới hạn."
+    },
+    {
+      "id": "AD-17-YC-004",
+      "description": "Máy khách gửi Bearer JWT qua AdminApiService. Danh mục #91 yêu cầu vai trò Admin; AC-35 yêu cầu quyền quản lý bài kiểm tra. API trong mã nguồn hiện dùng bộ kiểm tra quyền ADMIN dùng chung; chưa có ánh xạ quyền được duyệt.",
+      "group": "Bảo mật",
+      "source_ref": "04-api-integration.md; list_api.md #91; admin-api.service.ts; API #91 validate.py",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — quyền khác biệt",
+      "notes": "Không tự đồng nhất role Admin với quyền quiz-management."
+    },
+    {
+      "id": "AD-17-YC-005",
+      "description": "Gọi GET /api/v1/admin/quizzes/{quiz_id}/statistics. Catalog chỉ khai báo tham số path kiểu int64; không khai báo body, query, filter hoặc pagination.",
+      "group": "Tích hợp API",
+      "source_ref": "04-api-integration.md; list_api.md #91; AD17ApiService; API_091 descriptor",
+      "priority": "Cao",
+      "design_status": "Hợp đồng trực tiếp có trong danh mục; API DD còn Draft",
+      "notes": "Client hiện chỉ gắn path parameter và Bearer token."
+    },
+    {
+      "id": "AD-17-YC-006",
+      "description": "Catalog ghi response ApiEnvelope<Quiz>, nhưng Quiz không có trường thống kê. Mã nguồn hiện trả DTO riêng ApiEnvelope<AdminQuizStatistics>; hai schema chưa được thống nhất.",
+      "group": "Hợp đồng dữ liệu",
+      "source_ref": "04-api-integration.md; API #91 04_Response.md; models.py; route v1.py",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DISCREPANCY",
+      "notes": "Không coi DTO cục bộ là hợp đồng đã duyệt."
+    },
+    {
+      "id": "AD-17-YC-007",
+      "description": "Angular hiện chiếu Quiz ID, số lượt làm/nộp/đã chấm, điểm trung bình, lượt đạt và tỷ lệ đạt từ DTO cục bộ. Đây là hiện trạng mã nguồn, chưa phải quyết định nghiệp vụ.",
+      "group": "Hiển thị dữ liệu",
+      "source_ref": "01-ui-elements.md; admin-api.models.ts; admin-screen-renderers.ts; AD17 template",
+      "priority": "Cao",
+      "design_status": "Hiện trạng có trong mã nguồn; ý nghĩa chưa duyệt",
+      "notes": "Không coi các trường hiện có là định nghĩa nghiệp vụ đã duyệt."
+    },
+    {
+      "id": "AD-17-YC-008",
+      "description": "Đề xuất cục bộ dùng attempt.id, submitted_at, score và passing_score cùng quy tắc NULL, average và pass rate. Owner chưa phê duyệt các công thức này.",
+      "group": "Quy tắc nghiệp vụ",
+      "source_ref": "API #91 05_Data_Mapping.md; OPEN_QUESTIONS.md; query.py; view.py",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DERIVED",
+      "notes": "Không biến đề xuất cục bộ thành kết quả kỳ vọng nghiệp vụ."
+    },
+    {
+      "id": "AD-17-YC-009",
+      "description": "Không có căn cứ cho phổ điểm (score distribution), tỷ lệ hoàn thành (completion rate), thời lượng trung bình (average duration), telemetry hoặc số liệu ước lượng.",
+      "group": "Phạm vi dữ liệu",
+      "source_ref": "00-overview.md; 01-ui-elements.md marker #16/#25/#28/#29; AD-17_PLAN.md",
+      "priority": "Cao",
+      "design_status": "Chưa được hỗ trợ bởi hợp đồng",
+      "notes": "Các mục này chỉ xuất hiện trong nội dung bản mẫu."
+    },
+    {
+      "id": "AD-17-YC-010",
+      "description": "Mẫu Angular có trạng thái đang tải khi GET #91 chưa trả về; Stitch không quy định trạng thái này.",
+      "group": "Trạng thái giao diện",
+      "source_ref": "03-data-flow.md; AD17 template; admin-screen-state.ts",
+      "priority": "Trung bình",
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trình duyệt",
+      "notes": "Không suy ra thời gian tải hoặc kiểu spinner từ ảnh tĩnh."
+    },
+    {
+      "id": "AD-17-YC-011",
+      "description": "Khi success=true, trang hiện Quiz ID và sáu chỉ số của DTO cục bộ cùng cảnh báo giới hạn hợp đồng. Client hiện không kiểm tra businessCode mong đợi hoặc xác nhận Quiz ID trong phản hồi.",
+      "group": "Trạng thái giao diện",
+      "source_ref": "02-events.md EV-04; AD17 page/template; admin-screen-state.ts; admin-screen-renderers.ts",
+      "priority": "Cao",
+      "design_status": "mã nguồn hiện tại có; hợp đồng thành công đang bị chặn",
+      "notes": "Page chưa truyền successBusinessCode vào adminRouteState."
+    },
+    {
+      "id": "AD-17-YC-012",
+      "description": "Renderer hiển thị null thành dấu —; giá trị int64 vượt miền an toàn của JavaScript hiện hiển thị cảnh báo không thể biểu diễn chính xác.",
+      "group": "Định dạng dữ liệu",
+      "source_ref": "admin-screen-renderers.ts displayInt64/renderQuizStatistics; admin-screen-state.ts displayValue; AD17 spec",
+      "priority": "Cao",
+      "design_status": "Có bằng chứng mã nguồn; chưa chạy",
+      "notes": "Không đổi null thành 0; kiểu number phía client có giới hạn chính xác."
+    },
+    {
+      "id": "AD-17-YC-013",
+      "description": "Stitch luôn hiển thị trạng thái rỗng; Angular hiển thị thẻ chỉ số cả khi count=0. Contract chưa định nghĩa trạng thái no-data/ready hoặc cách phân biệt 0, chưa rõ và không khả dụng.",
+      "group": "Trạng thái dữ liệu",
+      "source_ref": "01-ui-elements.md; 03-data-flow.md; AD17 template; API #91 OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — hai hiện trạng khác nhau",
+      "notes": "Không coi ảnh trạng thái rỗng là hành vi đã duyệt."
+    },
+    {
+      "id": "AD-17-YC-014",
+      "description": "Catalog #91 khai báo lỗi 401/403/404/500 với các mã DESIGN_*; không liệt kê 422 trong hợp đồng trực tiếp.",
+      "group": "Xử lý lỗi",
+      "source_ref": "04-api-integration.md; list_api.md #91; API #91 06_Error.md; admin-screen-state.ts",
+      "priority": "Cao",
+      "design_status": "Hợp đồng trực tiếp có; thông điệp UI còn dùng chung",
+      "notes": "Không tự thêm mã lỗi hoặc đưa 422 thành hợp đồng #91."
+    },
+    {
+      "id": "AD-17-YC-015",
+      "description": "Mã nguồn dùng chung ánh xạ HTTP status 0 thành lỗi kết nối có thể thử lại. Trang không có nút retry; timeout và chính sách thử lại chưa được đặc tả.",
+      "group": "Xử lý lỗi",
+      "source_ref": "03-data-flow.md; admin-screen-state.ts; AD17 template; 06-navigation.md",
+      "priority": "Trung bình",
+      "design_status": "mã nguồn một phần; chính sách chưa có",
+      "notes": "Không khẳng định có thử lại tự động."
+    },
+    {
+      "id": "AD-17-YC-016",
+      "description": "Ba liên kết trong mẫu Angular trỏ tới /admin/quizzes. Việc giữ bộ lọc, trang hiện tại, lịch sử hoặc vị trí cuộn khi quay lại chưa được đặc tả.",
+      "group": "Điều hướng",
+      "source_ref": "06-navigation.md; AD17 template; admin.routes.ts; AD17_PLAN.md",
+      "priority": "Trung bình",
+      "design_status": "Đích có trong mã nguồn; hành vi môi trường chạy chưa xác minh",
+      "notes": "Không tự thêm quizId hoặc query parameter."
+    },
+    {
+      "id": "AD-17-YC-017",
+      "description": "Nút chỉ có trong HTML Stitch: sau khi nhấn, nhãn đổi; bộ định giờ chờ 700 ms rồi hiện thông báo tĩnh, sau 3 giây khôi phục nhãn. Không gửi mạng. Angular AD17 không có nút này.",
+      "group": "Bản mẫu tĩnh",
+      "source_ref": "02-events.md EV-07; screen_stitch AD-17 code.html; AD17 template",
+      "priority": "Trung bình",
+      "design_status": "Chỉ có trong bản mẫu",
+      "notes": "Không coi thông báo theo timer là kiểm tra kết nối thật."
+    },
+    {
+      "id": "AD-17-YC-018",
+      "description": "Điều hướng và chân trang trong Stitch dùng href=# hoặc không có trình xử lý. Trang Angular không sở hữu shell của bản mẫu.",
+      "group": "Thành phần điều hướng",
+      "source_ref": "01-ui-elements.md marker #1–#14/#30–#33; EV-08; Stitch code.html; admin.routes.ts",
+      "priority": "Thấp",
+      "design_status": "bản mẫu-chỉ",
+      "notes": "Không suy ra quyền RBAC, notification hoặc đích đến từ nội dung tĩnh."
+    },
+    {
+      "id": "AD-17-YC-019",
+      "description": "API #91 hiện chạy truy vấn tổng hợp đồng bộ khi GET và chỉ đọc. Không có bằng chứng về job hoặc push sau khi học viên nộp bài; schema và DB trực tiếp chưa xác minh.",
+      "group": "Dữ liệu và vòng đời",
+      "source_ref": "02-events.md EV-03/EV-09; query.py; view.py; database.md #91",
+      "priority": "Cao",
+      "design_status": "mã nguồn hiện tại có; phê duyệt vòng đời/DB còn mở",
+      "notes": "Không lọc bản ghi xóa mềm hoặc ghi answer rows khi chưa có quyết định."
+    },
+    {
+      "id": "AD-17-YC-020",
+      "description": "Giao diện Angular khác Stitch. Tệp ad17-page.css có trong mã nguồn nhưng decorator Component không khai báo styleUrl; chưa xác minh CSS có được nạp từ nơi khác hay không.",
+      "group": "Thiết kế và bố cục",
+      "source_ref": "AD-17_PLAN.md; Stitch screen/code; ad17-page.ts/html/css",
+      "priority": "Trung bình",
+      "design_status": "DISCREPANCY; trình duyệt chưa xác minh",
+      "notes": "Không dùng ảnh hoặc CSS liền kề làm bằng chứng giao diện đang chạy."
+    }
+  ],
+  "apis": [
+    {
+      "id": "AD-17-API-001",
+      "method": "GET",
+      "path": "/api/v1/admin/quizzes/{quiz_id}/statistics",
+      "request": "Bearer JWT của phiên Admin; đường dẫn quiz_id:int64! theo danh mục. Danh mục không khai báo nội dung thân hoặc tham số truy vấn. Máy khách giữ quizId dạng chuỗi sau khi kiểm tra là số dương trong giới hạn int64 có dấu; không gửi bộ lọc hoặc phân trang.",
+      "response": "Catalog #91: HTTP 200, DESIGN_RESOURCE_RETRIEVED, ApiEnvelope<Quiz> không có trường thống kê. Mã nguồn cục bộ hiện trả ApiEnvelope<AdminQuizStatistics> với quiz_id, attempt_count, submitted_attempt_count, graded_attempt_count, average_score, passed_attempt_count và pass_rate_percent. Đây là khác biệt/DERIVED, chưa được duyệt.",
+      "errors": "Catalog trực tiếp chỉ liệt kê 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND và 500 DESIGN_INTERNAL_ERROR; không có 422. Mã nguồn ánh xạ ID sai định dạng thành 404; client hiển thị thông báo lỗi dùng chung.",
+      "auth": "Danh mục yêu cầu Bearer JWT và role Admin; AC-35 yêu cầu quyền quản lý bài kiểm tra. Mã nguồn hiện dùng bộ kiểm tra quyền ADMIN dùng chung; chưa có căn cứ xác nhận quyền chi tiết tương ứng.",
+      "design_status": "API #91 Draft — Needs Confirmation (bản nháp — chờ xác nhận); release gate bị chặn bởi lược đồ phản hồi, chỉ số, quyền và schema data.",
+      "source_ref": "docs/lists/list_api.md #91; AC-35; API #91 DD 00/02–06 và OPEN_QUESTIONS.md; API_091 descriptor; AD17ApiService; Study Server route/module hiện tại.",
+      "event_ids": [
+        "AD-17-EV-002",
+        "AD-17-EV-003",
+        "AD-17-EV-004",
+        "AD-17-EV-005"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-17-EL-001",
+      "marker": "#1",
+      "name": "Nhận diện Study2Work LMS",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(15,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Logo/nhãn hiệu tĩnh của bản mẫu; không ràng buộc phiên thật.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #1; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-002",
+      "marker": "#2",
+      "name": "Điều hướng tổng quan trong khung giao diện",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(340,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; HTML không ánh xạ tới route.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #2; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-003",
+      "marker": "#3",
+      "name": "Điều hướng người dùng trong khung giao diện",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(488,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; HTML không ánh xạ tới route.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #3; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-004",
+      "marker": "#4",
+      "name": "Điều hướng khóa học và nội dung trong khung giao diện",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(652,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; HTML không ánh xạ tới route.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #4; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-005",
+      "marker": "#5",
+      "name": "Điều hướng kiểm duyệt trong khung giao diện",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(858,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; HTML không ánh xạ tới route.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #5; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-006",
+      "marker": "#6",
+      "name": "Điều hướng báo cáo trong khung giao diện",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1008,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; HTML không ánh xạ tới route.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #6; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-007",
+      "marker": "#7",
+      "name": "Nhãn “SYSTEM NORMAL” (hệ thống bình thường) tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1165,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Nhãn tĩnh “SYSTEM NORMAL” (hệ thống bình thường); không phải kiểm tra kết nối API.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #7; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-008",
+      "marker": "#8",
+      "name": "Nút thông báo không có trình xử lý",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1307,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Nút thông báo không có trình xử lý riêng cho màn hình.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #8; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-009",
+      "marker": "#9",
+      "name": "Danh tính quản trị viên và ảnh đại diện tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1570,15) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Tên/vai trò tĩnh; không chứng minh session hoặc quyền.",
+      "event_ids": [
+        "AD-17-EV-002",
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #9; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-010",
+      "marker": "#10",
+      "name": "Breadcrumb hệ thống tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(520,95) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Breadcrumb hệ thống và nhãn workspace tĩnh.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #10; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-011",
+      "marker": "#11",
+      "name": "Nhãn xác thực RBAC tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1585,95) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Nhãn RBAC tĩnh; không chứng minh chính sách phân quyền.",
+      "event_ids": [
+        "AD-17-EV-002",
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #11; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-012",
+      "marker": "#12",
+      "name": "Đường dẫn điều hướng Quản trị khảo thí",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(95,145) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Nhãn breadcrumb là span, không có href.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #12; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-013",
+      "marker": "#13",
+      "name": "Liên kết breadcrumb Danh sách bài kiểm tra",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(258,145) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Href=/admin/quizzes; đích là AD-15 theo mã nguồn tuyến.",
+      "event_ids": [
+        "AD-17-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #13; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-014",
+      "marker": "#14",
+      "name": "Breadcrumb trang Báo cáo thống kê",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(430,145) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Trang hiện tại trong breadcrumb.",
+      "event_ids": [
+        "AD-17-EV-001"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #14; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-015",
+      "marker": "#15",
+      "name": "Tiêu đề trang báo cáo thống kê kết quả",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(650,200) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "H1 tĩnh; nhãn trong Angular khác: Thống kê bài kiểm tra.",
+      "event_ids": [
+        "AD-17-EV-001",
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #15; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-016",
+      "marker": "#16",
+      "name": "Dòng mô tả trang có khẳng định phân phối bài làm",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(680,300) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Nội dung khẳng định có phân phối bài làm; không phải hợp đồng chỉ số.",
+      "event_ids": [
+        "AD-17-EV-004",
+        "AD-17-EV-009"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #16; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-017",
+      "marker": "#17",
+      "name": "Liên kết đầu trang quay về AD-15",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1585,294) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Href=/admin/quizzes; chỉ là đích mã nguồn bản mẫu.",
+      "event_ids": [
+        "AD-17-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #17; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-018",
+      "marker": "#18",
+      "name": "Tiêu đề thẻ Quiz mục tiêu",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(315,365) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Heading của thẻ mục tiêu tĩnh.",
+      "event_ids": [
+        "AD-17-EV-001",
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #18; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-019",
+      "marker": "#19",
+      "name": "Nhãn Quiz độc lập tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1318,375) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Badge Quiz độc lập; không xác nhận entity schema.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #19; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-020",
+      "marker": "#20",
+      "name": "Chỉ số hiệu quả chính (KPI) tên Quiz dạng giữ chỗ",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(518,415) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Tên bài kiểm tra hiển thị “--”; bản mẫu không lấy dữ liệu từ phản hồi.",
+      "event_ids": [
+        "AD-17-EV-001",
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #20; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-021",
+      "marker": "#21",
+      "name": "Chỉ số hiệu quả chính (KPI) mã Quiz dạng giữ chỗ",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1018,415) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "ID trong route hiển thị dạng giữ chỗ:quizId; bản mẫu không đọc URL.",
+      "event_ids": [
+        "AD-17-EV-001",
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #21; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-022",
+      "marker": "#22",
+      "name": "Chỉ số hiệu quả chính (KPI) trạng thái đồng bộ dạng giữ chỗ",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1515,415) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Trạng thái đồng bộ là nội dung tĩnh, không lấy từ API.",
+      "event_ids": [
+        "AD-17-EV-003",
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #22; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-023",
+      "marker": "#23",
+      "name": "Minh họa trạng thái rỗng tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(700,684) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Icon trang trí; không phải biểu đồ data.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #23; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-024",
+      "marker": "#24",
+      "name": "Tiêu đề trạng thái rỗng tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1174,827) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Trạng thái rỗng luôn hiện trong bản mẫu; ngữ nghĩa khi không có dữ liệu chưa được duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #24; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-025",
+      "marker": "#25",
+      "name": "Nội dung trạng thái rỗng có khẳng định chỉ số chưa hỗ trợ",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(350,878) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Nội dung nhắc tới phổ điểm, tỷ lệ hoàn thành, thời lượng và tự hiển thị; chưa có căn cứ cho các khẳng định này.",
+      "event_ids": [
+        "AD-17-EV-004",
+        "AD-17-EV-009"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #25; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-026",
+      "marker": "#26",
+      "name": "Nút quay về danh sách AD-15",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(426,1029) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "CTA href=/admin/quizzes; bản mẫu dùng liên kết.",
+      "event_ids": [
+        "AD-17-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #26; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-027",
+      "marker": "#27",
+      "name": "Nút kiểm tra kết nối chỉ có trong bản mẫu",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1175,1029) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Nút chạy bộ định giờ nhưng không gửi HTTP; mẫu Angular không có nút tương ứng.",
+      "event_ids": [
+        "AD-17-EV-007"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #27; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-028",
+      "marker": "#28",
+      "name": "Thẻ ghi chú toàn vẹn dữ liệu tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(758,1206) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Thẻ nêu khẳng định về chính sách/toàn vẹn dữ liệu; không phải bằng chứng chính sách.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #28; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-029",
+      "marker": "#29",
+      "name": "Thẻ ghi chú tác vụ phân tích nền chưa có căn cứ",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1546,1205) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Thẻ khẳng định có tổng hợp nền sau submit; không có bằng chứng worker hoặc push.",
+      "event_ids": [
+        "AD-17-EV-004",
+        "AD-17-EV-009"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #29; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-030",
+      "marker": "#30",
+      "name": "Copyright và nhãn hệ thống ở chân trang",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(245,1357) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Copyright và nhãn hệ thống tĩnh.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #30; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-031",
+      "marker": "#31",
+      "name": "Liên kết privacy dùng href=#",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(970,1357) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; không có đích đến.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #31; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-032",
+      "marker": "#32",
+      "name": "Liên kết RBAC dùng href=#",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1190,1357) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; không có đích đến.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #32; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-033",
+      "marker": "#33",
+      "name": "Liên kết hỗ trợ kỹ thuật dùng href=#",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1450,1357) điểm ảnh, tâm marker trên ảnh 1600×1440",
+      "properties": "Anchor href=#; không có đích đến.",
+      "event_ids": [
+        "AD-17-EV-008"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI hoặc hành vi môi trường chạy.",
+      "source_ref": "01-ui-elements.md marker #33; AD-17_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-17-EL-034",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Nhãn API #91 chỉ đọc",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Nhãn trên breadcrumb",
+      "properties": "Hiển thị API #91 · Chỉ đọc; hiện diện trong mẫu Angular, không có dấu mốc Stitch tương ứng.",
+      "event_ids": [
+        "AD-17-EV-003"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; AD17ApiService"
+    },
+    {
+      "id": "AD-17-EL-035",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Dòng phân loại QUIZ STATISTICS (thống kê Quiz)",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Dòng phân loại phía trên tiêu đề",
+      "properties": "Angular hiển thị “QUIZ STATISTICS” và tiêu đề “Thống kê bài kiểm tra”; nội dung khác bản mẫu.",
+      "event_ids": [
+        "AD-17-EV-001"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; ad17-screen.ui.ts"
+    },
+    {
+      "id": "AD-17-EL-036",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Panel trạng thái đang tải",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Nhánh loading của template",
+      "properties": "Hiển thị “Đang tải thống kê” và chờ phản hồi từ Study Server; chưa xác minh khi chạy.",
+      "event_ids": [
+        "AD-17-EV-003"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; admin-screen-state.ts"
+    },
+    {
+      "id": "AD-17-EL-037",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Panel trạng thái lỗi",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Nhánh error của template",
+      "properties": "Hiển thị “Không thể tải thống kê”, thông báo dùng chung và liên kết về AD-15.",
+      "event_ids": [
+        "AD-17-EV-005"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; admin-screen-state.ts"
+    },
+    {
+      "id": "AD-17-EL-038",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Thẻ dữ liệu thống kê đã nạp",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Nhánh loaded của template",
+      "properties": "Thẻ chỉ xuất hiện khi viewState là “loaded”; nhận phép chiếu cục bộ, không phải hợp đồng đã duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; AD17 page"
+    },
+    {
+      "id": "AD-17-EL-039",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Mã bài kiểm tra trong tiêu đề thẻ",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Tiêu đề thẻ loaded",
+      "properties": "Hiển thị Quiz ID từ phản hồi; client không đối chiếu với ID thô trong route.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; ad17-page.ts; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-17-EL-040",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Chỉ số Lượt làm bài",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Thẻ chỉ số đã tải",
+      "properties": "Chiếu attempt_count; kiểu number của client có thể vượt miền chính xác của JavaScript.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "admin-api.models.ts; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-17-EL-041",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Chỉ số Lượt nộp bài",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Thẻ chỉ số đã tải",
+      "properties": "Chiếu submitted_attempt_count từ DTO cục bộ; định nghĩa chỉ số chưa được duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "admin-api.models.ts; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-17-EL-042",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Chỉ số Lượt đã chấm",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Thẻ chỉ số đã tải",
+      "properties": "Chiếu graded_attempt_count từ DTO cục bộ; định nghĩa chỉ số chưa được duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "admin-api.models.ts; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-17-EL-043",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Chỉ số Điểm trung bình",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Thẻ chỉ số đã tải",
+      "properties": "Chiếu average_score dạng chuỗi hoặc dấu — khi null; công thức/làm tròn chưa được duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "admin-api.models.ts; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-17-EL-044",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Chỉ số Lượt đạt",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Thẻ chỉ số đã tải",
+      "properties": "Chiếu passed_attempt_count dạng số hoặc dấu —; điều kiện đạt chưa được duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "admin-api.models.ts; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-17-EL-045",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Chỉ số Tỷ lệ đạt",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Thẻ chỉ số đã tải",
+      "properties": "Chiếu pass_rate_percent dạng chuỗi hoặc dấu —; mẫu số/làm tròn chưa được duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "admin-api.models.ts; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-17-EL-046",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Ghi chú dấu — và công thức",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Chân thẻ thống kê",
+      "properties": "Ghi chú dấu — cho null và cảnh báo rằng ý nghĩa nghiệp vụ chưa được duyệt.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; admin-screen-state.ts"
+    },
+    {
+      "id": "AD-17-EL-047",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Thẻ cảnh báo giới hạn hợp đồng #91",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Aside phía dưới state",
+      "properties": "Cảnh báo ApiEnvelope<Quiz> khác DTO cục bộ; chỉ số, NULL/làm tròn và quyền chưa thống nhất.",
+      "event_ids": [
+        "AD-17-EV-004"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; ad17-api-boundary.ts"
+    },
+    {
+      "id": "AD-17-EL-048",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Ghi chú nguồn GET #91",
+      "type": "Thành phần mẫu Angular không có dấu mốc Stitch",
+      "position": "Chân trang của template",
+      "properties": "Hiển thị path nguồn chỉ đọc; không thêm bộ lọc, polling hoặc tự làm mới.",
+      "event_ids": [
+        "AD-17-EV-003"
+      ],
+      "design_status": "Có trong mã nguồn Angular; chưa xác minh trình duyệt/runtime.",
+      "source_ref": "ad17-page.html; ad17-api.service.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-17-EV-001",
+      "name": "Mở màn hình và đọc quizId",
+      "trigger": "Mở /admin/quizzes/:quizId/statistics từ AD-15 hoặc nhập đường dẫn trực tiếp.",
+      "processing": "AD17Page đọc quizId dạng chuỗi; chỉ tiếp tục khi là chuỗi chữ số dương tối đa 19 ký tự và không vượt signed int64. AD-15 chỉ tạo liên kết khi ID nằm trong miền số nguyên an toàn của JavaScript.",
+      "element_ids": [
+        "AD-17-EL-013",
+        "AD-17-EL-014",
+        "AD-17-EL-015",
+        "AD-17-EL-018",
+        "AD-17-EL-020",
+        "AD-17-EL-021",
+        "AD-17-EL-034",
+        "AD-17-EL-035"
+      ],
+      "api_ids": [
+        "AD-17-API-001"
+      ],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-01; AD17 page; AD15 renderer; admin.routes.ts"
+    },
+    {
+      "id": "AD-17-EV-002",
+      "name": "Xác thực và kiểm tra quyền",
+      "trigger": "Trước GET #91 khi ID trong đường dẫn hợp lệ.",
+      "processing": "AdminApiService lấy token phiên và gắn Authorization: Bearer. Phản hồi 401 kết thúc phiên cục bộ. Guard ADMIN dùng chung ở máy chủ chạy trước bước phân tích ID và truy vấn. Chưa có ánh xạ được duyệt cho quyền quiz-management theo AC-35.",
+      "element_ids": [
+        "AD-17-EL-009",
+        "AD-17-EL-011",
+        "AD-17-EL-034"
+      ],
+      "api_ids": [
+        "AD-17-API-001"
+      ],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-02; admin-api.service.ts; API #91 validate.py; AC-35"
+    },
+    {
+      "id": "AD-17-EV-003",
+      "name": "Tải thống kê qua API #91",
+      "trigger": "Sau khi kiểm tra ID trong đường dẫn và lấy token.",
+      "processing": "Gọi GET chỉ với path quiz_id, không có body hoặc query. Mã nguồn máy chủ chạy một truy vấn tổng hợp chỉ đọc. Catalog khai báo ApiEnvelope<Quiz>, khác DTO thống kê cục bộ.",
+      "element_ids": [
+        "AD-17-EL-021",
+        "AD-17-EL-022",
+        "AD-17-EL-034",
+        "AD-17-EL-048"
+      ],
+      "api_ids": [
+        "AD-17-API-001"
+      ],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-03; AD17ApiService; API #91 query.py/view.py; list_api.md #91"
+    },
+    {
+      "id": "AD-17-EV-004",
+      "name": "Ánh xạ phản hồi và hiển thị",
+      "trigger": "Sau phản hồi thành công từ #91.",
+      "processing": "Trang hiện chỉ kiểm tra success=true; không truyền businessCode mong đợi và không kiểm tra response.quiz_id có khớp ID trong route hay không. Trang chiếu sáu chỉ số; null thành dấu —; số int64 không an toàn thành cảnh báo. Công thức và ý nghĩa dữ liệu chưa được duyệt.",
+      "element_ids": [
+        "AD-17-EL-020",
+        "AD-17-EL-021",
+        "AD-17-EL-022",
+        "AD-17-EL-023",
+        "AD-17-EL-024",
+        "AD-17-EL-025",
+        "AD-17-EL-028",
+        "AD-17-EL-029",
+        "AD-17-EL-038",
+        "AD-17-EL-039",
+        "AD-17-EL-040",
+        "AD-17-EL-041",
+        "AD-17-EL-042",
+        "AD-17-EL-043",
+        "AD-17-EL-044",
+        "AD-17-EL-045",
+        "AD-17-EL-046",
+        "AD-17-EL-047"
+      ],
+      "api_ids": [
+        "AD-17-API-001"
+      ],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-04; AD17 page/template; admin-screen-state.ts; admin-screen-renderers.ts; API #91 models.py"
+    },
+    {
+      "id": "AD-17-EV-005",
+      "name": "Xử lý lỗi khi tải",
+      "trigger": "GET #91 trả lỗi hoặc ID trong đường dẫn thiếu/sai.",
+      "processing": "ID thiếu hoặc sai dừng trước HTTP. HTTP 401 kết thúc phiên; 403/404 hiện lỗi dùng chung; 500 hiện lỗi dịch vụ chung. HTTP status 0 hiện lỗi kết nối và đánh dấu retryable trong trạng thái; mẫu giao diện không có nút thử lại.",
+      "element_ids": [
+        "AD-17-EL-037"
+      ],
+      "api_ids": [
+        "AD-17-API-001"
+      ],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-05; admin-screen-state.ts; AdminApiService; API #91 06_Error.md"
+    },
+    {
+      "id": "AD-17-EV-006",
+      "name": "Quay lại danh sách AD-15",
+      "trigger": "Chọn breadcrumb, liên kết đầu trang hoặc liên kết chân trang.",
+      "processing": "Cả ba RouterLink trong mẫu Angular trỏ tới /admin/quizzes. Chưa có quyết định về việc giữ quizId, bộ lọc, trang hiện tại hoặc vị trí cuộn.",
+      "element_ids": [
+        "AD-17-EL-013",
+        "AD-17-EL-017",
+        "AD-17-EL-026",
+        "AD-17-EL-037"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-06; AD17 template; 06-navigation.md"
+    },
+    {
+      "id": "AD-17-EV-007",
+      "name": "Kiểm tra kết nối — chỉ trong bản mẫu",
+      "trigger": "Nhấn nút #27 trong HTML Stitch.",
+      "processing": "Trình lắng nghe khóa nút, bật spinner và đổi nhãn; sau 700 ms hiện phản hồi tĩnh, sau 3 giây khôi phục nhãn và mở nút. Không có fetch, XHR hoặc lời gọi API. Nhấn lần sau không ẩn phản hồi cũ. Angular không có điều khiển này.",
+      "element_ids": [
+        "AD-17-EL-027"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-07; screen_stitch code.html; AD17 template"
+    },
+    {
+      "id": "AD-17-EV-008",
+      "name": "Khung giao diện và liên kết chân trang giữ chỗ",
+      "trigger": "Nhấn điều hướng, thông báo hoặc liên kết chân trang trong bản mẫu.",
+      "processing": "Các anchor href=# hoặc điều khiển không có trình xử lý nên không chứng minh tuyến, thông báo, phiên, quyền hay trang đích. Tuyến cha dùng AdminLayout; nội dung shell không thuộc template AD-17.",
+      "element_ids": [
+        "AD-17-EL-001",
+        "AD-17-EL-002",
+        "AD-17-EL-003",
+        "AD-17-EL-004",
+        "AD-17-EL-005",
+        "AD-17-EL-006",
+        "AD-17-EL-007",
+        "AD-17-EL-008",
+        "AD-17-EL-009",
+        "AD-17-EL-010",
+        "AD-17-EL-011",
+        "AD-17-EL-012",
+        "AD-17-EL-030",
+        "AD-17-EL-031",
+        "AD-17-EL-032",
+        "AD-17-EL-033"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-08; Stitch code.html; AD17 template; admin.routes.ts"
+    },
+    {
+      "id": "AD-17-EV-009",
+      "name": "Khẳng định có tác vụ tổng hợp nền sau khi nộp bài",
+      "trigger": "Nội dung bản mẫu nói lượt làm được nộp sẽ kích hoạt tác vụ nền.",
+      "processing": "Không tìm thấy event, job hoặc push liên quan. Mã nguồn #91 tổng hợp đồng bộ khi nhận GET. Không thiết kế polling, tự làm mới hoặc cập nhật sau khi nộp bài.",
+      "element_ids": [
+        "AD-17-EL-025",
+        "AD-17-EL-029",
+        "AD-17-EL-048"
+      ],
+      "api_ids": [
+        "AD-17-API-001"
+      ],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-09; AC-35; API #91 query.py; API #91 OPEN_QUESTIONS.md"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD-17-BL-001",
+      "description": "DD AD-17 đang BLOCKED; inventory/DD không nêu người phụ trách, reviewer hoặc approver.",
+      "impact": "Các quyết định còn mở chưa thể dùng làm tiêu chí đã duyệt.",
+      "decision": "Người phụ trách và reviewer xác nhận phạm vi, trạng thái và quyết định còn mở; giữ ca ở Chờ xác nhận tới khi có bằng chứng.",
+      "source_ref": "AD-17 00-overview.md; AD-17.md mục F; list_screen.md row 75",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-002",
+      "description": "Catalog #91 trả ApiEnvelope<Quiz>, còn mã nguồn máy chủ hiện trả ApiEnvelope<AdminQuizStatistics>.",
+      "impact": "Consumer và producer chưa có schema thống nhất; chưa thể xác nhận phản hồi thành công theo hợp đồng.",
+      "decision": "Owner API đồng bộ catalog, DD và mô hình phản hồi rồi ghi nhận phê duyệt.",
+      "source_ref": "list_api.md #91; API #91 04_Response.md; models.py; route v1.py",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-003",
+      "description": "Tập chỉ số, công thức, đơn vị tính lượt làm, ngưỡng, NULL, số chữ số thập phân/làm tròn và chính sách bản ghi xóa mềm/trạng thái đều là DERIVED.",
+      "impact": "Các số liệu có thể mang nghĩa nghiệp vụ khác nhau; chưa thể duyệt giá trị kỳ vọng.",
+      "decision": "Product/BE owner duyệt định nghĩa chỉ số và ngữ nghĩa trước khi dùng làm tiêu chí nghiệm thu.",
+      "source_ref": "API #91 OPEN_QUESTIONS.md Q-91-02–05; 05_Data_Mapping.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-004",
+      "description": "AC-35 yêu cầu quyền quiz-management nhưng mã nguồn hiện chỉ chứng minh guard ADMIN dùng chung.",
+      "impact": "Chưa xác nhận quyền xem hoặc cách ánh xạ 401/403 theo chính sách nghiệp vụ.",
+      "decision": "Security owner xác nhận claim và chính sách phân quyền chi tiết tương ứng.",
+      "source_ref": "AC-35 diagram; API #91 02_Overview.md; validate.py",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-005",
+      "description": "Truy vấn dùng ứng viên schema BIGINT cũ của quizzes/quiz_attempts và không lọc status/tombstone; schema triển khai chưa xác minh. V1-PILOT dùng UUID riêng.",
+      "impact": "Chưa xác nhận cấu trúc, nhóm lượt làm hoặc lịch sử dữ liệu trong môi trường đích.",
+      "decision": "DB owner xác nhận schema, khóa ngoại/nullability, trạng thái và dữ liệu môi trường.",
+      "source_ref": ".agents/server-study/database.md mục #91; query.py; API #91 OPEN_QUESTIONS.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-006",
+      "description": "Stitch là bản mẫu tĩnh với các khẳng định về chỉ số, nền và kết nối. Angular có phép chiếu riêng, không có nút kiểm tra kết nối; ad17-page.css không được khai báo bằng styleUrl trong decorator.",
+      "impact": "Ảnh và CSS liền kề không chứng minh giao diện Angular được nạp như thế nào khi chạy.",
+      "decision": "Duyệt thiết kế đích và xác minh việc hiển thị cùng nạp CSS trên trình duyệt.",
+      "source_ref": "AD-17_markers.json; screen.png/code.html; ad17-page.ts/html/css",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-007",
+      "description": "Trang chỉ kiểm tra envelope.success; không yêu cầu businessCode DESIGN_RESOURCE_RETRIEVED và không đối chiếu response.quiz_id với route.",
+      "impact": "Phản hồi sai mã hoặc sai ID vẫn có thể được hiển thị; tiêu chí nghiệm thu và kiểm tra phía client chưa thống nhất.",
+      "decision": "Chốt invariant của envelope/ID và duyệt hoặc cập nhật hành vi client trước nghiệm thu.",
+      "source_ref": "adminRouteState; ad17-page.ts; list_api.md #91; API #91 DD",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-008",
+      "description": "AD-15 chỉ tạo liên kết thống kê khi quiz.id thỏa Number.isSafeInteger; AD-17/API path nhận signed int64 dương.",
+      "impact": "ID int64 ngoài miền chính xác của JavaScript không đi được từ dòng AD-15; JSON number có thể làm mất độ chính xác.",
+      "decision": "Chốt chính sách truyền và điều hướng ID int64 xuyên suốt.",
+      "source_ref": "admin-screen-renderers.ts renderQuizRow; ad17-page.ts; AdminQuizStatistics",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-009",
+      "description": "Chưa đặc tả ngữ nghĩa no-data/ready, nội dung lỗi, thử lại, polling/làm mới hoặc giữ trạng thái khi quay lại.",
+      "impact": "Chưa thể chốt trạng thái kỳ vọng và hành vi tải lại/điều hướng cho các nhánh này.",
+      "decision": "Owner chốt trạng thái và hành vi trước nghiệm thu.",
+      "source_ref": "03-data-flow.md; 06-navigation.md; API #91 OPEN_QUESTIONS.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-17-BL-010",
+      "description": "Chưa xác minh trình duyệt, API đã triển khai hoặc cơ sở dữ liệu trực tiếp; không chạy các kiểm thử mã nguồn sẵn có trong task này.",
+      "impact": "Chưa có bằng chứng runtime hoặc nghiệm thu; mọi ca mới vẫn ở Chưa chạy.",
+      "decision": "Sau khi giải quyết blocker, chạy kiểm thử trên môi trường được duyệt và lưu kết quả.",
+      "source_ref": "07-test-cases.md; existing source specs; API #91 tests",
+      "status": "Đang mở — chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-17-TC-MH-001",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Mở thống kê từ dòng Quiz có ID an toàn",
+        "requirement_ids": [
+          "AD-17-YC-002",
+          "AD-17-YC-003",
+          "AD-17-YC-005"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Quiz giả id=41; token Admin giả.",
+        "steps": [
+          "Nạp AD-15 bằng fixture Quiz có id=41.",
+          "Chọn Thống kê rồi quan sát URL và request #91."
+        ],
+        "expected": "Theo mã nguồn, AD-15 tạo liên kết /admin/quizzes/41/statistics khi ID là số nguyên an toàn; AD-17 gọi GET #91 với ID đó trong path. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "AD-15 renderQuizRow; AD-17 06-navigation.md; admin.routes.ts; API #91"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-002",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Chấp nhận Quiz ID signed-int64 lớn nhất khi mở trực tiếp",
+        "requirement_ids": [
+          "AD-17-YC-002",
+          "AD-17-YC-003",
+          "AD-17-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "tuyến ID giả 9223372036854775807.",
+        "steps": [
+          "Mở route với quizId=9223372036854775807.",
+          "Theo dõi GET #91 và xác nhận path được giữ dạng chuỗi."
+        ],
+        "expected": "Mã nguồn AD-17 chấp nhận quizId dương tới giới hạn signed int64 và giữ chuỗi khi gọi API. AD-15 không tạo liên kết nếu ID vượt Number.MAX_SAFE_INTEGER. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.ts; AD-15 renderQuizRow; API #91 validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-003",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra ID có số 0 ở đầu",
+        "requirement_ids": [
+          "AD-17-YC-003",
+          "AD-17-YC-005",
+          "AD-17-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "tuyến ID giả 0000000000000000001.",
+        "steps": [
+          "Mở route với quizId=0000000000000000001 (19 chữ số).",
+          "Quan sát request raw path và ID trong response."
+        ],
+        "expected": "AD17Page giữ nguyên chuỗi quizId có số 0 đầu; bộ phân tích phía máy chủ chuyển giá trị số đó thành 1. Client hiện không đối chiếu ID phản hồi với ID trong route. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.ts; API #91 validate.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-004",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Từ chối thiếu quizId trước HTTP",
+        "requirement_ids": [
+          "AD-17-YC-002",
+          "AD-17-YC-003",
+          "AD-17-YC-015"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở AD17Page với ParamMap không có quizId.",
+          "Theo dõi trạng thái lỗi và HTTP request."
+        ],
+        "expected": "Khi thiếu quizId, trạng thái tuyến hiện lỗi thiếu mã tham chiếu và không gọi API #91. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-screen-state.ts; ad17-page.ts; 02-events.md EV-01/EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-005",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Từ chối quizId 0, dấu, khoảng trắng, phân số, exponent và tràn int64",
+        "requirement_ids": [
+          "AD-17-YC-003",
+          "AD-17-YC-015"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Lặp route với 0, +1, -1, khoảng trắng, 1.5, 1e2, 9223372036854775808 và chuỗi dài hơn 19 ký tự.",
+          "Kiểm tra trạng thái tuyến và request."
+        ],
+        "expected": "Các giá trị 0, có dấu, có khoảng trắng, thập phân, số mũ, dài quá 19 ký tự hoặc vượt signed int64 bị chặn cục bộ; không phát request. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.ts; API #91 validate.py; 02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-006",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Xác nhận yêu cầu #91 chỉ có Bearer và path",
+        "requirement_ids": [
+          "AD-17-YC-004",
+          "AD-17-YC-005"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở route hợp lệ trong phiên Admin giả.",
+          "Kiểm tra method, path, Authorization, query và body của request."
+        ],
+        "expected": "Caller hiện dùng GET #91, header Authorization: Bearer và path quiz_id; không gửi body (thân yêu cầu), query (tham số truy vấn), filter (bộ lọc) hoặc pagination (phân trang). Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "AD17ApiService; AdminApiService; StudyApiService; API_091 descriptor; list_api.md #91"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-007",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu businessCode thành công",
+        "requirement_ids": [
+          "AD-17-YC-006",
+          "AD-17-YC-011"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Trả HTTP 200 với success=true nhưng businessCode khác DESIGN_RESOURCE_RETRIEVED.",
+          "Quan sát page state và ghi lại cách xử lý hiện tại."
+        ],
+        "expected": "Catalog yêu cầu DESIGN_RESOURCE_RETRIEVED, nhưng AD17Page chỉ kiểm tra success=true. Đây là khác biệt giữa catalog và client cần được chốt. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.ts; admin-screen-state.ts; list_api.md #91"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-008",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu quiz_id phản hồi với tuyến",
+        "requirement_ids": [
+          "AD-17-YC-006",
+          "AD-17-YC-011"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Gọi route /admin/quizzes/41/statistics.",
+          "Trả local DTO success=true có quiz_id khác 41.",
+          "Ghi nhận mã hiển thị và quyết định invariant sau khi owner chốt."
+        ],
+        "expected": "Với DTO có quiz_id khác ID trên route, trang hiện dùng ID từ phản hồi và không so khớp với route. Quy tắc định danh phía client chưa được duyệt. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.ts; admin-screen-renderers.ts; API #91 view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-009",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị phép chiếu cục bộ và cảnh báo hợp đồng",
+        "requirement_ids": [
+          "AD-17-YC-006",
+          "AD-17-YC-007",
+          "AD-17-YC-011"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "DTO giả: quiz_id=41; attempt_count=3; submitted_attempt_count=2; graded_attempt_count=2; average_score='75.000'; passed_attempt_count=1; pass_rate_percent='50.000'.",
+        "steps": [
+          "Trả success envelope local với sáu metric hợp lệ.",
+          "Quan sát ID, sáu thẻ và thông báo giới hạn API #91."
+        ],
+        "expected": "Angular hiện hiển thị sáu chỉ số từ DTO cục bộ và cảnh báo giới hạn #91. DTO này khác ApiEnvelope<Quiz> trong catalog, chưa phải schema được duyệt. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; admin-screen-renderers.ts; API #91 models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-010",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Không trình bày sai số int64 không an toàn",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "DTO giả có quiz_id=9007199254740992 và attempt_count=9007199254740992.",
+        "steps": [
+          "Trả quiz_id/count lớn hơn Number.MAX_SAFE_INTEGER qua DTO kiểu number.",
+          "Quan sát trường mã và metric count."
+        ],
+        "expected": "Khi giá trị int64 vượt Number.MAX_SAFE_INTEGER, renderer hiện hiển thị cảnh báo không thể biểu diễn chính xác; cách truyền số nguyên lớn vẫn cần quyết định. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.models.ts; admin-screen-renderers.ts; AD17 page spec"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-011",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị null thành dấu —, không đổi thành 0",
+        "requirement_ids": [
+          "AD-17-YC-008",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Trả average_score, passed_attempt_count và pass_rate_percent là null.",
+          "Quan sát giá trị trên card và ghi chú dưới card."
+        ],
+        "expected": "Renderer hiện đổi giá trị null thành dấu —, không đổi thành 0. Ý nghĩa nghiệp vụ của null chưa được duyệt. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-screen-state.ts displayValue; admin-screen-renderers.ts; AD17 page spec"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-012",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt count=0 với trạng thái rỗng",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-008",
+          "AD-17-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Trả DTO local có count=0, average_score=null và không có attempt.",
+          "Đối chiếu card Angular với trạng thái rỗng Stitch."
+        ],
+        "expected": "Angular hiển thị các thẻ chỉ số cả khi count=0; Stitch luôn hiện trạng thái rỗng. Chưa có hợp đồng xác định hai trạng thái này tương ứng ra sao. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; 01-ui-elements.md markers #23–#25; API #91 OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-013",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Không thêm chỉ số không có trong phản hồi",
+        "requirement_ids": [
+          "AD-17-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở projection với DTO hiện tại.",
+          "Kiểm tra không có score distribution, completion rate hoặc average duration."
+        ],
+        "expected": "Angular không tính phổ điểm, tỷ lệ hoàn thành hoặc thời lượng trung bình; không dùng nội dung tĩnh Stitch làm dữ liệu cho các chỉ số đó. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "AD-17 00-overview.md; 01-ui-elements.md; ad17-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-014",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Xử lý 401 và kết thúc phiên",
+        "requirement_ids": [
+          "AD-17-YC-004",
+          "AD-17-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Giả lập HTTP 401 từ GET #91.",
+          "Quan sát session và màn lỗi."
+        ],
+        "expected": "Với HTTP 401, AdminApiService kết thúc phiên cục bộ; trang chuyển sang lỗi yêu cầu đăng nhập lại và không hiển thị chỉ số. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.service.ts; admin-screen-state.ts; API #91 06_Error.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-015",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Xử lý 403 mà không hiện số liệu",
+        "requirement_ids": [
+          "AD-17-YC-004",
+          "AD-17-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Giả lập HTTP 403 từ GET #91.",
+          "Quan sát thông điệp và dữ liệu cũ."
+        ],
+        "expected": "Với HTTP 403, trạng thái dùng chung báo không được phép xem dữ liệu và không hiển thị chỉ số. Quyền quiz-management chưa được ánh xạ theo AC-35. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-screen-state.ts; API #91 06_Error.md; AC-35"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-016",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Xử lý 404 Quiz không tồn tại",
+        "requirement_ids": [
+          "AD-17-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Giả lập HTTP 404 DESIGN_RESOURCE_NOT_FOUND.",
+          "Quan sát trạng thái lỗi."
+        ],
+        "expected": "Với HTTP 404, trang hiện lỗi tải thống kê và thông báo không tìm thấy; không hiển thị thẻ chỉ số. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.spec.ts; admin-screen-state.ts; API #91 06_Error.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-017",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Xử lý 500 an toàn",
+        "requirement_ids": [
+          "AD-17-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Giả lập HTTP 500 DESIGN_INTERNAL_ERROR.",
+          "Kiểm tra page không lộ nội dung DB/SQL."
+        ],
+        "expected": "Với HTTP 500, trạng thái dùng chung hiện lỗi dịch vụ; handler phía máy chủ không trả chi tiết DB/SQL. Môi trường chạy chưa được xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-screen-state.ts; API #91 view.py; API #91 06_Error.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-018",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Xử lý mất kết nối mà không tự thử lại",
+        "requirement_ids": [
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Giả lập status 0/offline.",
+          "Quan sát state, retryable và các điều khiển trong template."
+        ],
+        "expected": "Với HTTP status 0, trạng thái dùng chung ghi lỗi kết nối và retryable=true (có thể thử lại). Template không có nút retry; chưa có chính sách thử lại tự động. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-screen-state.ts; ad17-page.html; 03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-019",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Quay về danh sách từ ba liên kết",
+        "requirement_ids": [
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Từ template, kích hoạt breadcrumb, liên kết đầu trang và liên kết footer.",
+          "Kiểm tra route đích."
+        ],
+        "expected": "Cả ba RouterLink (liên kết điều hướng Angular) đều trỏ tới /admin/quizzes. Chưa có chính sách giữ browser history (lịch sử trình duyệt), bộ lọc hoặc trang hiện tại. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ad17-page.html; 06-navigation.md; admin.routes.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-020",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Không tự thêm trạng thái truy vấn khi quay lại",
+        "requirement_ids": [
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở AD-17 từ một trang AD-15 đang lọc/phân trang.",
+          "Quay lại bằng mỗi liên kết và ghi nhận query/filter state."
+        ],
+        "expected": "Mã nguồn chỉ xác định route đích /admin/quizzes; việc giữ query/filter state (tham số truy vấn và bộ lọc) khi quay lại chưa được đặc tả nên chưa thể đặt kết quả kỳ vọng. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-17 06-navigation.md; ad17-page.html; AD15 page"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-021",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Nút kiểm tra kết nối chỉ là bộ định giờ trong bản mẫu",
+        "requirement_ids": [
+          "AD-17-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Trong HTML Stitch nhấn nút #27.",
+          "Theo dõi thay đổi nhãn sau 700 ms và reset sau 3 giây.",
+          "Kiểm tra không có HTTP/fetch request; so với Angular template."
+        ],
+        "expected": "Nút #27 trong HTML Stitch chỉ đổi nhãn theo bộ định giờ, hiện phản hồi tĩnh và không gửi yêu cầu mạng. Angular AD-17 không có nút này. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-17 02-events.md EV-07; screen_stitch code.html; ad17-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-022",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Không suy diễn chức năng khung giao diện/chân trang từ bản mẫu",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Đối chiếu nav, notification, breadcrumb hệ thống và ba liên kết footer.",
+          "Kiểm tra href/handler trong prototype và nội dung do Angular page sở hữu."
+        ],
+        "expected": "Các anchor Stitch dùng href=# hoặc không có handler (trình xử lý). AdminLayout là khung giao diện cha; không xem nhãn SYSTEM NORMAL/RBAC hoặc nội dung footer (chân trang) là trạng thái khi chạy. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-17 02-events.md EV-08; Stitch code.html; admin.routes.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-023",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Không coi lần nộp bài là sự kiện nền đã có",
+        "requirement_ids": [
+          "AD-17-YC-009",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Đối chiếu copy #25/#29 với AC-35 và query #91.",
+          "Tìm event/job/push integration được liên kết với AD-17."
+        ],
+        "expected": "Bản mẫu nói có tác vụ nền sau khi nộp bài, nhưng không tìm thấy job (tác vụ) hoặc push (sự kiện đẩy). Bằng chứng hiện có chỉ là GET #91 chạy truy vấn tổng hợp đồng bộ. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "AD-17 02-events.md EV-09; AC-35; API #91 query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-024",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Đảm bảo #91 chỉ đọc và không trả dữ liệu người học",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Dùng test double/kiểm tra câu truy vấn #91 sau khi môi trường được duyệt.",
+          "Xác nhận không ghi/commit, không đọc quiz_answers hoặc định danh học viên."
+        ],
+        "expected": "Truy vấn #91 hiện chỉ đọc quizzes/quiz_attempts, không đọc quiz_answers và không ghi/commit data. Lược đồ và DB trực tiếp chưa được xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "API #91 query.py/view.py; tests/modules/admin/api_91_admin_quizzes_statistics"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-MH-025",
+        "target_id": "AD-17",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu giao diện Angular và khả năng nạp CSS",
+        "requirement_ids": [
+          "AD-17-YC-020"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "So sánh bố cục Stitch với template Angular hiện tại.",
+          "Kiểm tra decorator Component có khai báo stylesheet hay không.",
+          "Khi có trình duyệt được duyệt, xác nhận stylesheet thực sự được nạp."
+        ],
+        "expected": "Decorator Component không khai báo styleUrl. Chưa xác minh ad17-page.css có được nạp từ nơi khác hoặc bố cục ra sao trên trình duyệt; ảnh Stitch không chứng minh giao diện khi chạy. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ad17-page.ts/html/css; AD-17_PLAN.md; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-17-TC-TP-001",
+        "target_id": "AD-17-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #1: Nhận diện Study2Work LMS",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #1 tại (15,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Logo/nhãn hiệu tĩnh của bản mẫu; không ràng buộc phiên thật. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #1; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-002",
+        "target_id": "AD-17-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #2: Điều hướng tổng quan trong khung giao diện",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #2 tại (340,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; HTML không ánh xạ tới route. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #2; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-003",
+        "target_id": "AD-17-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #3: Điều hướng người dùng trong khung giao diện",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #3 tại (488,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; HTML không ánh xạ tới route. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #3; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-004",
+        "target_id": "AD-17-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #4: Điều hướng khóa học và nội dung trong khung giao diện",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #4 tại (652,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; HTML không ánh xạ tới route. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #4; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-005",
+        "target_id": "AD-17-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #5: Điều hướng kiểm duyệt trong khung giao diện",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #5 tại (858,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; HTML không ánh xạ tới route. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #5; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-006",
+        "target_id": "AD-17-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #6: Điều hướng báo cáo trong khung giao diện",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #6 tại (1008,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; HTML không ánh xạ tới route. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #6; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-007",
+        "target_id": "AD-17-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #7: Nhãn hệ thống bình thường (hệ thống bình thường) tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #7 tại (1165,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Nhãn tĩnh “SYSTEM NORMAL” (hệ thống bình thường); không phải kiểm tra kết nối API. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #7; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-008",
+        "target_id": "AD-17-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #8: Nút thông báo không có trình xử lý",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #8 tại (1307,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Nút thông báo không có trình xử lý riêng cho màn hình. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #8; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-009",
+        "target_id": "AD-17-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #9: Danh tính quản trị viên và ảnh đại diện tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-004",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #9 tại (1570,15) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Tên/vai trò tĩnh; không chứng minh session hoặc quyền. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #9; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-010",
+        "target_id": "AD-17-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #10: Breadcrumb hệ thống tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #10 tại (520,95) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Breadcrumb hệ thống và nhãn workspace tĩnh. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #10; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-011",
+        "target_id": "AD-17-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #11: Nhãn xác thực RBAC tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-004",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #11 tại (1585,95) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Nhãn RBAC tĩnh; không chứng minh chính sách phân quyền. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #11; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-012",
+        "target_id": "AD-17-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #12: Breadcrumb Quản trị khảo thí",
+        "requirement_ids": [
+          "AD-17-YC-016",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #12 tại (95,145) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Nhãn breadcrumb là span, không có href. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #12; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-013",
+        "target_id": "AD-17-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #13: Liên kết breadcrumb Danh sách bài kiểm tra",
+        "requirement_ids": [
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #13 tại (258,145) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: href=/admin/quizzes; đích là AD-15 theo mã nguồn tuyến. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #13; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-014",
+        "target_id": "AD-17-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #14: Breadcrumb trang Báo cáo thống kê",
+        "requirement_ids": [
+          "AD-17-YC-002"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #14 tại (430,145) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Trang hiện tại trong breadcrumb. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #14; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-015",
+        "target_id": "AD-17-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #15: Tiêu đề trang báo cáo thống kê kết quả",
+        "requirement_ids": [
+          "AD-17-YC-002",
+          "AD-17-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #15 tại (650,200) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: H1 tĩnh; nhãn trong Angular khác: Thống kê bài kiểm tra. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #15; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-016",
+        "target_id": "AD-17-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #16: Dòng mô tả trang có khẳng định phân phối bài làm",
+        "requirement_ids": [
+          "AD-17-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #16 tại (680,300) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Nội dung khẳng định có phân phối bài làm; không phải hợp đồng chỉ số. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #16; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-017",
+        "target_id": "AD-17-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #17: Liên kết đầu trang quay về AD-15",
+        "requirement_ids": [
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #17 tại (1585,294) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: href=/admin/quizzes; chỉ là đích mã nguồn bản mẫu. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #17; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-018",
+        "target_id": "AD-17-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #18: Tiêu đề thẻ Quiz mục tiêu",
+        "requirement_ids": [
+          "AD-17-YC-007"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #18 tại (315,365) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Heading của thẻ mục tiêu tĩnh. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #18; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-019",
+        "target_id": "AD-17-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #19: Nhãn Quiz độc lập tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-007"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #19 tại (1318,375) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Badge Quiz độc lập; không xác nhận entity schema. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #19; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-020",
+        "target_id": "AD-17-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #20: chỉ số hiệu quả chính (KPI) tên Quiz dạng giữ chỗ",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #20 tại (518,415) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Tên bài kiểm tra hiển thị “--”; bản mẫu không lấy dữ liệu từ phản hồi. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #20; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-021",
+        "target_id": "AD-17-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #21: chỉ số hiệu quả chính (KPI) mã Quiz dạng giữ chỗ",
+        "requirement_ids": [
+          "AD-17-YC-003",
+          "AD-17-YC-007"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #21 tại (1018,415) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: ID trong route hiển thị dạng giữ chỗ:quizId; bản mẫu không đọc URL. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #21; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-022",
+        "target_id": "AD-17-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #22: chỉ số hiệu quả chính (KPI) trạng thái đồng bộ dạng giữ chỗ",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #22 tại (1515,415) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Trạng thái đồng bộ là nội dung tĩnh, không lấy từ API. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #22; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-023",
+        "target_id": "AD-17-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #23: Minh họa trạng thái rỗng tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #23 tại (700,684) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Icon trang trí; không phải biểu đồ data. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #23; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-024",
+        "target_id": "AD-17-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #24: Tiêu đề trạng thái rỗng tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #24 tại (1174,827) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Trạng thái rỗng luôn hiện trong bản mẫu; ngữ nghĩa khi không có dữ liệu chưa được duyệt. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #24; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-025",
+        "target_id": "AD-17-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #25: Nội dung trạng thái rỗng có khẳng định chỉ số chưa hỗ trợ",
+        "requirement_ids": [
+          "AD-17-YC-009",
+          "AD-17-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #25 tại (350,878) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Nội dung nhắc tới phổ điểm, tỷ lệ hoàn thành, thời lượng và tự hiển thị; chưa có căn cứ cho các khẳng định này. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #25; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-026",
+        "target_id": "AD-17-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #26: Nút quay về danh sách AD-15",
+        "requirement_ids": [
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #26 tại (426,1029) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: CTA href=/admin/quizzes; bản mẫu dùng liên kết. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #26; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-027",
+        "target_id": "AD-17-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #27: Nút kiểm tra kết nối chỉ có trong bản mẫu",
+        "requirement_ids": [
+          "AD-17-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #27 tại (1175,1029) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Nút chạy bộ định giờ nhưng không gửi HTTP; mẫu Angular không có nút tương ứng. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #27; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-028",
+        "target_id": "AD-17-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #28: Thẻ ghi chú toàn vẹn dữ liệu tĩnh",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #28 tại (758,1206) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Thẻ nêu khẳng định về chính sách/toàn vẹn dữ liệu; không phải bằng chứng chính sách. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #28; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-029",
+        "target_id": "AD-17-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #29: Thẻ ghi chú tác vụ phân tích nền chưa có căn cứ",
+        "requirement_ids": [
+          "AD-17-YC-009",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #29 tại (1546,1205) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Thẻ khẳng định có tổng hợp nền sau submit; không có bằng chứng worker hoặc push. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #29; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-030",
+        "target_id": "AD-17-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #30: Copyright và nhãn hệ thống ở chân trang",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #30 tại (245,1357) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Copyright và nhãn hệ thống tĩnh. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #30; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-031",
+        "target_id": "AD-17-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #31: Liên kết privacy dùng href=#",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #31 tại (970,1357) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; không có đích đến. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #31; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-032",
+        "target_id": "AD-17-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #32: Liên kết RBAC dùng href=#",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #32 tại (1190,1357) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; không có đích đến. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #32; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-033",
+        "target_id": "AD-17-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu mốc #33: Liên kết hỗ trợ kỹ thuật dùng href=#",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở ảnh đánh số và ảnh thiết kế gốc.",
+          "Đối chiếu tọa độ, nhãn và thuộc tính với mô tả; không suy ra hành vi runtime."
+        ],
+        "expected": "Marker #33 tại (1450,1357) điểm ảnh, tâm marker trên ảnh 1600×1440; đối chiếu nội dung tĩnh: Anchor href=#; không có đích đến. Đây là bằng chứng bản mẫu, không xác nhận UI Angular. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #33; AD-17_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-034",
+        "target_id": "AD-17-EL-034",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Nhãn API #91 chỉ đọc",
+        "requirement_ids": [
+          "AD-17-YC-005",
+          "AD-17-YC-006"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Hiển thị API #91 · Chỉ đọc; hiện diện trong mẫu Angular, không có dấu mốc Stitch tương ứng. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; AD17ApiService"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-035",
+        "target_id": "AD-17-EL-035",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Dòng phân loại QUIZ STATISTICS (thống kê Quiz)",
+        "requirement_ids": [
+          "AD-17-YC-002"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Angular hiển thị “QUIZ STATISTICS” và tiêu đề “Thống kê bài kiểm tra”; nội dung khác bản mẫu. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; ad17-screen.ui.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-036",
+        "target_id": "AD-17-EL-036",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Panel trạng thái đang tải",
+        "requirement_ids": [
+          "AD-17-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Hiển thị “Đang tải thống kê” và chờ phản hồi từ Study Server; chưa xác minh khi chạy. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; admin-screen-state.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-037",
+        "target_id": "AD-17-EL-037",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Panel trạng thái lỗi",
+        "requirement_ids": [
+          "AD-17-YC-015",
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Hiển thị “Không thể tải thống kê”, thông báo dùng chung và liên kết về AD-15. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; admin-screen-state.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-038",
+        "target_id": "AD-17-EL-038",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Thẻ dữ liệu thống kê đã nạp",
+        "requirement_ids": [
+          "AD-17-YC-006",
+          "AD-17-YC-007",
+          "AD-17-YC-008",
+          "AD-17-YC-011",
+          "AD-17-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Thẻ chỉ xuất hiện khi viewState là “loaded”; nhận phép chiếu cục bộ, không phải hợp đồng đã duyệt. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; AD17 page"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-039",
+        "target_id": "AD-17-EL-039",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Mã bài kiểm tra trong tiêu đề thẻ",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-011"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Hiển thị Quiz ID từ phản hồi; client không đối chiếu với ID thô trong route. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; ad17-page.ts; admin-screen-renderers.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-040",
+        "target_id": "AD-17-EL-040",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: chỉ số Lượt làm bài",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-011",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Chiếu attempt_count; kiểu number của client có thể vượt miền chính xác của JavaScript. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.models.ts; admin-screen-renderers.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-041",
+        "target_id": "AD-17-EL-041",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: chỉ số Lượt nộp bài",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Chiếu submitted_attempt_count từ DTO cục bộ; định nghĩa chỉ số chưa được duyệt. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.models.ts; admin-screen-renderers.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-042",
+        "target_id": "AD-17-EL-042",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: chỉ số Lượt đã chấm",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Chiếu graded_attempt_count từ DTO cục bộ; định nghĩa chỉ số chưa được duyệt. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.models.ts; admin-screen-renderers.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-043",
+        "target_id": "AD-17-EL-043",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: chỉ số Điểm trung bình",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-008",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Chiếu average_score dạng chuỗi hoặc dấu — khi null; công thức/làm tròn chưa được duyệt. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.models.ts; admin-screen-renderers.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-044",
+        "target_id": "AD-17-EL-044",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: chỉ số Lượt đạt",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-008",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Chiếu passed_attempt_count dạng số hoặc dấu —; điều kiện đạt chưa được duyệt. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.models.ts; admin-screen-renderers.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-045",
+        "target_id": "AD-17-EL-045",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: chỉ số Tỷ lệ đạt",
+        "requirement_ids": [
+          "AD-17-YC-007",
+          "AD-17-YC-008",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Chiếu pass_rate_percent dạng chuỗi hoặc dấu —; mẫu số/làm tròn chưa được duyệt. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "admin-api.models.ts; admin-screen-renderers.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-046",
+        "target_id": "AD-17-EL-046",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Ghi chú dấu — và công thức",
+        "requirement_ids": [
+          "AD-17-YC-008",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Ghi chú dấu — cho null và cảnh báo rằng ý nghĩa nghiệp vụ chưa được duyệt. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; admin-screen-state.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-047",
+        "target_id": "AD-17-EL-047",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Thẻ cảnh báo giới hạn hợp đồng #91",
+        "requirement_ids": [
+          "AD-17-YC-004",
+          "AD-17-YC-006",
+          "AD-17-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Cảnh báo ApiEnvelope<Quiz> khác DTO cục bộ; chỉ số, NULL/làm tròn và quyền chưa thống nhất. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; ad17-api-boundary.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-TP-048",
+        "target_id": "AD-17-EL-048",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Ghi chú nguồn GET #91",
+        "requirement_ids": [
+          "AD-17-YC-005",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Mở template/mã nguồn Angular được dẫn.",
+          "Đối chiếu điều kiện hiển thị và dữ liệu binding với mô tả.",
+          "Khi có môi trường được duyệt, kiểm tra hình ảnh thực tế; ghi nhận không suy ra runtime từ source."
+        ],
+        "expected": "Trong mã nguồn Angular, thành phần này có nội dung: Hiển thị path nguồn chỉ đọc; không thêm bộ lọc, polling hoặc tự làm mới. Trạng thái trên trình duyệt chưa xác minh. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "ad17-page.html; ad17-api.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-17-TC-SK-001",
+        "target_id": "AD-17-EV-001",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Mở màn hình và đọc quizId",
+        "requirement_ids": [
+          "AD-17-YC-002",
+          "AD-17-YC-003",
+          "AD-17-YC-015"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "AD17Page đọc quizId dạng chuỗi; chỉ tiếp tục khi là chuỗi chữ số dương tối đa 19 ký tự và không vượt signed int64. AD-15 chỉ tạo liên kết khi ID nằm trong miền số nguyên an toàn của JavaScript. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; AD17 page; AD15 renderer; admin.routes.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-002",
+        "target_id": "AD-17-EV-002",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Xác thực và quyền truy cập",
+        "requirement_ids": [
+          "AD-17-YC-004",
+          "AD-17-YC-001"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "AdminApiService lấy token phiên và gắn Authorization: Bearer. Phản hồi 401 kết thúc phiên cục bộ. Guard ADMIN dùng chung ở máy chủ chạy trước bước phân tích ID và truy vấn. Chưa có ánh xạ được duyệt cho quyền quiz-management theo AC-35. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-02; admin-api.service.ts; API #91 validate.py; AC-35"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-003",
+        "target_id": "AD-17-EV-003",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Tải thống kê qua API #91",
+        "requirement_ids": [
+          "AD-17-YC-005",
+          "AD-17-YC-006",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "Gọi GET chỉ với path quiz_id, không có body hoặc query. Mã nguồn máy chủ chạy một truy vấn tổng hợp chỉ đọc. Catalog khai báo ApiEnvelope<Quiz>, khác DTO thống kê cục bộ. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-03; AD17ApiService; API #91 query.py/view.py; list_api.md #91"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-004",
+        "target_id": "AD-17-EV-004",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Ánh xạ phản hồi và giao diện",
+        "requirement_ids": [
+          "AD-17-YC-006",
+          "AD-17-YC-007",
+          "AD-17-YC-008",
+          "AD-17-YC-011",
+          "AD-17-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "Trang hiện chỉ kiểm tra success=true; không truyền businessCode mong đợi và không kiểm tra response.quiz_id có khớp ID trong route hay không. Trang chiếu sáu chỉ số; null thành dấu —; số int64 không an toàn thành cảnh báo. Công thức và ý nghĩa dữ liệu chưa được duyệt. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-04; AD17 page/template; admin-screen-state.ts; admin-screen-renderers.ts; API #91 models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-005",
+        "target_id": "AD-17-EV-005",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Xử lý lỗi tải",
+        "requirement_ids": [
+          "AD-17-YC-003",
+          "AD-17-YC-014",
+          "AD-17-YC-015",
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "ID thiếu hoặc sai dừng trước HTTP. HTTP 401 kết thúc phiên; 403/404 hiện lỗi dùng chung; 500 hiện lỗi dịch vụ chung. HTTP status 0 hiện lỗi kết nối và đánh dấu retryable trong trạng thái; mẫu giao diện không có nút thử lại. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-05; admin-screen-state.ts; AdminApiService; API #91 06_Error.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-006",
+        "target_id": "AD-17-EV-006",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Quay lại danh sách AD-15",
+        "requirement_ids": [
+          "AD-17-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "Cả ba RouterLink trong mẫu Angular trỏ tới /admin/quizzes. Chưa có quyết định về việc giữ quizId, bộ lọc, trang hiện tại hoặc vị trí cuộn. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-06; AD17 template; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-007",
+        "target_id": "AD-17-EV-007",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Kiểm tra kết nối — chỉ ở bản mẫu",
+        "requirement_ids": [
+          "AD-17-YC-018",
+          "AD-17-YC-017"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "Trình lắng nghe khóa nút, bật spinner và đổi nhãn; sau 700 ms hiện phản hồi tĩnh, sau 3 giây khôi phục nhãn và mở nút. Không có fetch, XHR hoặc lời gọi API. Nhấn lần sau không ẩn phản hồi cũ. Angular không có điều khiển này. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-07; screen_stitch code.html; AD17 template"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-008",
+        "target_id": "AD-17-EV-008",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: khung giao diện và liên kết chân trang dạng giữ chỗ",
+        "requirement_ids": [
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "Các anchor href=# hoặc điều khiển không có trình xử lý nên không chứng minh tuyến, thông báo, phiên, quyền hay trang đích. Tuyến cha dùng AdminLayout; nội dung shell không thuộc template AD-17. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-08; Stitch code.html; AD17 template; admin.routes.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-17-TC-SK-009",
+        "target_id": "AD-17-EV-009",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: khẳng định tổng hợp nền sau khi nộp",
+        "requirement_ids": [
+          "AD-17-YC-009",
+          "AD-17-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được phê duyệt và dữ liệu giả/tổng hợp; không dùng thông tin người học thật. DD/API còn điểm chặn, trình duyệt/dịch vụ/DB đích chưa xác minh. Ca chưa chạy.",
+        "data": "Dữ liệu giả/tổng hợp; không chứa thông tin người học thật.",
+        "steps": [
+          "Thực hiện trigger giả lập trong môi trường được duyệt hoặc đối chiếu source được dẫn.",
+          "Theo dõi state/request/navigation tương ứng.",
+          "Ghi discrepancy riêng; không coi source/mockup là kết quả chạy."
+        ],
+        "expected": "Không tìm thấy event, job hoặc push liên quan. Mã nguồn #91 tổng hợp đồng bộ khi nhận GET. Không thiết kế polling, tự làm mới hoặc cập nhật sau khi nộp bài. Chờ xác nhận các quyết định nghiệp vụ liên quan trước nghiệm thu; ca chưa chạy và chưa được phê duyệt.",
+        "api_ids": [
+          "AD-17-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-09; AC-35; API #91 query.py; API #91 OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

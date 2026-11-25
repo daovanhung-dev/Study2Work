@@ -1,0 +1,1433 @@
+{
+  "metadata": {
+    "screen_id": "ST-07",
+    "screen_name": "Kết quả đăng ký khóa học",
+    "module": "Học viên — kết quả ghi danh khóa học",
+    "route": "/student/enroll/result/:courseId",
+    "actor": "Học viên theo AC-12; bố cục StudentLayout hiện biểu mẫu đăng nhập khi chưa có phiên.",
+    "version": "UTC v0.1",
+    "dd_version": "DD v0.1",
+    "dd_status": "BLOCKED",
+    "runtime_status": "Chưa xác minh khi chạy hoặc triển khai; mã nguồn cục bộ đã được đối chiếu.",
+    "author": "Chưa xác định trong DD",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md; apps/study-client/docs/screen_stitch/03_student/ST-07_ket-qua-dang-ky-khoa-hoc/ST-07.md; mã nguồn Angular ST07 và Study Server #18/#19/#20.",
+    "release_readiness": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+    "baseline_authorization": "Theo chỉ dẫn của người dùng, dùng DD ST-07 trong kho làm chuẩn dù tài liệu ghi BLOCKED; giữ nguyên mọi quyết định còn mở, không tự chốt thay owner.",
+    "discrepancy_note": "Tuyến và trang Angular đã có, nhưng nội dung vẫn là trạng thái tĩnh và không gọi API. DD/API #19/#20 cũ còn ghi UNWIRED; mã nguồn hiện có route/module. #20 trả CourseSummaryPage thay vì UserProfile trong catalog. API #18 chỉ theo dõi thông báo. Footer brand Angular là liên kết; Stitch/DD ghi tĩnh."
+  },
+  "overall": {
+    "objective": "Đối chiếu màn hình kết quả đăng ký với AC-12/AC-13 và chỉ báo kết quả sau khi backend xác nhận đúng hợp đồng.",
+    "inputs": "`courseId` trên tuyến kết quả; phiên học viên; kết quả entitlement/Payment/ghi danh; danh sách khóa học sau ghi danh. Trang hiện không đọc mã tuyến và không nhận phản hồi API.",
+    "outputs": "Hiện tại: đăng nhập ở bố cục cha nếu chưa có phiên; nếu đã đăng nhập thì thẻ tĩnh “Chưa thể xác nhận kết quả đăng ký.” cùng liên kết về danh sách khóa học. Dự kiến: chỉ hiển thị kết quả sau khi được backend xác nhận và mapping được duyệt.",
+    "main_flow": "Dự kiến theo AC-12: nhánh miễn phí đủ điều kiện hoặc nhánh trả phí có xác nhận tin cậy → #19 tạo ghi danh và Progress → #20 tải lại danh sách → hiển thị kết quả. #18 chỉ có thể tham gia nếu có Operation ID và hợp đồng phù hợp. Hiện tại: route được đăng ký nhưng component chỉ hiển thị thẻ tĩnh.",
+    "preconditions": "ST-07 là route con của StudentLayout. Bố cục cha hiển thị trang con khi có phiên học viên; khi không có phiên, nó hiện biểu mẫu đăng nhập. Điều kiện ghi danh/điểm gọi #19, Payment handoff và đích thành công chưa được chốt.",
+    "states": [
+      "Chưa đăng nhập — StudentLayout hiện biểu mẫu đăng nhập",
+      "Đã đăng nhập — trang con ST-07 hiển thị trạng thái tĩnh",
+      "Chưa thể xác nhận — nội dung cố định, không phải kết quả từ API",
+      "Awaiting-confirmation/enrolled/conflict/failure — nhãn inventory, chưa có mapping được duyệt cho trạng thái thực tế"
+    ],
+    "security": "Không xem `courseId`, callback trình duyệt, biểu tượng dấu chọn hoặc nội dung tĩnh là bằng chứng thanh toán/ghi danh. #19 theo hợp đồng yêu cầu Student Bearer; mã nguồn hiện lấy người dùng từ token. #18 hiện chỉ đọc tác vụ thông báo theo chủ sở hữu.",
+    "out_of_scope": "Không gọi API, không chạy kiểm thử ứng dụng hoặc trình duyệt, không truy cập database đang triển khai, không tạo ghi danh/Progress thật, không giả lập Payment và không xác nhận runtime."
+  },
+  "apis": [
+    {
+      "id": "#18",
+      "method": "GET",
+      "path": "/api/v1/operations/{operation_id}",
+      "event_ids": [
+        "ST-07-EV-003"
+      ],
+      "request": "Bearer JWT; ID trong catalog hiện là UUID. Tuyến ST-07 chỉ mang `courseId`, không cung cấp ID tác vụ.",
+      "response": "Theo thiết kế chung: 200 `DESIGN_OPERATION_RETRIEVED`, `ApiEnvelope<Operation>`. Nguồn Study hiện chỉ trả Operation gửi thông báo; không có kết quả ghi danh/Payment.",
+      "errors": "401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`.",
+      "auth": "Bearer JWT; Student/Mentor/Admin; chỉ chủ sở hữu trong nguồn hiện tại cho Operation thông báo.",
+      "design_status": "Bản nháp cho vòng đời chung; chỉ luồng thông báo hiện có nguồn mã. Chưa có handoff Operation ID cho ST-07.",
+      "source_ref": "docs/lists/list_api.md — API #18; apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md; apps/study-server/app/modules/shared/api_18_operations/validate.py; apps/study-server/app/modules/shared/api_18_operations/query.py; apps/study-server/app/modules/shared/api_18_operations/view.py"
+    },
+    {
+      "id": "#19",
+      "method": "POST",
+      "path": "/api/v1/courses/{course_id}/enrollments",
+      "event_ids": [
+        "ST-07-EV-002"
+      ],
+      "request": "Catalog: Student Bearer; path `course_id:int64!`; body ghi `course_id:int64!` và người dùng từ JWT nhưng chưa chốt trường dây. Mã nguồn hiện nhận `course_id` trong thân, lấy `user_id` từ JWT, yêu cầu path/thân bằng nhau và là số nguyên dương int64.",
+      "response": "Catalog: 201 `DESIGN_RESOURCE_CREATED`, `ApiEnvelope<Enrollment>`. Mã nguồn hiện trả ghi danh ACTIVE sau khi ghi ghi danh và các hàng Progress cho bài học PUBLISHED rồi commit.",
+      "errors": "Catalog: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 422 `DESIGN_VALIDATION_ERROR`, 409 `DESIGN_STATE_CONFLICT`, 500 `DESIGN_INTERNAL_ERROR`. Mã nguồn hiện dùng 409 khi đã có ghi danh ACTIVE hoặc khi khóa học có giá dương mà không có Order PAID.",
+      "auth": "Bearer JWT; vai trò Student. Mã nguồn hiện dùng subject số của token làm `user_id`.",
+      "design_status": "DD API vẫn ghi Bản nháp / UNWIRED cũ; mã nguồn hiện có route/module nhưng chưa có kiểm thử tập trung hoặc xác minh runtime/lược đồ triển khai. Trang ST-07 không gọi API.",
+      "source_ref": "docs/lists/list_api.md — API #19; apps/study-server/docs/dd/19_courses_enrollments/02_Overview.md; apps/study-server/docs/dd/19_courses_enrollments/03_Request.md; apps/study-server/docs/dd/19_courses_enrollments/04_Response.md; apps/study-server/docs/dd/19_courses_enrollments/OPEN_QUESTIONS.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_19_courses_enrollments/models.py; apps/study-server/app/modules/student/api_19_courses_enrollments/validate.py; apps/study-server/app/modules/student/api_19_courses_enrollments/query.py; apps/study-server/app/modules/student/api_19_courses_enrollments/view.py"
+    },
+    {
+      "id": "#20",
+      "method": "GET",
+      "path": "/api/v1/users/me/courses",
+      "event_ids": [
+        "ST-07-EV-004"
+      ],
+      "request": "Catalog: Student Bearer; truy vấn tùy chọn `status:string`, `page:int32`; không có thân. Mã nguồn hiện chuẩn hóa `page` dương, mặc định theo hằng dùng chung, cắt khoảng trắng `status` nhưng không giới hạn enum ở hàm xác thực.",
+      "response": "Catalog/DD: 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<UserProfile>`. Mã nguồn hiện trả `CourseSummaryPage` với `items` và `pagination`; không tự đổi hai kiểu này thành một.",
+      "errors": "Catalog: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`.",
+      "auth": "Bearer JWT; vai trò Student; mã nguồn lọc theo `user_id` lấy từ subject của token.",
+      "design_status": "Bản nháp; mã nguồn hiện có route/module và trả trang khóa học, khác kiểu phản hồi `UserProfile` trong catalog/DD. ST-07 không gọi API và chưa có kiểm thử tập trung.",
+      "source_ref": "docs/lists/list_api.md — API #20; apps/study-server/docs/dd/20_users_me_courses/02_Overview.md; apps/study-server/docs/dd/20_users_me_courses/03_Request.md; apps/study-server/docs/dd/20_users_me_courses/04_Response.md; apps/study-server/docs/dd/20_users_me_courses/OPEN_QUESTIONS.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_20_users_me_courses/models.py; apps/study-server/app/modules/student/api_20_users_me_courses/validate.py; apps/study-server/app/modules/student/api_20_users_me_courses/query.py; apps/study-server/app/modules/student/api_20_users_me_courses/view.py"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-07-YC-001",
+      "description": "Mở đúng tuyến kết quả đăng ký theo mã khóa học trong luồng AC-12.",
+      "group": "Điều hướng / ngữ cảnh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/00-overview.md; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Tuyến `/student/enroll/result/:courseId` đã được khai báo; mã nguồn trang hiện không đọc `courseId`.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-002",
+      "description": "Khi chưa có phiên học viên, yêu cầu đăng nhập trước khi hiển thị trang con.",
+      "group": "Xác thực",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/layouts/student/student-layout.html; apps/study-client/src/app/layouts/student/student-layout.ts",
+      "notes": "Bố cục cha kiểm tra phiên trong bộ nhớ và thay trang con bằng biểu mẫu đăng nhập khi chưa xác thực.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-003",
+      "description": "Khi trang con hiện tại mở, hiển thị trạng thái chưa thể xác nhận kết quả.",
+      "group": "Trạng thái giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #9; apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+      "notes": "Đây là nội dung tĩnh; không phải kết quả từ ghi danh, Payment hay Operation.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-004",
+      "description": "Không xem `courseId` trên đường dẫn là bằng chứng đã ghi danh hoặc thanh toán.",
+      "group": "Bảo mật / dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-01; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/03-data-flow.md",
+      "notes": "Trang hiện không đọc mã đường dẫn và không có nguồn kiểm chứng kết quả.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-005",
+      "description": "Không tạo ghi danh chỉ vì trang kết quả được mở, làm mới hoặc truy cập trực tiếp.",
+      "group": "Kích hoạt ghi danh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-01/EV-02; apps/study-client/src/app/features/student/ST07/pages/st07-page.ts",
+      "notes": "Thời điểm và màn hình sở hữu lời gọi #19 chưa được DD chốt; trang hiện không gọi #19.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-006",
+      "description": "Chỉ cho phép #19 sau khi backend xác nhận điều kiện ghi danh của nhánh miễn phí hoặc kết quả thanh toán tin cậy.",
+      "group": "Điều kiện ghi danh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/05-business-rules.md; apps/study-server/docs/dd/19_courses_enrollments/OPEN_QUESTIONS.md",
+      "notes": "AC-12 nêu nhánh miễn phí/trả phí; chi tiết entitlement và điểm gọi #19 còn mở. Mã nguồn #19 hiện kiểm tra khóa học đã xuất bản và yêu cầu Order PAID với giá dương.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-007",
+      "description": "Giữ đúng hợp đồng yêu cầu và kết quả #19; không tự thêm trường hoặc trạng thái.",
+      "group": "Tích hợp API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/04-api-integration.md — #19; apps/study-server/app/modules/student/api_19_courses_enrollments/models.py",
+      "notes": "Catalog yêu cầu path `course_id` và ghi chú người dùng từ JWT; mã nguồn hiện nhận `course_id` trong thân, lấy người dùng từ token và buộc path/thân trùng nhau.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-008",
+      "description": "Không hiển thị thành công từ phản hồi lỗi, biểu tượng hoặc câu chữ tĩnh.",
+      "group": "Trạng thái / lỗi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-05; apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+      "notes": "Danh mục có lỗi #19 401/403/404/422/409/500; cách ánh xạ sang trạng thái UI còn chờ xác nhận.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-009",
+      "description": "Chỉ tra cứu #18 khi có Operation ID được bàn giao và hợp đồng cho luồng ghi danh được duyệt.",
+      "group": "Theo dõi tác vụ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/04-api-integration.md — #18; apps/study-server/app/modules/shared/api_18_operations/query.py",
+      "notes": "Đường dẫn ST-07 chỉ mang `courseId`; mã nguồn #18 hiện chỉ truy vấn tác vụ gửi thông báo.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-010",
+      "description": "Sau khi #19 được chấp nhận, tải lại danh sách khóa học bằng dữ liệu khớp hợp đồng đã duyệt.",
+      "group": "Tải lại khóa học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/04-api-integration.md — #20; apps/study-server/app/modules/student/api_20_users_me_courses/models.py",
+      "notes": "Catalog/DD khai báo `UserProfile`, còn mã nguồn hiện trả `CourseSummaryPage`; trang ST-07 chưa gọi #20.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-011",
+      "description": "Chỉ báo đã ghi danh sau khi phản hồi backend và ánh xạ kết quả được duyệt xác nhận.",
+      "group": "Kết quả / điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/00-overview.md — Expected behavior; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-05",
+      "notes": "Không dùng callback trình duyệt, tham số đường dẫn hoặc dữ liệu tĩnh làm bằng chứng.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-012",
+      "description": "Nếu #19 có thể đã ghi dữ liệu nhưng bước #20 lỗi, không tự gửi lại #19.",
+      "group": "Phục hồi an toàn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-02/EV-04; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/06-navigation.md",
+      "notes": "Quy tắc xử lý kết quả một phần và thử lại chưa được chốt; hiện ST-07 không gọi hai API.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-07-YC-013",
+      "description": "Liên kết “Về khóa học của tôi” giữ đúng đích đã khai báo và không giả truyền mã khóa học.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #11; apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+      "notes": "CTA hiện đến `/student/courses` và không truyền `courseId`, `enrollmentId` hoặc trạng thái.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-07-YC-014",
+      "description": "Giữ riêng thiết kế BLOCKED, hành vi mã nguồn và kết quả kiểm thử chưa chạy.",
+      "group": "Bằng chứng / phát hành",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/07-test-cases.md",
+      "notes": "Bản UTC này là kế hoạch chờ xác nhận; không ghi ca đạt hoặc môi trường đã kiểm chứng.",
+      "priority": "Trung bình"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-07-EL-001",
+      "marker": "ST07-EL-01",
+      "name": "Liên kết thương hiệu Study2Work",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên trái",
+      "properties": "Liên kết Angular đến `/` với nhãn trợ năng “Study2Work — trang chủ”.",
+      "event_ids": [
+        "ST-07-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #1; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-07-EL-002",
+      "marker": "ST07-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm điều hướng",
+      "position": "Đầu trang",
+      "properties": "Trang chủ `/`, Khóa học `/courses`, Khóa học của tôi `/student/courses`, Tiến độ `/student/progress`. Ở màn hình hẹp, thanh cuộn ngang theo CSS hiện tại.",
+      "event_ids": [
+        "ST-07-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #2; apps/study-client/src/app/shared/ui/student-public-frame.html; apps/study-client/src/app/shared/ui/student-public-frame.css"
+    },
+    {
+      "id": "ST-07-EL-003",
+      "marker": "ST07-EL-03",
+      "name": "Liên kết Đăng nhập",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Nhãn “Đăng nhập”; đích `/login`.",
+      "event_ids": [
+        "ST-07-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #3; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-07-EL-004",
+      "marker": "ST07-EL-04",
+      "name": "Liên kết Đăng ký",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Nhãn “Đăng ký”; đích `/register`.",
+      "event_ids": [
+        "ST-07-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #4; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-07-EL-005",
+      "marker": "ST07-EL-05",
+      "name": "Breadcrumb kết quả đăng ký",
+      "type": "Nhóm điều hướng",
+      "position": "Trên tiêu đề trang",
+      "properties": "Liên kết Trang chủ `/`, Khóa học `/courses`; tên trang hiện tại là chữ, không mang mã khóa học.",
+      "event_ids": [
+        "ST-07-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #5; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EL-006",
+      "marker": "ST07-EL-06",
+      "name": "Tiêu đề trang",
+      "type": "Tiêu đề",
+      "position": "Phần nội dung đầu trang",
+      "properties": "H1 cố định “Kết quả đăng ký khóa học”.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #6; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EL-007",
+      "marker": "ST07-EL-07",
+      "name": "Thẻ trạng thái kết quả",
+      "type": "Vùng thông báo",
+      "position": "Giữa trang",
+      "properties": "Thẻ hiện tại có `role=\"status\"`, nhãn qua `aria-labelledby`; chỉ là vỏ giao diện.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #7; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EL-008",
+      "marker": "ST07-EL-08",
+      "name": "Biểu tượng giấy chứng nhận có dấu chọn",
+      "type": "Biểu tượng trang trí",
+      "position": "Đầu thẻ trạng thái",
+      "properties": "Stitch dùng Material Symbol; Angular dùng SVG trang trí có `aria-hidden=\"true\"`. Không xem dấu chọn là ghi danh thành công.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #8; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EL-009",
+      "marker": "ST07-EL-09",
+      "name": "Thông báo chưa xác nhận được kết quả",
+      "type": "Tiêu đề trạng thái",
+      "position": "Trong thẻ",
+      "properties": "H2 cố định “Chưa thể xác nhận kết quả đăng ký.”; không được ánh xạ thành `awaiting-confirmation` hoặc `failure`.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #9; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EL-010",
+      "marker": "ST07-EL-10",
+      "name": "Nội dung giải thích",
+      "type": "Nội dung hướng dẫn",
+      "position": "Dưới tiêu đề trạng thái",
+      "properties": "Angular viết “Hiện chưa có thông tin kết quả ghi danh để hiển thị...” khác câu trong Stitch; nội dung không đến từ API.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #10; apps/study-client/src/app/features/student/ST07/pages/st07-page.html; apps/study-client/docs/screen_stitch/03_student/ST-07_ket-qua-dang-ky-khoa-hoc/code.html"
+    },
+    {
+      "id": "ST-07-EL-011",
+      "marker": "ST07-EL-11",
+      "name": "Nút về khóa học của tôi",
+      "type": "Liên kết dạng nút",
+      "position": "Cuối thẻ trạng thái",
+      "properties": "Đích Angular `/student/courses`; không mang mã khóa học hay trạng thái kết quả.",
+      "event_ids": [
+        "ST-07-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #11; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EL-012",
+      "marker": "ST07-EL-12",
+      "name": "Thương hiệu ở chân trang",
+      "type": "Liên kết",
+      "position": "Chân trang, bên trái",
+      "properties": "Stitch/DD mô tả chữ/biểu trưng tĩnh; Angular hiện dùng liên kết đến `/`.",
+      "event_ids": [
+        "ST-07-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #12; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-07-EL-013",
+      "marker": "ST07-EL-13",
+      "name": "Nhóm điều hướng chân trang",
+      "type": "Nhóm điều hướng",
+      "position": "Chân trang, bên phải",
+      "properties": "Trang chủ `/`, Khóa học `/courses`, Đăng nhập `/login`, Đăng ký `/register`.",
+      "event_ids": [
+        "ST-07-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #13; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-07-EV-001",
+      "name": "Mở tuyến kết quả và xác định phiên học viên",
+      "trigger": "Mở `/student/enroll/result/:courseId` từ luồng trước hoặc truy cập trực tiếp.",
+      "element_ids": [
+        "ST-07-EL-001",
+        "ST-07-EL-005"
+      ],
+      "api_ids": [],
+      "processing": "Tuyến được khai báo dưới `StudentLayout`. Khi chưa có phiên, bố cục cha hiện biểu mẫu đăng nhập; khi có phiên, trang ST-07 hiện khung công khai riêng. Không có `canActivate` ở tuyến con và trang không đọc `courseId`.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-01; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/layouts/student/student-layout.html; apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+    },
+    {
+      "id": "ST-07-EV-002",
+      "name": "Tạo ghi danh bằng API #19 sau khi điều kiện được xác minh",
+      "trigger": "Dự kiến chỉ sau khi backend xác nhận đủ điều kiện; ST-07 hiện không có nút hoặc lời gọi.",
+      "element_ids": [
+        "ST-07-EL-007",
+        "ST-07-EL-009",
+        "ST-07-EL-011"
+      ],
+      "api_ids": [
+        "#19"
+      ],
+      "processing": "Catalog: POST `/api/v1/courses/{course_id}/enrollments`, Student Bearer, 201. Mã nguồn hiện buộc `course_id` path/thân trùng nhau, kiểm tra khóa học PUBLISHED, ghi danh ACTIVE và Order PAID cho khóa có giá dương; sau đó ghi ghi danh + Progress và commit. Đây là hành vi máy chủ hiện tại, không phải hành vi trang ST-07.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-02; apps/study-server/app/modules/student/api_19_courses_enrollments/models.py; apps/study-server/app/modules/student/api_19_courses_enrollments/validate.py; apps/study-server/app/modules/student/api_19_courses_enrollments/query.py; apps/study-server/app/modules/student/api_19_courses_enrollments/view.py"
+    },
+    {
+      "id": "ST-07-EV-003",
+      "name": "Theo dõi Operation qua API #18 khi có hợp đồng phù hợp",
+      "trigger": "Chỉ khi có Operation ID được bàn giao và luồng #18 đã được duyệt.",
+      "element_ids": [
+        "ST-07-EL-007",
+        "ST-07-EL-009"
+      ],
+      "api_ids": [
+        "#18"
+      ],
+      "processing": "Tuyến hiện chỉ mang `courseId`, không có `operationId`. Nguồn #18 hiện dùng UUID và chỉ truy vấn Operation gửi thông báo theo chủ sở hữu; không dùng trạng thái thông báo để quyết định kết quả ghi danh/thanh toán.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-03; apps/study-server/app/modules/shared/api_18_operations/validate.py; apps/study-server/app/modules/shared/api_18_operations/query.py; apps/study-server/app/modules/shared/api_18_operations/view.py"
+    },
+    {
+      "id": "ST-07-EV-004",
+      "name": "Tải lại Khóa học của tôi bằng API #20",
+      "trigger": "Dự kiến sau khi #19 được tạo thành công theo luồng AC-12.",
+      "element_ids": [
+        "ST-07-EL-007",
+        "ST-07-EL-009",
+        "ST-07-EL-011"
+      ],
+      "api_ids": [
+        "#20"
+      ],
+      "processing": "Catalog/Draft trả `UserProfile`; mã nguồn hiện trả `CourseSummaryPage` có `items` và `pagination`. Mã nguồn trang ST-07 không gọi #20; không đổi kiểu dữ liệu hoặc tự tạo trạng thái UI.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-04; apps/study-server/app/modules/student/api_20_users_me_courses/models.py; apps/study-server/app/modules/student/api_20_users_me_courses/view.py"
+    },
+    {
+      "id": "ST-07-EV-005",
+      "name": "Hiển thị kết quả ghi danh hoặc thanh toán",
+      "trigger": "Chỉ sau phản hồi server tin cậy và ánh xạ API/state được duyệt.",
+      "element_ids": [
+        "ST-07-EL-007",
+        "ST-07-EL-008",
+        "ST-07-EL-009",
+        "ST-07-EL-010"
+      ],
+      "api_ids": [
+        "#18",
+        "#19",
+        "#20"
+      ],
+      "processing": "Mã nguồn hiện chỉ hiển thị nội dung chưa xác nhận. Không dùng icon dấu chọn, callback trình duyệt, URL, 201/200 hoặc nội dung tĩnh riêng lẻ làm bằng chứng hoàn tất nếu chưa có kết hợp/contract được duyệt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-05; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EV-006",
+      "name": "Đi đến danh sách khóa học của tôi",
+      "trigger": "Bấm CTA “Về khóa học của tôi”.",
+      "element_ids": [
+        "ST-07-EL-011"
+      ],
+      "api_ids": [],
+      "processing": "Điều hướng hiện tại là literal `/student/courses`; không truyền mã khóa học, ghi danh ID hoặc kết quả. Tuyến đích ngoài ST-07 chưa được runtime xác minh.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-06; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/06-navigation.md; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    },
+    {
+      "id": "ST-07-EV-007",
+      "name": "Điều hướng đầu trang, breadcrumb và chân trang",
+      "trigger": "Bấm thương hiệu, liên kết điều hướng, đăng nhập/đăng ký hoặc breadcrumb.",
+      "element_ids": [
+        "ST-07-EL-001",
+        "ST-07-EL-002",
+        "ST-07-EL-003",
+        "ST-07-EL-004",
+        "ST-07-EL-005",
+        "ST-07-EL-012",
+        "ST-07-EL-013"
+      ],
+      "api_ids": [],
+      "processing": "Các đích được khai báo dưới dạng `routerLink` trong Angular. Không có API hoặc dữ liệu ghi danh được gửi qua các liên kết; footer brand Angular là liên kết dù DD ghi chữ tĩnh.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-07; apps/study-client/src/app/shared/ui/student-public-frame.html; apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-07-BL-01",
+      "description": "DD ST-07 và AC-12 chưa thống nhất việc có màn kết quả riêng, thời điểm gọi #19 và màn hình sở hữu thao tác ghi danh.",
+      "impact": "Không thể phê duyệt luồng tự tạo ghi danh khi mở trang hoặc quy định điểm quay về.",
+      "decision": "Owner xác nhận trigger #19, vai trò của ST-07 và thứ tự kết quả theo AC-12 trước khi mở gate.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-01/EV-02",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-07-BL-02",
+      "description": "#18 là node rời trong AC-12; ST-07 không nhận Operation ID và API #18 hiện chỉ truy vấn tác vụ gửi thông báo.",
+      "impact": "Không thể theo dõi kết quả ghi danh/thanh toán bằng #18 ở màn hình này.",
+      "decision": "Chốt producer, kiểu ID, quyền, vòng đời/trạng thái và cách bàn giao ID nếu #18 cần dùng cho ST-07.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/04-api-integration.md — #18; apps/study-server/app/modules/shared/api_18_operations/query.py; apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-07-BL-03",
+      "description": "DD API #19 còn mở về trường người dùng, điều kiện ghi danh, trùng lặp, khởi tạo Progress và trạng thái ban đầu; mã nguồn hiện đã triển khai một cách xử lý cụ thể nhưng khác phần mô tả UNWIRED cũ.",
+      "impact": "Chưa thể xem hiện trạng là hợp đồng được owner duyệt; cơ sở dữ liệu live chưa xác minh. Mã nguồn truy vấn `orders` nhưng DB.sql không định nghĩa bảng này.",
+      "decision": "Đồng bộ API DD/catalog với mã nguồn hoặc quyết định đã duyệt; xác minh schema Order/ghi danh/Progress và quy tắc giao dịch.",
+      "source_ref": "apps/study-server/docs/dd/19_courses_enrollments/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_19_courses_enrollments/view.py; infra/postgres/study-server/DB.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-07-BL-04",
+      "description": "Catalog/DD #20 khai báo `UserProfile`, còn mã nguồn hiện trả `CourseSummaryPage`; status, phân trang và trạng thái rỗng cũng chưa được quyết định thống nhất.",
+      "impact": "Màn kết quả không thể ánh xạ dữ liệu khóa học theo một wire contract chuẩn duy nhất.",
+      "decision": "Người phụ trách cần duyệt cấu trúc phản hồi, bộ lọc và quy tắc danh sách rỗng/phân trang; sau đó cập nhật danh mục, DD và máy khách đồng bộ.",
+      "source_ref": "apps/study-server/docs/dd/20_users_me_courses/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_20_users_me_courses/models.py; docs/lists/list_api.md — API #20",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-07-BL-05",
+      "description": "Trang ST-07 hiện không gọi #18/#19/#20; chưa có kiểm thử tập trung cho #19/#20 và môi trường/database đang triển khai chưa xác minh.",
+      "impact": "Không thể khẳng định end-to-end ghi danh, tải lại danh sách hoặc hiển thị kết quả đã chạy.",
+      "decision": "Sau khi chốt contract, nối nguồn gọi cần thiết, bổ sung môi trường kiểm chứng được duyệt và thực hiện kiểm thử/runtime riêng.",
+      "source_ref": "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts; apps/study-server/tests/modules/ — kiểm kê tên tệp; apps/study-client/src/app/features/student/student.route.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-07-BL-06",
+      "description": "Chưa chốt xử lý khi #19 đã commit nhưng #20 lỗi, điểm đến sau ghi danh, hoặc phép thử lại; CTA hiện chỉ mở `/student/courses` không mang course ID.",
+      "impact": "Không thể xác định trạng thái một phần, phục hồi an toàn hoặc mở đúng khóa học.",
+      "decision": "Duyệt quy tắc phục hồi sau ghi, destination/payload, và cách xử lý CTA trước khi triển khai luồng thành công.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-04/EV-05/EV-06; apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/06-navigation.md",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST07-MH-001",
+        "requirement_ids": [
+          "ST-07-YC-001",
+          "ST-07-YC-002"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến kết quả khi chưa đăng nhập",
+        "precondition": "Bố cục StudentLayout hoạt động; chưa có phiên học viên.",
+        "data": "Mở `/student/enroll/result/42`.",
+        "steps": [
+          "Mở tuyến ST-07 khi chưa có phiên.",
+          "Quan sát vùng nội dung chính."
+        ],
+        "expected": "StudentLayout hiện biểu mẫu đăng nhập và chưa hiện trang con. Tuyến con không khai báo `canActivate` riêng; ca này kiểm tra bố cục cha, chưa kiểm chứng runtime. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/src/app/layouts/student/student-layout.ts",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-002",
+        "requirement_ids": [
+          "ST-07-YC-001",
+          "ST-07-YC-003",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Mở trang khi đã có phiên học viên",
+        "precondition": "Có phiên học viên và tuyến con đã được kích hoạt.",
+        "data": "`courseId=42`; không có Enrollment/payment response.",
+        "steps": [
+          "Mở `/student/enroll/result/42`.",
+          "Quan sát tiêu đề, thẻ trạng thái và liên kết.",
+          "Theo dõi lời gọi mạng của riêng trang."
+        ],
+        "expected": "Trang con hiển thị “Chưa thể xác nhận kết quả đăng ký.” và CTA về danh sách khóa học; không gọi #18/#19/#20, không hiện `Đăng ký thành công`. Ca chưa chạy. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#18",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.spec.ts",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-003",
+        "requirement_ids": [
+          "ST-07-YC-003",
+          "ST-07-YC-004"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không dùng mã khóa học trên đường dẫn để suy ra kết quả",
+        "precondition": "Có phiên học viên.",
+        "data": "Thử `courseId=42`, `0` và `abc`.",
+        "steps": [
+          "Mở tuyến lần lượt với từng giá trị.",
+          "Quan sát nội dung và lời gọi mạng."
+        ],
+        "expected": "Thành phần hiện không đọc tham số route; nội dung vẫn là thẻ chưa xác nhận và không phát sinh lời gọi ghi danh. Quy tắc kiểm tra ID trong giao diện còn chờ duyệt. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-01"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-004",
+        "requirement_ids": [
+          "ST-07-YC-003",
+          "ST-07-YC-008",
+          "ST-07-YC-011"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không coi thẻ tĩnh là trạng thái thành công hoặc thất bại",
+        "precondition": "Trang con đã hiển thị.",
+        "data": "Không có phản hồi API, Enrollment ID, Payment ID hoặc Operation ID.",
+        "steps": [
+          "Đọc H2 và nội dung giải thích.",
+          "Đối chiếu với dữ liệu mạng và state model."
+        ],
+        "expected": "Câu chữ cố định “Chưa thể xác nhận kết quả đăng ký.” không chứng minh trạng thái `awaiting-confirmation`, `failure` hay `enrolled`. Không đánh dấu đã ghi danh. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #9–#10",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/03-data-flow.md — Current behavior"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-005",
+        "requirement_ids": [
+          "ST-07-YC-005",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không tự gọi #19 khi mở hoặc làm mới trang",
+        "precondition": "Có phiên học viên.",
+        "data": "Mở mới và làm mới `/student/enroll/result/42`.",
+        "steps": [
+          "Mở tuyến lần đầu.",
+          "Làm mới trang.",
+          "Theo dõi POST `/api/v1/courses/42/enrollments`."
+        ],
+        "expected": "Mã nguồn ST07 không có API service hoặc trình xử lý; mở/làm mới không gọi #19. `apiIds` trong route chỉ là metadata, không phải lời gọi mạng. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-006",
+        "requirement_ids": [
+          "ST-07-YC-005",
+          "ST-07-YC-006",
+          "ST-07-YC-011"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không tạo ghi danh nhánh trả phí nếu chưa có xác nhận tin cậy",
+        "precondition": "Không có xác nhận từ cổng thanh toán/backend.",
+        "data": "Paid course; không có Order PAID hoặc Operation bàn giao.",
+        "steps": [
+          "Đối chiếu điều kiện AC-12 và mã nguồn #19.",
+          "Xác nhận ST-07 không gọi #19."
+        ],
+        "expected": "Không khởi tạo ghi danh từ route, callback hoặc nội dung trang. Mã nguồn #19 hiện yêu cầu Order PAID cho khóa có giá dương, nhưng ST-07 không gọi API và chưa có UI mapping. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-02; apps/study-server/app/modules/student/api_19_courses_enrollments/view.py; apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-007",
+        "requirement_ids": [
+          "ST-07-YC-004",
+          "ST-07-YC-006"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không coi mã route là điều kiện đủ cho nhánh miễn phí",
+        "precondition": "Không có xác nhận eligibility từ backend.",
+        "data": "Khóa học miễn phí có `courseId`; chưa có kết quả entitlement.",
+        "steps": [
+          "Mở trang bằng mã khóa học.",
+          "Kiểm tra có POST #19 hay không."
+        ],
+        "expected": "Không phát sinh #19 và không hiển thị đã ghi danh chỉ từ mã URL. Trigger/điều kiện ghi danh nhánh miễn phí vẫn là blocker của DD. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/00-overview.md — Expected behavior",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-02",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-008",
+        "requirement_ids": [
+          "ST-07-YC-009"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không tra #18 khi chưa có Operation ID hoặc producer phù hợp",
+        "precondition": "Chỉ có route `courseId`; không có `operationId`.",
+        "data": "Không có Operation ID trong tuyến hoặc trạng thái trang.",
+        "steps": [
+          "Mở `/student/enroll/result/42`.",
+          "Kiểm tra không có GET `/api/v1/operations/...`."
+        ],
+        "expected": "Trang không gọi #18. Mã nguồn #18 hiện chỉ truy vấn Operation gửi thông báo; không suy ra kết quả ghi danh hoặc thanh toán từ trạng thái thông báo. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#18"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts",
+          "apps/study-server/app/modules/shared/api_18_operations/query.py",
+          "apps/study-server/app/modules/shared/api_18_operations/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-009",
+        "requirement_ids": [
+          "ST-07-YC-007",
+          "ST-07-YC-008"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không biến lỗi hoặc xung đột #19 thành thành công",
+        "precondition": "Chưa có quy tắc ánh xạ lỗi API sang giao diện được duyệt.",
+        "data": "Catalog #19 có 409 `DESIGN_STATE_CONFLICT`; hiện mã nguồn cũng dùng 409 cho đã ghi danh hoặc thiếu Order PAID.",
+        "steps": [
+          "Đối chiếu catalog, handler và trạng thái ST-07 hiện có.",
+          "Xác nhận trang không nhận phản hồi #19."
+        ],
+        "expected": "Trang không ánh xạ 409 hay lỗi khác thành `enrolled`. Mã nguồn hiện trả lỗi theo API nhưng không có caller trong ST-07; copy khôi phục vẫn chưa chốt. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/04-api-integration.md — #19",
+          "apps/study-server/app/modules/student/api_19_courses_enrollments/view.py",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-010",
+        "requirement_ids": [
+          "ST-07-YC-010",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Giữ riêng kiểu trả về thiết kế và kiểu trả về mã nguồn của #20",
+        "precondition": "Đọc contract catalog/DD và mã nguồn #20.",
+        "data": "Catalog: `UserProfile`; mã nguồn: `CourseSummaryPage`.",
+        "steps": [
+          "Đối chiếu loại phản hồi trong catalog và API DD.",
+          "Đọc model/view của #20.",
+          "Xác nhận ST-07 không ép kiểu response."
+        ],
+        "expected": "Catalog/DD và mã nguồn khác nhau: catalog ghi `UserProfile`, còn API hiện trả `CourseSummaryPage`. Trang ST-07 không gọi #20 và chưa chuyển response thành trạng thái hiển thị. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/04-api-integration.md — #20",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/models.py",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/view.py",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-011",
+        "requirement_ids": [
+          "ST-07-YC-008",
+          "ST-07-YC-011"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Chỉ hiển thị ghi danh sau khi có bằng chứng backend đủ điều kiện",
+        "precondition": "Không có kết quả #19/#20 hoặc ánh xạ được duyệt.",
+        "data": "Icon dấu chọn và câu chữ chưa xác nhận đang hiển thị.",
+        "steps": [
+          "Kiểm tra trang không có nhánh thành công động.",
+          "Đối chiếu yêu cầu #19/#20 và AC-12."
+        ],
+        "expected": "Hiện không có dữ liệu để xác nhận ghi danh; icon chỉ trang trí. Không điều hướng ST-09 hoặc đánh dấu thành công từ callback hay hình ảnh. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-05",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/03-data-flow.md — Current behavior"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-012",
+        "requirement_ids": [
+          "ST-07-YC-012"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Không lặp POST #19 tự động khi #20 tải lại không thành công",
+        "precondition": "Giả lập một kịch bản kế hoạch trong tài liệu; không gửi yêu cầu thật.",
+        "data": "#19 có thể đã commit; #20 trả lỗi hoặc mất kết nối.",
+        "steps": [
+          "Đối chiếu thứ tự #19 → #20 trong AC-12.",
+          "Kiểm tra mã nguồn ST07 hiện không tự gọi lại #19."
+        ],
+        "expected": "Không có cơ chế gửi lại trong trang hiện tại. DD yêu cầu không tự lặp khi kết quả ghi chưa rõ; chính sách phục hồi sau khi #19 commit vẫn cần owner quyết định. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-02/EV-04",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/06-navigation.md — reload-after-create-uncertain",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-013",
+        "requirement_ids": [
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu đích CTA về danh sách khóa học",
+        "precondition": "Trang con đã hiển thị.",
+        "data": "CTA “Về khóa học của tôi”; đích `/student/courses`.",
+        "steps": [
+          "Đọc nhãn và `routerLink`.",
+          "Kiểm tra có mã khóa học hoặc trạng thái được truyền hay không."
+        ],
+        "expected": "CTA dẫn tới `/student/courses`; không truyền course ID, ghi danh ID hay trạng thái. Đích runtime và cách mở đúng khóa học chưa xác minh. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/06-navigation.md — CTA #11",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-MH-014",
+        "requirement_ids": [
+          "ST-07-YC-003",
+          "ST-07-YC-013",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu nội dung tiếng Việt và khác biệt với mẫu Stitch",
+        "precondition": "Có phiên học viên; trang con được hiển thị.",
+        "data": "Tiêu đề, trạng thái, nội dung giải thích, CTA, đầu trang và chân trang.",
+        "steps": [
+          "Đọc tất cả nhãn chính.",
+          "So sánh phần giải thích và footer brand với bản Stitch/DD."
+        ],
+        "expected": "Nhãn giao diện hiện tại dùng tiếng Việt; câu giải thích Angular khác bản mẫu và footer brand là liên kết trong Angular. Giữ hai khác biệt trong hồ sơ, không suy ra trạng thái nghiệp vụ. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html",
+          "apps/study-client/docs/screen_stitch/03_student/ST-07_ket-qua-dang-ky-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST07-TP-001",
+        "requirement_ids": [
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EL-001",
+        "group": "Thành phần",
+        "title": "Liên kết thương hiệu Study2Work",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Kiểm tra nhãn trợ năng.",
+          "Đọc đích `routerLink`."
+        ],
+        "expected": "Nhãn “Study2Work — trang chủ”; đích `/`. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #1",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-002",
+        "requirement_ids": [
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EL-002",
+        "group": "Thành phần",
+        "title": "Nhóm điều hướng chính",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc bốn nhãn.",
+          "Đối chiếu bốn đích.",
+          "Kiểm tra CSS ở màn hình hẹp."
+        ],
+        "expected": "Có Trang chủ, Khóa học, Khóa học của tôi, Tiến độ; CSS hiện cho phép cuộn ngang khi màn hình hẹp. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #2",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-003",
+        "requirement_ids": [
+          "ST-07-YC-002",
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EL-003",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng nhập",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc nhãn và đích."
+        ],
+        "expected": "Nhãn “Đăng nhập”, đích `/login`; liên kết này không tự chứng minh phiên đã xác thực. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #3",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-004",
+        "requirement_ids": [
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EL-004",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng ký",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc nhãn và đích."
+        ],
+        "expected": "Nhãn “Đăng ký”, đích `/register`. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #4",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-005",
+        "requirement_ids": [
+          "ST-07-YC-001",
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EL-005",
+        "group": "Thành phần",
+        "title": "Breadcrumb kết quả đăng ký",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc thứ tự mục.",
+          "Kiểm tra hai liên kết và mục trang hiện tại."
+        ],
+        "expected": "Trang chủ và Khóa học là liên kết; tên màn hình là chữ hiện tại, không mang `courseId`. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #5",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-006",
+        "requirement_ids": [
+          "ST-07-YC-003"
+        ],
+        "target_id": "ST-07-EL-006",
+        "group": "Thành phần",
+        "title": "Tiêu đề trang",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc nội dung H1."
+        ],
+        "expected": "H1 là “Kết quả đăng ký khóa học”, không phụ thuộc phản hồi API. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #6",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-007",
+        "requirement_ids": [
+          "ST-07-YC-003",
+          "ST-07-YC-008"
+        ],
+        "target_id": "ST-07-EL-007",
+        "group": "Thành phần",
+        "title": "Thẻ trạng thái kết quả",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Kiểm tra vùng thẻ và `role=\"status\"`.",
+          "Xác minh nhãn được nối qua `aria-labelledby`."
+        ],
+        "expected": "Thẻ có tên truy cập và vai trò trạng thái; nội dung bên trong vẫn cố định, không phải kết quả server. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #7",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-008",
+        "requirement_ids": [
+          "ST-07-YC-008",
+          "ST-07-YC-011"
+        ],
+        "target_id": "ST-07-EL-008",
+        "group": "Thành phần",
+        "title": "Biểu tượng giấy chứng nhận có dấu chọn",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Kiểm tra SVG và `aria-hidden`.",
+          "Đối chiếu với biểu tượng trong Stitch."
+        ],
+        "expected": "Angular dùng SVG trang trí, Stitch dùng Material Symbol; không xem dấu chọn là thành công. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #8",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-009",
+        "requirement_ids": [
+          "ST-07-YC-003",
+          "ST-07-YC-008",
+          "ST-07-YC-011"
+        ],
+        "target_id": "ST-07-EL-009",
+        "group": "Thành phần",
+        "title": "Thông báo chưa xác nhận được kết quả",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc nguyên văn H2.",
+          "Đối chiếu với nhánh trạng thái được DD nêu."
+        ],
+        "expected": "Hiển thị “Chưa thể xác nhận kết quả đăng ký.”; câu tĩnh không đồng nghĩa thất bại hoặc chờ xử lý. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #9",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-010",
+        "requirement_ids": [
+          "ST-07-YC-003",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07-EL-010",
+        "group": "Thành phần",
+        "title": "Nội dung giải thích",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc nguyên văn đoạn giải thích.",
+          "So sánh với `code.html`."
+        ],
+        "expected": "Angular hiện dùng câu “Hiện chưa có thông tin kết quả ghi danh...” khác Stitch; nội dung không có nguồn API. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #10",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-011",
+        "requirement_ids": [
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EL-011",
+        "group": "Thành phần",
+        "title": "Nút về khóa học của tôi",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc nhãn CTA.",
+          "Đọc đích và kiểm tra payload."
+        ],
+        "expected": "Đích `/student/courses`; không có mã khóa học hoặc trạng thái. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #11",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-012",
+        "requirement_ids": [
+          "ST-07-YC-013",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07-EL-012",
+        "group": "Thành phần",
+        "title": "Thương hiệu ở chân trang",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Kiểm tra phần tử Angular và đích.",
+          "Đối chiếu với DD."
+        ],
+        "expected": "Angular là liên kết `/`; Stitch/DD mô tả phần tử tĩnh. Ghi nhận sai khác. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #12",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-TP-013",
+        "requirement_ids": [
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EL-013",
+        "group": "Thành phần",
+        "title": "Nhóm điều hướng chân trang",
+        "precondition": "Trang con được hiển thị qua `StudentPublicFrame`; đối chiếu DOM Angular với marker của Stitch.",
+        "data": "Kiểm tra nhãn, loại phần tử, đích, trạng thái trợ năng và sai khác giữa hai nguồn.",
+        "steps": [
+          "Đọc bốn nhãn và đích."
+        ],
+        "expected": "Có Trang chủ, Khóa học, Đăng nhập, Đăng ký với các đích khai báo trong Angular. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/01-ui-elements.md — marker #13",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST07-SK-001",
+        "requirement_ids": [
+          "ST-07-YC-001",
+          "ST-07-YC-002",
+          "ST-07-YC-003"
+        ],
+        "target_id": "ST-07-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở tuyến ST-07 và áp dụng cổng phiên học viên",
+        "precondition": "Có tuyến Student và trạng thái phiên có/không có.",
+        "data": "`/student/enroll/result/42`.",
+        "steps": [
+          "Mở khi chưa có phiên.",
+          "Quan sát biểu mẫu đăng nhập của bố cục cha.",
+          "Mở lại khi có phiên."
+        ],
+        "expected": "Khi chưa đăng nhập, `StudentLayout` không hiển thị ST-07; khi có phiên, trang con tĩnh hiển thị. Tuyến con không có `canActivate` riêng. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-SK-002",
+        "requirement_ids": [
+          "ST-07-YC-005",
+          "ST-07-YC-006",
+          "ST-07-YC-007"
+        ],
+        "target_id": "ST-07-EV-002",
+        "group": "Sự kiện",
+        "title": "Tạo ghi danh chỉ theo điều kiện và trigger được duyệt",
+        "precondition": "Không gọi môi trường thật; đọc mã nguồn và DD.",
+        "data": "Path/thân #19 bằng cùng `course_id`; người gọi Student; nhánh miễn phí hoặc Order PAID đã xác nhận.",
+        "steps": [
+          "Đọc model và validator #19.",
+          "Đọc thứ tự khóa Course, kiểm tra ghi danh/Order, ghi ghi danh/Progress và commit.",
+          "Kiểm tra trang ST-07 không gọi #19 khi mở."
+        ],
+        "expected": "Mã nguồn hiện thực hiện các bước nêu trong dữ liệu ca; DD còn mở điều kiện, trường wire, tính lặp và schema. ST-07 hiện không có caller; ca chưa chạy. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#19"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-02",
+          "apps/study-server/app/modules/student/api_19_courses_enrollments/models.py",
+          "apps/study-server/app/modules/student/api_19_courses_enrollments/validate.py",
+          "apps/study-server/app/modules/student/api_19_courses_enrollments/query.py",
+          "apps/study-server/app/modules/student/api_19_courses_enrollments/view.py",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-SK-003",
+        "requirement_ids": [
+          "ST-07-YC-009"
+        ],
+        "target_id": "ST-07-EV-003",
+        "group": "Sự kiện",
+        "title": "Không dùng API #18 notification để diễn giải kết quả ghi danh",
+        "precondition": "Chỉ đọc mã nguồn, không gọi API.",
+        "data": "Không có `operationId` trên tuyến ST-07.",
+        "steps": [
+          "Kiểm tra kiểu ID và owner binding của #18.",
+          "Đọc query và loại Operation mà handler trả.",
+          "Kiểm tra ST-07 không gọi #18."
+        ],
+        "expected": "#18 hiện nhận UUID, ràng buộc theo chủ sở hữu và chỉ lấy tác vụ gửi thông báo; không có dữ liệu/kind ghi danh. Không dùng API này để kết luận payment/ghi danh. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#18"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-03",
+          "apps/study-server/app/modules/shared/api_18_operations/validate.py",
+          "apps/study-server/app/modules/shared/api_18_operations/query.py",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-SK-004",
+        "requirement_ids": [
+          "ST-07-YC-010"
+        ],
+        "target_id": "ST-07-EV-004",
+        "group": "Sự kiện",
+        "title": "Tải lại danh sách khóa học mà không ép kiểu response",
+        "precondition": "Không gọi môi trường thật; so sánh catalog/DD với mã hiện tại.",
+        "data": "Catalog `UserProfile`; model hiện tại `CourseSummaryPage`.",
+        "steps": [
+          "Đọc contract #20.",
+          "Đọc model, bộ lọc, truy vấn và phản hồi hiện tại.",
+          "Xác nhận component ST-07 không gọi hoặc ép kiểu response."
+        ],
+        "expected": "Hiện có bất đồng response: catalog/DD ghi `UserProfile`, mã hiện tại trả `CourseSummaryPage`. ST-07 chưa gọi #20; cần owner duyệt trước khi dùng làm wire contract. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/04-api-integration.md — #20",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/models.py",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/query.py",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/view.py",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-SK-005",
+        "requirement_ids": [
+          "ST-07-YC-008",
+          "ST-07-YC-011",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07-EV-005",
+        "group": "Sự kiện",
+        "title": "Chỉ hiển thị kết quả khi có nguồn backend tin cậy",
+        "precondition": "Không có ghi danh/Payment result response được cấp cho trang.",
+        "data": "Thẻ tĩnh, icon dấu chọn, callback trình duyệt hoặc URL.",
+        "steps": [
+          "Đọc event mapping và mẫu trang.",
+          "Kiểm tra nguồn hiện tại không có binding data."
+        ],
+        "expected": "Trang giữ trạng thái chưa xác nhận; không khẳng định thành công/thất bại từ UI hoặc callback. Cách map phản hồi API sang nội dung mới còn chờ duyệt. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#18",
+          "#19",
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-05",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/03-data-flow.md — Current behavior",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-SK-006",
+        "requirement_ids": [
+          "ST-07-YC-013"
+        ],
+        "target_id": "ST-07-EV-006",
+        "group": "Sự kiện",
+        "title": "Đi đến danh sách khóa học mà không tự thêm định danh",
+        "precondition": "Trang con đang hiển thị.",
+        "data": "CTA đến `/student/courses`.",
+        "steps": [
+          "Bấm CTA trong kế hoạch DOM.",
+          "Đọc đích và các giá trị được truyền."
+        ],
+        "expected": "Đích là `/student/courses`; không có `courseId` hoặc `Enrollment` payload. Khả năng mở thẳng khóa hiện tại chưa được chốt. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-06",
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/06-navigation.md — CTA #11",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST07-SK-007",
+        "requirement_ids": [
+          "ST-07-YC-013",
+          "ST-07-YC-014"
+        ],
+        "target_id": "ST-07-EV-007",
+        "group": "Sự kiện",
+        "title": "Kiểm tra nhóm điều hướng đầu trang, breadcrumb và chân trang",
+        "precondition": "Trang con đang hiển thị.",
+        "data": "Liên kết thương hiệu, điều hướng, breadcrumb, đăng nhập/đăng ký và footer.",
+        "steps": [
+          "Đối chiếu nhãn, thứ tự và `routerLink` của từng nhóm.",
+          "So sánh phần tử footer brand với marker DD."
+        ],
+        "expected": "Các đích hiện khớp với danh mục; footer brand Angular là liên kết trong khi Stitch/DD ghi chữ tĩnh. Các trang đích và xử lý hết phiên ngoài phạm vi này chưa xác minh. Kỳ vọng này mô tả mã nguồn hiện tại; quyết định thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-07-KetQuaDangKyKhoaHoc/02-events.md — EV-07",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html",
+          "apps/study-client/src/app/features/student/ST07/pages/st07-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

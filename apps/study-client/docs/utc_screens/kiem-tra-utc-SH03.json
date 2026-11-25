@@ -1,0 +1,24 @@
+{
+  "hop_le_ve_cau_truc": true,
+  "du_dieu_kien_phe_duyet": false,
+  "thong_tin": [
+    "29 yêu cầu, 16 thành phần, 8 sự kiện, 1 API",
+    "23 ca toàn màn hình, 16 ca thành phần, 20 ca sự kiện",
+    "Tổng ca: 59; yêu cầu được truy vết: 29/29"
+  ],
+  "loi": [],
+  "canh_bao": [
+    "SH-03-TC-MH-014: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-MH-017: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-TP-005: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-TP-011: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-TP-014: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-TP-015: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-SK-005: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-SK-008: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-SK-012: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-SK-019: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "SH-03-TC-SK-020: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+  ]
+}

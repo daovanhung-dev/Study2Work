@@ -1,0 +1,13 @@
+{
+  "hop_le_ve_cau_truc": true,
+  "du_dieu_kien_phe_duyet": false,
+  "thong_tin": [
+    "22 yêu cầu, 67 thành phần, 9 sự kiện, 2 API",
+    "22 ca toàn màn hình, 67 ca thành phần, 14 ca sự kiện",
+    "Tổng ca: 103; yêu cầu được truy vết: 22/22"
+  ],
+  "loi": [],
+  "canh_bao": [
+    "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+  ]
+}

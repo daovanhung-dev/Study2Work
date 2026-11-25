@@ -1,0 +1,2832 @@
+{
+  "metadata": {
+    "screen_id": "ST-12",
+    "screen_name": "Tài liệu kèm bài học",
+    "module": "Học viên — danh sách tài liệu theo bài học",
+    "route": "/student/lessons/:lessonId/resources",
+    "actor": "Học viên có phiên dùng Student Bearer service; API #26 tự kiểm tra Student và ghi danh theo mã nguồn hiện tại. Runtime chưa xác minh.",
+    "version": "UTC v1.0",
+    "dd_version": "DD v0.2",
+    "dd_status": "BLOCKED",
+    "runtime_status": "Route, component, service và API #26 source hiện có. ST-12 gọi #26; #26 hiện trả danh sách từ resources. API #47 hiện ghi lesson_uploads và chưa tìm thấy writer cho resources. API #12 thuộc GS-07. Không xác minh trình duyệt, API đang chạy, DB live hoặc môi trường triển khai.",
+    "author": "Chưa xác định trong DD",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/04-api-integration.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/07-test-cases.md",
+    "release_readiness": "UTC v1.0 được lập theo yêu cầu dùng DD trong kho làm nguồn chuẩn. DD tại kho vẫn ghi BLOCKED và API #26/#12 còn Draft/open questions; các blocker được giữ nguyên, không tự quyết thay owner. Mọi ca đang Chưa chạy; chưa xác minh môi trường.",
+    "baseline_authorization": "Người dùng xác nhận dùng DD trong kho làm tài liệu chuẩn dù có nhãn BLOCKED và cho biết DD đã được duyệt; nội dung chưa có trong nguồn vẫn không được suy diễn. Ưu tiên mã nguồn hiện tại khi ghi hành vi đã có.",
+    "discrepancy_note": "DD lịch sử có đoạn nói tuyến/#26 chưa tồn tại; phần đối chiếu mã nguồn hiện tại xác nhận tuyến/trang/dịch vụ và API #26 đã có. Mã nguồn hiện gọi #26, kiểm tra payload và hiển thị danh sách/rỗng/lỗi/thử lại. Catalog #26 khai `ApiEnvelope<Lesson>` nhưng mã nguồn trả `LessonResources`. #26 đọc `resources`, API #47 ghi `lesson_uploads`; chưa thấy nơi ghi vào `resources`. API #12 có tuyến và xử lý URL PUBLIC/PRIVATE trong mã nguồn, nhưng DD vẫn là Draft; GS-07 sở hữu bước gọi. Ảnh ST-12 là bản tĩnh khác giao diện hiện tại, có nội dung Pending Auth và tự làm mới mỗi 30 giây chưa được chứng minh."
+  },
+  "overall": {
+    "objective": "Hiển thị tài liệu gắn với bài học theo phản hồi #26, cho phép chuyển sang GS-07 bằng resource ID và quay lại bài học.",
+    "inputs": "LessonId từ tuyến; Student Bearer service; phản hồi GET #26 theo lesson_id. Không có query/body do ST-12 tự bổ sung.",
+    "outputs": "Trang hiện hiển thị tên bài, số lượng, danh sách resource.name cùng nhãn loại tĩnh; khi rỗng hiện trạng thái rỗng, khi lỗi hiện alert và nút tải lại. Link item chuyển sang GS-07 với resourceId và context bài học.",
+    "main_flow": "StudentLayout portal → đọc/kiểm tra lessonId → GET #26 → kiểm tra success, businessCode, LessonResources, bài PUBLISHED và các resource → hiện loading/list/empty/error → chọn item thì chuyển GS-07, hoặc quay lại ST-11. #12 không được gọi trực tiếp từ ST-12.",
+    "preconditions": "Tuyến /student/lessons/:lessonId/resources đã đăng ký; lessonId là số dương an toàn; service Student có thể gửi request. Quyền runtime, nguồn ghi resources và môi trường triển khai chưa xác minh.",
+    "states": [
+      "Đang tải danh sách",
+      "Lỗi hoặc payload sai, có thể tải lại",
+      "Danh sách có tài liệu",
+      "Danh sách rỗng",
+      "Bài học PUBLISHED đã được kiểm tra từ phản hồi",
+      "Chuyển sang GS-07",
+      "Quay lại bài học",
+      "Prototype fallback tĩnh",
+      "Runtime chưa xác minh"
+    ],
+    "security": "#26 trong mã nguồn yêu cầu Student, ghi danh ACTIVE, lesson/course PUBLISHED; mỗi resource hiện có url=null. ST-12 chỉ chuyển resourceId sang GS-07, không mở URL và không gọi #12. #12 trong mã nguồn áp dụng PUBLIC/PRIVATE riêng; DD còn Draft. Không xem khẳng định “zero disclosure” hoặc token dùng một lần trong ảnh là bằng chứng.",
+    "out_of_scope": "Gọi trực tiếp #12, quyết định visibility/URL/signed URL, xem/tải file, polling mỗi 30 giây, xác nhận nguồn ghi resources/live schema, điều hướng diễn đàn/legal của mockup, kiểm tra runtime/trình duyệt/API/DB."
+  },
+  "apis": [
+    {
+      "id": "#26",
+      "method": "GET",
+      "path": "/api/v1/lessons/{lesson_id}/resources",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "request": "Đường dẫn bắt buộc lesson_id:int64; danh mục không có truy vấn/nội dung thân. Theo danh mục dùng Bearer Student; tuyến máy khách dùng StudentApiService.",
+      "response": "Catalog khai ApiEnvelope<Lesson>. Source hiện trả LessonResources gồm id, course_id, title, content, video_url, order, status và resources[]; mỗi resource có id, lesson_id, name, type, url=null. Danh sách hiện sắp xếp id tăng dần; rỗng trả [].",
+      "errors": "Catalog: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 500 DESIGN_INTERNAL_ERROR. Source hiện kiểm Student/ACTIVE ghi danh/lesson và course PUBLISHED; path sai hoặc lesson không dùng được trả 404; lỗi truy vấn/map trả 500.",
+      "auth": "Danh mục khai báo Bearer JWT và vai trò Student. Mã nguồn hiện kiểm tra vai trò Student, ghi danh ACTIVE, bài học PUBLISHED và khóa học PUBLISHED.",
+      "design_status": "DD API ở trạng thái Draft/Chờ xác nhận; Q-26-01..07 còn bỏ ngỏ. Mã nguồn tuyến/module/truy vấn/model/kiểm thử hiện có; chưa chạy kiểm thử hoặc xác minh môi trường chạy.",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_26_lessons_resources/{models.py,validate.py,query.py,view.py}; apps/study-server/tests/modules/student/api_26_lessons_resources/test_lessons_resources.py; apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "#12",
+      "method": "GET",
+      "path": "/api/v1/resources/{resource_id}",
+      "event_ids": [
+        "ST-12-EV-002"
+      ],
+      "request": "Đường dẫn resource_id kiểu signed int64. Catalog hiện không yêu cầu Bearer; API chỉ do GS-07 sở hữu trong luồng chi tiết, không được gọi trực tiếp từ ST-12.",
+      "response": "Source hiện trả id, name, type, url, visibility và lesson_id. PUBLIC dùng URL HTTP(S) lưu sẵn; PRIVATE cần Student, lesson/course cha phù hợp và ghi danh ACTIVE rồi cấp signed URL TTL 300 giây.",
+      "errors": "Source hiện có 404 cho ID/tài nguyên/parent không dùng được; 401 cho PRIVATE thiếu phiên hợp lệ; 403 khi PRIVATE không có ghi danh ACTIVE; 500 lỗi truy vấn/map; 503 khi storage signer không sẵn sàng. API DD vẫn Draft; test source chưa chạy.",
+      "auth": "Catalog/API DD hiện khác nhau về chi tiết; source không yêu cầu auth cho PUBLIC và kiểm Student cho PRIVATE. GS-07 xử lý quyền mở URL.",
+      "design_status": "API source có route/module/test; DD ghi Draft — Needs Confirmation và cover cũ ghi runtime/OpenAPI chưa xác minh. Không phải lời gọi trực tiếp của ST-12.",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_12_resources_detail/{models.py,validate.py,query.py,view.py}; apps/study-server/tests/modules/guest/api_12_resources_detail/test_resources_detail.py; apps/study-server/docs/dd/12_resources_detail/00_Cover.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-12-YC-001",
+      "description": "Mở ST-12 theo tuyến /student/lessons/:lessonId/resources trong StudentLayout; ghi nhận tuyến có trong mã nguồn nhưng chưa xác minh trên trình duyệt.",
+      "group": "Tuyến và bố cục",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Tuyến gắn ST12Page, shell=portal; trạng thái runtime chưa được kiểm tra.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-002",
+      "description": "Chỉ nạp dữ liệu khi lessonId là mã dương an toàn; mã thiếu hoặc sai định dạng phải đưa màn hình vào trạng thái lỗi hiện có.",
+      "group": "Mã bài học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+      "notes": "Mã hiện dùng toSafeStudyId; không gọi #26 nếu mã không hợp lệ.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-003",
+      "description": "Khi vào màn hình hoặc đổi lessonId hợp lệ, gọi GET #26 bằng Student Bearer service với lesson_id trên đường dẫn, không tự thêm query hay body.",
+      "group": "Nạp danh sách tài liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-01; apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Hiện chỉ gọi #26 từ ST-12; route metadata cũng liệt kê #12 nhưng không có lời gọi #12 tại đây.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-004",
+      "description": "Khi lessonId đổi, dữ liệu của yêu cầu cũ không được ghi đè dữ liệu của bài mới.",
+      "group": "Đổi mã bài học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — Current-source reconciliation; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+      "notes": "Mã hiện dùng distinctUntilChanged và switchMap; hủy nhánh cũ trong luồng giao diện.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-005",
+      "description": "Chỉ nhận phản hồi #26 có success=true, businessCode=DESIGN_RESOURCE_RETRIEVED và cấu trúc LessonResources hợp lệ.",
+      "group": "Kiểm tra phản hồi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts; apps/study-server/app/modules/student/api_26_lessons_resources/models.py",
+      "notes": "Mã hiện kiểm tra mã nghiệp vụ và kiểu payload; cấu trúc khai trong catalog khác với payload hiện tại.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-006",
+      "description": "Chỉ nhận payload có lesson ID trùng tuyến, status=PUBLISHED, danh sách resources, ID tài nguyên tăng dần và lesson_id của từng tài nguyên khớp tuyến.",
+      "group": "Kiểm tra dữ liệu tài nguyên",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts; apps/study-server/app/modules/student/api_26_lessons_resources/query.py",
+      "notes": "Mã hiện kiểm tra các điều kiện này; runtime chưa được xác minh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-007",
+      "description": "Giữ trạng thái đang tải cho tới khi yêu cầu #26 hoàn tất; vùng tải hiện có role=status.",
+      "group": "Trạng thái đang tải",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+      "notes": "Đây là hành vi từ template Angular hiện tại, không suy ra từ ảnh fallback.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-008",
+      "description": "Khi tải thất bại hoặc dữ liệu không hợp lệ, hiện thông báo lỗi và nút tải lại; thao tác tải lại gọi lại #26 cho lessonId hiện tại.",
+      "group": "Lỗi và tải lại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts; apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts",
+      "notes": "Lỗi hiển thị bằng role=alert; hành vi được đọc từ mã nguồn, chưa chạy trên runtime.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-009",
+      "description": "Nếu phản hồi hợp lệ có resources rỗng, hiển thị trạng thái danh sách rỗng riêng với lỗi tải.",
+      "group": "Danh sách rỗng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-server/app/modules/student/api_26_lessons_resources/query.py",
+      "notes": "API #26 hiện trả resources=[] khi không có bản ghi; đây là hành vi mã nguồn, còn contract DD chưa chốt empty semantics.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-010",
+      "description": "Với mỗi tài nguyên, chỉ hiển thị tên nhận từ API và nhãn loại tĩnh; không dựng tên tệp, phần mở rộng, dung lượng hoặc URL.",
+      "group": "Dòng tài nguyên",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-server/app/modules/student/api_26_lessons_resources/models.py",
+      "notes": "Template hiện chỉ kết xuất resource.name và chữ “Tài liệu đính kèm”; resource.type không hiển thị.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-011",
+      "description": "Không đưa URL trong payload vào giao diện danh sách hoặc tự mở/tải tài nguyên; giữ nguyên bàn giao sang GS-07 để xử lý #12 theo contract của màn hình đó.",
+      "group": "Bảo vệ URL tài nguyên",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-02; apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-server/app/modules/guest/api_12_resources_detail/view.py",
+      "notes": "ST-12 không gọi #12 trực tiếp; API #26 hiện trả url=null. #12 có chính sách khác nhau theo PUBLIC/PRIVATE và thuộc GS-07.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-012",
+      "description": "Khi chọn một dòng, chuyển sang GS-07 với resourceId và query context from=lesson, lessonId hiện tại.",
+      "group": "Mở tài liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Template hiện điều hướng tới /resources/:id cùng query context; chưa xác minh luồng trình duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-013",
+      "description": "CTA quay lại bài học chuyển về /student/lessons/:lessonId của màn hình hiện tại mà không tự ghi tiến độ hoặc playback position.",
+      "group": "Quay lại bài học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-03; apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+      "notes": "Liên kết được gắn bằng RouterLink; không gọi API từ thao tác này.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-014",
+      "description": "Phân biệt phản hồi hiện tại của #26 với contract catalog ApiEnvelope<Lesson>; không coi hai cấu trúc là tương đương khi chưa cập nhật contract.",
+      "group": "Lệch schema #26",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/app/modules/student/api_26_lessons_resources/models.py; apps/study-server/app/modules/student/api_26_lessons_resources/view.py; apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md",
+      "notes": "Catalog khai ApiEnvelope<Lesson>; source hiện trả LessonResources có resources[]. Câu hỏi Q-26-01 còn mở.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-015",
+      "description": "Giữ rõ điều kiện truy cập hiện tại của #26: Student, ghi danh ACTIVE, lesson PUBLISHED và course PUBLISHED; không thay thế bằng giả định từ ảnh.",
+      "group": "Quyền truy cập #26",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/student/api_26_lessons_resources/view.py; apps/study-server/app/modules/student/api_26_lessons_resources/query.py; docs/lists/list_api.md",
+      "notes": "Đây là điều kiện trong mã nguồn hiện tại; policy độc lập, claim binding và cách che thông tin còn câu hỏi mở.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-016",
+      "description": "Giữ rõ khoảng trống nguồn ghi dữ liệu: #26 đọc resources nhưng API #47 hiện ghi lesson_uploads; chưa có bằng chứng writer cho resources.",
+      "group": "Nguồn dữ liệu tài nguyên",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md; apps/study-server/app/modules/student/api_26_lessons_resources/query.py; apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/query.py; docs/lists/list_api.md",
+      "notes": "Không tự nối bảng hoặc thêm side effect; live schema và nguồn tạo dữ liệu chưa xác minh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-017",
+      "description": "Không gọi API #12 từ ST-12; chỉ kiểm tra điều hướng sang GS-07, nơi nhận resourceId và sở hữu bước lấy metadata/mở URL.",
+      "group": "Ranh giới GS-07 và #12",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-02; apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts; apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-server/app/modules/guest/api_12_resources_detail/view.py",
+      "notes": "Route có metadata apiIds [12,26], nhưng caller ST12ResourcesService chỉ gọi #26.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-018",
+      "description": "Không biến nhãn “Tự động làm mới mỗi 30s” của prototype thành polling, timer hoặc yêu cầu mạng.",
+      "group": "Không polling từ nhãn tĩnh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+      "notes": "Template hiện không khai báo bộ hẹn giờ; copy trong prototype không phải hành vi.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-019",
+      "description": "Không trình bày các nhãn bảo mật, xác thực, trạng thái API hay tuân thủ trên ảnh như kết quả kiểm tra runtime.",
+      "group": "Copy và trạng thái tĩnh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html; apps/study-server/docs/dd/12_resources_detail/00_Cover.md",
+      "notes": "Các claim trên ảnh là nội dung tĩnh; API #12 DD vẫn Draft dù route/source hiện có.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-020",
+      "description": "Đánh giá header/footer, breadcrumb, diễn đàn và legal links theo đúng nguồn: phần bao quanh do StudentLayout sở hữu; anchor placeholder của prototype chưa chứng minh đích.",
+      "group": "Shell và điều hướng ngoài màn hình",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+      "notes": "Không suy ra đích điều hướng từ data-path hoặc href=\"#\" trong HTML tĩnh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-021",
+      "description": "Ghi nhận thuộc tính responsive và focus-visible trong CSS; không tuyên bố đã đạt WCAG hoặc kiểm tra bàn phím khi chưa thực thi audit.",
+      "group": "Trợ năng và hiển thị",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md; apps/study-client/src/app/features/student/ST12/pages/st12-page.css",
+      "notes": "CSS có breakpoint 640px, focus-visible và chiều cao liên kết 44px; claim compliance trên ảnh chưa được kiểm chứng.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-022",
+      "description": "Giữ các quyết định API #26 còn mở về payload, số lượng/thứ tự/empty, quyền, visibility, URL, lỗi và schema/path validation.",
+      "group": "Blocker hợp đồng #26",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md",
+      "notes": "Không tự giải quyết Q-26-01 đến Q-26-07 dựa trên source snapshot.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-023",
+      "description": "Giữ riêng trạng thái DD BLOCKED, mã nguồn hiện có và môi trường/runtime chưa xác minh; không ghi test nguồn là đã chạy.",
+      "group": "Giới hạn bằng chứng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/07-test-cases.md; apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md",
+      "notes": "Test source đã được đọc tĩnh; không thực thi test, app, API, DB hoặc migration.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-12-YC-024",
+      "description": "Giữ mapping đủ 27 marker của ảnh gốc và tách rõ các thành phần/state bổ sung chỉ có trong Angular hiện tại.",
+      "group": "Truy vết ảnh và mã nguồn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+      "notes": "Ảnh đã đánh số là trạng thái fallback, không thể hiện danh sách hiện được tải từ API.",
+      "priority": "Cao"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-12-EL-001",
+      "marker": "ST12-EL-01",
+      "name": "Thương hiệu Study2Work LMS và điều hướng chính",
+      "type": "Liên kết thương hiệu",
+      "position": "Đầu trang, trái",
+      "properties": "Các liên kết trong prototype đều href=\"#\" và không phải điều hướng hiện hành; vùng header thực thuộc StudentLayout.",
+      "event_ids": [
+        "ST-12-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-002",
+      "marker": "ST12-EL-02",
+      "name": "Tên, vai trò và avatar người học viết sẵn",
+      "type": "Thông tin người học",
+      "position": "Đầu trang, phải",
+      "properties": "Tên “Nguyễn Văn A”, vai trò “Học viên” và biểu tượng được ghi cứng; không chứng minh phiên/người dùng hiện tại.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-003",
+      "marker": "ST12-EL-03",
+      "name": "Đường dẫn từ trang chủ tới màn hình hiện tại",
+      "type": "Đường dẫn điều hướng",
+      "position": "Dưới đầu trang",
+      "properties": "Ảnh dùng liên kết tĩnh, không có lessonId động; template hiện có breadcrumb riêng gắn tuyến thật.",
+      "event_ids": [
+        "ST-12-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-004",
+      "marker": "ST12-EL-04",
+      "name": "Nhãn tuyến /student/lessons/:lessonId/resources",
+      "type": "Nhãn tuyến",
+      "position": "Đầu vùng nội dung",
+      "properties": "Chỉ là metadata thiết kế trong ảnh, không phải trạng thái API hay xác nhận runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-005",
+      "marker": "ST12-EL-05",
+      "name": "Nhãn ST-12 Resource Panel và Design chỉ",
+      "type": "Nhãn thiết kế",
+      "position": "Phần mở đầu nội dung",
+      "properties": "Badge tĩnh trên ảnh; không phải trạng thái triển khai.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-006",
+      "marker": "ST12-EL-06",
+      "name": "Tiêu đề Tài liệu kèm bài học và mô tả",
+      "type": "Tiêu đề và mô tả",
+      "position": "Đầu vùng nội dung",
+      "properties": "Ảnh có copy tĩnh; template hiện có tiêu đề tiếng Việt riêng và dữ liệu tên bài động.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-007",
+      "marker": "ST12-EL-07",
+      "name": "Thẻ Zero Information Disclosure Enforced",
+      "type": "Thẻ tuyên bố bảo mật",
+      "position": "Phần đầu nội dung",
+      "properties": "Đây là claim tĩnh; source #12 hiện trả URL theo PUBLIC/PRIVATE, không chứng minh claim tổng quát.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-008",
+      "marker": "ST12-EL-08",
+      "name": "Biểu tượng thư mục ở trạng thái chưa có tài liệu",
+      "type": "Biểu tượng trang trí",
+      "position": "Giữa khung trạng thái",
+      "properties": "Chỉ là biểu tượng của mockup fallback; không xác định lỗi hay phản hồi rỗng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-009",
+      "marker": "ST12-EL-09",
+      "name": "Nhãn kiểm soát truy cập tập trung",
+      "type": "Nhãn bảo mật",
+      "position": "Trên thông báo giữa trang",
+      "properties": "Copy tĩnh; policy và nguồn enforcement cần được chốt riêng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-010",
+      "marker": "ST12-EL-10",
+      "name": "Tiêu đề không có tài liệu và giải thích riêng tư",
+      "type": "Thông báo rỗng hoặc không khả dụng",
+      "position": "Khung giữa trang",
+      "properties": "Copy cố định của ảnh; không phân biệt 200 rỗng, 401/403, 404, 500 hoặc lỗi mạng.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-011",
+      "marker": "ST12-EL-11",
+      "name": "Nút Quay lại trình học bài (ST-11)",
+      "type": "Liên kết điều hướng",
+      "position": "Dưới thông báo giữa trang",
+      "properties": "Mockup dùng href=\"#\" và data-path; template hiện có CTA riêng quay lại bài bằng lessonId tuyến.",
+      "event_ids": [
+        "ST-12-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-012",
+      "marker": "ST12-EL-12",
+      "name": "Các claim E2E, metadata không công khai và token một lần",
+      "type": "Dải tuyên bố bảo mật",
+      "position": "Dưới CTA",
+      "properties": "Ba claim tĩnh chưa có bằng chứng backend, định danh hoặc lưu trữ; không được ghi như tính năng đã xác minh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-013",
+      "marker": "ST12-EL-13",
+      "name": "Tiêu đề trạng thái kiểm định kết nối",
+      "type": "Tiêu đề trạng thái",
+      "position": "Cột thông tin phía dưới",
+      "properties": "Chỉ là tiêu đề/biểu tượng tĩnh; không có API chẩn đoán.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-014",
+      "marker": "ST12-EL-14",
+      "name": "Nhãn tự động làm mới mỗi 30 giây",
+      "type": "Nhãn làm mới",
+      "position": "Cột trạng thái kết nối",
+      "properties": "Copy tĩnh; không có timer, polling hoặc request tự động trong page source.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-015",
+      "marker": "ST12-EL-15",
+      "name": "Thẻ #26 Schema Mismatch và Type: Lesson",
+      "type": "Thẻ trạng thái API",
+      "position": "Cột thông tin bên trái",
+      "properties": "Nhãn phản ánh mismatch design; catalog khai ApiEnvelope<Lesson> trong khi source hiện trả LessonResources.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-016",
+      "marker": "ST12-EL-16",
+      "name": "Thẻ #12 Design chỉ và Pending Auth",
+      "type": "Thẻ trạng thái API",
+      "position": "Cột thông tin bên phải",
+      "properties": "Nhãn “Pending Auth” trên ảnh không khớp catalog/source API #12 vốn có PUBLIC không yêu cầu token; API DD còn Draft.",
+      "event_ids": [
+        "ST-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-017",
+      "marker": "ST12-EL-17",
+      "name": "Tiêu đề ghi chú kỹ thuật bàn giao",
+      "type": "Tiêu đề phần ghi chú",
+      "position": "Cột thông tin phía dưới",
+      "properties": "Nội dung tĩnh dành cho bàn giao; không cấu hình capability của ứng dụng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-018",
+      "marker": "ST12-EL-18",
+      "name": "Cảnh báo không mở URL ngoài chính sách",
+      "type": "Ghi chú an toàn URL",
+      "position": "Phần ghi chú kỹ thuật",
+      "properties": "Khuyến nghị thiết kế; allowlist, scheme, redirect và hành vi mở chưa được chốt ở ST-12.",
+      "event_ids": [
+        "ST-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-019",
+      "marker": "ST12-EL-19",
+      "name": "Cảnh báo không tự dựng tên, phần mở rộng, dung lượng hoặc URL",
+      "type": "Ghi chú dữ liệu",
+      "position": "Phần ghi chú kỹ thuật",
+      "properties": "Nguyên tắc không bịa dữ liệu; list template hiện chỉ hiển thị tên backend và nhãn loại tĩnh.",
+      "event_ids": [
+        "ST-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-020",
+      "marker": "ST12-EL-20",
+      "name": "Ghi chú WCAG 2.1 AA và focus bàn phím",
+      "type": "Ghi chú trợ năng",
+      "position": "Phần ghi chú kỹ thuật",
+      "properties": "Claim trong ảnh chưa qua audit; CSS có focus-visible và chiều cao liên kết tối thiểu 44px.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-021",
+      "marker": "ST12-EL-21",
+      "name": "Ghi chú màu thương hiệu Ocean #0B5F8A",
+      "type": "Ghi chú màu sắc",
+      "position": "Phần ghi chú kỹ thuật",
+      "properties": "Mã màu là literal thiết kế; ảnh còn dùng màu khác, cần đối chiếu khi chốt thiết kế.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-022",
+      "marker": "ST12-EL-22",
+      "name": "Nhãn ST-12 v2.4 và Valid Spec",
+      "type": "Nhãn phiên bản/trạng thái",
+      "position": "Cuối bảng ghi chú",
+      "properties": "Nhãn tĩnh không phải hồ sơ phê duyệt; DD trong kho đang BLOCKED.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-023",
+      "marker": "ST12-EL-23",
+      "name": "Thẻ trợ giúp liên hệ giảng viên hoặc trợ giảng",
+      "type": "Nội dung trợ giúp",
+      "position": "Phần cuối trang",
+      "properties": "Copy tĩnh; không có người nhận, ngữ cảnh khóa học hoặc logic gửi yêu cầu.",
+      "event_ids": [
+        "ST-12-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-024",
+      "marker": "ST12-EL-24",
+      "name": "Liên kết Diễn đàn Thảo luận",
+      "type": "Liên kết điều hướng",
+      "position": "Thẻ trợ giúp",
+      "properties": "Prototype dùng href=\"#\" và thiếu courseId/đích; route chưa được xác định.",
+      "event_ids": [
+        "ST-12-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-025",
+      "marker": "ST12-EL-25",
+      "name": "Dòng bản quyền Study2Work LMS năm 2025",
+      "type": "Văn bản bản quyền",
+      "position": "Chân trang, trái",
+      "properties": "Văn bản tĩnh; không có nguồn cấu hình năm.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-026",
+      "marker": "ST12-EL-26",
+      "name": "Huy hiệu WCAG 2.1 AA Compliant",
+      "type": "Nhãn tuyên bố trợ năng",
+      "position": "Chân trang",
+      "properties": "Claim tĩnh; chưa có audit runtime hoặc chứng nhận.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-027",
+      "marker": "ST12-EL-27",
+      "name": "Các liên kết điều khoản, quyền riêng tư và trợ giúp",
+      "type": "Nhóm liên kết chân trang",
+      "position": "Chân trang, phải",
+      "properties": "Các anchor của prototype dùng href=\"#\"; destination chưa được wire.",
+      "event_ids": [
+        "ST-12-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+    },
+    {
+      "id": "ST-12-EL-028",
+      "marker": "",
+      "name": "Breadcrumb tên bài theo lesson hiện tại",
+      "type": "Liên kết tuyến động",
+      "position": "Dưới đầu trang",
+      "properties": "Template hiện hiển thị lesson.title hoặc “Bài học”; RouterLink giữ lessonId hiện tại.",
+      "event_ids": [
+        "ST-12-EV-001",
+        "ST-12-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+    },
+    {
+      "id": "ST-12-EL-029",
+      "marker": "",
+      "name": "Trạng thái đang tải tài liệu",
+      "type": "Thông báo trạng thái",
+      "position": "Dưới tiêu đề",
+      "properties": "Hiện “Đang tải tài liệu…” với role=status trong khi gọi #26.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+    },
+    {
+      "id": "ST-12-EL-030",
+      "marker": "",
+      "name": "Thông báo lỗi khi không tải hoặc dữ liệu sai",
+      "type": "Thông báo lỗi",
+      "position": "Dưới tiêu đề",
+      "properties": "Hiện nội dung lỗi bằng role=alert; các lỗi map từ mã máy khách và lỗi payload.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+    },
+    {
+      "id": "ST-12-EL-031",
+      "marker": "",
+      "name": "Nút tải lại tài liệu",
+      "type": "Nút thao tác",
+      "position": "Trong vùng lỗi",
+      "properties": "Gọi retryResources để nạp lại #26 cho lessonId hiện tại.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts; apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts"
+    },
+    {
+      "id": "ST-12-EL-032",
+      "marker": "",
+      "name": "Tiêu đề bài học lấy từ phản hồi #26",
+      "type": "Tiêu đề động",
+      "position": "Đầu vùng nội dung",
+      "properties": "Hiện lesson.title khi payload hợp lệ; nếu không có thì dùng câu mô tả mặc định.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+    },
+    {
+      "id": "ST-12-EL-033",
+      "marker": "",
+      "name": "Số lượng tài liệu",
+      "type": "Nhãn số lượng",
+      "position": "Bên cạnh tiêu đề",
+      "properties": "Chỉ hiện khi lesson đã hợp lệ; lấy độ dài resources, gồm 0 cho trạng thái rỗng.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+    },
+    {
+      "id": "ST-12-EL-034",
+      "marker": "",
+      "name": "Danh sách tài nguyên",
+      "type": "Danh sách",
+      "position": "Giữa trang",
+      "properties": "Hiện khi có ít nhất một resource; lặp theo resource.id; không hiện trong ảnh fallback.",
+      "event_ids": [
+        "ST-12-EV-001",
+        "ST-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+    },
+    {
+      "id": "ST-12-EL-035",
+      "marker": "",
+      "name": "Tên tài nguyên từ API",
+      "type": "Nội dung từng dòng",
+      "position": "Trong dòng tài nguyên",
+      "properties": "Hiện resource.name; không tự thêm tên file, phần mở rộng, URL hoặc dung lượng.",
+      "event_ids": [
+        "ST-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+    },
+    {
+      "id": "ST-12-EL-036",
+      "marker": "",
+      "name": "Nhãn loại tài liệu tĩnh",
+      "type": "Nhãn từng dòng",
+      "position": "Dưới tên tài nguyên",
+      "properties": "Hiện chữ “Tài liệu đính kèm”; không phải resource.type từ API.",
+      "event_ids": [
+        "ST-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+    },
+    {
+      "id": "ST-12-EL-037",
+      "marker": "",
+      "name": "Liên kết mở tài liệu qua GS-07",
+      "type": "Liên kết từng dòng",
+      "position": "Bên phải tên tài nguyên",
+      "properties": "Đi tới /resources/:id kèm from=lesson và lessonId; ST-12 không gọi #12 trực tiếp.",
+      "event_ids": [
+        "ST-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-12-EL-038",
+      "marker": "",
+      "name": "Trạng thái danh sách rỗng",
+      "type": "Thông báo rỗng",
+      "position": "Giữa trang",
+      "properties": "Khi resources.length bằng 0, hiển thị lời báo chưa có tài liệu và giải thích; tách khỏi lỗi tải.",
+      "event_ids": [
+        "ST-12-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-server/app/modules/student/api_26_lessons_resources/query.py"
+    },
+    {
+      "id": "ST-12-EL-039",
+      "marker": "",
+      "name": "CTA quay lại bài học",
+      "type": "Liên kết điều hướng",
+      "position": "Cuối nội dung đã tải",
+      "properties": "Đi tới /student/lessons/:lessonId; không gọi API khi bấm.",
+      "event_ids": [
+        "ST-12-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST12/pages/st12-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-12-EV-001",
+      "name": "Vào tuyến, đổi bài và nạp danh sách",
+      "trigger": "Mở màn hình, tải lại hoặc thay đổi lessonId.",
+      "element_ids": [
+        "ST-12-EL-004",
+        "ST-12-EL-015",
+        "ST-12-EL-028",
+        "ST-12-EL-029",
+        "ST-12-EL-032",
+        "ST-12-EL-033",
+        "ST-12-EL-034",
+        "ST-12-EL-038"
+      ],
+      "api_ids": [
+        "#26"
+      ],
+      "processing": "Đọc lessonId; từ chối mã không an toàn; phát trạng thái đang tải; gọi #26; hủy request cũ khi ID thay đổi; kiểm success/businessCode, lesson ID, PUBLISHED, resources, ID tài nguyên tăng dần, lesson_id khớp và url=null; sau đó hiện danh sách hoặc trạng thái rỗng. Khi lỗi, hiển thị alert và nút tải lại. Catalog vẫn khai ApiEnvelope<Lesson>; API DD chưa chốt semantics.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md",
+        "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+        "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts",
+        "apps/study-server/app/modules/student/api_26_lessons_resources/models.py",
+        "apps/study-server/app/modules/student/api_26_lessons_resources/validate.py",
+        "apps/study-server/app/modules/student/api_26_lessons_resources/query.py",
+        "apps/study-server/app/modules/student/api_26_lessons_resources/view.py",
+        "docs/lists/list_api.md"
+      ]
+    },
+    {
+      "id": "ST-12-EV-002",
+      "name": "Chọn tài nguyên và chuyển sang GS-07",
+      "trigger": "Chọn liên kết Mở tài liệu tại một dòng đã tải.",
+      "element_ids": [
+        "ST-12-EL-018",
+        "ST-12-EL-019",
+        "ST-12-EL-037"
+      ],
+      "api_ids": [
+        "#12"
+      ],
+      "processing": "Mã hiện chuyển resource ID và query context from=lesson, lessonId sang GS-07. ST-12 không gọi #12 và không mở URL trực tiếp; #12 thuộc luồng chi tiết tại GS-07. Chính sách visibility/URL vẫn cần được chốt theo DD và nguồn hiện tại.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+        "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+        "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts",
+        "apps/study-server/app/modules/guest/api_12_resources_detail/view.py",
+        "apps/study-server/docs/dd/12_resources_detail/00_Cover.md"
+      ]
+    },
+    {
+      "id": "ST-12-EV-003",
+      "name": "Quay lại bài học ST-11",
+      "trigger": "Chọn liên kết quay lại bài học sau khi danh sách được tải.",
+      "element_ids": [
+        "ST-12-EL-011",
+        "ST-12-EL-028",
+        "ST-12-EL-039"
+      ],
+      "api_ids": [],
+      "processing": "Điều hướng về /student/lessons/:lessonId bằng RouterLink. Không gọi API và không khôi phục vị trí xem; runtime chưa được kiểm tra.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+        "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+        "apps/study-client/src/app/features/student/student.route.ts"
+      ]
+    },
+    {
+      "id": "ST-12-EV-004",
+      "name": "Mở diễn đàn từ phần trợ giúp trong bản thiết kế",
+      "trigger": "Chọn liên kết diễn đàn trên ảnh/mockup.",
+      "element_ids": [
+        "ST-12-EL-023",
+        "ST-12-EL-024"
+      ],
+      "api_ids": [],
+      "processing": "Ảnh và HTML prototype dùng href=\"#\"; thiếu courseId và destination. Không tự gán route. Đây không phải hành vi của Angular page hiện tại.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+        "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html",
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md"
+      ]
+    },
+    {
+      "id": "ST-12-EV-005",
+      "name": "Điều hướng đầu trang và liên kết pháp lý của prototype",
+      "trigger": "Chọn liên kết trong đầu trang, breadcrumb tĩnh hoặc chân trang của ảnh/mockup.",
+      "element_ids": [
+        "ST-12-EL-001",
+        "ST-12-EL-003",
+        "ST-12-EL-027"
+      ],
+      "api_ids": [],
+      "processing": "Prototype dùng href=\"#\" và data-path tĩnh. Header/footer thực do StudentLayout quản lý; route và trạng thái chạy chưa xác minh. Không suy ra đích từ nhãn.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+        "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html",
+        "apps/study-client/src/app/features/student/student.route.ts"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST12-B01",
+      "description": "Study Web route/runtime không có trong các trích đoạn DD lịch sử; phần cập nhật current-source ghi route/page hiện có.",
+      "impact": "Các đoạn lịch sử và current-source reconciliation không thống nhất; cần giữ bằng chứng hiện hành riêng.",
+      "decision": "Owner DD cập nhật phần lịch sử và trạng thái implementation để không mâu thuẫn.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md; apps/study-client/src/app/features/student/student.route.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B02",
+      "description": "Catalog #26 khai ApiEnvelope<Lesson> trong khi use case cần danh sách Resource.",
+      "impact": "Chặn chốt item, trạng thái rỗng và resource_id.",
+      "decision": "API/schema owner xác nhận kiểu dữ liệu và cập nhật canonical contract.",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B03",
+      "description": "API #26 trước đây được ghi là không có route/source; mã nguồn hiện có route, module, query, model và test.",
+      "impact": "Tài liệu nguồn lịch sử không còn mô tả đúng mã nguồn hiện tại.",
+      "decision": "Cập nhật phần DD phản ánh source mới; không đồng nhất source có với runtime đã xác minh.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_26_lessons_resources/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B04",
+      "description": "Semantics #26 về thứ tự, số lượng, empty, entitlement, visibility, URL, lỗi và schema còn mở.",
+      "impact": "Không thể chốt toàn bộ ma trận dữ liệu và lỗi cho các điều kiện chưa có contract.",
+      "decision": "API owner trả lời Q-26-01 đến Q-26-07 và cập nhật contract.",
+      "source_ref": "apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B05",
+      "description": "API #12 source hiện trả URL trực tiếp cho PUBLIC và URL ký cho PRIVATE; DD vẫn Draft.",
+      "impact": "Chặn tuyên bố an toàn URL hoặc luồng mở/tải đã được duyệt.",
+      "decision": "Owner API #12 xác nhận contract; GS-07 tiếp tục sở hữu quyết định mở URL.",
+      "source_ref": "apps/study-server/app/modules/guest/api_12_resources_detail/view.py; apps/study-server/docs/dd/12_resources_detail/00_Cover.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B06",
+      "description": "Nhãn “Pending Auth” trên mockup không khớp source/API #12 cho PUBLIC không cần Bearer.",
+      "impact": "Có thể gây hiểu nhầm về xác thực và quyền truy cập.",
+      "decision": "Sửa copy thiết kế hoặc chốt contract hiển thị theo API #12.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md; apps/study-server/app/modules/guest/api_12_resources_detail/view.py; docs/lists/list_api.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B07",
+      "description": "Claim bảo mật, tự làm mới và tuân thủ trên mockup không được chứng minh bởi mã nguồn.",
+      "impact": "Không được ghi claim tĩnh thành chức năng hoặc kết quả kiểm thử.",
+      "decision": "Product/security/design xác nhận, thay nội dung hoặc cung cấp bằng chứng kiểm chứng.",
+      "source_ref": "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.ts; apps/study-client/src/app/features/student/ST12/pages/st12-page.css",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B08",
+      "description": "Ảnh fallback không có danh sách tài nguyên hay lựa chọn item; source Angular hiện có loaded list/link.",
+      "impact": "Thiết kế gốc không mô tả trạng thái đang hoạt động hiện tại.",
+      "decision": "Duyệt thiết kế loaded/list/empty/error phù hợp với contract và source.",
+      "source_ref": "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen.png; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html; apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B09",
+      "description": "Đích diễn đàn, legal links và vị trí quay lại của mockup chưa được wire.",
+      "impact": "Không thể xác nhận luồng điều hướng từ ảnh hoặc data-path tĩnh.",
+      "decision": "Chốt destination/context theo route owner trước khi duyệt các liên kết này.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md; apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B10",
+      "description": "#26 đọc bảng resources nhưng #47 hiện ghi lesson_uploads; chưa tìm thấy writer cho resources.",
+      "impact": "Nguồn dữ liệu list chưa được nối end-to-end; không thể xác nhận có dữ liệu thật.",
+      "decision": "Owner dữ liệu/backend xác định nguồn ghi và schema canonical; không tự thêm side effect.",
+      "source_ref": "apps/study-server/app/modules/student/api_26_lessons_resources/query.py; apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/query.py; apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST12-B11",
+      "description": "API #12 DD cover ghi runtime/OpenAPI chưa xác minh trong khi source route/module/test hiện có.",
+      "impact": "Trạng thái tài liệu và source lệch nhau; test/runtime vẫn chưa được thực thi.",
+      "decision": "Cập nhật trạng thái DD theo bằng chứng; phân biệt source tồn tại với test/runtime đã xác minh.",
+      "source_ref": "apps/study-server/docs/dd/12_resources_detail/00_Cover.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_12_resources_detail/view.py",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST12-TM-001",
+        "requirement_ids": [
+          "ST-12-YC-001"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Mở ST-12 theo tuyến /student/lessons/:lessonId/resources trong StudentLayout; ghi nhận tuyến có trong mã nguồn nhưng chưa xác minh trên trình duyệt.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Tuyến gắn ST12Page, shell=portal; trạng thái runtime chưa được kiểm tra.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-002",
+        "requirement_ids": [
+          "ST-12-YC-002"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ nạp dữ liệu khi lessonId là mã dương an toàn; mã thiếu hoặc sai định dạng phải đưa màn hình vào trạng thái lỗi hiện có.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Mã hiện dùng toSafeStudyId; không gọi #26 nếu mã không hợp lệ.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-003",
+        "requirement_ids": [
+          "ST-12-YC-003"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi vào màn hình hoặc đổi lessonId hợp lệ, gọi GET #26 bằng Student Bearer service với lesson_id trên đường dẫn, không tự thêm query hay body.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Hiện chỉ gọi #26 từ ST-12; route metadata cũng liệt kê #12 nhưng không có lời gọi #12 tại đây.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-01",
+          "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-004",
+        "requirement_ids": [
+          "ST-12-YC-004"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi lessonId đổi, dữ liệu của yêu cầu cũ không được ghi đè dữ liệu của bài mới.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Mã hiện dùng distinctUntilChanged và switchMap; hủy nhánh cũ trong luồng giao diện.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — Current-source reconciliation",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-005",
+        "requirement_ids": [
+          "ST-12-YC-005"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ nhận phản hồi #26 có success=true, businessCode=DESIGN_RESOURCE_RETRIEVED và cấu trúc LessonResources hợp lệ.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Mã hiện kiểm tra mã nghiệp vụ và kiểu payload; cấu trúc khai trong catalog khác với payload hiện tại.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-006",
+        "requirement_ids": [
+          "ST-12-YC-006"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ nhận payload có lesson ID trùng tuyến, status=PUBLISHED, danh sách resources, ID tài nguyên tăng dần và lesson_id của từng tài nguyên khớp tuyến.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Mã hiện kiểm tra các điều kiện này; runtime chưa được xác minh.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-007",
+        "requirement_ids": [
+          "ST-12-YC-007"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ trạng thái đang tải cho tới khi yêu cầu #26 hoàn tất; vùng tải hiện có role=status.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Đây là hành vi từ template Angular hiện tại, không suy ra từ ảnh fallback.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-008",
+        "requirement_ids": [
+          "ST-12-YC-008"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi tải thất bại hoặc dữ liệu không hợp lệ, hiện thông báo lỗi và nút tải lại; thao tác tải lại gọi lại #26 cho lessonId hiện tại.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Lỗi hiển thị bằng role=alert; hành vi được đọc từ mã nguồn, chưa chạy trên runtime.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-009",
+        "requirement_ids": [
+          "ST-12-YC-009"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nếu phản hồi hợp lệ có resources rỗng, hiển thị trạng thái danh sách rỗng riêng với lỗi tải.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "API #26 hiện trả resources=[] khi không có bản ghi; đây là hành vi mã nguồn, còn contract DD chưa chốt empty semantics.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-010",
+        "requirement_ids": [
+          "ST-12-YC-010"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Với mỗi tài nguyên, chỉ hiển thị tên nhận từ API và nhãn loại tĩnh; không dựng tên tệp, phần mở rộng, dung lượng hoặc URL.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Template hiện chỉ kết xuất resource.name và chữ “Tài liệu đính kèm”; resource.type không hiển thị.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-011",
+        "requirement_ids": [
+          "ST-12-YC-011"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không đưa URL trong payload vào giao diện danh sách hoặc tự mở/tải tài nguyên; giữ nguyên bàn giao sang GS-07 để xử lý #12 theo contract của màn hình đó.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "ST-12 không gọi #12 trực tiếp; API #26 hiện trả url=null. #12 có chính sách khác nhau theo PUBLIC/PRIVATE và thuộc GS-07.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-02",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-server/app/modules/guest/api_12_resources_detail/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-012",
+        "requirement_ids": [
+          "ST-12-YC-012"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi chọn một dòng, chuyển sang GS-07 với resourceId và query context from=lesson, lessonId hiện tại.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Template hiện điều hướng tới /resources/:id cùng query context; chưa xác minh luồng trình duyệt.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-013",
+        "requirement_ids": [
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "CTA quay lại bài học chuyển về /student/lessons/:lessonId của màn hình hiện tại mà không tự ghi tiến độ hoặc playback position.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Liên kết được gắn bằng RouterLink; không gọi API từ thao tác này.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-03",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-014",
+        "requirement_ids": [
+          "ST-12-YC-014"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Phân biệt phản hồi hiện tại của #26 với contract catalog ApiEnvelope<Lesson>; không coi hai cấu trúc là tương đương khi chưa cập nhật contract.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Catalog khai ApiEnvelope<Lesson>; source hiện trả LessonResources có resources[]. Câu hỏi Q-26-01 còn mở.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/models.py",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/view.py",
+          "apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-015",
+        "requirement_ids": [
+          "ST-12-YC-015"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ rõ điều kiện truy cập hiện tại của #26: Student, ghi danh ACTIVE, lesson PUBLISHED và course PUBLISHED; không thay thế bằng giả định từ ảnh.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Đây là điều kiện trong source hiện tại; policy độc lập, claim binding và cách che thông tin còn câu hỏi mở.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_26_lessons_resources/view.py",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/query.py",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-016",
+        "requirement_ids": [
+          "ST-12-YC-016"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ rõ khoảng trống nguồn ghi dữ liệu: #26 đọc resources nhưng API #47 hiện ghi lesson_uploads; chưa có bằng chứng writer cho resources.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Không tự nối bảng hoặc thêm side effect; live schema và nguồn tạo dữ liệu chưa xác minh.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/query.py",
+          "apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/query.py",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-017",
+        "requirement_ids": [
+          "ST-12-YC-017"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không gọi API #12 từ ST-12; chỉ kiểm tra điều hướng sang GS-07, nơi nhận resourceId và sở hữu bước lấy metadata/mở URL.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Route có metadata apiIds [12,26], nhưng caller ST12ResourcesService chỉ gọi #26.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md — ST12-EV-02",
+          "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-server/app/modules/guest/api_12_resources_detail/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-018",
+        "requirement_ids": [
+          "ST-12-YC-018"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không biến nhãn “Tự động làm mới mỗi 30s” của prototype thành polling, timer hoặc yêu cầu mạng.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Template hiện không khai báo bộ hẹn giờ; copy trong prototype không phải hành vi.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-019",
+        "requirement_ids": [
+          "ST-12-YC-019"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không trình bày các nhãn bảo mật, xác thực, trạng thái API hay tuân thủ trên ảnh như kết quả kiểm tra runtime.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Các claim trên ảnh là nội dung tĩnh; API #12 DD vẫn Draft dù route/source hiện có.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html",
+          "apps/study-server/docs/dd/12_resources_detail/00_Cover.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-020",
+        "requirement_ids": [
+          "ST-12-YC-020"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Đánh giá đầu trang/chân trang, breadcrumb, diễn đàn và legal các liên kết theo đúng nguồn: phần bao quanh do StudentLayout sở hữu; anchor placeholder của prototype chưa chứng minh đích.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Không suy ra đích điều hướng từ data-path hoặc href=\"#\" trong HTML tĩnh.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-021",
+        "requirement_ids": [
+          "ST-12-YC-021"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Ghi nhận thuộc tính responsive và focus-visible trong CSS; không tuyên bố đã đạt WCAG hoặc kiểm tra bàn phím khi chưa thực thi audit.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "CSS có breakpoint 640px, focus-visible và chiều cao liên kết 44px; claim compliance trên ảnh chưa được kiểm chứng.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.css"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-022",
+        "requirement_ids": [
+          "ST-12-YC-022"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ các quyết định API #26 còn mở về payload, số lượng/thứ tự/empty, quyền, visibility, URL, lỗi và schema/path validation.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Không tự giải quyết Q-26-01 đến Q-26-07 dựa trên source snapshot.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-023",
+        "requirement_ids": [
+          "ST-12-YC-023"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ riêng trạng thái DD BLOCKED, mã nguồn hiện có và môi trường/runtime chưa xác minh; không ghi test nguồn là đã chạy.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Test source đã được đọc tĩnh; không thực thi test, app, API, DB hoặc migration.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/07-test-cases.md",
+          "apps/study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TM-024",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ mapping đủ 27 marker của ảnh gốc và tách rõ các thành phần/state bổ sung chỉ có trong Angular hiện tại.",
+        "precondition": "Mã nguồn/DD đã được đối chiếu tĩnh; ca thực thi chỉ tiến hành khi môi trường và quyết định áp dụng được xác nhận.",
+        "data": "Ảnh numbered là trạng thái fallback, không thể hiện danh sách hiện được tải từ API.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng trạng thái/luồng theo yêu cầu.",
+          "Ghi riêng kết quả kỳ vọng, hành vi mã nguồn hiện tại và điểm còn mở.",
+          "Không đánh dấu đạt khi chưa chạy trên môi trường phù hợp."
+        ],
+        "expected": "Kỳ vọng được đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST12-TP-001",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-001",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thương hiệu Study2Work LMS và điều hướng chính",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Các liên kết trong prototype đều href=\"#\" và không phải điều hướng hiện hành; vùng header thực thuộc StudentLayout.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-002",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-002",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tên, vai trò và avatar người học viết sẵn",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Tên “Nguyễn Văn A”, vai trò “Học viên” và biểu tượng được ghi cứng; không chứng minh phiên/người dùng hiện tại.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-003",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-003",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Đường dẫn từ trang chủ tới màn hình hiện tại",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Ảnh dùng liên kết tĩnh, không có lessonId động; template hiện có breadcrumb riêng gắn tuyến thật.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-004",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-004",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn tuyến /student/lessons/:lessonId/resources",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Chỉ là metadata thiết kế trong ảnh, không phải trạng thái API hay xác nhận runtime.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-005",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-005",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn ST-12 Resource Panel và Design chỉ",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Badge tĩnh trên ảnh; không phải trạng thái triển khai.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-006",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-006",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề Tài liệu kèm bài học và mô tả",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Ảnh có copy tĩnh; template hiện có tiêu đề tiếng Việt riêng và dữ liệu tên bài động.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-007",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-007",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ Zero Information Disclosure Enforced",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Đây là claim tĩnh; source #12 hiện trả URL theo PUBLIC/PRIVATE, không chứng minh claim tổng quát.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-008",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-008",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Biểu tượng thư mục ở trạng thái chưa có tài liệu",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Chỉ là biểu tượng của mockup fallback; không xác định lỗi hay phản hồi rỗng.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-009",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-009",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn kiểm soát truy cập tập trung",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Copy tĩnh; policy và nguồn enforcement cần được chốt riêng.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-010",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-010",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề không có tài liệu và giải thích riêng tư",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Copy cố định của ảnh; không phân biệt 200 rỗng, 401/403, 404, 500 hoặc lỗi mạng.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-011",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-011",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút Quay lại trình học bài (ST-11)",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Mockup dùng href=\"#\" và data-path; template hiện có CTA riêng quay lại bài bằng lessonId tuyến.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-012",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-012",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Các claim E2E, metadata không công khai và token một lần",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Ba claim tĩnh chưa có bằng chứng backend, định danh hoặc lưu trữ; không được ghi như tính năng đã xác minh.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-013",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-013",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề trạng thái kiểm định kết nối",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Chỉ là tiêu đề/biểu tượng tĩnh; không có API chẩn đoán.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-014",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-014",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn tự động làm mới mỗi 30 giây",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Copy tĩnh; không có timer, polling hoặc request tự động trong page source.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-015",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-015",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ #26 Schema Mismatch và Type: Lesson",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Nhãn phản ánh mismatch design; catalog khai ApiEnvelope<Lesson> trong khi source hiện trả LessonResources.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-016",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-016",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ #12 Design chỉ và Pending Auth",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Nhãn “Pending Auth” trên ảnh không khớp catalog/source API #12 vốn có PUBLIC không yêu cầu token; API DD còn Draft.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-017",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-017",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề ghi chú kỹ thuật bàn giao",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Nội dung tĩnh dành cho bàn giao; không cấu hình capability của ứng dụng.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-018",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-018",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Cảnh báo không mở URL ngoài chính sách",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Khuyến nghị thiết kế; allowlist, scheme, redirect và hành vi mở chưa được chốt ở ST-12.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-019",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-019",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Cảnh báo không tự dựng tên, phần mở rộng, dung lượng hoặc URL",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Nguyên tắc không bịa dữ liệu; list template hiện chỉ hiển thị tên backend và nhãn loại tĩnh.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-020",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-020",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Ghi chú WCAG 2.1 AA và focus bàn phím",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Claim trong ảnh chưa qua audit; CSS có focus-visible và chiều cao liên kết tối thiểu 44px.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-021",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-021",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Ghi chú màu thương hiệu Ocean #0B5F8A",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Mã màu là literal thiết kế; ảnh còn dùng màu khác, cần đối chiếu khi chốt thiết kế.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-022",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-022",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn ST-12 v2.4 và Valid Spec",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Nhãn tĩnh không phải hồ sơ phê duyệt; DD trong kho đang BLOCKED.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-023",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-023",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ trợ giúp liên hệ giảng viên hoặc trợ giảng",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Copy tĩnh; không có người nhận, ngữ cảnh khóa học hoặc logic gửi yêu cầu.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-024",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-024",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Liên kết Diễn đàn Thảo luận",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Prototype dùng href=\"#\" và thiếu courseId/đích; route chưa được xác định.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-025",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-025",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Dòng bản quyền Study2Work LMS năm 2025",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Văn bản tĩnh; không có nguồn cấu hình năm.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-026",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-026",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Badge WCAG 2.1 AA Compliant",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Claim tĩnh; chưa có audit runtime hoặc chứng nhận.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-027",
+        "requirement_ids": [
+          "ST-12-YC-024"
+        ],
+        "target_id": "ST-12-EL-027",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Các liên kết điều khoản, quyền riêng tư và trợ giúp",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Các anchor của prototype dùng href=\"#\"; destination chưa được wire.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/ST-12_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-028",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-028",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Breadcrumb tên bài theo lesson hiện tại",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Template hiện hiển thị lesson.title hoặc “Bài học”; RouterLink giữ lessonId hiện tại.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-029",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-029",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Trạng thái đang tải tài liệu",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Hiện “Đang tải tài liệu…” với role=status trong khi gọi #26.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-030",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-030",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thông báo lỗi khi không tải hoặc dữ liệu sai",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Hiện nội dung lỗi bằng role=alert; các lỗi map từ mã máy khách và lỗi payload.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-031",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-031",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút tải lại tài liệu",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Gọi retryResources để nạp lại #26 cho lessonId hiện tại.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+          "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-032",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-032",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề bài học lấy từ phản hồi #26",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Hiện lesson.title khi payload hợp lệ; nếu không có thì dùng câu mô tả mặc định.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-033",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-033",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Số lượng tài liệu",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Chỉ hiện khi lesson đã hợp lệ; lấy độ dài resources, gồm 0 cho trạng thái rỗng.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-034",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-034",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Danh sách tài nguyên",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Hiện khi có ít nhất một resource; lặp theo resource.id; không hiện trong ảnh fallback.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-035",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-035",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tên tài nguyên từ API",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Hiện resource.name; không tự thêm tên file, phần mở rộng, URL hoặc dung lượng.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-036",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-036",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn loại tài liệu tĩnh",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Hiện chữ “Tài liệu đính kèm”; không phải resource.type từ API.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-037",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-037",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Liên kết mở tài liệu qua GS-07",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Đi tới /resources/:id kèm from=lesson và lessonId; ST-12 không gọi #12 trực tiếp.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-038",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-038",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Trạng thái danh sách rỗng",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Khi resources.length bằng 0, hiển thị lời báo chưa có tài liệu và giải thích; tách khỏi lỗi tải.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/query.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-TP-039",
+        "requirement_ids": [
+          "ST-12-YC-006",
+          "ST-12-YC-009",
+          "ST-12-YC-010",
+          "ST-12-YC-011",
+          "ST-12-YC-012",
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EL-039",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: CTA quay lại bài học",
+        "precondition": "Mở nguồn DD, ảnh hoặc mã nguồn được dẫn; không tuyên bố runtime/audit đã chạy.",
+        "data": "Đi tới /student/lessons/:lessonId; không gọi API khi bấm.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc selector được dẫn.",
+          "Đối chiếu nhãn, loại, điều kiện hiển thị, dữ liệu và điều hướng với nguồn.",
+          "Ghi rõ khác biệt giữa ảnh prototype và Angular hiện tại."
+        ],
+        "expected": "Ghi kết quả đối chiếu theo bằng chứng; DD/source còn điểm mở thì giữ Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST12-SK-001",
+        "requirement_ids": [
+          "ST-12-YC-003"
+        ],
+        "target_id": "ST-12-EV-001",
+        "group": "Sự kiện màn hình",
+        "title": "Vào tuyến, đổi bài và nạp danh sách",
+        "precondition": "Có thể đối chiếu mã nguồn và DD; ca thực thi chỉ tiến hành khi contract và môi trường được xác nhận.",
+        "data": "Đọc lessonId; từ chối mã không an toàn; chuyển sang trạng thái đang tải; gọi #26; hủy yêu cầu cũ khi ID đổi; kiểm tra success/businessCode, lesson ID, PUBLISHED, resources, ID tài nguyên tăng dần, lesson_id khớp và url=null; sau đó hiển thị danh sách hoặc trạng thái trống. Khi lỗi, hiển thị alert và nút tải lại. Danh mục vẫn khai ApiEnvelope<Lesson>; ngữ nghĩa DD API chưa chốt.",
+        "steps": [
+          "Đối chiếu trigger và đầu vào theo nguồn.",
+          "Theo dõi tuyến, API, trạng thái và đích điều hướng thuộc phạm vi sự kiện.",
+          "Không gán kết quả cho luồng placeholder hoặc phần thuộc màn hình khác."
+        ],
+        "expected": "Ghi hành vi source và điểm còn Chờ xác nhận; ca này chưa chạy.",
+        "api_ids": [
+          "#26"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.ts",
+          "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/models.py",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/validate.py",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/query.py",
+          "apps/study-server/app/modules/student/api_26_lessons_resources/view.py",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-SK-002",
+        "requirement_ids": [
+          "ST-12-YC-012",
+          "ST-12-YC-017"
+        ],
+        "target_id": "ST-12-EV-002",
+        "group": "Sự kiện màn hình",
+        "title": "Chọn tài nguyên và chuyển sang GS-07",
+        "precondition": "Có thể đối chiếu mã nguồn và DD; ca thực thi chỉ tiến hành khi contract và môi trường được xác nhận.",
+        "data": "Mã hiện chuyển resource ID và query context from=lesson, lessonId sang GS-07. ST-12 không gọi #12 và không mở URL trực tiếp; #12 thuộc luồng chi tiết tại GS-07. Chính sách visibility/URL vẫn cần được chốt theo DD và nguồn hiện tại.",
+        "steps": [
+          "Đối chiếu trigger và đầu vào theo nguồn.",
+          "Theo dõi tuyến, API, trạng thái và đích điều hướng thuộc phạm vi sự kiện.",
+          "Không gán kết quả cho luồng placeholder hoặc phần thuộc màn hình khác."
+        ],
+        "expected": "Ghi hành vi source và điểm còn Chờ xác nhận; ca này chưa chạy.",
+        "api_ids": [
+          "#12"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/ST12/data-access/st12-resources.service.ts",
+          "apps/study-server/app/modules/guest/api_12_resources_detail/view.py",
+          "apps/study-server/docs/dd/12_resources_detail/00_Cover.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-SK-003",
+        "requirement_ids": [
+          "ST-12-YC-013"
+        ],
+        "target_id": "ST-12-EV-003",
+        "group": "Sự kiện màn hình",
+        "title": "Quay lại bài học ST-11",
+        "precondition": "Có thể đối chiếu mã nguồn và DD; ca thực thi chỉ tiến hành khi contract và môi trường được xác nhận.",
+        "data": "Điều hướng về /student/lessons/:lessonId bằng RouterLink. Không gọi API và không khôi phục vị trí xem; runtime chưa được kiểm tra.",
+        "steps": [
+          "Đối chiếu trigger và đầu vào theo nguồn.",
+          "Theo dõi tuyến, API, trạng thái và đích điều hướng thuộc phạm vi sự kiện.",
+          "Không gán kết quả cho luồng placeholder hoặc phần thuộc màn hình khác."
+        ],
+        "expected": "Ghi hành vi source và điểm còn Chờ xác nhận; ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST12/pages/st12-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-SK-004",
+        "requirement_ids": [
+          "ST-12-YC-020"
+        ],
+        "target_id": "ST-12-EV-004",
+        "group": "Sự kiện màn hình",
+        "title": "Mở diễn đàn từ phần trợ giúp trong bản thiết kế",
+        "precondition": "Có thể đối chiếu mã nguồn và DD; ca thực thi chỉ tiến hành khi contract và môi trường được xác nhận.",
+        "data": "Ảnh và HTML prototype dùng href=\"#\"; thiếu courseId và destination. Không tự gán route. Đây không phải hành vi của Angular page hiện tại.",
+        "steps": [
+          "Đối chiếu trigger và đầu vào theo nguồn.",
+          "Theo dõi tuyến, API, trạng thái và đích điều hướng thuộc phạm vi sự kiện.",
+          "Không gán kết quả cho luồng placeholder hoặc phần thuộc màn hình khác."
+        ],
+        "expected": "Ghi hành vi source và điểm còn Chờ xác nhận; ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST12-SK-005",
+        "requirement_ids": [
+          "ST-12-YC-020"
+        ],
+        "target_id": "ST-12-EV-005",
+        "group": "Sự kiện màn hình",
+        "title": "Điều hướng đầu trang và liên kết pháp lý của prototype",
+        "precondition": "Có thể đối chiếu mã nguồn và DD; ca thực thi chỉ tiến hành khi contract và môi trường được xác nhận.",
+        "data": "Prototype dùng href=\"#\" và data-path tĩnh. Header/footer thực do StudentLayout quản lý; route và trạng thái chạy chưa xác minh. Không suy ra đích từ nhãn.",
+        "steps": [
+          "Đối chiếu trigger và đầu vào theo nguồn.",
+          "Theo dõi tuyến, API, trạng thái và đích điều hướng thuộc phạm vi sự kiện.",
+          "Không gán kết quả cho luồng placeholder hoặc phần thuộc màn hình khác."
+        ],
+        "expected": "Ghi hành vi source và điểm còn Chờ xác nhận; ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-12-TaiLieuKemBaiHoc/06-navigation.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-12_tai-lieu-kem-bai-hoc/code.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

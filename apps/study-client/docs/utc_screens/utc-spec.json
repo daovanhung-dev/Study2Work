@@ -1,0 +1,2519 @@
+{
+  "metadata": {
+    "screen_id": "AD-01",
+    "screen_name": "Dashboard quản trị",
+    "module": "Study2Work / Phân hệ Quản trị",
+    "route": "/admin",
+    "actor": "Quản trị viên (ADMIN)",
+    "version": "1.0 – KẾ HOẠCH",
+    "dd_version": "0.1 (gói DD; ghi chú mã nguồn ngày 2026-11-20; đối chiếu lại mã nguồn ngày 2026-11-23)",
+    "dd_status": "DD BỊ CHẶN (BLOCKED) – API #101/chỉ số hiệu quả chính (KPI) và hành vi cần xác nhận",
+    "runtime_status": "CHƯA XÁC MINH MÔI TRƯỜNG CHẠY / TRIỂN KHAI / TRÌNH DUYỆT",
+    "author": "AI lập kế hoạch kiểm thử; cần rà soát",
+    "reviewer": "Chưa phân công",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-23",
+    "source_name": "AD-01-DashboardQuanTri: 00-overview.md–07-test-cases.md; screen-clean.png; screen-numbered.png; mã nguồn hiện hành phía giao diện/máy chủ được đối chiếu lại ngày 2026-11-23"
+  },
+  "overall": {
+    "objective": "Chuẩn bị UTC có truy vết cho AD-01 theo DD được duyệt; hiện chỉ là kế hoạch vì DD/API #101 vẫn BỊ CHẶN (BLOCKED).",
+    "inputs": "Tuyến /admin; phiên ADMIN; DD bản nháp khai báo truy vấn từ/to?:date cho #101. Giá trị ngày, giá trị mặc định và múi giờ chưa được duyệt.",
+    "outputs": "Theo DD bản nháp: Report.period, metrics[], generated_at; chủ sở hữu cần xác nhận cách ánh xạ giao diện và ý nghĩa của trạng thái rỗng/không đầy đủ/lỗi.",
+    "main_flow": "Theo DD dự kiến: mở /admin → kiểm tra phiên và quyền xem báo cáo → gọi GET #101 theo chính sách ngày → kiểm tra phong bì phản hồi → ánh xạ chỉ số theo quyết định đã duyệt. Mã nguồn hiện hành đã có bên gọi ở giao diện và tuyến phía máy chủ; mã nguồn không thay thế việc phê duyệt hợp đồng hoặc xác minh môi trường chạy.",
+    "states": [
+      "Đang tải (cách ánh xạ chưa được duyệt)",
+      "Có dữ liệu (cách ánh xạ chưa được duyệt)",
+      "Không có dữ liệu (ý nghĩa chưa được duyệt)",
+      "Lỗi/không khả dụng (chưa duyệt cách ánh xạ và thử lại)",
+      "Bị từ chối quyền (chưa duyệt cách ánh xạ)",
+      "Chưa xác minh môi trường chạy",
+      "Thông tin hoạt động chưa khả dụng",
+      "Nhật ký kiểm toán chưa khả dụng",
+      "Trạng thái dịch vụ chưa khả dụng",
+      "Nội dung tuân thủ chưa có bằng chứng"
+    ],
+    "preconditions": "DD phiên bản 0.1; cần đóng các điểm chặn liên quan trước khi chạy; chỉ dùng phiên và bộ dữ liệu giả lập không nhạy cảm.",
+    "security": "Mã nguồn hiện hành có bước kiểm tra vai trò ADMIN và lấy hồ sơ từ phiên API #03; cần xác nhận quyền dành riêng cho báo cáo và hợp đồng #101. Không dùng dữ liệu hoặc tài khoản thật.",
+    "out_of_scope": "Không suy luận môi trường chạy từ ảnh hoặc mã của bản mẫu; không tự duyệt chỉ số hiệu quả chính (KPI), chính sách ngày, tình trạng hệ thống, kiểm toán hoặc tuân thủ; không kiểm thử nội dung API của AD-02/AD-06/AD-10."
+  },
+  "apis": [
+    {
+      "id": "AD-01-API-001",
+      "method": "GET",
+      "path": "/api/v1/admin/reports/summary",
+      "event_ids": [
+        "AD-01-EV-001",
+        "AD-01-EV-002",
+        "AD-01-EV-003"
+      ],
+      "request": "Phiên ADMIN dùng Bearer; truy vấn theo DD bản nháp gồm from?:date và to?:date; không có nội dung thân yêu cầu hoặc tham số đường dẫn. Quy tắc giới hạn ngày chưa được duyệt.",
+      "response": "200 ApiEnvelope<Report>; period, metrics[], generated_at; giá trị từng chỉ số là decimal-string theo bản nháp DD API. Chưa duyệt khóa/công thức chỉ số hiệu quả chính (KPI) và ý nghĩa trạng thái rỗng/không đầy đủ.",
+      "errors": "DD khai báo 401/403/500; cần xác nhận ngày không hợp lệ/khoảng ngày đảo ngược, hết thời gian chờ/lỗi mạng, chỉ số không đầy đủ và quy tắc thử lại/bộ nhớ đệm.",
+      "auth": "ADMIN; người phụ trách cần xác nhận quyền dành riêng cho báo cáo và hợp đồng xác thực.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "04-api-integration.md §A–§D; 02-events.md EV-01"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "AD-01-YC-001",
+      "description": "Kiểm tra AD-01 theo tiêu chí nghiệm thu AC-38 sau khi các quyết định DD/API liên quan được phê duyệt; chưa có bằng chứng kiểm thử hoặc môi trường chạy.",
+      "group": "Toàn màn hình",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "00-overview.md AC-38; 07-test-cases.md §1–§3",
+      "notes": "Mã yêu cầu nội bộ phục vụ truy vết; DD chỉ nêu AC-38 làm căn cứ kế hoạch, không cấp mã yêu cầu riêng.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-002",
+      "description": "Điểm đánh dấu #1: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Khối nhận diện Study2Work LMS Admin” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #1",
+      "notes": "Mã yêu cầu nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-003",
+      "description": "Điểm đánh dấu #2: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nhóm điều hướng chính gồm năm liên kết” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #2",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-004",
+      "description": "Điểm đánh dấu #3: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nhãn trạng thái SYSTEM NORMAL” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #3",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-005",
+      "description": "Điểm đánh dấu #4: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nút thông báo” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #4",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-006",
+      "description": "Điểm đánh dấu #5: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Khối danh tính và ảnh đại diện quản trị viên” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #5",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-007",
+      "description": "Điểm đánh dấu #6: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Đường dẫn điều hướng toàn cục” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #6",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-008",
+      "description": "Điểm đánh dấu #7: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nhãn tuyên bố tuân thủ RBAC” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #7",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-009",
+      "description": "Điểm đánh dấu #8: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Ngữ cảnh trang Bảng điều khiển” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #8",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-010",
+      "description": "Điểm đánh dấu #9: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nhãn sẵn sàng vận hành” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #9",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-011",
+      "description": "Điểm đánh dấu #10: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Phần giới thiệu bảng điều khiển quản trị” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #10",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-012",
+      "description": "Điểm đánh dấu #11: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nhóm nút chọn khoảng ngày” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #11",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-013",
+      "description": "Điểm đánh dấu #12: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nút làm mới số liệu” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #12",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-014",
+      "description": "Điểm đánh dấu #13: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thẻ chỉ số người dùng hệ thống” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #13",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-015",
+      "description": "Điểm đánh dấu #14: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thẻ chỉ số chương trình học” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #14",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-016",
+      "description": "Điểm đánh dấu #15: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thẻ chỉ số kiểm định chất lượng” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #15",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-017",
+      "description": "Điểm đánh dấu #16: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thẻ chỉ số hạ tầng trực tuyến” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #16",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-018",
+      "description": "Điểm đánh dấu #17: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Tiêu đề khu vực hoạt động hệ thống gần đây” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #17",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-019",
+      "description": "Điểm đánh dấu #18: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nhãn ghi vết bảo mật” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #18",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-020",
+      "description": "Điểm đánh dấu #19: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Biểu tượng và nội dung trạng thái trống hoạt động” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #19",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-021",
+      "description": "Điểm đánh dấu #20: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Tuyên bố tuân thủ ISO/IEC 27001” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #20",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-022",
+      "description": "Điểm đánh dấu #21: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nội dung trạng thái trong 24 giờ” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #21",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-023",
+      "description": "Điểm đánh dấu #22: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Nút xem nhật ký kiểm toán đang khóa” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #22",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-024",
+      "description": "Điểm đánh dấu #23: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Tiêu đề khu vực vận hành máy chủ và chấm trạng thái” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #23",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-025",
+      "description": "Điểm đánh dấu #24: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Dòng trạng thái cơ sở dữ liệu” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #24",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-026",
+      "description": "Điểm đánh dấu #25: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Dòng trạng thái dịch vụ xác thực” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #25",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-027",
+      "description": "Điểm đánh dấu #26: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Dòng trạng thái hàng đợi tác vụ nền” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #26",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-028",
+      "description": "Điểm đánh dấu #27: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thông báo quyền quản trị viên” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #27",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-029",
+      "description": "Điểm đánh dấu #28: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Tiêu đề lối tắt quản lý trực tiếp” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #28",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-030",
+      "description": "Điểm đánh dấu #29: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thẻ lối tắt quản lý người dùng” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #29",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-031",
+      "description": "Điểm đánh dấu #30: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thẻ lối tắt quản lý khóa học” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #30",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-032",
+      "description": "Điểm đánh dấu #31: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Thẻ lối tắt hàng đợi kiểm duyệt” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #31",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-033",
+      "description": "Điểm đánh dấu #32: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Chân trang bản quyền và tên hệ thống” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #32",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-034",
+      "description": "Điểm đánh dấu #33: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Liên kết quy chế bảo mật dữ liệu” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #33",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-035",
+      "description": "Điểm đánh dấu #34: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Liên kết tiêu chuẩn phân quyền RBAC” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #34",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-036",
+      "description": "Điểm đánh dấu #35: đối chiếu nội dung, trạng thái, nguồn dữ liệu và hành vi của “Liên kết hỗ trợ kỹ thuật” với DD đã duyệt.",
+      "group": "Thành phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #35",
+      "notes": "Mã YC nội bộ phục vụ truy vết; điểm đánh dấu là mã liên kết trong gói DD.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-037",
+      "description": "Sự kiện AD-01-EV-001: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-01; 04-api-integration.md §A–§D",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-038",
+      "description": "Sự kiện AD-01-EV-002: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-02; 01-ui-elements.md §3 #11; 04-api-integration.md",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-039",
+      "description": "Sự kiện AD-01-EV-003: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-03; 01-ui-elements.md §3 #12",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-040",
+      "description": "Sự kiện AD-01-EV-004: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-04; 01-ui-elements.md §3 #2; 06-navigation.md",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-041",
+      "description": "Sự kiện AD-01-EV-005: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-05; 01-ui-elements.md §3 #4",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-042",
+      "description": "Sự kiện AD-01-EV-006: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-06; 01-ui-elements.md §3 #29–#31; 06-navigation.md",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "AD-01-YC-043",
+      "description": "Sự kiện AD-01-EV-007: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-07; 01-ui-elements.md §3 #22",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Cao"
+    },
+    {
+      "id": "AD-01-YC-044",
+      "description": "Sự kiện AD-01-EV-008: đối chiếu thao tác kích hoạt, xử lý, kết quả, API, điều hướng và nhánh lỗi với DD đã duyệt.",
+      "group": "Sự kiện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §2 EV-08; 01-ui-elements.md §3 #33–#35; 06-navigation.md",
+      "notes": "Mã YC nội bộ; mã sự kiện là tên gọi tương ứng theo mẫu UTC, không chứng minh môi trường chạy.",
+      "priority": "Trung bình"
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-01-EL-001",
+      "marker": "#1",
+      "name": "Thương hiệu cổng quản trị Study2Work LMS",
+      "type": "Khối nhận diện",
+      "position": "Đầu trang, bên trái",
+      "properties": "Chữ S, Study2Work, LMS và nhãn “ADMIN PORTAL” (Cổng quản trị); hiển thị tĩnh, không có đích đến hoặc bộ xử lý khi nhấp.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #1"
+    },
+    {
+      "id": "AD-01-EL-002",
+      "marker": "#2",
+      "name": "Nhóm điều hướng chính gồm năm liên kết",
+      "type": "Nhóm điều hướng",
+      "position": "Đầu trang",
+      "properties": "Tổng quan (đang chọn), Người dùng, Khóa học & Nội dung, Kiểm duyệt, Báo cáo; bản mẫu dùng href=\"#\" và data-path, đây không phải tuyến điều hướng.",
+      "event_ids": [
+        "AD-01-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #2"
+    },
+    {
+      "id": "AD-01-EL-003",
+      "marker": "#3",
+      "name": "Nhãn trạng thái SYSTEM NORMAL",
+      "type": "Nhãn trạng thái",
+      "position": "Đầu trang",
+      "properties": "Chấm xanh và nhãn “SYSTEM NORMAL” (Hệ thống bình thường); đây là tuyên bố tĩnh, không có nguồn dữ liệu hoặc ngưỡng đo.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #3"
+    },
+    {
+      "id": "AD-01-EL-004",
+      "marker": "#4",
+      "name": "Nút thông báo",
+      "type": "Nút biểu tượng",
+      "position": "Đầu trang",
+      "properties": "Chuông, chấm đỏ, aria-label=\"Notifications\" (Thông báo); DD chưa nêu bộ xử lý, cách hiển thị số lượng hoặc API.",
+      "event_ids": [
+        "AD-01-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #4"
+    },
+    {
+      "id": "AD-01-EL-005",
+      "marker": "#5",
+      "name": "Khối danh tính và ảnh đại diện quản trị viên",
+      "type": "Khối hồ sơ",
+      "position": "Đầu trang",
+      "properties": "Bản mẫu dùng tên/vai trò tĩnh; Study AdminLayout hiện lấy full_name/role từ API #03 qua AdminSessionService.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #5"
+    },
+    {
+      "id": "AD-01-EL-006",
+      "marker": "#6",
+      "name": "Đường dẫn điều hướng toàn cục",
+      "type": "Đường dẫn điều hướng",
+      "position": "Thanh điều hướng",
+      "properties": "Hệ thống > Quản trị trung tâm > Không gian làm việc; các nút là phần tử span tĩnh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #6"
+    },
+    {
+      "id": "AD-01-EL-007",
+      "marker": "#7",
+      "name": "Nhãn tuyên bố tuân thủ RBAC",
+      "type": "Nhãn tuân thủ",
+      "position": "Thanh điều hướng",
+      "properties": "Biểu tượng khiên và dòng “Chuẩn xác thực RBAC”; bảng điều khiển không có bằng chứng về chính sách hoặc kiểm toán.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #7"
+    },
+    {
+      "id": "AD-01-EL-008",
+      "marker": "#8",
+      "name": "Ngữ cảnh trang Bảng điều khiển",
+      "type": "Đường dẫn điều hướng",
+      "position": "Thanh điều hướng",
+      "properties": "Bảng điều khiển quản trị > Tổng quan hệ thống; các nút là phần tử span tĩnh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #8"
+    },
+    {
+      "id": "AD-01-EL-009",
+      "marker": "#9",
+      "name": "Nhãn sẵn sàng vận hành",
+      "type": "Nhãn trạng thái",
+      "position": "Phần mở đầu dashboard",
+      "properties": "Chấm xanh và dòng “CỔNG VẬN HÀNH SẴN SÀNG”; không gọi API kiểm tra mức độ sẵn sàng hoặc thăm dò môi trường chạy.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #9"
+    },
+    {
+      "id": "AD-01-EL-010",
+      "marker": "#10",
+      "name": "Phần giới thiệu bảng điều khiển quản trị",
+      "type": "Phần mở đầu",
+      "position": "Đầu nội dung chính",
+      "properties": "Dòng “HỆ THỐNG QUẢN TRỊ TỔNG THỂ”, tiêu đề và mô tả; nội dung không định nghĩa chỉ số hiệu quả chính (KPI) hoặc trường API.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #10"
+    },
+    {
+      "id": "AD-01-EL-011",
+      "marker": "#11",
+      "name": "Nhóm nút chọn khoảng ngày",
+      "type": "Nhóm nút",
+      "position": "Thanh công cụ chỉ số hiệu quả chính (KPI)",
+      "properties": "Hôm nay, 7 ngày qua, 30 ngày qua; ảnh/bản mẫu đánh dấu các nút là bị vô hiệu hóa. Giá trị mặc định, múi giờ, cách tính hai đầu mút và giới hạn ngày chưa được duyệt.",
+      "event_ids": [
+        "AD-01-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #11"
+    },
+    {
+      "id": "AD-01-EL-012",
+      "marker": "#12",
+      "name": "Nút làm mới số liệu",
+      "type": "Nút",
+      "position": "Thanh công cụ chỉ số hiệu quả chính (KPI)",
+      "properties": "Nút làm mới; bản mẫu có refresh-btn và hẹn giờ 700 ms. DD chưa chốt việc tải lại, trạng thái đang tải hoặc cách xử lý thao tác lặp.",
+      "event_ids": [
+        "AD-01-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #12"
+    },
+    {
+      "id": "AD-01-EL-013",
+      "marker": "#13",
+      "name": "Thẻ chỉ số người dùng hệ thống",
+      "type": "Thẻ chỉ số",
+      "position": "Hàng chỉ số hiệu quả chính (KPI) 1",
+      "properties": "Người dùng hệ thống; --; Tổng tài khoản người dùng; trạng thái đồng bộ là tĩnh. -- không có nghĩa là 0; cách ánh xạ chỉ số chưa được duyệt.",
+      "event_ids": [
+        "AD-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #13"
+    },
+    {
+      "id": "AD-01-EL-014",
+      "marker": "#14",
+      "name": "Thẻ chỉ số chương trình học",
+      "type": "Thẻ chỉ số",
+      "position": "Hàng chỉ số hiệu quả chính (KPI) 2",
+      "properties": "Chương trình học; --; Khóa học đang hoạt động; số bản ghi được tạo không đồng nghĩa với số khóa học đang hoạt động.",
+      "event_ids": [
+        "AD-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #14"
+    },
+    {
+      "id": "AD-01-EL-015",
+      "marker": "#15",
+      "name": "Thẻ chỉ số kiểm định chất lượng",
+      "type": "Thẻ chỉ số",
+      "position": "Hàng chỉ số hiệu quả chính (KPI) 3",
+      "properties": "Kiểm định chất lượng; --; yêu cầu kiểm duyệt đang chờ xử lý; chưa xác nhận cách ánh xạ chỉ số/API.",
+      "event_ids": [
+        "AD-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #15"
+    },
+    {
+      "id": "AD-01-EL-016",
+      "marker": "#16",
+      "name": "Thẻ chỉ số hạ tầng trực tuyến",
+      "type": "Thẻ chỉ số",
+      "position": "Hàng chỉ số hiệu quả chính (KPI) 4",
+      "properties": "Hạ tầng trực tuyến; --; tỷ lệ tải; #101 không định nghĩa cách ánh xạ tình trạng hoặc mức tải.",
+      "event_ids": [
+        "AD-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #16"
+    },
+    {
+      "id": "AD-01-EL-017",
+      "marker": "#17",
+      "name": "Tiêu đề khu vực hoạt động hệ thống gần đây",
+      "type": "Tiêu đề khu vực",
+      "position": "Khu vực hoạt động",
+      "properties": "Hoạt động hệ thống gần đây; #101 không có truy vấn hoặc điểm cuối để lấy danh sách.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #17"
+    },
+    {
+      "id": "AD-01-EL-018",
+      "marker": "#18",
+      "name": "Nhãn ghi vết bảo mật",
+      "type": "Nhãn",
+      "position": "Khu vực hoạt động",
+      "properties": "Ghi vết bảo mật; nhãn tĩnh, không chứng minh có ghi nhật ký hoặc API danh sách kiểm toán.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #18"
+    },
+    {
+      "id": "AD-01-EL-019",
+      "marker": "#19",
+      "name": "Biểu tượng và nội dung trạng thái trống hoạt động",
+      "type": "Trạng thái rỗng",
+      "position": "Khu vực hoạt động",
+      "properties": "Chưa có nhật ký hoạt động được ghi nhận; bản mẫu không phân biệt trạng thái rỗng, chưa kích hoạt hay chưa khả dụng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #19"
+    },
+    {
+      "id": "AD-01-EL-020",
+      "marker": "#20",
+      "name": "Tuyên bố tuân thủ ISO/IEC 27001",
+      "type": "Nhãn tuân thủ",
+      "position": "Khu vực hoạt động",
+      "properties": "Phiên đăng nhập tuân thủ chuẩn ISO/IEC 27001; không có bằng chứng về chính sách hoặc kiểm toán.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #20"
+    },
+    {
+      "id": "AD-01-EL-021",
+      "marker": "#21",
+      "name": "Nội dung trạng thái trong 24 giờ",
+      "type": "Tóm tắt trạng thái",
+      "position": "Khu vực hoạt động",
+      "properties": "Không có thay đổi trạng thái trong 24 giờ qua; không có dấu thời gian, truy vấn hoặc bằng chứng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #21"
+    },
+    {
+      "id": "AD-01-EL-022",
+      "marker": "#22",
+      "name": "Nút xem nhật ký kiểm toán đang khóa",
+      "type": "Nút đang khóa",
+      "position": "Khu vực hoạt động",
+      "properties": "Xem toàn bộ nhật ký kiểm toán; nút bị vô hiệu hóa; chưa có điểm cuối kiểm toán, quyền hoặc đích đến.",
+      "event_ids": [
+        "AD-01-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #22"
+    },
+    {
+      "id": "AD-01-EL-023",
+      "marker": "#23",
+      "name": "Tiêu đề khu vực vận hành máy chủ và chấm trạng thái",
+      "type": "Tiêu đề khu vực",
+      "position": "Khu vực vận hành",
+      "properties": "Thông báo vận hành máy chủ và chấm xanh; không gọi nguồn kiểm tra tình trạng dịch vụ.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #23"
+    },
+    {
+      "id": "AD-01-EL-024",
+      "marker": "#24",
+      "name": "Dòng trạng thái cơ sở dữ liệu",
+      "type": "Dòng trạng thái dịch vụ",
+      "position": "Khu vực vận hành",
+      "properties": "Cơ sở dữ liệu, cụm lưu trữ phân tán, trạng thái Hoạt động; /health/ready không thăm dò cơ sở data.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #24"
+    },
+    {
+      "id": "AD-01-EL-025",
+      "marker": "#25",
+      "name": "Dòng trạng thái dịch vụ xác thực",
+      "type": "Dòng trạng thái dịch vụ",
+      "position": "Khu vực vận hành",
+      "properties": "Dịch vụ xác thực, SSO và Quản lý phân quyền, trạng thái Trực tuyến; chưa có nguồn xác nhận tình trạng dịch vụ xác thực.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #25"
+    },
+    {
+      "id": "AD-01-EL-026",
+      "marker": "#26",
+      "name": "Dòng trạng thái hàng đợi tác vụ nền",
+      "type": "Dòng trạng thái dịch vụ",
+      "position": "Khu vực vận hành",
+      "properties": "Hàng đợi tác vụ, điều phối tiến trình nền, trạng thái Sẵn sàng; chưa có nguồn/API xác nhận tình trạng hàng đợi.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #26"
+    },
+    {
+      "id": "AD-01-EL-027",
+      "marker": "#27",
+      "name": "Thông báo quyền quản trị viên",
+      "type": "Khung thông tin",
+      "position": "Khu vực vận hành",
+      "properties": "Quyền hạn quản trị viên; nội dung cho biết số liệu bị khóa cho đến khi hoàn tất phân quyền; chưa có hợp đồng về chuyển trạng thái hoặc chính sách.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #27"
+    },
+    {
+      "id": "AD-01-EL-028",
+      "marker": "#28",
+      "name": "Tiêu đề lối tắt quản lý trực tiếp",
+      "type": "Tiêu đề mục",
+      "position": "Khu vực lối tắt",
+      "properties": "Lối tắt quản lý trực tiếp; chuyển đến không gian quản trị.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #28"
+    },
+    {
+      "id": "AD-01-EL-029",
+      "marker": "#29",
+      "name": "Thẻ lối tắt quản lý người dùng",
+      "type": "Liên kết/thẻ",
+      "position": "Khu vực lối tắt",
+      "properties": "Quản lý người dùng; RouterLink hiện tại là /admin/users; nội dung đích thuộc AD-02.",
+      "event_ids": [
+        "AD-01-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #29"
+    },
+    {
+      "id": "AD-01-EL-030",
+      "marker": "#30",
+      "name": "Thẻ lối tắt quản lý khóa học",
+      "type": "Liên kết/thẻ",
+      "position": "Khu vực lối tắt",
+      "properties": "Quản lý khóa học; RouterLink hiện tại là /admin/courses; nội dung đích thuộc AD-06.",
+      "event_ids": [
+        "AD-01-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #30"
+    },
+    {
+      "id": "AD-01-EL-031",
+      "marker": "#31",
+      "name": "Thẻ lối tắt hàng đợi kiểm duyệt",
+      "type": "Liên kết/thẻ",
+      "position": "Khu vực lối tắt",
+      "properties": "Hàng đợi kiểm duyệt; RouterLink hiện tại là /admin/content/pending; nội dung đích thuộc AD-10.",
+      "event_ids": [
+        "AD-01-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #31"
+    },
+    {
+      "id": "AD-01-EL-032",
+      "marker": "#32",
+      "name": "Chân trang bản quyền và tên hệ thống",
+      "type": "Văn bản chân trang",
+      "position": "Chân trang",
+      "properties": "© 2025 Study2Work LMS; Hệ thống quản trị trung tâm.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #32"
+    },
+    {
+      "id": "AD-01-EL-033",
+      "marker": "#33",
+      "name": "Liên kết quy chế bảo mật dữ liệu",
+      "type": "Liên kết chân trang",
+      "position": "Chân trang",
+      "properties": "Quy chế bảo mật dữ liệu; bản mẫu dùng href=\"#\", chưa xác định đích đến.",
+      "event_ids": [
+        "AD-01-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #33"
+    },
+    {
+      "id": "AD-01-EL-034",
+      "marker": "#34",
+      "name": "Liên kết tiêu chuẩn phân quyền RBAC",
+      "type": "Liên kết chân trang",
+      "position": "Chân trang",
+      "properties": "Tiêu chuẩn phân quyền RBAC; bản mẫu dùng href=\"#\", chưa xác định đích đến.",
+      "event_ids": [
+        "AD-01-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #34"
+    },
+    {
+      "id": "AD-01-EL-035",
+      "marker": "#35",
+      "name": "Liên kết hỗ trợ kỹ thuật",
+      "type": "Liên kết chân trang",
+      "position": "Chân trang",
+      "properties": "Hỗ trợ kỹ thuật hệ thống; bản mẫu dùng href=\"#\", chưa xác định đích đến.",
+      "event_ids": [
+        "AD-01-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3, marker #35"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-01-EV-001",
+      "name": "Khởi tạo dashboard / tải chỉ số hiệu quả chính (KPI)",
+      "trigger": "Mở tuyến /admin sau khi có phiên ADMIN; DD yêu cầu duyệt quyền xem báo cáo và chính sách ngày.",
+      "element_ids": [
+        "AD-01-EL-010",
+        "AD-01-EL-013",
+        "AD-01-EL-014",
+        "AD-01-EL-015",
+        "AD-01-EL-016"
+      ],
+      "api_ids": [
+        "AD-01-API-001"
+      ],
+      "processing": "Theo DD dự kiến, gọi GET #101, kiểm tra ApiEnvelope<Report> và ánh xạ chỉ số theo khóa/công thức đã duyệt. Mã nguồn giao diện/máy chủ hiện có bên gọi/tuyến API #101 và bốn bộ đếm bản ghi được tạo. Đây là SAI KHÁC (DISCREPANCY) với ghi chú DD cũ, không chứng minh môi trường chạy đã hoạt động hoặc chỉ số hiệu quả chính (KPI) đã được phê duyệt.",
+      "source_ref": "02-events.md §2 EV-01; 04-api-integration.md §A–§D",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-01-EV-002",
+      "name": "Chọn khoảng ngày",
+      "trigger": "Chọn Hôm nay, 7 ngày qua hoặc 30 ngày qua.",
+      "element_ids": [
+        "AD-01-EL-011"
+      ],
+      "api_ids": [
+        "AD-01-API-001"
+      ],
+      "processing": "Bản mẫu DD đánh dấu cả ba nút là bị vô hiệu hóa; giá trị mặc định, múi giờ, quy tắc tính cả hai đầu mút và quy tắc từ/to chưa được duyệt. Mã giao diện hiện hành có bộ chọn kỳ và giới hạn truy vấn; chủ sở hữu cần xác nhận chính sách trước khi đối chiếu.",
+      "source_ref": "02-events.md §2 EV-02; 01-ui-elements.md §3 #11; 04-api-integration.md",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-01-EV-003",
+      "name": "Làm mới số liệu",
+      "trigger": "Nhấp nút làm mới.",
+      "element_ids": [
+        "AD-01-EL-012"
+      ],
+      "api_ids": [
+        "AD-01-API-001"
+      ],
+      "processing": "DD mô tả biểu tượng hẹn giờ 700 ms trong bản mẫu, không gọi API; mã giao diện hiện hành gọi lại #101 theo kỳ đang chọn. Cần chốt hành vi làm mới, đang tải, lỗi và gửi lặp.",
+      "source_ref": "02-events.md §2 EV-03; 01-ui-elements.md §3 #12",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-01-EV-004",
+      "name": "Điều hướng trên đầu trang",
+      "trigger": "Nhấp một trong năm mục điều hướng trên đầu trang.",
+      "element_ids": [
+        "AD-01-EL-002"
+      ],
+      "api_ids": [],
+      "processing": "Mẫu dùng href=\"#\" và data-path; DD chưa chốt đích tuyến cho năm mục. Không suy ra tuyến/API từ data-path.",
+      "source_ref": "02-events.md §2 EV-04; 01-ui-elements.md §3 #2; 06-navigation.md",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-01-EV-005",
+      "name": "Thông báo",
+      "trigger": "Nhấp nút có aria-label=\"Notifications\" (Thông báo).",
+      "element_ids": [
+        "AD-01-EL-004"
+      ],
+      "api_ids": [],
+      "processing": "DD ghi nhận không có bộ xử lý, menu, mô hình số lượng hoặc API; đích/API cần được xác nhận trước khi bật.",
+      "source_ref": "02-events.md §2 EV-05; 01-ui-elements.md §3 #4",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-01-EV-006",
+      "name": "Thẻ lối tắt quản trị",
+      "trigger": "Nhấp một trong ba thẻ lối tắt.",
+      "element_ids": [
+        "AD-01-EL-029",
+        "AD-01-EL-030",
+        "AD-01-EL-031"
+      ],
+      "api_ids": [],
+      "processing": "Các tuyến trong DD lần lượt là /admin/users, /admin/courses, /admin/content/pending; mã nguồn Study Web hiện dùng RouterLink tới ba tuyến này. AD-01 không gọi API của màn hình đích.",
+      "source_ref": "02-events.md §2 EV-06; 01-ui-elements.md §3 #29–#31; 06-navigation.md",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-01-EV-007",
+      "name": "Xem nhật ký kiểm toán",
+      "trigger": "Nhấp nút Xem toàn bộ nhật ký kiểm toán.",
+      "element_ids": [
+        "AD-01-EL-022"
+      ],
+      "api_ids": [],
+      "processing": "Nút bị vô hiệu hóa; không phát sinh yêu cầu hay chuyển trạng thái. Cần xác định điểm cuối danh sách kiểm toán, quyền, bộ lọc, quy tắc trạng thái rỗng/lỗi và tuyến trước khi bật nút.",
+      "source_ref": "02-events.md §2 EV-07; 01-ui-elements.md §3 #22",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD-01-EV-008",
+      "name": "Liên kết chân trang",
+      "trigger": "Nhấp liên kết bảo mật, tiêu chuẩn RBAC hoặc hỗ trợ kỹ thuật.",
+      "element_ids": [
+        "AD-01-EL-033",
+        "AD-01-EL-034",
+        "AD-01-EL-035"
+      ],
+      "api_ids": [],
+      "processing": "Mẫu dùng href=\"#\"; chưa có đích hoặc bộ xử lý được duyệt. Không xem việc chuyển tới fragment là đích nghiệp vụ.",
+      "source_ref": "02-events.md §2 EV-08; 01-ui-elements.md §3 #33–#35; 06-navigation.md",
+      "design_status": "Chờ xác nhận"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD-01-BL-001",
+      "description": "API #101: DD vẫn ở trạng thái Bản nháp (Draft)/Chờ xác nhận (Needs Confirmation); ghi chú cũ nói API chưa được nối (UNWIRED), trong khi mã nguồn hiện có bên gọi giao diện, descriptor ghi đã nối (WIRED) và tuyến/phân hệ Study Server.",
+      "impact": "Không thể xem mã nguồn là hợp đồng đã được duyệt hoặc khẳng định hành vi đã chạy.",
+      "decision": "Người phụ trách xác nhận hợp đồng/phiên bản API và cập nhật DD; quyết định chính sách ngày, hình dạng phản hồi, quyền và cách xử lý lỗi.",
+      "source_ref": "00-overview.md §5; 02-events.md EV-01; 04-api-integration.md; đối chiếu lại mã nguồn hiện hành ngày 2026-11-23",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-002",
+      "description": "Bốn chỉ số hiệu quả chính (KPI) chưa có cách ánh xạ được duyệt; API/mã nguồn hiện đếm số bản ghi được tạo, không tương đương số khóa học đang hoạt động, nội dung chờ kiểm duyệt hay tải hệ thống.",
+      "impact": "Chưa thể xác nhận nhãn, giá trị, đơn vị, tập dữ liệu tính toán, công thức hoặc thứ tự thẻ thống kê.",
+      "decision": "Người phụ trách duyệt khóa chỉ số, công thức, tập dữ liệu, đơn vị, thứ tự và cách ánh xạ cho từng thẻ.",
+      "source_ref": "01-ui-elements.md #13–#16; 04-api-integration.md; 05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-003",
+      "description": "Chính sách ngày và hành vi điều khiển mâu thuẫn: bản mẫu DD vô hiệu hóa điều khiển; mã nguồn hiện hành có lựa chọn kỳ và giới hạn truy vấn.",
+      "impact": "Chưa xác nhận giá trị mặc định, múi giờ, cách tính hai đầu mút, trường hợp chỉ có một đầu mút, khoảng ngày đảo ngược/không hợp lệ và kỳ trong phản hồi.",
+      "decision": "Người phụ trách duyệt cách ánh xạ lựa chọn sang ngày, giá trị mặc định, múi giờ, quy tắc tính đầu mút, kiểm tra dữ liệu và ý nghĩa của thao tác làm mới.",
+      "source_ref": "02-events.md EV-02–EV-03; 04-api-integration.md; 05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-004",
+      "description": "Định danh/quyền truy cập: khung hiện hành kiểm tra vai trò ADMIN và dùng hồ sơ từ phiên API #03; DD/API #101 chưa duyệt quyền dành riêng cho báo cáo và hợp đồng hồ sơ.",
+      "impact": "Chưa thể chốt quyền xem báo cáo, trạng thái bị từ chối, hành vi token/phiên hoặc cách hiển thị hồ sơ.",
+      "decision": "Người phụ trách xác nhận quyền xem báo cáo, cách ánh xạ 401/403 và nguồn định danh được duyệt.",
+      "source_ref": "00-overview.md §4–§5; 02-events.md EV-01; 04-api-integration.md; 05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-005",
+      "description": "Các thông tin về hoạt động, kiểm toán, tình trạng dịch vụ, mức độ sẵn sàng và tuân thủ chưa có nguồn dữ liệu trên bảng điều khiển; giao diện hiện hành giữ chúng ở trạng thái chưa khả dụng/vô hiệu hóa.",
+      "impact": "Không thể khẳng định trạng thái cơ sở dữ liệu/xác thực/hàng đợi, lịch sử, ISO/RBAC hoặc tuyên bố “SYSTEM NORMAL”.",
+      "decision": "Người phụ trách quyết định loại bỏ hay cung cấp API/mã nguồn, quyền, ý nghĩa trạng thái rỗng/lỗi và bằng chứng cho từng thông tin.",
+      "source_ref": "01-ui-elements.md #3, #7, #17–#27; 02-events.md EV-05, EV-07",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-006",
+      "description": "Ghi chú mã nguồn về kết nối giao diện/điều hướng trong DD đã cũ: giao diện hiện hành có bên gọi #101 và RouterLinks; tuyến, triển khai và môi trường chạy trên trình duyệt chưa được xác minh.",
+      "impact": "Không thể dùng hành vi href/hẹn giờ trong bản mẫu làm kỳ vọng cho môi trường chạy hiện hành hoặc kết luận tuyến đã triển khai hoạt động.",
+      "decision": "Người phụ trách đối chiếu kết quả rà soát mã nguồn trong DD với mã giao diện/máy chủ; xác minh bản dựng, trình duyệt và môi trường triển khai trước khi thực thi.",
+      "source_ref": "01-ui-elements.md ghi chú mã nguồn hiện hành; 02-events.md ghi chú mã nguồn hiện hành; 06-navigation.md; đối chiếu lại mã nguồn ngày 2026-11-23",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-007",
+      "description": "Ảnh thiết kế dùng bảng màu, phông chữ và biến thiết kế khác với Study Web.",
+      "impact": "Chưa thể duyệt mức độ tương đồng trực quan hoặc xem bản mẫu là chuẩn giao diện hiện hành.",
+      "decision": "Người phụ trách duyệt ngoại lệ của hệ thống thiết kế hoặc cập nhật ảnh/DD theo biến thiết kế của Study Web.",
+      "source_ref": "00-overview.md; 01-ui-elements.md; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-01-TC-SC-001",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "AC-38 — đối chiếu truy vết tiêu chí và điểm chặn",
+        "precondition": "Có DD AD-01 phiên bản 0.1 và danh sách điểm chặn của màn hình.",
+        "data": "AC-38; DD BỊ CHẶN (BLOCKED); API #101 ở trạng thái Bản nháp (Draft); môi trường chạy chưa xác minh.",
+        "steps": [
+          "Đối chiếu mục AC-38 với yêu cầu, thành phần và sự kiện trong UTC.",
+          "Kiểm tra mỗi kỳ vọng đang chờ xác nhận đều liên kết với điểm chặn tương ứng.",
+          "Xác nhận chưa điền trước kết quả thực tế."
+        ],
+        "expected": "Chờ xác nhận DD: hiện AC-38 chỉ là tài liệu tham chiếu cho kế hoạch; chưa thể phê duyệt thực thi cho đến khi đóng các điểm chặn liên quan.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md AC-38; 07-test-cases.md §1–§3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-002",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến quản trị bằng phiên ADMIN",
+        "precondition": "Có môi trường Study Web và phiên kiểm thử giả lập vai trò ADMIN; môi trường chạy chưa xác minh.",
+        "data": "Tuyến /admin; vai trò ADMIN; không dùng thông tin hoặc tài khoản thật.",
+        "steps": [
+          "Mở tuyến /admin bằng phiên ADMIN hợp lệ.",
+          "Quan sát khung giao diện, đường dẫn phân cấp, nội dung AD-01 và thông báo lỗi nếu có.",
+          "Đối chiếu kết quả với hợp đồng quyền truy cập đã được người phụ trách duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: DD yêu cầu Quản trị viên đã xác thực; quyền xem báo cáo và hành vi trong môi trường chạy cần được duyệt/xác minh trước khi kết luận tuyến có hiển thị.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md §3–§5",
+          "02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-003",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Khởi tạo báo cáo và xử lý trạng thái đang tải",
+        "precondition": "Hợp đồng API #101, chính sách ngày và quyền xem báo cáo đã được duyệt; môi trường có phản hồi giả lập an toàn.",
+        "data": "GET #101; from/to theo bộ dữ liệu giả lập đã duyệt; phản hồi giả lập có phong bì hợp lệ.",
+        "steps": [
+          "Mở AD-01 bằng phiên được cấp quyền.",
+          "Quan sát yêu cầu #101, truy vấn và trạng thái đang tải.",
+          "Sau khi yêu cầu hoàn tất, đối chiếu phản hồi/kỳ dữ liệu với giao diện."
+        ],
+        "expected": "Chờ xác nhận DD: điểm cuối/truy vấn được nêu trong DD nhưng trạng thái giao diện, quyền xem báo cáo và cách ánh xạ chỉ số còn mở; không khẳng định dữ liệu gửi hoặc trạng thái nào trước khi được duyệt.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-01",
+          "03-data-flow.md",
+          "04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-004",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu cách ánh xạ bốn chỉ số hiệu quả chính (KPI)",
+        "precondition": "Người phụ trách đã duyệt khóa chỉ số, công thức, tập dữ liệu, đơn vị và cách ánh xạ cho từng thẻ.",
+        "data": "Bốn thẻ về người dùng/khóa học/kiểm định chất lượng/hạ tầng; phản hồi giả lập theo hợp đồng chỉ số đã duyệt.",
+        "steps": [
+          "Nạp bộ dữ liệu giả lập có các chỉ số đã duyệt.",
+          "So sánh từng thẻ với khóa, công thức, đơn vị và tập dữ liệu trong hợp đồng.",
+          "Kiểm tra giá trị -- không bị hiểu nhầm thành số 0."
+        ],
+        "expected": "Chờ xác nhận DD: bốn thẻ và các chỉ số API chưa có cách ánh xạ tương đương được duyệt; không suy ra số khóa học đang hoạt động, nội dung chờ kiểm duyệt hoặc tải hệ thống từ số bản ghi được tạo.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md #13–#16",
+          "04-api-integration.md",
+          "05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-005",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Áp dụng khoảng ngày và làm mới dữ liệu",
+        "precondition": "Người phụ trách đã duyệt các lựa chọn ngày, giới hạn, múi giờ và quy tắc làm mới.",
+        "data": "Các lựa chọn Hôm nay, 7 ngày qua, 30 ngày qua; ngày giả lập theo múi giờ đã duyệt.",
+        "steps": [
+          "Chọn lần lượt từng khoảng ngày theo thiết kế đã duyệt.",
+          "Ghi nhận từ/to gửi đến #101 và kỳ dữ liệu trả về.",
+          "Nhấn nút làm mới khi yêu cầu chưa bắt đầu và khi yêu cầu đang chạy, theo quy tắc đã duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: bản mẫu vô hiệu hóa các điều khiển/chỉ có hẹn giờ; mã nguồn hiện hành có bộ chọn kỳ và thao tác tải lại. Chưa duyệt giới hạn ngày kỳ vọng, múi giờ hoặc chính sách gửi lặp.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-02–EV-03",
+          "04-api-integration.md",
+          "05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-006",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Xử lý phản hồi rỗng, lỗi và dữ liệu chưa đầy đủ",
+        "precondition": "Người phụ trách đã duyệt các nhánh phản hồi và nội dung/trạng thái hiển thị tương ứng.",
+        "data": "Phản hồi giả lập 200 rỗng/chưa đầy đủ; lỗi 401/403/500; lỗi mạng; chỉ dùng bộ dữ liệu giả lập đã duyệt.",
+        "steps": [
+          "Nạp lần lượt từng bộ dữ liệu giả lập đã duyệt.",
+          "Quan sát trạng thái đang tải, rỗng/lỗi, thông báo và nút thử lại.",
+          "Kiểm tra giao diện không hiển thị số liệu giả hoặc biến -- thành 0."
+        ],
+        "expected": "Chờ xác nhận DD: ý nghĩa phản hồi rỗng/chưa đầy đủ/lỗi mạng và quy tắc thử lại/bộ nhớ đệm còn mở; chỉ chốt kết quả kỳ vọng sau khi hợp đồng DD/API xác định từng nhánh.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "03-data-flow.md",
+          "04-api-integration.md",
+          "05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-007",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra quyền và thông tin Quản trị viên",
+        "precondition": "Có bộ dữ liệu giả lập phiên hợp lệ và các trường hợp chưa xác thực/bị từ chối quyền đã được duyệt.",
+        "data": "ADMIN, không phải ADMIN, phiên hết hạn/không hợp lệ; chỉ giả lập, không dùng thông tin xác thực thật.",
+        "steps": [
+          "Mở AD-01 với từng bộ dữ liệu giả lập quyền.",
+          "Ghi nhận tuyến truy cập và yêu cầu/phản hồi báo cáo.",
+          "Đối chiếu hồ sơ, mã 401/403 và quyền báo cáo với hợp đồng đã duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: mã nguồn hiện có bước kiểm tra ADMIN/hồ sơ từ API #03 và bước kiểm tra API #101; quyền xem báo cáo, cách ánh xạ phản hồi và hợp đồng định danh trong DD chưa được phê duyệt.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §4–§5",
+          "02-events.md EV-01",
+          "04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-008",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Đánh giá thông tin hoạt động, kiểm toán và tuân thủ",
+        "precondition": "Người phụ trách đã cung cấp nguồn dữ liệu/bằng chứng và quy tắc hiển thị được duyệt.",
+        "data": "Thông tin hoạt động, tình trạng cơ sở dữ liệu/xác thực/hàng đợi, kiểm toán, tuyên bố RBAC/ISO; không dùng trạng thái giả làm bằng chứng.",
+        "steps": [
+          "Đối chiếu từng thông tin trên màn hình với nguồn dữ liệu có thể truy vết.",
+          "Kiểm tra trạng thái chưa khả dụng/bị vô hiệu hóa khi không có nguồn.",
+          "Không diễn giải /health/ready thành phép thăm dò cơ sở data."
+        ],
+        "expected": "Chờ xác nhận DD: các tuyên bố tĩnh không có nguồn dữ liệu trong mã nguồn bảng điều khiển; giao diện hiện hành giữ trạng thái chưa khả dụng/bị vô hiệu hóa. Chưa thể xác nhận tình trạng hệ thống, kiểm toán hoặc tuân thủ khi chưa có bằng chứng.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md #3, #7, #17–#27",
+          "02-events.md EV-07",
+          "05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-SC-009",
+        "requirement_ids": [
+          "AD-01-YC-001"
+        ],
+        "target_id": "AD-01",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu điều hướng và giao diện trực quan mục tiêu",
+        "precondition": "Người phụ trách đã duyệt sơ đồ tuyến, ảnh chuẩn và quyết định về hệ thống thiết kế.",
+        "data": "Năm mục đầu trang, ba lối tắt, ba liên kết chân trang; ảnh thiết kế sạch và có đánh số.",
+        "steps": [
+          "Đối chiếu nhãn/trạng thái/điểm đánh dấu với ảnh DD được duyệt.",
+          "Kiểm tra từng liên kết tới tuyến đích đã được người phụ trách xác nhận.",
+          "So sánh bảng màu/phông chữ sau khi quyết định ngoại lệ biến thiết kế."
+        ],
+        "expected": "Chờ xác nhận DD: đầu trang/chân trang bản mẫu có nội dung giữ chỗ, bảng màu/phông chữ trong ảnh khác Study Web; ba lối tắt có tuyến trong mã nguồn nhưng cần xác minh môi trường chạy và đích đến.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3",
+          "02-events.md EV-04–EV-08",
+          "06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-01-TC-EL-001",
+        "requirement_ids": [
+          "AD-01-YC-002"
+        ],
+        "target_id": "AD-01-EL-001",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #1 — Khối nhận diện Study2Work LMS Admin: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 1 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #1; mô tả theo nguồn: Chữ S, Study2Work, LMS và nhãn “ADMIN PORTAL” (Cổng quản trị); hiển thị tĩnh, không có đích đến hoặc bộ xử lý khi nhấp.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 1 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Khối nhận diện Study2Work LMS Admin” với đặc tính “Chữ S, Study2Work, LMS và nhãn “ADMIN PORTAL” (Cổng quản trị); hiển thị tĩnh, không có đích đến hoặc bộ xử lý khi nhấp.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #1"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-002",
+        "requirement_ids": [
+          "AD-01-YC-003"
+        ],
+        "target_id": "AD-01-EL-002",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #2 — Nhóm điều hướng chính gồm năm liên kết: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 2 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #2; mô tả theo nguồn: Tổng quan (đang chọn), Người dùng, Khóa học & Nội dung, Kiểm duyệt, Báo cáo; bản mẫu dùng href=\"#\" và data-path, đây không phải tuyến điều hướng.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 2 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nhóm điều hướng chính gồm năm liên kết” với đặc tính “Tổng quan (đang chọn), Người dùng, Khóa học & Nội dung, Kiểm duyệt, Báo cáo; bản mẫu dùng href=\"#\" và data-path, đây không phải tuyến điều hướng.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-003",
+        "requirement_ids": [
+          "AD-01-YC-004"
+        ],
+        "target_id": "AD-01-EL-003",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #3 — Nhãn trạng thái SYSTEM NORMAL: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 3 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #3; mô tả theo nguồn: Chấm xanh và nhãn “SYSTEM NORMAL” (Hệ thống bình thường); đây là tuyên bố tĩnh, không có nguồn dữ liệu hoặc ngưỡng đo.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 3 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nhãn trạng thái SYSTEM NORMAL” với đặc tính “Chấm xanh và nhãn “SYSTEM NORMAL” (Hệ thống bình thường); đây là tuyên bố tĩnh, không có nguồn dữ liệu hoặc ngưỡng đo.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-004",
+        "requirement_ids": [
+          "AD-01-YC-005"
+        ],
+        "target_id": "AD-01-EL-004",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #4 — Nút thông báo: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 4 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #4; mô tả theo nguồn: Chuông, chấm đỏ, aria-label=\"Notifications\" (Thông báo); DD chưa nêu bộ xử lý, cách hiển thị số lượng hoặc API.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 4 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nút thông báo” với đặc tính “Chuông, chấm đỏ, aria-label=\"Notifications\" (Thông báo); DD chưa nêu bộ xử lý, cách hiển thị số lượng hoặc API.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-005",
+        "requirement_ids": [
+          "AD-01-YC-006"
+        ],
+        "target_id": "AD-01-EL-005",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #5 — Khối danh tính và ảnh đại diện quản trị viên: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 5 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #5; mô tả theo nguồn: Bản mẫu dùng tên/vai trò tĩnh; Study AdminLayout hiện lấy full_name/role từ API #03 qua AdminSessionService.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 5 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Khối danh tính và ảnh đại diện quản trị viên” với đặc tính “Bản mẫu dùng tên/vai trò tĩnh; Study AdminLayout hiện lấy full_name/role từ API #03 qua AdminSessionService.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #5"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-006",
+        "requirement_ids": [
+          "AD-01-YC-007"
+        ],
+        "target_id": "AD-01-EL-006",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #6 — Đường dẫn điều hướng toàn cục: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 6 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #6; mô tả theo nguồn: Hệ thống > Quản trị trung tâm > Không gian làm việc; các nút là phần tử span tĩnh.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 6 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Đường dẫn điều hướng toàn cục” với đặc tính “Hệ thống > Quản trị trung tâm > Không gian làm việc; các nút là phần tử span tĩnh.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #6"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-007",
+        "requirement_ids": [
+          "AD-01-YC-008"
+        ],
+        "target_id": "AD-01-EL-007",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #7 — Nhãn tuyên bố tuân thủ RBAC: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 7 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #7; mô tả theo nguồn: Biểu tượng khiên và dòng “Chuẩn xác thực RBAC”; bảng điều khiển không có bằng chứng về chính sách hoặc kiểm toán.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 7 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nhãn tuyên bố tuân thủ RBAC” với đặc tính “Biểu tượng khiên và dòng “Chuẩn xác thực RBAC”; bảng điều khiển không có bằng chứng về chính sách hoặc kiểm toán.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #7"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-008",
+        "requirement_ids": [
+          "AD-01-YC-009"
+        ],
+        "target_id": "AD-01-EL-008",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #8 — Ngữ cảnh trang Bảng điều khiển: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 8 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #8; mô tả theo nguồn: Bảng điều khiển quản trị > Tổng quan hệ thống; các nút là phần tử span tĩnh.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 8 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Ngữ cảnh trang Bảng điều khiển” với đặc tính “Bảng điều khiển quản trị > Tổng quan hệ thống; các nút là phần tử span tĩnh.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #8"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-009",
+        "requirement_ids": [
+          "AD-01-YC-010"
+        ],
+        "target_id": "AD-01-EL-009",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #9 — Nhãn sẵn sàng vận hành: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 9 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #9; mô tả theo nguồn: Chấm xanh và dòng “CỔNG VẬN HÀNH SẴN SÀNG”; không gọi API kiểm tra mức độ sẵn sàng hoặc thăm dò môi trường chạy.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 9 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nhãn sẵn sàng vận hành” với đặc tính “Chấm xanh và dòng “CỔNG VẬN HÀNH SẴN SÀNG”; không gọi API kiểm tra mức độ sẵn sàng hoặc thăm dò môi trường chạy.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #9"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-010",
+        "requirement_ids": [
+          "AD-01-YC-011"
+        ],
+        "target_id": "AD-01-EL-010",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #10 — Phần giới thiệu bảng điều khiển quản trị: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 10 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #10; mô tả theo nguồn: Dòng “HỆ THỐNG QUẢN TRỊ TỔNG THỂ”, tiêu đề và mô tả; nội dung không định nghĩa KPI hoặc trường API.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 10 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Phần giới thiệu bảng điều khiển quản trị” với đặc tính “Dòng “HỆ THỐNG QUẢN TRỊ TỔNG THỂ”, tiêu đề và mô tả; nội dung không định nghĩa chỉ số hiệu quả chính (KPI) hoặc trường API.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #10"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-011",
+        "requirement_ids": [
+          "AD-01-YC-012"
+        ],
+        "target_id": "AD-01-EL-011",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #11 — Nhóm nút chọn khoảng ngày: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 11 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #11; mô tả theo nguồn: Hôm nay, 7 ngày qua, 30 ngày qua; ảnh/bản mẫu đánh dấu các nút là bị vô hiệu hóa. Giá trị mặc định, múi giờ, cách tính hai đầu mút và giới hạn ngày chưa được duyệt.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 11 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nhóm nút chọn khoảng ngày” với đặc tính “Hôm nay, 7 ngày qua, 30 ngày qua; ảnh/bản mẫu đánh dấu các nút là bị vô hiệu hóa. Giá trị mặc định, múi giờ, cách tính hai đầu mút và giới hạn ngày chưa được duyệt.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #11"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-012",
+        "requirement_ids": [
+          "AD-01-YC-013"
+        ],
+        "target_id": "AD-01-EL-012",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #12 — Nút làm mới số liệu: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 12 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #12; mô tả theo nguồn: Nút làm mới; bản mẫu có refresh-btn và hẹn giờ 700 ms. DD chưa chốt việc tải lại, trạng thái đang tải hoặc cách xử lý thao tác lặp.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 12 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nút làm mới số liệu” với đặc tính “Nút làm mới; bản mẫu có refresh-btn và hẹn giờ 700 ms. DD chưa chốt việc tải lại, trạng thái đang tải hoặc cách xử lý thao tác lặp.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #12"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-013",
+        "requirement_ids": [
+          "AD-01-YC-014"
+        ],
+        "target_id": "AD-01-EL-013",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #13 — Thẻ chỉ số người dùng hệ thống: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 13 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #13; mô tả theo nguồn: Người dùng hệ thống; --; Tổng tài khoản người dùng; trạng thái đồng bộ là tĩnh. -- không có nghĩa là 0; cách ánh xạ chỉ số chưa được duyệt.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 13 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thẻ chỉ số người dùng hệ thống” với đặc tính “Người dùng hệ thống; --; Tổng tài khoản người dùng; trạng thái đồng bộ là tĩnh. -- không có nghĩa là 0; cách ánh xạ chỉ số chưa được duyệt.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #13"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-014",
+        "requirement_ids": [
+          "AD-01-YC-015"
+        ],
+        "target_id": "AD-01-EL-014",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #14 — Thẻ chỉ số chương trình học: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 14 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #14; mô tả theo nguồn: Chương trình học; --; Khóa học đang hoạt động; số bản ghi được tạo không đồng nghĩa với số khóa học đang hoạt động.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 14 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thẻ chỉ số chương trình học” với đặc tính “Chương trình học; --; Khóa học đang hoạt động; số bản ghi được tạo không đồng nghĩa với số khóa học đang hoạt động.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #14"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-015",
+        "requirement_ids": [
+          "AD-01-YC-016"
+        ],
+        "target_id": "AD-01-EL-015",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #15 — Thẻ chỉ số kiểm định chất lượng: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 15 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #15; mô tả theo nguồn: Kiểm định chất lượng; --; yêu cầu kiểm duyệt đang chờ xử lý; chưa xác nhận cách ánh xạ chỉ số/API.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 15 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thẻ chỉ số kiểm định chất lượng” với đặc tính “Kiểm định chất lượng; --; yêu cầu kiểm duyệt đang chờ xử lý; chưa xác nhận cách ánh xạ chỉ số/API.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #15"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-016",
+        "requirement_ids": [
+          "AD-01-YC-017"
+        ],
+        "target_id": "AD-01-EL-016",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #16 — Thẻ chỉ số hạ tầng trực tuyến: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 16 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #16; mô tả theo nguồn: Hạ tầng trực tuyến; --; tỷ lệ tải; #101 không định nghĩa cách ánh xạ tình trạng hoặc mức tải.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 16 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thẻ chỉ số hạ tầng trực tuyến” với đặc tính “Hạ tầng trực tuyến; --; tỷ lệ tải; #101 không định nghĩa cách ánh xạ tình trạng hoặc mức tải.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-017",
+        "requirement_ids": [
+          "AD-01-YC-018"
+        ],
+        "target_id": "AD-01-EL-017",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #17 — Tiêu đề khu vực hoạt động hệ thống gần đây: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 17 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #17; mô tả theo nguồn: Hoạt động hệ thống gần đây; #101 không có truy vấn hoặc điểm cuối để lấy danh sách.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 17 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Tiêu đề khu vực hoạt động hệ thống gần đây” với đặc tính “Hoạt động hệ thống gần đây; #101 không có truy vấn hoặc điểm cuối để lấy danh sách.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #17"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-018",
+        "requirement_ids": [
+          "AD-01-YC-019"
+        ],
+        "target_id": "AD-01-EL-018",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #18 — Nhãn ghi vết bảo mật: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 18 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #18; mô tả theo nguồn: Ghi vết bảo mật; nhãn tĩnh, không chứng minh có ghi nhật ký hoặc API danh sách kiểm toán.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 18 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nhãn ghi vết bảo mật” với đặc tính “Ghi vết bảo mật; nhãn tĩnh, không chứng minh có ghi nhật ký hoặc API danh sách kiểm toán.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #18"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-019",
+        "requirement_ids": [
+          "AD-01-YC-020"
+        ],
+        "target_id": "AD-01-EL-019",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #19 — Biểu tượng và nội dung trạng thái trống hoạt động: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 19 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #19; mô tả theo nguồn: Chưa có nhật ký hoạt động được ghi nhận; bản mẫu không phân biệt trạng thái rỗng, chưa kích hoạt hay chưa khả dụng.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 19 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Biểu tượng và nội dung trạng thái trống hoạt động” với đặc tính “Chưa có nhật ký hoạt động được ghi nhận; bản mẫu không phân biệt trạng thái rỗng, chưa kích hoạt hay chưa khả dụng.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #19"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-020",
+        "requirement_ids": [
+          "AD-01-YC-021"
+        ],
+        "target_id": "AD-01-EL-020",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #20 — Tuyên bố tuân thủ ISO/IEC 27001: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 20 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #20; mô tả theo nguồn: Phiên đăng nhập tuân thủ chuẩn ISO/IEC 27001; không có bằng chứng về chính sách hoặc kiểm toán.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 20 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Tuyên bố tuân thủ ISO/IEC 27001” với đặc tính “Phiên đăng nhập tuân thủ chuẩn ISO/IEC 27001; không có bằng chứng về chính sách hoặc kiểm toán.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #20"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-021",
+        "requirement_ids": [
+          "AD-01-YC-022"
+        ],
+        "target_id": "AD-01-EL-021",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #21 — Nội dung trạng thái trong 24 giờ: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 21 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #21; mô tả theo nguồn: Không có thay đổi trạng thái trong 24 giờ qua; không có dấu thời gian, truy vấn hoặc bằng chứng.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 21 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nội dung trạng thái trong 24 giờ” với đặc tính “Không có thay đổi trạng thái trong 24 giờ qua; không có dấu thời gian, truy vấn hoặc bằng chứng.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #21"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-022",
+        "requirement_ids": [
+          "AD-01-YC-023"
+        ],
+        "target_id": "AD-01-EL-022",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #22 — Nút xem nhật ký kiểm toán đang khóa: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 22 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #22; mô tả theo nguồn: Xem toàn bộ nhật ký kiểm toán; nút bị vô hiệu hóa; chưa có điểm cuối kiểm toán, quyền hoặc đích đến.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 22 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Nút xem nhật ký kiểm toán đang khóa” với đặc tính “Xem toàn bộ nhật ký kiểm toán; nút bị vô hiệu hóa; chưa có điểm cuối kiểm toán, quyền hoặc đích đến.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #22"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-023",
+        "requirement_ids": [
+          "AD-01-YC-024"
+        ],
+        "target_id": "AD-01-EL-023",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #23 — Tiêu đề khu vực vận hành máy chủ và chấm trạng thái: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 23 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #23; mô tả theo nguồn: Thông báo vận hành máy chủ và chấm xanh; không gọi nguồn kiểm tra tình trạng dịch vụ.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 23 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Tiêu đề khu vực vận hành máy chủ và chấm trạng thái” với đặc tính “Thông báo vận hành máy chủ và chấm xanh; không gọi nguồn kiểm tra tình trạng dịch vụ.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #23"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-024",
+        "requirement_ids": [
+          "AD-01-YC-025"
+        ],
+        "target_id": "AD-01-EL-024",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #24 — Dòng trạng thái cơ sở dữ liệu: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 24 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #24; mô tả theo nguồn: Cơ sở dữ liệu, cụm lưu trữ phân tán, trạng thái Hoạt động; /health/ready không thăm dò cơ sở data.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 24 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Dòng trạng thái cơ sở dữ liệu” với đặc tính “Cơ sở dữ liệu, cụm lưu trữ phân tán, trạng thái Hoạt động; /health/ready không thăm dò cơ sở data.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #24"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-025",
+        "requirement_ids": [
+          "AD-01-YC-026"
+        ],
+        "target_id": "AD-01-EL-025",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #25 — Dòng trạng thái dịch vụ xác thực: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 25 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #25; mô tả theo nguồn: Dịch vụ xác thực, SSO và Quản lý phân quyền, trạng thái Trực tuyến; chưa có nguồn xác nhận tình trạng dịch vụ xác thực.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 25 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Dòng trạng thái dịch vụ xác thực” với đặc tính “Dịch vụ xác thực, SSO và Quản lý phân quyền, trạng thái Trực tuyến; chưa có nguồn xác nhận tình trạng dịch vụ xác thực.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #25"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-026",
+        "requirement_ids": [
+          "AD-01-YC-027"
+        ],
+        "target_id": "AD-01-EL-026",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #26 — Dòng trạng thái hàng đợi tác vụ nền: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 26 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #26; mô tả theo nguồn: Hàng đợi tác vụ, điều phối tiến trình nền, trạng thái Sẵn sàng; chưa có nguồn/API xác nhận tình trạng hàng đợi.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 26 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Dòng trạng thái hàng đợi tác vụ nền” với đặc tính “Hàng đợi tác vụ, điều phối tiến trình nền, trạng thái Sẵn sàng; chưa có nguồn/API xác nhận tình trạng hàng đợi.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #26"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-027",
+        "requirement_ids": [
+          "AD-01-YC-028"
+        ],
+        "target_id": "AD-01-EL-027",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #27 — Thông báo quyền quản trị viên: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 27 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #27; mô tả theo nguồn: Quyền hạn quản trị viên; nội dung cho biết số liệu bị khóa cho đến khi hoàn tất phân quyền; chưa có hợp đồng về chuyển trạng thái hoặc chính sách.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 27 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thông báo quyền quản trị viên” với đặc tính “Quyền hạn quản trị viên; nội dung cho biết số liệu bị khóa cho đến khi hoàn tất phân quyền; chưa có hợp đồng về chuyển trạng thái hoặc chính sách.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #27"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-028",
+        "requirement_ids": [
+          "AD-01-YC-029"
+        ],
+        "target_id": "AD-01-EL-028",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #28 — Tiêu đề lối tắt quản lý trực tiếp: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 28 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #28; mô tả theo nguồn: Lối tắt quản lý trực tiếp; chuyển đến không gian quản trị.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 28 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Tiêu đề lối tắt quản lý trực tiếp” với đặc tính “Lối tắt quản lý trực tiếp; chuyển đến không gian quản trị.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #28"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-029",
+        "requirement_ids": [
+          "AD-01-YC-030"
+        ],
+        "target_id": "AD-01-EL-029",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #29 — Thẻ lối tắt quản lý người dùng: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 29 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #29; mô tả theo nguồn: Quản lý người dùng; RouterLink hiện tại là /admin/users; nội dung đích thuộc AD-02.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 29 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thẻ lối tắt quản lý người dùng” với đặc tính “Quản lý người dùng; RouterLink hiện tại là /admin/users; nội dung đích thuộc AD-02.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #29"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-030",
+        "requirement_ids": [
+          "AD-01-YC-031"
+        ],
+        "target_id": "AD-01-EL-030",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #30 — Thẻ lối tắt quản lý khóa học: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 30 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #30; mô tả theo nguồn: Quản lý khóa học; RouterLink hiện tại là /admin/courses; nội dung đích thuộc AD-06.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 30 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thẻ lối tắt quản lý khóa học” với đặc tính “Quản lý khóa học; RouterLink hiện tại là /admin/courses; nội dung đích thuộc AD-06.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #30"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-031",
+        "requirement_ids": [
+          "AD-01-YC-032"
+        ],
+        "target_id": "AD-01-EL-031",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #31 — Thẻ lối tắt hàng đợi kiểm duyệt: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 31 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #31; mô tả theo nguồn: Hàng đợi kiểm duyệt; RouterLink hiện tại là /admin/content/pending; nội dung đích thuộc AD-10.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 31 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Thẻ lối tắt hàng đợi kiểm duyệt” với đặc tính “Hàng đợi kiểm duyệt; RouterLink hiện tại là /admin/content/pending; nội dung đích thuộc AD-10.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #31"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-032",
+        "requirement_ids": [
+          "AD-01-YC-033"
+        ],
+        "target_id": "AD-01-EL-032",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #32 — Chân trang bản quyền và tên hệ thống: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 32 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #32; mô tả theo nguồn: © 2025 Study2Work LMS; Hệ thống quản trị trung tâm.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 32 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Chân trang bản quyền và tên hệ thống” với đặc tính “© 2025 Study2Work LMS; Hệ thống quản trị trung tâm.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #32"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-033",
+        "requirement_ids": [
+          "AD-01-YC-034"
+        ],
+        "target_id": "AD-01-EL-033",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #33 — Liên kết quy chế bảo mật dữ liệu: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 33 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #33; mô tả theo nguồn: Quy chế bảo mật dữ liệu; bản mẫu dùng href=\"#\", chưa xác định đích đến.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 33 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Liên kết quy chế bảo mật dữ liệu” với đặc tính “Quy chế bảo mật dữ liệu; bản mẫu dùng href=\"#\", chưa xác định đích đến.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #33"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-034",
+        "requirement_ids": [
+          "AD-01-YC-035"
+        ],
+        "target_id": "AD-01-EL-034",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #34 — Liên kết tiêu chuẩn phân quyền RBAC: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 34 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #34; mô tả theo nguồn: Tiêu chuẩn phân quyền RBAC; bản mẫu dùng href=\"#\", chưa xác định đích đến.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 34 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Liên kết tiêu chuẩn phân quyền RBAC” với đặc tính “Tiêu chuẩn phân quyền RBAC; bản mẫu dùng href=\"#\", chưa xác định đích đến.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #34"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EL-035",
+        "requirement_ids": [
+          "AD-01-YC-036"
+        ],
+        "target_id": "AD-01-EL-035",
+        "group": "Thành phần",
+        "title": "Điểm đánh dấu #35 — Liên kết hỗ trợ kỹ thuật: đối chiếu nội dung và trạng thái",
+        "precondition": "DD/thiết kế cho điểm đánh dấu 35 đã được người phụ trách duyệt; môi trường và ảnh chuẩn đã sẵn sàng.",
+        "data": "Điểm đánh dấu #35; mô tả theo nguồn: Hỗ trợ kỹ thuật hệ thống; bản mẫu dùng href=\"#\", chưa xác định đích đến.",
+        "steps": [
+          "Mở trạng thái AD-01 tương ứng với điểm đánh dấu 35 sau khi DD được duyệt.",
+          "Đối chiếu tên, nhãn, trạng thái và đặc tính với nguồn đã dẫn; không xem nội dung mẫu là dữ liệu thật.",
+          "Ghi lại sai lệch kèm ảnh/bằng chứng sau khi ca kiểm thử được phê duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu “Liên kết hỗ trợ kỹ thuật” với đặc tính “Hỗ trợ kỹ thuật hệ thống; bản mẫu dùng href=\"#\", chưa xác định đích đến.”; khi điểm chặn còn mở, chưa xem thiết kế là đã được duyệt hoặc hành vi trong môi trường chạy là đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3, marker #35"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-01-TC-EV-001",
+        "requirement_ids": [
+          "AD-01-YC-037"
+        ],
+        "target_id": "AD-01-EV-001",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-001 — khởi tạo và tải báo cáo #101",
+        "precondition": "Đặc tả sự kiện AD-01-EV-001 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Tuyến /admin; giới hạn ngày theo chính sách đã duyệt; phản hồi ApiEnvelope<Report> giả lập.",
+        "steps": [
+          "Thực hiện thao tác “khởi tạo và tải báo cáo #101” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: API #101 được nêu trong DD và đã được nối trong mã nguồn hiện hành; cần xác nhận hợp đồng, quyền và cách ánh xạ trước khi khẳng định yêu cầu/giao diện.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §2 EV-01; 04-api-integration.md §A–§D"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-002",
+        "requirement_ids": [
+          "AD-01-YC-038"
+        ],
+        "target_id": "AD-01-EV-002",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-002 — chọn Hôm nay",
+        "precondition": "Đặc tả sự kiện AD-01-EV-002 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Lựa chọn Hôm nay; ngày tham chiếu chỉ theo bộ dữ liệu giả lập và múi giờ đã được duyệt.",
+        "steps": [
+          "Thực hiện thao tác “chọn Hôm nay” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: sau khi người phụ trách duyệt chính sách ngày, lựa chọn Hôm nay phải ánh xạ chính xác theo giới hạn/múi giờ và phản hồi đã duyệt; hiện chưa có giá trị từ/to chuẩn.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §2 EV-02; 01-ui-elements.md §3 #11; 04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-003",
+        "requirement_ids": [
+          "AD-01-YC-038"
+        ],
+        "target_id": "AD-01-EV-002",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-002 — chọn 7 ngày qua",
+        "precondition": "Đặc tả sự kiện AD-01-EV-002 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Lựa chọn 7 ngày qua; ngày tham chiếu chỉ theo bộ dữ liệu giả lập và múi giờ đã được duyệt.",
+        "steps": [
+          "Thực hiện thao tác “chọn 7 ngày qua” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: sau khi người phụ trách duyệt chính sách ngày, lựa chọn 7 ngày qua phải ánh xạ chính xác theo giới hạn/múi giờ và phản hồi đã duyệt; hiện chưa có giá trị từ/to chuẩn.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §2 EV-02; 01-ui-elements.md §3 #11; 04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-004",
+        "requirement_ids": [
+          "AD-01-YC-038"
+        ],
+        "target_id": "AD-01-EV-002",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-002 — chọn 30 ngày qua",
+        "precondition": "Đặc tả sự kiện AD-01-EV-002 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Lựa chọn 30 ngày qua; ngày tham chiếu chỉ theo bộ dữ liệu giả lập và múi giờ đã được duyệt.",
+        "steps": [
+          "Thực hiện thao tác “chọn 30 ngày qua” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: sau khi người phụ trách duyệt chính sách ngày, lựa chọn 30 ngày qua phải ánh xạ chính xác theo giới hạn/múi giờ và phản hồi đã duyệt; hiện chưa có giá trị từ/to chuẩn.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §2 EV-02; 01-ui-elements.md §3 #11; 04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-005",
+        "requirement_ids": [
+          "AD-01-YC-039"
+        ],
+        "target_id": "AD-01-EV-003",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-003 — làm mới báo cáo",
+        "precondition": "Đặc tả sự kiện AD-01-EV-003 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Nút làm mới; yêu cầu #101 có thể chưa bắt đầu hoặc đang chạy.",
+        "steps": [
+          "Thực hiện thao tác “làm mới báo cáo” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: bản mẫu chỉ mô tả hẹn giờ 700 ms nhưng mã nguồn hiện hành tải lại #101; cần chốt việc tải lại, trạng thái đang tải, xử lý lỗi và thao tác lặp.",
+        "api_ids": [
+          "AD-01-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §2 EV-03; 01-ui-elements.md §3 #12"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-006",
+        "requirement_ids": [
+          "AD-01-YC-040"
+        ],
+        "target_id": "AD-01-EV-004",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-004 — mục điều hướng đầu trang “Tổng quan”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-004 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Mục “Tổng quan”; bản mẫu dùng href=\"#\"; DD chưa chốt tuyến đích.",
+        "steps": [
+          "Thực hiện thao tác “mục điều hướng đầu trang “Tổng quan”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: người phụ trách cần xác nhận tuyến đích của “Tổng quan”; data-path/fragment chưa đủ căn cứ để xác định tuyến kỳ vọng.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-04; 01-ui-elements.md §3 #2; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-007",
+        "requirement_ids": [
+          "AD-01-YC-040"
+        ],
+        "target_id": "AD-01-EV-004",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-004 — mục điều hướng đầu trang “Người dùng”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-004 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Mục “Người dùng”; bản mẫu dùng href=\"#\"; DD chưa chốt tuyến đích.",
+        "steps": [
+          "Thực hiện thao tác “mục điều hướng đầu trang “Người dùng”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: người phụ trách cần xác nhận tuyến đích của “Người dùng”; data-path/fragment chưa đủ căn cứ để xác định tuyến kỳ vọng.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-04; 01-ui-elements.md §3 #2; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-008",
+        "requirement_ids": [
+          "AD-01-YC-040"
+        ],
+        "target_id": "AD-01-EV-004",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-004 — mục điều hướng đầu trang “Khóa học & Nội dung”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-004 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Mục “Khóa học & Nội dung”; bản mẫu dùng href=\"#\"; DD chưa chốt tuyến đích.",
+        "steps": [
+          "Thực hiện thao tác “mục điều hướng đầu trang “Khóa học & Nội dung”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: người phụ trách cần xác nhận tuyến đích của “Khóa học & Nội dung”; data-path/fragment chưa đủ căn cứ để xác định tuyến kỳ vọng.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-04; 01-ui-elements.md §3 #2; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-009",
+        "requirement_ids": [
+          "AD-01-YC-040"
+        ],
+        "target_id": "AD-01-EV-004",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-004 — mục điều hướng đầu trang “Kiểm duyệt”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-004 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Mục “Kiểm duyệt”; bản mẫu dùng href=\"#\"; DD chưa chốt tuyến đích.",
+        "steps": [
+          "Thực hiện thao tác “mục điều hướng đầu trang “Kiểm duyệt”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: người phụ trách cần xác nhận tuyến đích của “Kiểm duyệt”; data-path/fragment chưa đủ căn cứ để xác định tuyến kỳ vọng.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-04; 01-ui-elements.md §3 #2; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-010",
+        "requirement_ids": [
+          "AD-01-YC-040"
+        ],
+        "target_id": "AD-01-EV-004",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-004 — mục điều hướng đầu trang “Báo cáo”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-004 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Mục “Báo cáo”; bản mẫu dùng href=\"#\"; DD chưa chốt tuyến đích.",
+        "steps": [
+          "Thực hiện thao tác “mục điều hướng đầu trang “Báo cáo”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: người phụ trách cần xác nhận tuyến đích của “Báo cáo”; data-path/fragment chưa đủ căn cứ để xác định tuyến kỳ vọng.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-04; 01-ui-elements.md §3 #2; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-011",
+        "requirement_ids": [
+          "AD-01-YC-041"
+        ],
+        "target_id": "AD-01-EV-005",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-005 — nút thông báo",
+        "precondition": "Đặc tả sự kiện AD-01-EV-005 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Nút aria-label=\"Notifications\"; chấm đỏ trên biểu tượng là tĩnh.",
+        "steps": [
+          "Thực hiện thao tác “nút thông báo” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: bản mẫu chưa có bộ lắng nghe, yêu cầu API hoặc menu; cần duyệt đích đến/API trước khi xác nhận kết quả khi nhấp.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-05; 01-ui-elements.md §3 #4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-012",
+        "requirement_ids": [
+          "AD-01-YC-042"
+        ],
+        "target_id": "AD-01-EV-006",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-006 — lối tắt “Quản lý người dùng”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-006 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Quản lý người dùng; tuyến được ghi trong mã nguồn/DD: /admin/users.",
+        "steps": [
+          "Thực hiện thao tác “lối tắt “Quản lý người dùng”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: cần xác nhận điều hướng tới /admin/users sau khi tuyến/môi trường chạy được kiểm chứng; nội dung và API của màn hình đích nằm ngoài AD-01.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-06; 01-ui-elements.md §3 #29–#31; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-013",
+        "requirement_ids": [
+          "AD-01-YC-042"
+        ],
+        "target_id": "AD-01-EV-006",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-006 — lối tắt “Quản lý khóa học”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-006 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Quản lý khóa học; tuyến được ghi trong mã nguồn/DD: /admin/courses.",
+        "steps": [
+          "Thực hiện thao tác “lối tắt “Quản lý khóa học”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: cần xác nhận điều hướng tới /admin/courses sau khi tuyến/môi trường chạy được kiểm chứng; nội dung và API của màn hình đích nằm ngoài AD-01.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-06; 01-ui-elements.md §3 #29–#31; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-014",
+        "requirement_ids": [
+          "AD-01-YC-042"
+        ],
+        "target_id": "AD-01-EV-006",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-006 — lối tắt “Hàng đợi kiểm duyệt”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-006 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Hàng đợi kiểm duyệt; tuyến được ghi trong mã nguồn/DD: /admin/content/pending.",
+        "steps": [
+          "Thực hiện thao tác “lối tắt “Hàng đợi kiểm duyệt”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: cần xác nhận việc điều hướng tới /admin/content/pending sau khi tuyến/môi trường chạy được kiểm chứng; nội dung và API của màn hình đích nằm ngoài AD-01.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-06; 01-ui-elements.md §3 #29–#31; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-015",
+        "requirement_ids": [
+          "AD-01-YC-043"
+        ],
+        "target_id": "AD-01-EV-007",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-007 — nút nhật ký kiểm toán",
+        "precondition": "Đặc tả sự kiện AD-01-EV-007 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Nút bị vô hiệu hóa; chưa có API/đích đến danh sách kiểm toán được duyệt.",
+        "steps": [
+          "Thực hiện thao tác “nút nhật ký kiểm toán” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: khi chưa có API kiểm toán, quyền và tuyến, nút vẫn bị vô hiệu hóa và không phát sinh yêu cầu; cần quyết định riêng trước khi bật nút.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-07; 01-ui-elements.md §3 #22"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-016",
+        "requirement_ids": [
+          "AD-01-YC-044"
+        ],
+        "target_id": "AD-01-EV-008",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-008 — liên kết chân trang “Quy chế bảo mật dữ liệu”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-008 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Quy chế bảo mật dữ liệu; bản mẫu dùng href=\"#\".",
+        "steps": [
+          "Thực hiện thao tác “liên kết chân trang “Quy chế bảo mật dữ liệu”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: cần duyệt đích đến cho “Quy chế bảo mật dữ liệu”; việc chuyển tới fragment không chứng minh nội dung hoặc tuyến nghiệp vụ.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-08; 01-ui-elements.md §3 #33–#35; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-017",
+        "requirement_ids": [
+          "AD-01-YC-044"
+        ],
+        "target_id": "AD-01-EV-008",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-008 — liên kết chân trang “Tiêu chuẩn phân quyền RBAC”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-008 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Tiêu chuẩn phân quyền RBAC; bản mẫu dùng href=\"#\".",
+        "steps": [
+          "Thực hiện thao tác “liên kết chân trang “Tiêu chuẩn phân quyền RBAC”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: cần duyệt đích đến cho “Tiêu chuẩn phân quyền RBAC”; việc chuyển tới fragment không chứng minh nội dung hoặc tuyến nghiệp vụ.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-08; 01-ui-elements.md §3 #33–#35; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-01-TC-EV-018",
+        "requirement_ids": [
+          "AD-01-YC-044"
+        ],
+        "target_id": "AD-01-EV-008",
+        "group": "Sự kiện",
+        "title": "AD-01-EV-008 — liên kết chân trang “Hỗ trợ kỹ thuật hệ thống”",
+        "precondition": "Đặc tả sự kiện AD-01-EV-008 đã được duyệt; môi trường và bộ dữ liệu giả lập an toàn đã sẵn sàng.",
+        "data": "Hỗ trợ kỹ thuật hệ thống; bản mẫu dùng href=\"#\".",
+        "steps": [
+          "Thực hiện thao tác “liên kết chân trang “Hỗ trợ kỹ thuật hệ thống”” trên AD-01 sau khi được phép chạy.",
+          "Quan sát giao diện, yêu cầu/phản hồi API hoặc điều hướng thực tế.",
+          "So sánh với hợp đồng đã duyệt và lưu bằng chứng; không đánh dấu ca đạt trước khi chạy."
+        ],
+        "expected": "Chờ xác nhận DD: cần duyệt đích đến cho “Hỗ trợ kỹ thuật hệ thống”; việc chuyển tới fragment không chứng minh nội dung hoặc tuyến nghiệp vụ.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §2 EV-08; 01-ui-elements.md §3 #33–#35; 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

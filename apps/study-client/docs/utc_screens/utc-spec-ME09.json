@@ -1,0 +1,2994 @@
+{
+  "metadata": {
+    "screen_id": "ME-09",
+    "screen_name": "Danh sách bài cần chấm",
+    "module": "Mentor / Study Web",
+    "route": "/mentor/submissions",
+    "actor": "Mentor đã xác thực; API #54 yêu cầu Bearer JWT, vai trò MENTOR và phạm vi khóa học theo chủ sở hữu trực tiếp. Mentor được phân công chưa được hỗ trợ trong mã nguồn phương án dự phòng.",
+    "dd_status": "Bản DD 0.1 được người dùng xác nhận làm chuẩn; trong kho ghi BLOCKED. Trang/API nguồn có nhưng dạng kết quả và quyết định UI/API còn mở.",
+    "runtime_status": "Chưa xác minh trình duyệt, triển khai, cơ sở dữ liệu thật hoặc môi trường kiểm thử.",
+    "version": "1.0",
+    "dd_version": "0.1 (2026-11-08; cập nhật 2026-11-20)",
+    "author": "Chưa được cung cấp",
+    "reviewer": "Chưa được cung cấp",
+    "approver": "Người dùng xác nhận dùng DD hiện tại làm cơ sở đối chiếu; tên người duyệt không được cung cấp.",
+    "date": "2026-11-24",
+    "source_name": "Bộ DD ME-09 00–07, 27 marker và Stitch; trang/dịch vụ `Study Web` hiện hành; API #54 và DD liên quan.",
+    "baseline_authorization": "Người dùng xác nhận dùng DD hiện có, dù trạng thái trong kho BLOCKED, làm cơ sở đối chiếu. Không tự giải quyết dạng kết quả, bộ lọc, tìm kiếm, fields hoặc câu hỏi API còn mở.",
+    "environment": "Chưa có môi trường lúc chạy được xác nhận; chỉ đối chiếu tĩnh tài liệu, ảnh và mã nguồn checkout.",
+    "release_readiness": "`UTC` chính thức theo cơ sở đối chiếu người dùng xác nhận; còn 7 blocker. Ca kiểm thử chưa chạy và lúc chạy chưa xác minh.",
+    "discrepancy_note": "Danh mục/API DD bất đồng về `Page<Submission>`; #54 và `ME09Page` hiện dùng trang. Ảnh chỉ có trạng thái rỗng/thành phần mẫu; trang hiện có form, bảng và phân trang. Tuyến/trang nguồn đã nối; trình duyệt chưa xác minh."
+  },
+  "overall": {
+    "objective": "Kiểm tra tuyến ME-09, truy vấn #54, phản hồi validation, trạng thái, hàng dữ liệu và handoff sang ME-10; giữ riêng ảnh mẫu, contract và mã nguồn hiện hành.",
+    "inputs": "Truy vấn page/course_id/status; phong bì giả DESIGN_RESOURCE_RETRIEVED với Submission[] và phân trang; phản hồi lỗi giả.",
+    "outputs": "Đang tải/rỗng/sẵn sàng/lỗi, hàng theo field #54, phân trang và điều hướng bằng item.id; không thay đổi data.",
+    "main_flow": "Mở /mentor/submissions → GET #54 với page=1 → kiểm tra phong bì, phân trang và items → hiện trạng thái rỗng hoặc bảng → phân trang hoặc mở item.id sang ME-10. Khi đổi bộ lọc, đặt page=1.",
+    "states": [
+      "Đang tải",
+      "Rỗng sau phản hồi thành công",
+      "Có danh sách",
+      "Lỗi có thể thử lại",
+      "Sai mã khóa học/số trang",
+      "Đang chuyển trang",
+      "Không có quyền"
+    ],
+    "preconditions": "Tuyến/trang/dịch vụ có trong nguồn; dùng phản hồi/ID giả. #54 chỉ đọc, kích thước trang cố định 20; không có đang chạy/lúc chạy verification.",
+    "security": "Không đưa token vào `URL`; máy chủ kiểm tra MENTOR và chủ sở hữu trực tiếp; không dùng avatar/vai trò trong ảnh làm phân quyền. Không mở `URL` tệp thô hoặc bịa tên học viên/dữ liệu ngoài phản hồi.",
+    "out_of_scope": "Không quyết định trang dạng kết quả, tìm kiếm, nguồn khóa học lựa chọn, enum trạng thái, deadline/tiêu đề/rubric, tự đồng bộ, hỗ trợ destination hoặc trình duyệt/WCAG pass.",
+    "summary": {
+      "requirements": 10,
+      "elements": 27,
+      "events": 10,
+      "apis": 1,
+      "blockers": 7,
+      "test_cases": {
+        "screen": 28,
+        "elements": 27,
+        "events": 10,
+        "total": 65
+      }
+    }
+  },
+  "apis": [
+    {
+      "id": "API-54",
+      "number": "54",
+      "method": "GET",
+      "path": "/api/v1/mentor/submissions",
+      "event_ids": [
+        "ME-09-EV-001",
+        "ME-09-EV-002",
+        "ME-09-EV-003",
+        "ME-09-EV-006",
+        "ME-09-EV-007",
+        "ME-09-EV-010"
+      ],
+      "request": "Bearer JWT; course_id nếu có phải là số nguyên dương 64-bit; status là chuỗi chính xác; page là số nguyên dương 32-bit, mặc định 1. Không có thân yêu cầu và không nhận q, size hoặc sort. Ứng dụng khách luôn gửi page và thêm course_id/status khi không rỗng.",
+      "response": "HTTP 200, DESIGN_RESOURCE_RETRIEVED; data.items là Submission[]; data.pagination={page,size,total,total_pages}. Kích thước trang cố định 20; total_pages=0 khi total=0. Mỗi mục có id, assignment_id, user_id, content?, files[], status, submitted_at, score? Và feedback?.",
+      "errors": "401 Bearer/claims; 403 vai trò hoặc khóa học thuộc Mentor khác; 422 truy vấn; 500 truy vấn/ánh xạ. 409 khai báo trong catalog nhưng không có nhánh nguồn. Khóa học thiếu hoặc không có hàng dữ liệu khớp trả 200 trang rỗng.",
+      "auth": "Bộ kiểm tra dùng chung yêu cầu MENTOR; danh sách bị giới hạn theo courses.mentor_id và JWT subject. Mentor được phân công chưa được hỗ trợ.",
+      "design_status": "DD API còn Draft — Needs Confirmation; dạng kết quả trang là suy ra từ mã nguồn; nơi tạo dữ liệu tệp `URL`, trạng thái, múi giờ/schema và quyền còn câu hỏi mở. lúc chạy chưa xác minh.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py; apps/study-server/app/api/v1.py; apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md; apps/study-server/docs/dd/54_mentor_submissions_list/OPEN_QUESTIONS.md; apps/study-server/tests/modules/mentor/api_54_mentor_submissions_list/test_mentor_submissions_list.py"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ME-09-YC-001",
+      "group": "Điều hướng",
+      "title": "Tuyến danh sách",
+      "description": "Mở `/mentor/submissions` trong `MentorLayout`; tuyến/trang có trong nguồn. Không suy ra trình duyệt/lúc chạy đã chạy.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md; apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-002",
+      "group": "Yêu cầu API",
+      "title": "Truy vấn #54 được hỗ trợ",
+      "description": "GET #54 chỉ nhận course_id tùy chọn số nguyên dương 64-bit, trạng thái tùy chọn chính xác string, trang số nguyên dương 32-bit mặc định 1. Không thân yêu cầu, q, size hoặc sắp xếp; size cố định 20.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/api/v1.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-003",
+      "group": "Xác thực đầu vào",
+      "title": "Kiểm tra ID và trang",
+      "description": "Ứng dụng khách loại khoảng trắng ở đầu/cuối khóa học/trạng thái; khóa học là số nguyên dương 64-bit, trang là số nguyên dương 32-bit; đổi bộ lọc về trang 1. Trạng thái sau loại khoảng trắng ở đầu/cuối được API so chính xác.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py; apps/study-server/app/api/v1.py",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-004",
+      "group": "Phân trang",
+      "title": "Đối chiếu siêu dữ liệu trang",
+      "description": "Trang phải đúng yêu cầu, size=20, total không âm, total_pages bằng phép làm tròn lên; total=0 thì total_pages=0. Máy chủ sắp xếp `submitted_at` rồi id giảm dần.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-005",
+      "group": "Kiểm tra phản hồi",
+      "title": "Chỉ render phong bì dữ liệu hợp lệ",
+      "description": "Xác minh success, businessCode, items, phân trang, ID duy nhất và kiểu trường/tệp trước render; phản hồi sai thành lỗi.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-006",
+      "group": "Dữ liệu hiển thị",
+      "title": "Không bịa tên và hạn nộp",
+      "description": "#54 trả id, assignment_id, user_id, nội dung?, files[], trạng thái, `submitted_at`, score?, feedback? Và phân trang; không có tên hiển thị, tiêu đề, hạn nộp, rubric hoặc course_id trong item.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py; apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md; apps/study-server/docs/dd/54_mentor_submissions_list/05_Data_Mapping.md",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-007",
+      "group": "Trạng thái và lỗi",
+      "title": "Phân biệt tải, rỗng, có dữ liệu và lỗi",
+      "description": "Đang tải/lỗi/rỗng/sẵn sàng tách biệt; 401/403 có thông báo dùng chung; 422/500/network không thành rỗng. 409 có catalog nhưng không có nhánh nguồn.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/shared/models/mentor-api-errors.ts; apps/study-server/docs/dd/54_mentor_submissions_list/06_Error.md; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-008",
+      "group": "Handoff ME-10",
+      "title": "Dùng đúng mã `Submission`",
+      "description": "Chọn hàng dùng `item.id` cho tuyến `/mentor/submissions/:submissionId`, không dùng assignment_id/user_id và không gọi #55 từ ME-09. Tên logical `submission_id` cần thống nhất.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-009",
+      "group": "Bộ lọc và tải lại",
+      "title": "Giữ hành vi nguồn riêng ảnh mẫu",
+      "description": "Trang có đầu vào mã khóa học/trạng thái, lọc về trang 1, xóa bộ lọc trong trạng thái rỗng, thử lại khi lỗi. Không có tìm kiếm, dropdown nguồn, thăm dò định kỳ hoặc reload ở sẵn sàng.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": ""
+    },
+    {
+      "id": "ME-09-YC-010",
+      "group": "Thiết kế và tiếp cận",
+      "title": "Không coi marker là lúc chạy",
+      "description": "Ảnh có 27 marker/trạng thái rỗng và tuyên bố deadline/rubric/tự đồng bộ; trang có bảng/phân trang và shell chung. Tiêu điểm/reflow/a11y chỉ được đối chiếu nguồn; trình duyệt chưa xác minh.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css; apps/study-client/src/app/features/mentor/shared/ui/mentor-pages.css; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/layouts/mentor/mentor-layout.css",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "ME-09-EL-001",
+      "marker": 1,
+      "source_element_id": "ME09-EL-01",
+      "name": "Logo và thương hiệu `Study2Work` `LMS` Mentor",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=28, y=13 px; gốc trên trái, ảnh nguồn 1600×1280; marker #1.",
+      "properties": "Ảnh: Logo và thương hiệu `Study2Work` `LMS` Mentor. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-002",
+      "marker": 2,
+      "source_element_id": "ME09-EL-02",
+      "name": "Điều hướng Tổng quan",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=351, y=13 px; gốc trên trái, ảnh nguồn 1600×1280; marker #2.",
+      "properties": "Ảnh: Điều hướng Tổng quan. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-003",
+      "marker": 3,
+      "source_element_id": "ME09-EL-03",
+      "name": "Điều hướng Khóa học phụ trách",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=524, y=13 px; gốc trên trái, ảnh nguồn 1600×1280; marker #3.",
+      "properties": "Ảnh: Điều hướng Khóa học phụ trách. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-004",
+      "marker": 4,
+      "source_element_id": "ME09-EL-04",
+      "name": "Điều hướng Chấm bài đang chọn",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=681, y=88 px; gốc trên trái, ảnh nguồn 1600×1280; marker #4.",
+      "properties": "Ảnh: Điều hướng Chấm bài đang chọn. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-005",
+      "marker": 5,
+      "source_element_id": "ME09-EL-05",
+      "name": "Điều hướng Hộp thư hỗ trợ",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=845, y=13 px; gốc trên trái, ảnh nguồn 1600×1280; marker #5.",
+      "properties": "Ảnh: Điều hướng Hộp thư hỗ trợ. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-006",
+      "marker": 6,
+      "source_element_id": "ME09-EL-06",
+      "name": "Điều hướng Thông báo",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=992, y=13 px; gốc trên trái, ảnh nguồn 1600×1280; marker #6.",
+      "properties": "Ảnh: Điều hướng Thông báo. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-007",
+      "marker": 7,
+      "source_element_id": "ME09-EL-07",
+      "name": "Nút chuông thông báo",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=1277, y=13 px; gốc trên trái, ảnh nguồn 1600×1280; marker #7.",
+      "properties": "Ảnh: Nút chuông thông báo. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-008",
+      "marker": 8,
+      "source_element_id": "ME09-EL-08",
+      "name": "Danh tính và avatar Mentor",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=1574, y=13 px; gốc trên trái, ảnh nguồn 1600×1280; marker #8.",
+      "properties": "Ảnh: Danh tính và avatar Mentor. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+      "event_ids": [
+        "ME-09-EV-008"
+      ],
+      "source_event_refs": [
+        "ME09-E08"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-009",
+      "marker": 9,
+      "source_element_id": "ME09-EL-09",
+      "name": "Nhãn Trung tâm Đánh giá và Phản hồi",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=27, y=128 px; gốc trên trái, ảnh nguồn 1600×1280; marker #9.",
+      "properties": "Eyebrow Trung tâm Đánh giá & Phản hồi là nhãn tĩnh; trang hiện có tiêu đề Bài nộp cần chấm, không có API category.",
+      "event_ids": [
+        "ME-09-EV-001"
+      ],
+      "source_event_refs": [
+        "ME09-E01"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-009",
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css"
+    },
+    {
+      "id": "ME-09-EL-010",
+      "marker": 10,
+      "source_element_id": "ME09-EL-10",
+      "name": "Tiêu đề Danh sách bài nộp cần chấm điểm",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=637, y=170 px; gốc trên trái, ảnh nguồn 1600×1280; marker #10.",
+      "properties": "Tiêu đề ảnh khác tiêu đề hiện hành của MentorPageHeader. Ghi nhận sai khác; không phải dữ liệu API.",
+      "event_ids": [
+        "ME-09-EV-001"
+      ],
+      "source_event_refs": [
+        "ME09-E01"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-009",
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css"
+    },
+    {
+      "id": "ME-09-EL-011",
+      "marker": 11,
+      "source_element_id": "ME09-EL-11",
+      "name": "Mô tả mục đích màn hình",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=27, y=211 px; gốc trên trái, ảnh nguồn 1600×1280; marker #11.",
+      "properties": "Mô tả ảnh là copy biên tập; trang hiện mô tả bộ lọc chỉ dùng field #54.",
+      "event_ids": [
+        "ME-09-EV-001"
+      ],
+      "source_event_refs": [
+        "ME09-E01"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-009",
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css"
+    },
+    {
+      "id": "ME-09-EL-012",
+      "marker": 12,
+      "source_element_id": "ME09-EL-12",
+      "name": "Nhãn Đồng bộ tự động: Bật",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=1578, y=170 px; gốc trên trái, ảnh nguồn 1600×1280; marker #12.",
+      "properties": "Đồng bộ tự động là tuyên bố; trang/dịch vụ không có thăm dò định kỳ, timer hoặc websocket.",
+      "event_ids": [
+        "ME-09-EV-001"
+      ],
+      "source_event_refs": [
+        "ME09-E01"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-009",
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-013",
+      "marker": 13,
+      "source_element_id": "ME09-EL-13",
+      "name": "Bộ lọc Khóa học phụ trách",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=28, y=325 px; gốc trên trái, ảnh nguồn 1600×1280; marker #13.",
+      "properties": "Các giá trị all/fe/be/ux trong danh sách thả xuống chỉ là mẫu; trang có trường nhập mã khóa học và chỉ gửi số nguyên dương 64-bit. Nguồn lựa chọn/giá trị mặc định chưa có.",
+      "event_ids": [
+        "ME-09-EV-002"
+      ],
+      "source_event_refs": [
+        "ME09-E02"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-002",
+        "ME-09-YC-003",
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+    },
+    {
+      "id": "ME-09-EL-014",
+      "marker": 14,
+      "source_element_id": "ME09-EL-14",
+      "name": "Bộ lọc Trạng thái bài nộp",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=437, y=325 px; gốc trên trái, ảnh nguồn 1600×1280; marker #14.",
+      "properties": "`pending`/`graded`/`recheck` là mẫu; trang có đầu vào trạng thái tự nhập, ứng dụng khách loại khoảng trắng ở đầu/cuối và API so khớp chính xác; enum/default chưa chốt.",
+      "event_ids": [
+        "ME-09-EV-003"
+      ],
+      "source_event_refs": [
+        "ME09-E03"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-002",
+        "ME-09-YC-003",
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+    },
+    {
+      "id": "ME-09-EL-015",
+      "marker": 15,
+      "source_element_id": "ME09-EL-15",
+      "name": "Ô tìm kiếm bài tập",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=738, y=325 px; gốc trên trái, ảnh nguồn 1600×1280; marker #15.",
+      "properties": "Tìm kiếm chỉ có trong ảnh; trang hiện không có ô tìm, #54 không nhận q và item không có assignment tiêu đề.",
+      "event_ids": [
+        "ME-09-EV-004"
+      ],
+      "source_event_refs": [
+        "ME09-E04"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+    },
+    {
+      "id": "ME-09-EL-016",
+      "marker": 16,
+      "source_element_id": "ME09-EL-16",
+      "name": "Nút Thiết lập lại bộ lọc",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=1550, y=325 px; gốc trên trái, ảnh nguồn 1600×1280; marker #16.",
+      "properties": "Đặt lại ảnh chỉ thay cục bộ value; trang hiện tại chỉ có Xóa bộ lọc trong trạng thái rỗng, gửi trang 1; không có đặt lại riêng khi sẵn sàng.",
+      "event_ids": [
+        "ME-09-EV-005"
+      ],
+      "source_event_refs": [
+        "ME09-E05"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-003",
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+    },
+    {
+      "id": "ME-09-EL-017",
+      "marker": 17,
+      "source_element_id": "ME09-EL-17",
+      "name": "Minh họa trạng thái rỗng",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=800, y=430 px; gốc trên trái, ảnh nguồn 1600×1280; marker #17.",
+      "properties": "Ảnh có minh họa rỗng; trang hiện dùng biểu tượng check đơn giản. Rỗng chỉ sau `HTTP 200` với items rỗng.",
+      "event_ids": [
+        "ME-09-EV-001"
+      ],
+      "source_event_refs": [
+        "ME09-E01"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-007",
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-018",
+      "marker": 18,
+      "source_element_id": "ME09-EL-18",
+      "name": "Tiêu đề trạng thái chưa có bài cần chấm",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=553, y=627 px; gốc trên trái, ảnh nguồn 1600×1280; marker #18.",
+      "properties": "Heading ảnh khác rỗng heading hiện tại. Chỉ hiện sau phản hồi thành công không có hàng.",
+      "event_ids": [
+        "ME-09-EV-001"
+      ],
+      "source_event_refs": [
+        "ME09-E01"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-007",
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-019",
+      "marker": 19,
+      "source_element_id": "ME09-EL-19",
+      "name": "Nội dung giải thích trạng thái rỗng",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=395, y=686 px; gốc trên trái, ảnh nguồn 1600×1280; marker #19.",
+      "properties": "Copy ảnh nói về được phân công Mentor và tự cập nhật; API direct-chủ sở hữu không chứng minh các tuyên bố này. Trang hiện nêu không có `submission` phù hợp với bộ lọc.",
+      "event_ids": [
+        "ME-09-EV-001"
+      ],
+      "source_event_refs": [
+        "ME09-E01"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-007",
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-020",
+      "marker": 20,
+      "source_element_id": "ME09-EL-20",
+      "name": "Nút Tải lại danh sách",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=648, y=817 px; gốc trên trái, ảnh nguồn 1600×1280; marker #20.",
+      "properties": "Nút ảnh chỉ animate cục bộ; trang có Tải lại ở trạng thái lỗi và gọi #54, không có nút ở rỗng/sẵn sàng.",
+      "event_ids": [
+        "ME-09-EV-006"
+      ],
+      "source_event_refs": [
+        "ME09-E06"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-007",
+        "ME-09-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-021",
+      "marker": 21,
+      "source_element_id": "ME09-EL-21",
+      "name": "Thông tin tuân thủ hạn nộp 48 giờ",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=260, y=914 px; gốc trên trái, ảnh nguồn 1600×1280; marker #21.",
+      "properties": "Tuyên bố SLA 48h không có due_date/SLA trong #54; table không hiển thị hạn nộp.",
+      "event_ids": [
+        "ME-09-EV-009"
+      ],
+      "source_event_refs": [
+        "ME09-E09"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-006",
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-022",
+      "marker": 22,
+      "source_element_id": "ME09-EL-22",
+      "name": "Thông tin hệ thống chấm theo Rubric chuẩn",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=590, y=883 px; gốc trên trái, ảnh nguồn 1600×1280; marker #22.",
+      "properties": "Tuyên bố Rubric chuẩn không có trong #54; không suy rubric từ score.",
+      "event_ids": [
+        "ME-09-EV-009"
+      ],
+      "source_event_refs": [
+        "ME09-E09"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-006",
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-023",
+      "marker": 23,
+      "source_element_id": "ME09-EL-23",
+      "name": "Liên hệ Ban Đào tạo hỗ trợ chuyên môn",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=956, y=914 px; gốc trên trái, ảnh nguồn 1600×1280; marker #23.",
+      "properties": "Liên hệ hỗ trợ là copy tĩnh, anchor #; chưa có destination được xác nhận.",
+      "event_ids": [
+        "ME-09-EV-009"
+      ],
+      "source_event_refs": [
+        "ME09-E09"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-006",
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EL-024",
+      "marker": 24,
+      "source_element_id": "ME09-EL-24",
+      "name": "Logo và thông tin bản quyền chân trang",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=26, y=1064 px; gốc trên trái, ảnh nguồn 1600×1280; marker #24.",
+      "properties": "Chân trang ảnh là mẫu; trang dùng chân trang chung khác, không xác nhận copyright lúc chạy.",
+      "event_ids": [
+        "ME-09-EV-009"
+      ],
+      "source_event_refs": [
+        "ME09-E09"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-025",
+      "marker": 25,
+      "source_element_id": "ME09-EL-25",
+      "name": "Liên kết Quy chế Giảng viên",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=1109, y=1028 px; gốc trên trái, ảnh nguồn 1600×1280; marker #25.",
+      "properties": "Liên kết chân trang Liên kết Quy chế Giảng viên trong Stitch dùng href=\"#\"; đích chính sách/hỗ trợ chưa được xác nhận.",
+      "event_ids": [
+        "ME-09-EV-009"
+      ],
+      "source_event_refs": [
+        "ME09-E09"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-026",
+      "marker": 26,
+      "source_element_id": "ME09-EL-26",
+      "name": "Liên kết Tiêu chuẩn đánh giá",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=1310, y=1028 px; gốc trên trái, ảnh nguồn 1600×1280; marker #26.",
+      "properties": "Liên kết chân trang Liên kết Tiêu chuẩn đánh giá trong Stitch dùng href=\"#\"; đích chính sách/hỗ trợ chưa được xác nhận.",
+      "event_ids": [
+        "ME-09-EV-009"
+      ],
+      "source_event_refs": [
+        "ME09-E09"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EL-027",
+      "marker": 27,
+      "source_element_id": "ME09-EL-27",
+      "name": "Liên kết Hỗ trợ kỹ thuật",
+      "type": "Thành phần ảnh thiết kế; đối chiếu với trang ME-09 hiện tại",
+      "position": "X=1491, y=1028 px; gốc trên trái, ảnh nguồn 1600×1280; marker #27.",
+      "properties": "Liên kết chân trang Liên kết Hỗ trợ kỹ thuật trong Stitch dùng href=\"#\"; đích chính sách/hỗ trợ chưa được xác nhận.",
+      "event_ids": [
+        "ME-09-EV-009"
+      ],
+      "source_event_refs": [
+        "ME09-E09"
+      ],
+      "requirement_ids": [
+        "ME-09-YC-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ME-09-EV-001",
+      "source_event_id": "ME09-E01",
+      "name": "Vào màn hình và tải danh sách",
+      "trigger": "Mở tuyến hoặc thử lại sau lỗi.",
+      "element_ids": [
+        "ME-09-EL-001",
+        "ME-09-EL-009",
+        "ME-09-EL-010",
+        "ME-09-EL-012",
+        "ME-09-EL-013",
+        "ME-09-EL-014",
+        "ME-09-EL-017",
+        "ME-09-EL-018",
+        "ME-09-EL-019",
+        "ME-09-EL-020"
+      ],
+      "api_ids": [
+        "API-54"
+      ],
+      "processing": "Khởi tạo `page=1`, bộ lọc rỗng; gọi GET #54 bằng truy vấn được hỗ trợ; kiểm tra phong bì dữ liệu/trang/items. `switchMap` hủy truy vấn cũ.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+    },
+    {
+      "id": "ME-09-EV-002",
+      "source_event_id": "ME09-E02",
+      "name": "Đổi bộ lọc khóa học",
+      "trigger": "Nhập khóa học ID rồi gửi form.",
+      "element_ids": [
+        "ME-09-EL-013",
+        "ME-09-EL-016"
+      ],
+      "api_ids": [
+        "API-54"
+      ],
+      "processing": "Loại bỏ khoảng trắng đầu/cuối; chỉ gửi số nguyên dương 64-bit dưới course_id; lọc đặt page=1 rồi gọi #54. all/fe/be/ux trong ảnh không phải ID API.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+    },
+    {
+      "id": "ME-09-EV-003",
+      "source_event_id": "ME09-E03",
+      "name": "Đổi trạng thái bài nộp",
+      "trigger": "Nhập trạng thái rồi gửi form.",
+      "element_ids": [
+        "ME-09-EL-014",
+        "ME-09-EL-016"
+      ],
+      "api_ids": [
+        "API-54"
+      ],
+      "processing": "Trim, đặt `page=1`; API so khớp chính xác, không enum/normalize. `pending`/`graded`/`recheck` chưa map với giá trị máy chủ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py"
+    },
+    {
+      "id": "ME-09-EV-004",
+      "source_event_id": "ME09-E04",
+      "name": "Nhập từ khóa bài tập",
+      "trigger": "Gõ vào ô tìm kiếm trong ảnh.",
+      "element_ids": [
+        "ME-09-EL-015"
+      ],
+      "api_ids": [],
+      "processing": "`HTML` mẫu có ô tìm nhưng trang hiện không có control/bộ xử lý; #54 không nhận q và phản hồi không có tiêu đề để tìm cục bộ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py"
+    },
+    {
+      "id": "ME-09-EV-005",
+      "source_event_id": "ME09-E05",
+      "name": "Thiết lập lại bộ lọc",
+      "trigger": "Dùng đặt lại ảnh mẫu hoặc xóa bộ lọc hiện tại trong trạng thái rỗng.",
+      "element_ids": [
+        "ME-09-EL-016",
+        "ME-09-EL-018",
+        "ME-09-EL-019"
+      ],
+      "api_ids": [
+        "API-54"
+      ],
+      "processing": "Ảnh mẫu chỉ đổi control cục bộ. Trang hiện tại có “Xóa bộ lọc” trong trạng thái rỗng, gọi bộ lọc rỗng/trang 1; không có nút đặt lại riêng lúc sẵn sàng.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts"
+    },
+    {
+      "id": "ME-09-EV-006",
+      "source_event_id": "ME09-E06",
+      "name": "Tải lại danh sách",
+      "trigger": "Chọn Tải lại trong trạng thái lỗi.",
+      "element_ids": [
+        "ME-09-EL-012",
+        "ME-09-EL-020"
+      ],
+      "api_ids": [
+        "API-54"
+      ],
+      "processing": "Trang gọi lại #54 và giữ bộ lọc/trang. Nút ảnh chỉ animate; không có thăm dò định kỳ/tự đồng bộ trong trang.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts"
+    },
+    {
+      "id": "ME-09-EV-007",
+      "source_event_id": "ME09-E07",
+      "name": "Mở `Submission` sang ME-10",
+      "trigger": "Chọn hành động trên hàng đã tải.",
+      "element_ids": [
+        "ME-09-EL-010",
+        "ME-09-EL-017"
+      ],
+      "api_ids": [],
+      "processing": "Dùng item.id làm `submissionId` tuyến; không dùng assignment_id/user_id; không gọi #55/#56/#57 từ ME-09.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EV-008",
+      "source_event_id": "ME09-E08",
+      "name": "Dùng đầu trang, chuông và tài khoản",
+      "trigger": "Kích hoạt logo/nav/notification/avatar trong ảnh.",
+      "element_ids": [
+        "ME-09-EL-001",
+        "ME-09-EL-002",
+        "ME-09-EL-003",
+        "ME-09-EL-004",
+        "ME-09-EL-005",
+        "ME-09-EL-006",
+        "ME-09-EL-007",
+        "ME-09-EL-008"
+      ],
+      "api_ids": [],
+      "processing": "Anchor và identity Stitch là mẫu; shell hiện dùng `MentorLayout` chung. Không suy unread count/profile/destination từ ảnh.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/layouts/mentor/mentor-layout.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    },
+    {
+      "id": "ME-09-EV-009",
+      "source_event_id": "ME09-E09",
+      "name": "Dùng chân trang và tuyên bố hỗ trợ",
+      "trigger": "Chọn chân trang liên kết hoặc xem tuyên bố hạn nộp/rubric/hỗ trợ.",
+      "element_ids": [
+        "ME-09-EL-021",
+        "ME-09-EL-022",
+        "ME-09-EL-023",
+        "ME-09-EL-024",
+        "ME-09-EL-025",
+        "ME-09-EL-026",
+        "ME-09-EL-027"
+      ],
+      "api_ids": [],
+      "processing": "Links/claims là tĩnh; #54 không cung cấp deadline/rubric/hỗ trợ. Chân trang hiện tại là dùng chung, không chứng minh đích/cam kết ảnh.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/layouts/mentor/mentor-layout.html"
+    },
+    {
+      "id": "ME-09-EV-010",
+      "source_event_id": "D.1 — ánh xạ lỗi",
+      "name": "Ánh xạ lỗi và mã phản hồi",
+      "trigger": "Nhận HTTP/business/network phản hồi #54.",
+      "element_ids": [
+        "ME-09-EL-013",
+        "ME-09-EL-014",
+        "ME-09-EL-017",
+        "ME-09-EL-018",
+        "ME-09-EL-019",
+        "ME-09-EL-020"
+      ],
+      "api_ids": [
+        "API-54"
+      ],
+      "processing": "200 tách rỗng/non-rỗng; 401/403 dùng thông báo chung; 422/500/network hiện lỗi có thử lại. Không dựng 409 khi nguồn không có tác nhân kích hoạt.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/shared/models/mentor-api-errors.ts; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py; apps/study-server/docs/dd/54_mentor_submissions_list/06_Error.md"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ME09-BL-01",
+      "description": "Danh mục chưa xác nhận trang khi contract nói `Submission`; AC diagram/API DD/mã nguồn hiện tại đều dùng `Page<Submission>` nhưng DD gọi phương án dự phòng suy ra từ mã nguồn.",
+      "impact": "Chưa thống nhất dạng kết quả danh mục, schema và UI.",
+      "decision": "API/schema chủ sở hữu xác nhận trang hay singular `Submission`; đồng bộ danh mục/API DD/catalog/diagram.",
+      "source_ref": "apps/study-client/docs/list_screen.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md; apps/study-server/docs/dd/54_mentor_submissions_list/02_Overview.md; apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md; apps/study-server/docs/dd/54_mentor_submissions_list/OPEN_QUESTIONS.md; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+      "status": "Chưa giải quyết; chặn xác minh hợp đồng/UX/lúc chạy"
+    },
+    {
+      "id": "ME09-BL-02",
+      "description": "Ảnh/AC mong deadline, chủ sở hữu, assignment/khóa học tiêu đề; #54 không trả deadline, tên hiển thị, titles hoặc course_id trong item.",
+      "impact": "Không đủ nguồn để dựng loaded hàng dữ liệu theo mẫu; trang hiện hiển thị user_id số.",
+      "decision": "Duyệt field/hàng dữ liệu design và dữ liệu nguồn cho deadline, names, titles và tệp.",
+      "source_ref": "apps/study-client/docs/list_screen.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md; apps/study-server/docs/dd/54_mentor_submissions_list/05_Data_Mapping.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+      "status": "Chưa giải quyết; chặn xác minh hợp đồng/UX/lúc chạy"
+    },
+    {
+      "id": "ME09-BL-03",
+      "description": "Khóa học/trạng thái lựa chọn/default trong ảnh là chuỗi mẫu; API cần course_id int64/trạng thái chính xác.",
+      "impact": "Không thể gửi fe/be/ux hoặc `pending`/`graded`/`recheck` như mã chuẩn; bộ lọc/trang đặt lại cần đồng thuận.",
+      "decision": "Duyệt nguồn khóa học lựa chọn, ID, trạng thái enum/default, loại khoảng trắng ở đầu/cuối và đặt lại phân trang.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-server/docs/dd/54_mentor_submissions_list/03_Request.md; apps/study-server/docs/dd/54_mentor_submissions_list/OPEN_QUESTIONS.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts; apps/study-server/app/api/v1.py",
+      "status": "Chưa giải quyết; chặn xác minh hợp đồng/UX/lúc chạy"
+    },
+    {
+      "id": "ME09-BL-04",
+      "description": "Ảnh mẫu có tìm kiếm; #54 không nhận q và item không có tiêu đề để lọc cục bộ.",
+      "impact": "Không thể kiểm tra tìm kiếm theo tên/mã bài.",
+      "decision": "Bỏ/khóa tìm kiếm hoặc chốt API/dữ liệu nguồn, normalize, debounce và paging.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py",
+      "status": "Chưa giải quyết; chặn xác minh hợp đồng/UX/lúc chạy"
+    },
+    {
+      "id": "ME09-BL-05",
+      "description": "Nút reload, tự đồng bộ, SLA 48h, rubric và hỗ trợ copy không có nguồn/behavior #54.",
+      "impact": "Có thể tạo cam kết hoặc trạng thái vận hành giả.",
+      "decision": "Duyệt nguồn/copy, reload/thử lại/thăm dò định kỳ và destination hỗ trợ/chính sách.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+      "status": "Chưa giải quyết; chặn xác minh hợp đồng/UX/lúc chạy"
+    },
+    {
+      "id": "ME09-BL-06",
+      "description": "API DD còn hỏi nơi tạo dữ liệu `URL`, được phân công Mentor, trạng thái/409, nullability/múi giờ/đang chạy schema và lỗi catalog.",
+      "impact": "Mã nguồn cục bộ/fake DB không chứng minh tệp, quyền, timestamp hay triển khai thật.",
+      "decision": "Chốt API/schema open questions và cập nhật catalog/DDL trước integration.",
+      "source_ref": "apps/study-server/docs/dd/54_mentor_submissions_list/OPEN_QUESTIONS.md; apps/study-server/docs/dd/54_mentor_submissions_list/02_Overview.md; apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md; apps/study-server/docs/dd/54_mentor_submissions_list/05_Data_Mapping.md; apps/study-server/docs/dd/54_mentor_submissions_list/06_Error.md; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py; apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py; apps/study-server/tests/modules/mentor/api_54_mentor_submissions_list/test_mentor_submissions_list.py",
+      "status": "Chưa giải quyết; chặn xác minh hợp đồng/UX/lúc chạy"
+    },
+    {
+      "id": "ME09-BL-07",
+      "description": "Tuyến/trang/dịch vụ đã có nguồn nhưng trình duyệt, auth session, loaded-trạng thái approval, keyboard/reflow/a11y và môi trường thật chưa xác minh.",
+      "impact": "Không thể khẳng định màn hình lúc chạy hoặc WCAG đạt.",
+      "decision": "Xác nhận môi trường kiểm thử và duyệt/kiểm tra trình duyệt, keyboard, tiêu điểm, reflow sau khi khóa contract.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md; apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html; apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css; apps/study-client/src/app/features/mentor/shared/ui/mentor-pages.css; apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+      "status": "Chưa giải quyết; chặn xác minh hợp đồng/UX/lúc chạy"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ME09-TS-001",
+        "requirement_ids": [
+          "ME-09-YC-001",
+          "ME-09-YC-002",
+          "ME-09-YC-007"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Mở danh sách với bộ lọc mặc định",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "`page=1`, khóa học/trạng thái rỗng, size máy chủ=20.",
+        "steps": [
+          "Mở `/mentor/submissions`.",
+          "Quan sát đang tải và GET #54.",
+          "Đối chiếu truy vấn."
+        ],
+        "expected": "Gửi `page=1`; bỏ khóa học/trạng thái rỗng, q, size, sắp xếp. Ca chưa chạy.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-002",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Gửi khóa học ID int64 hợp lệ",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "course_id giả 101.",
+        "steps": [
+          "Nhập 101.",
+          "Gửi lọc.",
+          "Kiểm tra course_id=101 và `page=1`."
+        ],
+        "expected": "Gửi course_id dương sau khi loại khoảng trắng ở đầu/cuối; lọc về trang 1.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py",
+          "apps/study-server/app/api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-003",
+        "requirement_ids": [
+          "ME-09-YC-003"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Chặn khóa học ID 0/âm/chữ",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "khóa học ID sai.",
+        "steps": [
+          "Nhập 0, số âm hoặc chữ.",
+          "Gửi lọc."
+        ],
+        "expected": "Hiện lỗi; không gọi #54 và không chuyển giá trị dropdown mẫu thành ID.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-004",
+        "requirement_ids": [
+          "ME-09-YC-003"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Chặn khóa học ID vượt int64",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Chuỗi số lớn hơn 9223372036854775807.",
+        "steps": [
+          "Nhập giá trị vượt giới hạn.",
+          "Gửi lọc."
+        ],
+        "expected": "Ứng dụng khách chặn trước yêu cầu; API cũng ràng buộc signed int64.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py",
+          "apps/study-server/app/api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-005",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Trim trạng thái nhưng giữ chính xác match",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "trạng thái giả ` SUBMITTED `.",
+        "steps": [
+          "Nhập trạng thái có khoảng trắng.",
+          "Gửi lọc.",
+          "Đối chiếu truy vấn sau loại khoảng trắng ở đầu/cuối."
+        ],
+        "expected": "Ứng dụng khách loại khoảng trắng ở đầu/cuối; API so đúng chuỗi còn lại, không đổi hoa/thường hoặc mapping enum.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-006",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Không coi trạng thái mẫu là enum đã duyệt",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "`pending`/`graded`/`recheck` trong ảnh.",
+        "steps": [
+          "Đối chiếu dropdown mẫu với API.",
+          "Không dùng như fixture chuẩn nếu chưa có quyết định."
+        ],
+        "expected": "API nhận chính xác string; giá trị ảnh mẫu chưa được chốt. Chờ xác nhận mapping.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py",
+          "apps/study-server/docs/dd/54_mentor_submissions_list/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TS-007",
+        "requirement_ids": [
+          "ME-09-YC-003"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Chặn trang không phải số nguyên dương 32-bit",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "trang 0, âm, thập phân hoặc vượt 2^31−1.",
+        "steps": [
+          "Dùng harness gọi load với trang sai.",
+          "Kiểm tra lỗi và yêu cầu."
+        ],
+        "expected": "Ứng dụng khách chặn trang sai trước #54.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/api/v1.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-008",
+        "requirement_ids": [
+          "ME-09-YC-002"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Không gửi q/size/sắp xếp",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "truy vấn có trang và bộ lọc hợp lệ.",
+        "steps": [
+          "Gửi bộ lọc.",
+          "Kiểm tra `URL` truy vấn."
+        ],
+        "expected": "Chỉ có trang, course_id/trạng thái nếu nhập; không q/size/sắp xếp.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/api/v1.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-009",
+        "requirement_ids": [
+          "ME-09-YC-003",
+          "ME-09-YC-004"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Bộ lọc mới về trang 1",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Đang trang 3; đổi khóa học hoặc trạng thái.",
+        "steps": [
+          "Đổi bộ lọc và gửi.",
+          "Quan sát trang và data."
+        ],
+        "expected": "ApplyFilters gọi trang 1; dữ liệu cũ bị xóa trước truy vấn.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-010",
+        "requirement_ids": [
+          "ME-09-YC-003",
+          "ME-09-YC-005"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Hủy truy vấn cũ khi bộ lọc đổi nhanh",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Q1/Q2 trả về đảo thứ tự.",
+        "steps": [
+          "Bắt đầu Q1.",
+          "Phát Q2 trước khi Q1 xong.",
+          "Trả Q1 sau Q2."
+        ],
+        "expected": "`switchMap` hủy yêu cầu trước và isCurrentQuery ngăn dữ liệu cũ thay list.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-011",
+        "requirement_ids": [
+          "ME-09-YC-004",
+          "ME-09-YC-005"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Chấp nhận trang siêu dữ liệu đúng",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "`page=1`,size=20,total=21,total_pages=2.",
+        "steps": [
+          "Nạp phản hồi giả hợp lệ.",
+          "Kiểm tra siêu dữ liệu và nút Trang sau."
+        ],
+        "expected": "Ứng dụng khách chấp nhận siêu dữ liệu; nút Trang sau hoạt động nếu trang còn nhỏ hơn total_pages.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-012",
+        "requirement_ids": [
+          "ME-09-YC-004",
+          "ME-09-YC-005"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phân trang sai",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "size khác 20, trang lệch hoặc total_pages sai.",
+        "steps": [
+          "Trả phản hồi giả siêu dữ liệu sai.",
+          "Kiểm tra trạng thái."
+        ],
+        "expected": "Trang sai bị từ chối; không render list một phần.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-013",
+        "requirement_ids": [
+          "ME-09-YC-005",
+          "ME-09-YC-007"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Rỗng success khác lỗi",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "200 hợp lệ, items=[],total=0,total_pages=0.",
+        "steps": [
+          "Tải trang rỗng.",
+          "Đối chiếu trạng thái/phân trang."
+        ],
+        "expected": "Hiển thị trạng thái rỗng; không dùng message text làm điều kiện. Mẫu giao diện hiển thị trang 1/1.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-014",
+        "requirement_ids": [
+          "ME-09-YC-005",
+          "ME-09-YC-006"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Render hàng dữ liệu theo trường API",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "`Submission` giả có id/assignment_id/user_id/trạng thái/`submitted_at`/files/score.",
+        "steps": [
+          "Nạp trang hợp lệ.",
+          "Đối chiếu cột với data."
+        ],
+        "expected": "Hiện id, assignment_id, user_id số, trạng thái thô, ngày nộp, số tệp, score; không bịa tên/deadline.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py",
+          "apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-015",
+        "requirement_ids": [
+          "ME-09-YC-005",
+          "ME-09-YC-007"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phong bì dữ liệu hoặc mã sai",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Thiếu trường, success=false hoặc mã khác.",
+        "steps": [
+          "Trả phong bì dữ liệu sai.",
+          "Quan sát lỗi."
+        ],
+        "expected": "Không coi là success/rỗng; hiển thị trạng thái lỗi.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-016",
+        "requirement_ids": [
+          "ME-09-YC-005"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Từ chối item ID trùng/field lỗi",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "ID trùng, ID không dương hoặc thiếu field bắt buộc.",
+        "steps": [
+          "Trả items lỗi.",
+          "Quan sát bảng."
+        ],
+        "expected": "Từ chối toàn trang; không render hàng dữ liệu không hợp lệ.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-017",
+        "requirement_ids": [
+          "ME-09-YC-005",
+          "ME-09-YC-006"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra timestamp và nullable fields",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "`submitted_at` sai; nội dung/score/feedback null/vắng.",
+        "steps": [
+          "Trả từng biến thể giả.",
+          "Đối chiếu lỗi và ô score."
+        ],
+        "expected": "Timestamp không parse bị từ chối; nullable string hợp lệ; score rỗng hiện dấu gạch.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-018",
+        "requirement_ids": [
+          "ME-09-YC-005",
+          "ME-09-YC-006"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Từ chối tệp siêu dữ liệu sai",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "files[] thiếu ID/name/`url`/type/trạng thái hoặc size_bytes âm.",
+        "steps": [
+          "Trả item có asset lỗi.",
+          "Kiểm tra validation và không mở `URL`."
+        ],
+        "expected": "Phản hồi bị từ chối; trang chỉ hiển thị số tệp, không mở `URL` thô.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-019",
+        "requirement_ids": [
+          "ME-09-YC-007"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "`HTTP 401` hiển thị thông báo phiên",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "#54 trả 401 hoặc lỗi session.",
+        "steps": [
+          "Trả 401.",
+          "Quan sát alert."
+        ],
+        "expected": "Hiện thông báo phiên hết hạn/đăng nhập lại; không render dữ liệu mẫu.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/shared/models/mentor-api-errors.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-020",
+        "requirement_ids": [
+          "ME-09-YC-007"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "`HTTP 403` hiển thị thông báo quyền",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "#54 trả 403.",
+        "steps": [
+          "Trả 403.",
+          "Kiểm tra thông báo và yêu cầu count."
+        ],
+        "expected": "Hiện thông báo không có quyền; không thử lại vô hạn hoặc render dữ liệu ngoài scope.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/shared/models/mentor-api-errors.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-021",
+        "requirement_ids": [
+          "ME-09-YC-003",
+          "ME-09-YC-007"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "`HTTP 422` là lỗi truy vấn, không phải rỗng",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "API trả `DESIGN_VALIDATION_ERROR`.",
+        "steps": [
+          "Trả 422.",
+          "Kiểm tra alert."
+        ],
+        "expected": "Không biến thành rỗng; hiển thị thông báo lỗi. Chưa có ánh xạ field riêng.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/api/v1.py",
+          "apps/study-server/docs/dd/54_mentor_submissions_list/06_Error.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-022",
+        "requirement_ids": [
+          "ME-09-YC-007",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "`HTTP 500`/network có thể tải lại",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Lỗi 500/mạng với bộ lọc/trang hiện tại.",
+        "steps": [
+          "Trả lỗi.",
+          "Chọn Tải lại.",
+          "Đối chiếu truy vấn mới."
+        ],
+        "expected": "Hiện thông báo an toàn; thử lại gọi GET với bộ lọc/trang hiện tại.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-client/src/app/features/mentor/shared/models/mentor-api-errors.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-023",
+        "requirement_ids": [
+          "ME-09-YC-004"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Phân trang trước/sau theo ranh giới",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "total_pages=3; trang 1,2,3.",
+        "steps": [
+          "Kiểm tra nút ở trang 1.",
+          "Đi tiếp rồi quay lại."
+        ],
+        "expected": "Trước bị vô hiệu hóa ở đầu; sau bị vô hiệu hóa ở cuối; thao tác gọi đúng trang.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-024",
+        "requirement_ids": [
+          "ME-09-YC-008"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Mở ME-10 bằng item.id",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "item.id=501, assignment_id=601,user_id=701.",
+        "steps": [
+          "Chọn Mở bài nộp.",
+          "Đối chiếu tuyến."
+        ],
+        "expected": "Tuyến dùng ID 501; không dùng assignment/user ID, không gọi #55 từ ME-09.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TS-025",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Không coi tìm kiếm/lựa chọn/tự đồng bộ mẫu là chức năng",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "ảnh mẫu có dropdown, tìm kiếm, tự đồng bộ.",
+        "steps": [
+          "Đối chiếu marker với mẫu giao diện hiện hành và truy vấn."
+        ],
+        "expected": "Trang hiện không có tìm kiếm/thăm dò định kỳ/lựa chọn mẫu. Chờ xác nhận nếu muốn biến các mẫu thành requirement.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/api/v1.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TS-026",
+        "requirement_ids": [
+          "ME-09-YC-003",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Khác biệt đặt lại giữa ảnh mẫu và rỗng trang",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Có bộ lọc và rỗng result.",
+        "steps": [
+          "So sánh đặt lại ảnh với nút Xóa bộ lọc trên trang.",
+          "Kiểm tra truy vấn rỗng/trang 1."
+        ],
+        "expected": "Trang xóa hai bộ lọc và tải trang 1; không dùng `pending` default trong ảnh. Chờ xác nhận canonical default.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TS-027",
+        "requirement_ids": [
+          "ME-09-YC-006",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Không dùng tuyên bố deadline/rubric/hỗ trợ",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Ảnh có SLA/rubric/hỗ trợ; #54 không có các field.",
+        "steps": [
+          "Đối chiếu ảnh/API/mẫu giao diện.",
+          "Ghi vùng thiết kế-only."
+        ],
+        "expected": "Không tạo deadline/rubric/destination từ ảnh. Chờ xác nhận nguồn/copy.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TS-028",
+        "requirement_ids": [
+          "ME-09-YC-001",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu shell, tiêu điểm, label và reflow",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Viewport 320 `CSS` px, keyboard-only trong môi trường sau này.",
+        "steps": [
+          "Đọc label/ARIA/table/tiêu điểm/điểm ngắt/shared shell.",
+          "Chạy trình duyệt chỉ khi có môi trường được duyệt."
+        ],
+        "expected": "Nguồn có label, aria-đang chạy, vai trò, scope và điểm ngắt 620px; trình duyệt/WCAG chưa được xác minh. Chờ xác nhận lúc chạy.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css",
+          "apps/study-client/src/app/features/mentor/shared/ui/mentor-pages.css",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ME09-TE-001",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #1: Logo và thương hiệu `Study2Work` `LMS` Mentor",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #1 tại (28,13) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #1 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Logo và thương hiệu `Study2Work` `LMS` Mentor. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-002",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #2: Điều hướng Tổng quan",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #2 tại (351,13) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #2 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Điều hướng Tổng quan. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-003",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #3: Điều hướng Khóa học phụ trách",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #3 tại (524,13) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #3 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Điều hướng Khóa học phụ trách. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-004",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #4: Điều hướng Chấm bài đang chọn",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #4 tại (681,88) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #4 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Điều hướng Chấm bài đang chọn. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-005",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #5: Điều hướng Hộp thư hỗ trợ",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #5 tại (845,13) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #5 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Điều hướng Hộp thư hỗ trợ. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-006",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #6: Điều hướng Thông báo",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #6 tại (992,13) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #6 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Điều hướng Thông báo. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-007",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #7: Nút chuông thông báo",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #7 tại (1277,13) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #7 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Nút chuông thông báo. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-008",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #8: Danh tính và avatar Mentor",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #8 tại (1574,13) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #8 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh: Danh tính và avatar Mentor. Stitch có anchor `href=\"#\"` và identity tĩnh; trang hiện nằm trong `MentorLayout` dùng chung. Không coi thông báo/profile/destination trong ảnh là dữ liệu đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-009",
+        "requirement_ids": [
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #9: Nhãn Trung tâm Đánh giá và Phản hồi",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #9 tại (27,128) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #9 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Eyebrow Trung tâm Đánh giá & Phản hồi là nhãn tĩnh; trang hiện có tiêu đề Bài nộp cần chấm, không có API category.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-010",
+        "requirement_ids": [
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #10: Tiêu đề Danh sách bài nộp cần chấm điểm",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #10 tại (637,170) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #10 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Tiêu đề ảnh khác tiêu đề hiện hành của MentorPageHeader. Ghi nhận sai khác; không phải dữ liệu API.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-011",
+        "requirement_ids": [
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #11: Mô tả mục đích màn hình",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #11 tại (27,211) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #11 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Mô tả ảnh là copy biên tập; trang hiện mô tả bộ lọc chỉ dùng field #54.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-012",
+        "requirement_ids": [
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #12: nhãn Đồng bộ tự động: Bật",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #12 tại (1578,170) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #12 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Đồng bộ tự động là tuyên bố; trang/dịch vụ không có thăm dò định kỳ, timer hoặc websocket.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-013",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #13: Bộ lọc Khóa học phụ trách",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #13 tại (28,325) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #13 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Các giá trị all/fe/be/ux trong danh sách thả xuống chỉ là mẫu; trang có trường nhập mã khóa học và chỉ gửi số nguyên dương 64-bit. Nguồn lựa chọn/giá trị mặc định chưa có.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-014",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #14: Bộ lọc Trạng thái bài nộp",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #14 tại (437,325) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #14 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "`pending`/`graded`/`recheck` là mẫu; trang có đầu vào trạng thái tự nhập, ứng dụng khách loại khoảng trắng ở đầu/cuối và API so khớp chính xác; enum/default chưa chốt.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-015",
+        "requirement_ids": [
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #15: Ô tìm kiếm bài tập",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #15 tại (738,325) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #15 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Tìm kiếm chỉ có trong ảnh; trang hiện không có ô tìm, #54 không nhận q và item không có assignment tiêu đề.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-016",
+        "requirement_ids": [
+          "ME-09-YC-003",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #16: Nút Thiết lập lại bộ lọc",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #16 tại (1550,325) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #16 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Đặt lại ảnh chỉ thay cục bộ value; trang hiện tại chỉ có Xóa bộ lọc trong trạng thái rỗng, gửi trang 1; không có đặt lại riêng khi sẵn sàng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-017",
+        "requirement_ids": [
+          "ME-09-YC-007",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #17: Minh họa trạng thái rỗng",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #17 tại (800,430) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #17 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Ảnh có minh họa rỗng; trang hiện dùng biểu tượng check đơn giản. Rỗng chỉ sau `HTTP 200` với items rỗng.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-018",
+        "requirement_ids": [
+          "ME-09-YC-007",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #18: Tiêu đề trạng thái chưa có bài cần chấm",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #18 tại (553,627) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #18 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Heading ảnh khác rỗng heading hiện tại. Chỉ hiện sau phản hồi thành công không có hàng.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-019",
+        "requirement_ids": [
+          "ME-09-YC-007",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #19: Nội dung giải thích trạng thái rỗng",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #19 tại (395,686) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #19 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Copy ảnh nói về được phân công Mentor và tự cập nhật; API direct-chủ sở hữu không chứng minh các tuyên bố này. Trang hiện nêu không có `submission` phù hợp với bộ lọc.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-020",
+        "requirement_ids": [
+          "ME-09-YC-007",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #20: Nút Tải lại danh sách",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #20 tại (648,817) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #20 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Nút ảnh chỉ animate cục bộ; trang có Tải lại ở trạng thái lỗi và gọi #54, không có nút ở rỗng/sẵn sàng.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-021",
+        "requirement_ids": [
+          "ME-09-YC-006",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #21: Thông tin tuân thủ hạn nộp 48 giờ",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #21 tại (260,914) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #21 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Tuyên bố SLA 48h không có due_date/SLA trong #54; table không hiển thị hạn nộp.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-022",
+        "requirement_ids": [
+          "ME-09-YC-006",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #22: Thông tin hệ thống chấm theo Rubric chuẩn",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #22 tại (590,883) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #22 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Tuyên bố Rubric chuẩn không có trong #54; không suy rubric từ score.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-023",
+        "requirement_ids": [
+          "ME-09-YC-006",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #23: Liên hệ Ban Đào tạo hỗ trợ chuyên môn",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #23 tại (956,914) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #23 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Liên hệ hỗ trợ là copy tĩnh, anchor #; chưa có destination được xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-024",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #24: Logo và thông tin bản quyền chân trang",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #24 tại (26,1064) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #24 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Chân trang ảnh là mẫu; trang dùng chân trang chung khác, không xác nhận copyright lúc chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-025",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #25: Liên kết Quy chế Giảng viên",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #25 tại (1109,1028) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #25 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Liên kết chân trang Liên kết Quy chế Giảng viên trong Stitch dùng href=\"#\"; đích chính sách/hỗ trợ chưa được xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-026",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #26: Liên kết Tiêu chuẩn đánh giá",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #26 tại (1310,1028) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #26 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Liên kết chân trang Liên kết Tiêu chuẩn đánh giá trong Stitch dùng href=\"#\"; đích chính sách/hỗ trợ chưa được xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TE-027",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #27: Liên kết Hỗ trợ kỹ thuật",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Marker #27 tại (1491,1028) px, ảnh 1600×1280; không dùng dữ liệu thật.",
+        "steps": [
+          "Đối chiếu marker #27 ở ảnh sạch/đánh số với DD.",
+          "Đối chiếu mẫu giao diện/trang/bố cục hiện hành, ghi phần chỉ thuộc ảnh.",
+          "Không đánh dấu đạt khi chưa chạy/thiếu bằng chứng."
+        ],
+        "expected": "Liên kết chân trang Liên kết Hỗ trợ kỹ thuật trong Stitch dùng href=\"#\"; đích chính sách/hỗ trợ chưa được xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ME09-TV-001",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003",
+          "ME-09-YC-007",
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EV-001",
+        "group": "Sự kiện",
+        "title": "Vào màn hình và tải danh sách",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Mở tuyến hoặc thử lại sau lỗi.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Khởi tạo `page=1`, bộ lọc rỗng; gọi GET #54 bằng truy vấn được hỗ trợ; kiểm tra phong bì dữ liệu/trang/items. `switchMap` hủy truy vấn cũ. Ca này chưa chạy.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME09-TV-002",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EV-002",
+        "group": "Sự kiện",
+        "title": "Đổi bộ lọc khóa học",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Nhập khóa học ID rồi gửi form.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Loại bỏ khoảng trắng đầu/cuối; chỉ gửi số nguyên dương 64-bit dưới course_id; lọc đặt page=1 rồi gọi #54. all/fe/be/ux trong ảnh không phải ID API. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-003",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EV-003",
+        "group": "Sự kiện",
+        "title": "Đổi trạng thái bài nộp",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Nhập trạng thái rồi gửi form.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Trim, đặt `page=1`; API so khớp chính xác, không enum/normalize. `pending`/`graded`/`recheck` chưa map với giá trị máy chủ. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-004",
+        "requirement_ids": [
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EV-004",
+        "group": "Sự kiện",
+        "title": "Nhập từ khóa bài tập",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Gõ vào ô tìm kiếm trong ảnh.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "`HTML` mẫu có ô tìm nhưng trang hiện không có control/bộ xử lý; #54 không nhận q và phản hồi không có tiêu đề để tìm cục bộ. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/truy vấn.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-005",
+        "requirement_ids": [
+          "ME-09-YC-003",
+          "ME-09-YC-007",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EV-005",
+        "group": "Sự kiện",
+        "title": "Thiết lập lại bộ lọc",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Dùng đặt lại ảnh mẫu hoặc xóa bộ lọc hiện tại trong trạng thái rỗng.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Ảnh mẫu chỉ đổi control cục bộ. Trang hiện tại có “Xóa bộ lọc” trong trạng thái rỗng, gọi bộ lọc rỗng/trang 1; không có nút đặt lại riêng lúc sẵn sàng. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-006",
+        "requirement_ids": [
+          "ME-09-YC-007",
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EV-006",
+        "group": "Sự kiện",
+        "title": "Tải lại danh sách",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Chọn Tải lại trong trạng thái lỗi.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Trang gọi lại #54 và giữ bộ lọc/trang. Nút ảnh chỉ animate; không có thăm dò định kỳ/tự đồng bộ trong trang. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-007",
+        "requirement_ids": [
+          "ME-09-YC-007",
+          "ME-09-YC-009",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EV-007",
+        "group": "Sự kiện",
+        "title": "Mở `Submission` sang ME-10",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Chọn hành động trên hàng đã tải.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Dùng item.id làm `submissionId` tuyến; không dùng assignment_id/user_id; không gọi #55/#56/#57 từ ME-09. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-008",
+        "requirement_ids": [
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EV-008",
+        "group": "Sự kiện",
+        "title": "Dùng đầu trang, chuông và tài khoản",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Kích hoạt logo/nav/notification/avatar trong ảnh.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Anchor và identity Stitch là mẫu; shell hiện dùng `MentorLayout` chung. Không suy unread count/profile/destination từ ảnh. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-009",
+        "requirement_ids": [
+          "ME-09-YC-006",
+          "ME-09-YC-010"
+        ],
+        "target_id": "ME-09-EV-009",
+        "group": "Sự kiện",
+        "title": "Dùng chân trang và tuyên bố hỗ trợ",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Chọn chân trang liên kết hoặc xem tuyên bố hạn nộp/rubric/hỗ trợ.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "Links/claims là tĩnh; #54 không cung cấp deadline/rubric/hỗ trợ. Chân trang hiện tại là dùng chung, không chứng minh đích/cam kết ảnh. Ca này chưa chạy. Chờ xác nhận; chưa được duyệt để coi là hành vi bắt buộc.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/layouts/mentor/mentor-layout.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME09-TV-010",
+        "requirement_ids": [
+          "ME-09-YC-002",
+          "ME-09-YC-003",
+          "ME-09-YC-007",
+          "ME-09-YC-009"
+        ],
+        "target_id": "ME-09-EV-010",
+        "group": "Sự kiện",
+        "title": "Ánh xạ lỗi và mã phản hồi",
+        "precondition": "Dùng IDs, rows, tệp siêu dữ liệu và phản hồi giả; chưa chạy ca này. Không dùng dữ liệu cá nhân hoặc tuyên bố ảnh làm fixture.",
+        "data": "Nhận HTTP/business/network phản hồi #54.",
+        "steps": [
+          "Tạo tình huống giả theo tác nhân kích hoạt.",
+          "Đối chiếu truy vấn/trạng thái/dữ liệu/tuyến với mã nguồn hiện tại.",
+          "Ghi sai khác, không coi ảnh hoặc kiểm thử nguồn chưa chạy là lúc chạy."
+        ],
+        "expected": "200 tách rỗng/non-rỗng; 401/403 dùng thông báo chung; 422/500/network hiện lỗi có thử lại. Không dựng 409 khi nguồn không có tác nhân kích hoạt. Ca này chưa chạy.",
+        "api_ids": [
+          "API-54"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md",
+          "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts",
+          "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html",
+          "apps/study-client/src/app/features/mentor/shared/models/mentor-api-errors.ts",
+          "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+          "apps/study-server/docs/dd/54_mentor_submissions_list/06_Error.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ]
+  },
+  "source_hashes": {
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/00-overview.md": "439db56376a71b0e5e94778db355cb5bac41409dbd854d53f562e0c667f2ad0f",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/01-ui-elements.md": "95b6a3688c79e1f8f9b3b68ddd8b39ab365f6a85586535e86a9771aad47e727f",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/02-events.md": "fb12196e8fc1c98445d6eebf488d3e44add15df6dd1300bc16c7e5a14d9107bc",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/03-data-flow.md": "fbd7f0a29bf303245e8c7b5de53a2d5e70d193640eb31571a23fad442a259c3c",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/04-api-integration.md": "1591a30d480e45b53d88933a69b13aa8014cac14e9e91e979c61569eb1c30004",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/05-business-rules.md": "800ad6865338bcf5017cf78d06f697494dea9d70e8f11192f20bbe8b69fcc79e",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/06-navigation.md": "bf06debde8bc96779d1c354488fb0bb33dd45d9366cfe9e98f73b0845475a47a",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/07-test-cases.md": "aad6132aaa29fcd6270f8a15c5a15290eb19078a7e4da33dc5872e67e76b88ba",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-clean.png": "cc69bf224b53dc95a7900800d16bb626d2bd956d3cf8474db3adb68d3db9f18f",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/screen-numbered.png": "b910728caddab151c66599de695ded5ddae10c544965c335907d4dc5d740d2be",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/images/README.md": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7",
+    "apps/study-client/docs/dd_screens/ME-09-DanhSachBaiCanCham/code.html": "9127d4ce896dbb1347f5ae55c3cf616d9fc5c4bdc351a4f88b8d258e7f320cc8",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md": "85e16750315c2282395712a5fec86f0e9e535346cec88a3a9f975a6f3c08a8c1",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_PLAN.md": "fcaf09838007108a9e970576862abc9021c52a6686dd2c41ba00f6016e9e40cb",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json": "ba24b5a3786db9e91349c4af9ccf052756f0d1dd44f20ffb27d7676455feef45",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers_overlay.svg": "1a200d08725de60c395f1301e2c0ce3a6dcd6b6fdb0333e48a2a28b7e17244d8",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/screen.png": "cc69bf224b53dc95a7900800d16bb626d2bd956d3cf8474db3adb68d3db9f18f",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/screen_annotated.png": "b910728caddab151c66599de695ded5ddae10c544965c335907d4dc5d740d2be",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/code.html": "9127d4ce896dbb1347f5ae55c3cf616d9fc5c4bdc351a4f88b8d258e7f320cc8",
+    "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.ts": "a754f43d032b9266f26365db9c85106f0946a002d43692efe2823022f87a5c65",
+    "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.html": "3e3cb234acc1e38b0fead71619665ba4d32346813c1ec25a263c45ee180b1f7f",
+    "apps/study-client/src/app/features/mentor/ME09/pages/me09-page.css": "c60780346aec567ff9563370324edab29f33da86ea3b9730f2b89a89feae33c0",
+    "apps/study-client/src/app/features/mentor/ME09/data-access/me09-submissions.service.ts": "eedef06805793253a568dee5d81bf09a1f9395b68459eec308e917bfc35868e2",
+    "apps/study-client/src/app/features/mentor/mentor.route.ts": "e06357d47f5318efd79109ebd1b4aa4efd06898f19741cbbd0ebeb54b31a89e1",
+    "apps/study-client/src/app/features/mentor/mentor.route.spec.ts": "b4df002b58c815f8fe5f83c59959dce558834c308a05791fabe65d0e96727837",
+    "apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts": "2331a5aeed9174c3dcffe45f1358505be6eaea935bbfa441d894fdb20972fea2",
+    "apps/study-client/src/app/features/mentor/shared/models/mentor-api-errors.ts": "ddca9c5cc07ae2b6b9d25180bc364436d6c1a4578c6c4b323900e584cfb320f9",
+    "apps/study-client/src/app/features/mentor/shared/ui/mentor-pages.css": "3e16000e508a61b4b77cbefc8f25f680f8863e178e767c52c85f372ffc235ff6",
+    "apps/study-client/src/app/features/mentor/shared/ui/mentor-page-header.ts": "2d72cac6ffb16da1b293868275cc664951c26fde05d34941e914936580dc36f4",
+    "apps/study-client/src/app/layouts/mentor/mentor-layout.html": "73164548440363fff34f40ea0be950528af83991230d3139e2bb3d73c2be6366",
+    "apps/study-client/src/app/layouts/mentor/mentor-layout.css": "d8de66b8466edf5669f3365b2347d723ef79aed014a6ad16e2683007d6b0947d",
+    "apps/study-client/docs/list_screen.md": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40",
+    "apps/study-server/app/api/v1.py": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf",
+    "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py": "d200fec2b8d7e64af932359ba7cc9c1289d591efbd69ee855dc275483c6d85bd",
+    "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/query.py": "8c0a3e45114f5d4fb097760ca643c388f86551094f410a5fbf76ed04685cbcd7",
+    "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py": "b22d713dcbd17818f3570a1f462b8ea1ea0b8d933bb998f7bd8e3022286c12ea",
+    "apps/study-server/tests/modules/mentor/api_54_mentor_submissions_list/test_mentor_submissions_list.py": "a95ffd9f89abde946d5d76e1295532b224e77a9f176c0d3bc5b6382f627f2764",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/02_Overview.md": "74c8411663ee7cb5353ec797db0f98f34906d392b458d56bd2b2baa0a33ff565",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/03_Request.md": "71e459574cb2070c2a504aabb6e00250331e434680545384b3f21575a906c690",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/04_Response.md": "b3860fbcb9ce4a0fb1defa2d1e29c5a3c1b5e6983564fb0da16ae8ece3c74c8c",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/05_Data_Mapping.md": "749dd93923c368c4eb2e7335e78dfa5e5a0494d421f6d49a0b9cc56fa9ed5b15",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/06_Error.md": "646f9270d2aa539919ef5507172a51965cda27c04bd4b71a7ca4014d0d243745",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/07_table.md": "57d1fc938be99f55602610da467fb4df20ba3936bd871c5748b6a305fc4a1bd9",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/OPEN_QUESTIONS.md": "435a449674fcc3c09dc552901ff58f933447bec078d3c18cc777b5454fd230a3",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/PLAN_RESULT.md": "d7dc9530b9ca4a463064dc0bcf0e89a2d4da8bde5740c4590bb087341a986b8f",
+    "apps/study-server/docs/dd/54_mentor_submissions_list/VERIFICATION_REPORT.md": "9754c64571f44497d5e4945787efd715c334907f89f8ad9bc9b53ea5d51a3c8d"
+  }
+}

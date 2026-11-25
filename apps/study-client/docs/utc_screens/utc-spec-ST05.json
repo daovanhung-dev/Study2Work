@@ -1,0 +1,1700 @@
+{
+  "metadata": {
+    "screen_id": "ST-05",
+    "screen_name": "Kiểm tra đơn hàng",
+    "module": "Học viên — tạo đơn hàng trong nhánh trả phí",
+    "route": "/student/checkout/:courseId",
+    "actor": "Học viên đã đăng nhập theo AC-12",
+    "version": "UTC v0.1",
+    "dd_version": "DD v0.1",
+    "dd_status": "BLOCKED",
+    "runtime_status": "Chưa xác minh khi chạy/triển khai",
+    "author": "Chưa xác định trong DD",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/00-overview.md và apps/study-client/docs/screen_stitch/03_student/ST-05_kiem-tra-don-hang-checkout/ST-05.md",
+    "release_readiness": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+    "baseline_authorization": "Người dùng chỉ định dùng DD trong kho làm chuẩn kể cả khi trạng thái `BLOCKED`; giữ nguyên blocker và không tự chốt nội dung còn mở.",
+    "discrepancy_note": "DD gói tài liệu có nội dung không đồng nhất về đường dẫn/API #16; mã nguồn hiện tại cho thấy đường dẫn ST-05 và máy chủ #16 có mã nguồn, nhưng máy khách không gọi #16, mục khai báo `UNWIRED` và DDL thiếu bảng `orders`."
+  },
+  "overall": {
+    "objective": "Kiểm tra khóa học trước khi tạo đơn hàng trong nhánh trả phí của AC-12; chỉ gửi #16 sau xác nhận rõ ràng theo điều khoản đã được duyệt.",
+    "inputs": "`courseId` trên đường dẫn; phiên học viên; phản hồi #08; thông tin số tiền/nhà cung cấp/điều khoản và thao tác xác nhận sau khi được phê duyệt.",
+    "outputs": "Trạng thái màn hình; theo danh mục màn hình có thể gửi #16 một lần và giữ mã đơn hàng để chuyển sang ST-06 khi ánh xạ được duyệt.",
+    "main_flow": "ST-04 nhánh trả phí → đọc lại #08 → hiển thị số tiền/nhà cung cấp/điều khoản đã được duyệt → học viên xác nhận → POST #16 → nhận đơn hàng → chuyển ST-06. Mã nguồn hiện tại chỉ đọc #08 rồi hiển thị thanh toán chưa khả dụng; không gọi #16.",
+    "preconditions": "AC-12 yêu cầu học viên đăng nhập. `StudentLayout` hiện hiển thị biểu mẫu đăng nhập nếu chưa có phiên; đường dẫn không khai báo canActivate. Mã khóa học/lược đồ môi trường chưa được xác minh đang chạy.",
+    "states": [
+      "Đang kiểm tra khóa học",
+      "Không tìm thấy khóa học",
+      "Lỗi tải khóa học",
+      "Thanh toán chưa thể bắt đầu",
+      "Đang xác nhận — dự kiến, chưa có điều khiển",
+      "Đang tạo đơn — dự kiến, máy khách chưa nối",
+      "Lỗi tạo đơn — chưa có giao diện ánh xạ"
+    ],
+    "security": "#16 theo danh mục API yêu cầu Bearer JWT và vai trò học viên. Không gửi đơn hàng khi không có xác nhận; không xem giá, giao diện trạng thái hoặc phản hồi từ trình duyệt là bằng chứng đã thanh toán. Mã nguồn phía máy chủ hiện tính số tiền từ giá và nhận nhà cung cấp chuỗi không rỗng; đây là hiện trạng mã nguồn, chưa phải quy tắc được duyệt.",
+    "out_of_scope": "Không xác minh giao dịch thật, cơ sở dữ liệu/lược đồ thực tế hoặc thanh toán #17/#18; không chạy ứng dụng/trình duyệt/API/cơ sở dữ liệu kiểm thử trong bộ UTC này."
+  },
+  "apis": [
+    {
+      "id": "#08",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}",
+      "request": "`course_id` trên đường dẫn là số nguyên int64; không có truy vấn hoặc thân data. Theo danh mục API, API công khai và không cần Bearer. ST-05 truyền chuỗi đường dẫn nguyên trạng tới dịch vụ #08.",
+      "response": "200 `DESIGN_RESOURCE_RETRIEVED`; `data.items` có một khóa học có trạng thái `PUBLISHED` với các trường `id`, `title`, `description`, `thumbnail_url`, `price` dạng chuỗi số thập phân, `status` và `mentor`; phân trang một mục. Không có đơn vị tiền tệ hoặc số tiền báo giá.",
+      "errors": "404 `DESIGN_RESOURCE_NOT_FOUND` cho mã định danh sai hoặc khóa học không có/chưa `PUBLISHED`. 500 `DESIGN_INTERNAL_ERROR` cho lỗi truy vấn/ánh xạ. Mã nguồn truy vấn SQL dùng `LEFT JOIN`; thiếu người hướng dẫn có thể làm bộ ánh xạ trả lỗi 500.",
+      "auth": "Công khai; không cần Bearer theo danh mục API.",
+      "design_status": "Có mã nguồn hiện hành và nơi gọi của ST-05; DD API #08 có khác biệt `INNER JOIN`/`LEFT JOIN`.",
+      "source_ref": "docs/lists/list_api.md — #08; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts; apps/study-server/app/modules/guest/api_08_courses_detail/view.py; apps/study-server/app/modules/shared/course_catalog/helpers.py",
+      "event_ids": [
+        "ST-05-EV-002"
+      ]
+    },
+    {
+      "id": "#16",
+      "method": "POST",
+      "path": "/api/v1/orders",
+      "request": "Theo danh mục API: Bearer JWT, vai trò học viên; JSON thân dữ liệu gồm `course_id:int64` và `payment_provider:PaymentProvider`. Các giá trị `PaymentProvider` chưa được danh mục API liệt kê. Mã nguồn hiện kiểm tra Bearer của học viên, số nguyên dương và nhà cung cấp không rỗng.",
+      "response": "Theo quy ước API: 201 `DESIGN_RESOURCE_CREATED` với đơn hàng gồm `id`, `course_id`, `user_id`, `amount`, `currency`, `status`, `created_at`; AC-12 chỉ chốt trạng thái khởi tạo `PENDING`. Mã nguồn hiện lấy số tiền từ `courses.price`, đặt đơn vị tiền tệ `VND`, rồi thử ghi `orders`.",
+      "errors": "Danh mục API nêu 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`. Mã nguồn hiện cũng trả 422 cho khóa học không có trạng thái `PUBLISHED` hoặc giá không dương; lỗi SQL/ánh xạ hoàn tác và trả 500. Không xác minh được ghi thật vì DDL trong kho không có `orders`.",
+      "auth": "Bearer JWT; vai trò học viên theo danh mục API và máy chủ bộ kiểm tra.",
+      "design_status": "DD API #16 ở trạng thái bản nháp và còn cần quyết định; mã nguồn máy chủ có tuyến API và mô-đun xử lý; mục khai báo API phía máy khách vẫn `UNWIRED`; việc lưu trữ và hành vi khi chạy chưa được xác minh.",
+      "source_ref": "docs/lists/list_api.md — #16; apps/study-client/src/app/core/constant/api.constants.ts — API_016; apps/study-server/app/api/v1.py — route #16; apps/study-server/app/modules/student/api_16_orders/models.py; apps/study-server/app/modules/student/api_16_orders/validate.py; apps/study-server/app/modules/student/api_16_orders/query.py; apps/study-server/app/modules/student/api_16_orders/view.py; apps/study-server/docs/dd/16_orders/OPEN_QUESTIONS.md",
+      "event_ids": [
+        "ST-05-EV-004"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-05-YC-001",
+      "description": "Mở màn hình từ nhánh trả phí của ST-04 bằng mã khóa học đúng và kiểm tra ngữ cảnh phiên học viên.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/00-overview.md — §2–§4; apps/study-client/src/app/layouts/student/student-layout.html",
+      "notes": "Đường dẫn đã đăng ký; thành phần cha `StudentLayout` hiển thị biểu mẫu đăng nhập nếu chưa có phiên. DD chưa chốt luồng bảo vệ đường dẫn/URL quay lại và cách xử lý đăng nhập tiếp tục.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-002",
+      "description": "Đọc lại khóa học qua #08 khi mở ST-05 trước khi cân nhắc tạo đơn hàng.",
+      "group": "API #08",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/03-data-flow.md",
+      "notes": "Danh mục màn hình yêu cầu đọc lại dữ liệu; AC-12 chưa chốt lần đọc thứ hai hoặc xử lý giá đổi. Không xem lần đọc này là báo giá có hiệu lực nếu chưa có chính sách.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-003",
+      "description": "Chỉ tiếp tục trạng thái sẵn sàng khi #08 trả khóa học có trạng thái `PUBLISHED`; phân biệt thiếu khóa học với lỗi đọc.",
+      "group": "Trạng thái khóa học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+      "notes": "Mã nguồn Angular hiện hiển thị trạng thái không thể bắt đầu thanh toán với khóa học có trạng thái `PUBLISHED`; 404 hoặc khóa học không có trạng thái `PUBLISHED` đi tới không tìm thấy. Không có giao diện cho thông tin số tiền/nhà cung cấp/điều khoản đã duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-004",
+      "description": "Hiển thị lỗi đọc #08 riêng với trạng thái chưa khả dụng của thanh toán.",
+      "group": "Lỗi #08",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02; apps/study-client/src/app/features/student/ST05/pages/st05-page.html",
+      "notes": "404 hiện hiển thị không tìm thấy; lỗi khác hoặc khung phản hồi không hợp lệ hiện hiển thị lỗi chung. Nội dung lỗi và hành động thử lại chưa được DD chốt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-005",
+      "description": "Chỉ hiển thị số tiền và tiền tệ theo nguồn, phép tính và chính sách giá đã được duyệt.",
+      "group": "Giá và số tiền",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/05-business-rules.md; apps/study-server/app/modules/student/api_16_orders/view.py",
+      "notes": "#08 trả `price`; mã nguồn máy chủ #16 hiện lấy giá khóa học làm số tiền và gán `VND`. DD API #16 chưa phê duyệt phép tính hoặc tiền tệ; không suy diễn từ mã nguồn hiện tại.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-006",
+      "description": "Chỉ chọn hoặc gửi nhà cung cấp thanh toán có danh sách và ý nghĩa đã được duyệt.",
+      "group": "Nhà cung cấp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/04-api-integration.md; apps/study-server/app/modules/student/api_16_orders/validate.py",
+      "notes": "Quy ước API #16 yêu cầu `payment_provider:PaymentProvider`; mã nguồn hiện chỉ kiểm tra chuỗi không rỗng. Danh sách giá trị cho phép và quan hệ với trường `provider` của #17 chưa được quyết định.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-007",
+      "description": "Yêu cầu thao tác xác nhận tường minh trước khi gửi yêu cầu tạo đơn hàng.",
+      "group": "Xác nhận mua",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-03; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md",
+      "notes": "Danh mục màn hình yêu cầu người dùng xác nhận rõ ràng; bản mẫu và Angular hiện không có điều khiển xác nhận. Không tự thêm ô chọn, nút hoặc điều khoản.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-008",
+      "description": "Chỉ gửi #16 theo một thao tác xác nhận hợp lệ; không gửi khi mở trang hoặc chỉ có giá dương.",
+      "group": "Tạo đơn hàng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-04; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-server/app/modules/student/api_16_orders/view.py",
+      "notes": "Mục khai báo API phía máy khách #16 ở trạng thái `UNWIRED`; `ST05Page` không gọi API này. Mã nguồn máy chủ đã có tuyến API và mô-đun xử lý, nhưng có thể ghi đơn hàng chỉ khi cơ sở dữ liệu được cấu hình phù hợp. Chưa có quyết định được duyệt về cơ chế chống gửi trùng, cách xử lý yêu cầu lặp, hoàn tác hoặc gọi API trực tiếp.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-009",
+      "description": "Chỉ tiếp tục sang ST-06 khi phản hồi đơn hàng hợp lệ và ánh xạ `data.id` sang `order_id` được duyệt.",
+      "group": "Dữ liệu đơn hàng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/03-data-flow.md; apps/study-server/docs/dd/16_orders/OPEN_QUESTIONS.md",
+      "notes": "Quy ước API #16 mô tả cấu trúc logic của đơn hàng; bảng `orders` chưa có trong DDL/ERD đang lưu trong kho. Khóa chính, cách lưu trữ và sự tương ứng với đầu vào `order_id` của #17 chưa được xác nhận.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-010",
+      "description": "Phân biệt các mã lỗi #16 đã có trong danh mục API và không tự thêm tình huống lỗi hoặc cách thử lại.",
+      "group": "Lỗi tạo đơn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/04-api-integration.md; docs/lists/list_api.md — #16",
+      "notes": "Danh mục API nêu 401/403/422/500; mã nguồn hiện cũng dùng 422 cho khóa học không có trạng thái `PUBLISHED` hoặc giá không dương và 500 khi truy vấn/ghi thất bại. Máy khách chưa có nơi gọi hoặc giao diện ánh xạ cho các lỗi #16.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-011",
+      "description": "Không mở ST-06 và không khởi tạo thanh toán nếu chưa có mã đơn hàng được xác nhận.",
+      "group": "Điều hướng thanh toán",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/00-overview.md — §2–§3; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/03-data-flow.md",
+      "notes": "DD yêu cầu giữ `order_id`; #16 phản hồi có `data.id`; #17 dùng `order_id`. Chưa có xác nhận tính liên tục của mã định danh; không đánh dấu đã thanh toán hoặc đã ghi danh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-05-YC-012",
+      "description": "Ghi nhận đúng đích của nút quay lại và giữ nguyên khác biệt giữa nhãn nút với đường dẫn hiện tại.",
+      "group": "Quay lại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #11; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/06-navigation.md",
+      "notes": "Bản mẫu ghi “Quay lại kiểm tra ghi danh” nhưng `href=/courses`; không có `courseId` hoặc trạng thái quay lại. Đích về ST-04 và giữ ngữ cảnh cần được chốt.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-05-YC-013",
+      "description": "Kiểm tra các liên kết ở đầu trang, nhóm điều hướng và chân trang theo địa chỉ trong thuộc tính `href` của bản mẫu và Angular.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #1–#5, #12–#13; apps/study-client/src/app/features/student/ST05/pages/st05-page.html",
+      "notes": "Một số địa chỉ là tĩnh; mục “Khóa học của tôi” trong Angular là thẻ `span` bị vô hiệu hóa, khác với bản mẫu. Địa chỉ đích, yêu cầu phiên và cách nhóm điều hướng thích ứng trên màn hình nhỏ chưa được thống nhất.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-05-YC-014",
+      "description": "Kiểm tra thông báo trạng thái và khả năng dùng bàn phím/trình đọc màn hình ở các trạng thái hiện có.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md; apps/study-client/src/app/features/student/ST05/pages/st05-page.html",
+      "notes": "Angular dùng `role=\"status\"`, `aria-labelledby`, `aria-live=\"polite\"` ở trạng thái đang tải và `aria-hidden` cho biểu tượng. Chưa có tiêu chí được duyệt về vị trí lấy nét và thông báo trạng thái cho toàn luồng.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-05-YC-015",
+      "description": "Xác nhận lược đồ và môi trường trước khi kiểm tra ghi đơn hàng; không coi DDL trong kho là bằng chứng cơ sở dữ liệu đang chạy.",
+      "group": "Môi trường dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/05-business-rules.md; apps/study-server/docs/diagrams/DB_UNICA_TABLES.md; infra/postgres/study-server/DB.sql",
+      "notes": "ERD V1 và DDL trong kho không có bảng `orders`; mã nguồn máy chủ hiện thử lệnh ghi vào bảng đó. Lược đồ thực tế, bản chuyển đổi dữ liệu, quyền cơ sở dữ liệu và giao dịch chưa được xác minh.",
+      "priority": "Cao"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-05-EL-001",
+      "marker": "ST-05-EL-01",
+      "name": "Liên kết thương hiệu Study2Work",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên trái",
+      "properties": "Bản mẫu dùng `href=\"/\"`; HTML Angular hiện cũng mở trang chủ.",
+      "event_ids": [
+        "ST-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #1 / ST05-EL-01"
+    },
+    {
+      "id": "ST-05-EL-002",
+      "marker": "ST-05-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm điều hướng",
+      "position": "Đầu trang",
+      "properties": "Bản mẫu có Trang chủ, Khóa học, Khóa học của tôi, Tiến độ. Bản mẫu ẩn nhóm điều hướng dưới điểm ngắt `md`; Angular hiện đổi “Khóa học của tôi” thành chữ `aria-disabled=true`.",
+      "event_ids": [
+        "ST-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #2 / ST05-EL-02"
+    },
+    {
+      "id": "ST-05-EL-003",
+      "marker": "ST-05-EL-03",
+      "name": "Liên kết Đăng nhập",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Bản mẫu và Angular trỏ `/login`; khác với điều kiện học viên đã đăng nhập theo AC-12.",
+      "event_ids": [
+        "ST-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #3 / ST05-EL-03"
+    },
+    {
+      "id": "ST-05-EL-004",
+      "marker": "ST-05-EL-04",
+      "name": "Liên kết Đăng ký",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Liên kết tĩnh `/register` trong bản mẫu và Angular.",
+      "event_ids": [
+        "ST-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #4 / ST05-EL-04"
+    },
+    {
+      "id": "ST-05-EL-005",
+      "marker": "ST-05-EL-05",
+      "name": "Đường dẫn điều hướng Trang chủ > Khóa học > Kiểm tra ghi danh > Kiểm tra đơn hàng",
+      "type": "Đường dẫn điều hướng",
+      "position": "Dưới đầu trang",
+      "properties": "Bản mẫu có các liên kết Trang chủ, Khóa học, Kiểm tra ghi danh cùng nhãn trang hiện tại. Liên kết “Kiểm tra ghi danh” cũng trỏ `/courses`, không giữ `courseId`.",
+      "event_ids": [
+        "ST-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #5 / ST05-EL-05"
+    },
+    {
+      "id": "ST-05-EL-006",
+      "marker": "ST-05-EL-06",
+      "name": "Biểu tượng giỏ hàng và thanh toán",
+      "type": "Biểu tượng trang trí",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Biểu tượng `shopping_cart_checkout` tĩnh; không đại diện phản hồi thanh toán hoặc đơn hàng từ máy chủ.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #6 / ST05-EL-06"
+    },
+    {
+      "id": "ST-05-EL-007",
+      "marker": "ST-05-EL-07",
+      "name": "Thẻ trạng thái",
+      "type": "Vùng nội dung",
+      "position": "Giữa màn hình",
+      "properties": "Khung tĩnh chứa biểu tượng, tiêu đề, thông báo và nút hành động. Angular hiện dùng `role=status` và `aria-labelledby`; không phải bản ghi đơn hàng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #7 / ST05-EL-07"
+    },
+    {
+      "id": "ST-05-EL-008",
+      "marker": "ST-05-EL-08",
+      "name": "Tiêu đề Kiểm tra đơn hàng",
+      "type": "Tiêu đề H1",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Tiêu đề tĩnh khi đang tải hoặc thanh toán chưa khả dụng; không lấy dữ liệu đơn hàng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #8 / ST05-EL-08"
+    },
+    {
+      "id": "ST-05-EL-009",
+      "marker": "ST-05-EL-09",
+      "name": "Thông báo Quy trình thanh toán chưa thể bắt đầu",
+      "type": "Thông báo trạng thái",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Bản mẫu là nội dung tĩnh; Angular hiển thị khi #08 xác nhận khóa học có trạng thái `PUBLISHED`. Không phải thông điệp lỗi #16.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #9 / ST05-EL-09"
+    },
+    {
+      "id": "ST-05-EL-010",
+      "marker": "ST-05-EL-10",
+      "name": "Giải thích chưa thể khởi tạo thông tin đơn hàng",
+      "type": "Văn bản giải thích",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Nội dung tĩnh yêu cầu kiểm tra điều kiện ghi danh; không có nút thử lại.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #10 / ST05-EL-10"
+    },
+    {
+      "id": "ST-05-EL-011",
+      "marker": "ST-05-EL-11",
+      "name": "Nút Quay lại kiểm tra ghi danh",
+      "type": "Liên kết dạng nút",
+      "position": "Dưới thông báo",
+      "properties": "Nhãn nói quay lại kiểm tra ghi danh nhưng `href=\"/courses\"`; không truyền mã khóa học, truy vấn hoặc trạng thái quay lại.",
+      "event_ids": [
+        "ST-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #11 / ST05-EL-11"
+    },
+    {
+      "id": "ST-05-EL-012",
+      "marker": "ST-05-EL-12",
+      "name": "Thương hiệu Study2Work ở chân trang",
+      "type": "Nhóm thương hiệu",
+      "position": "Chân trang, bên trái",
+      "properties": "Bản mẫu là chữ/biểu tượng tĩnh; Angular hiện biến thành liên kết trang chủ.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #12 / ST05-EL-12"
+    },
+    {
+      "id": "ST-05-EL-013",
+      "marker": "ST-05-EL-13",
+      "name": "Nhóm liên kết chân trang",
+      "type": "Nhóm điều hướng",
+      "position": "Chân trang, bên phải",
+      "properties": "Gồm Trang chủ, Khóa học, Đăng nhập và Đăng ký theo đường dẫn trong bản mẫu.",
+      "event_ids": [
+        "ST-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #13 / ST05-EL-13"
+    },
+    {
+      "id": "ST-05-SRC-EL-014",
+      "marker": "",
+      "name": "Trạng thái đang kiểm tra khóa học",
+      "type": "Trạng thái tải",
+      "position": "Nội dung chính",
+      "properties": "Angular hiển thị dòng “Đang kiểm tra thông tin khóa học…” khi gọi #08; vùng tải dùng `aria-live=polite`.",
+      "event_ids": [
+        "ST-05-EV-001",
+        "ST-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh loading; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+    },
+    {
+      "id": "ST-05-SRC-EL-015",
+      "marker": "",
+      "name": "Trạng thái không tìm thấy khóa học",
+      "type": "Trạng thái không khả dụng",
+      "position": "Nội dung chính",
+      "properties": "Angular hiển thị khi #08 trả 404, không có khóa học hoặc khóa học không có trạng thái `PUBLISHED`.",
+      "event_ids": [
+        "ST-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh not-found; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+    },
+    {
+      "id": "ST-05-SRC-EL-016",
+      "marker": "",
+      "name": "Trạng thái lỗi tải khóa học",
+      "type": "Trạng thái lỗi",
+      "position": "Nội dung chính",
+      "properties": "Angular dùng cho phản hồi khung phản hồi sai hoặc lỗi #08 khác 404; chưa có nút thử lại.",
+      "event_ids": [
+        "ST-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh error; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+    },
+    {
+      "id": "ST-05-SRC-EL-017",
+      "marker": "",
+      "name": "Trạng thái thanh toán chưa thể bắt đầu",
+      "type": "Trạng thái chưa khả dụng",
+      "position": "Nội dung chính",
+      "properties": "Angular hiển thị thẻ chưa khả dụng sau khi #08 trả khóa học có trạng thái `PUBLISHED`. Không hiển thị giá, nhà cung cấp, điều khoản hay tạo đơn hàng.",
+      "event_ids": [
+        "ST-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh unavailable; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-05-EV-001",
+      "name": "Mở đường dẫn và kiểm tra phiên học viên",
+      "trigger": "Mở `/student/checkout/:courseId` từ nhánh trả phí hoặc truy cập trực tiếp.",
+      "processing": "Đường dẫn ST-05 đã được đăng ký và đặt trong `StudentLayout`. Không có canActivate tại đường dẫn; `StudentLayout` hiện hiển thị biểu mẫu đăng nhập khi chưa có phiên, thay cho vùng hiển thị nội dung con. Sau khi đã xác thực, `ST05Page` đọc `courseId` dạng chuỗi.",
+      "element_ids": [
+        "ST-05-SRC-EL-014"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-01; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/layouts/student/student-layout.html"
+    },
+    {
+      "id": "ST-05-EV-002",
+      "name": "Đọc lại khóa học qua API #08",
+      "trigger": "`ST05Page` nhận `courseId` không rỗng hoặc `courseId` trên đường dẫn thay đổi.",
+      "processing": "Gọi GET #08 công khai, không Bearer. Mã nguồn hiện chuyển sang đang tải; phản hồi hợp lệ với mục đầu tiên có trạng thái `PUBLISHED` hiển thị chưa khả dụng; 404 hoặc mục thiếu/không có trạng thái `PUBLISHED` hiển thị không tìm thấy; lỗi HTTP khác 404 hoặc khung phản hồi/`businessCode` sai hiển thị lỗi. Không hiển thị giá và không tạo đơn hàng.",
+      "element_ids": [
+        "ST-05-SRC-EL-014",
+        "ST-05-SRC-EL-015",
+        "ST-05-SRC-EL-016",
+        "ST-05-SRC-EL-017"
+      ],
+      "api_ids": [
+        "#08"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts"
+    },
+    {
+      "id": "ST-05-EV-003",
+      "name": "Xác nhận điều khoản đơn hàng",
+      "trigger": "Một thao tác xác nhận mua của học viên sau khi xem điều khoản đã được phê duyệt.",
+      "processing": "Đây là bước dự kiến trong danh mục màn hình; mã HTML và Angular hiện không có ô chọn, nút xác nhận, số tiền, nhà cung cấp hoặc điều khoản. Không tạo điều khiển giả định hay chuyển sang tạo đơn hàng.",
+      "element_ids": [
+        "ST-05-EL-007",
+        "ST-05-EL-008",
+        "ST-05-EL-009",
+        "ST-05-EL-010"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-03; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md; apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+    },
+    {
+      "id": "ST-05-EV-004",
+      "name": "Tạo đơn hàng qua API #16",
+      "trigger": "Một thao tác xác nhận hợp lệ theo thiết kế đã duyệt; hiện chưa có kích hoạt trong màn hình.",
+      "processing": "Quy ước API yêu cầu Bearer của học viên và thân dữ liệu gồm `course_id` và `payment_provider`. Mục khai báo API phía máy khách #16 là `UNWIRED`, `ST05Page` không gọi #16. Mã nguồn máy chủ đã có tuyến API và mô-đun: kiểm tra học viên, khóa học có trạng thái `PUBLISHED` và giá dương; số tiền lấy từ giá, đơn vị tiền tệ VND, trạng thái `PENDING`, thử `INSERT INTO orders`, xác nhận giao dịch; lỗi dữ liệu/SQL hoàn tác và trả 500. Không coi mã nguồn là khi chạy thành công vì DDL không có bảng `orders` và chưa tìm thấy kiểm thử #16.",
+      "element_ids": [
+        "ST-05-SRC-EL-017"
+      ],
+      "api_ids": [
+        "#16"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-04; apps/study-server/app/api/v1.py — route #16; apps/study-server/app/modules/student/api_16_orders/view.py; infra/postgres/study-server/DB.sql"
+    },
+    {
+      "id": "ST-05-EV-005",
+      "name": "Quay lại kiểm tra ghi danh",
+      "trigger": "Chọn nút hành động bên dưới thẻ trạng thái.",
+      "processing": "Bản mẫu và Angular hiện dùng thuộc tính `href`/`routerLink` đều trỏ tới `/courses`; nhãn lại nói quay về kiểm tra ghi danh. Không truyền `courseId` hoặc trạng thái quay lại và không gọi API. Đích dự kiến ST-04 cần quyết định.",
+      "element_ids": [
+        "ST-05-EL-011"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-05; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #11"
+    },
+    {
+      "id": "ST-05-EV-006",
+      "name": "Điều hướng đầu trang, đường dẫn điều hướng và chân trang",
+      "trigger": "Chọn một liên kết trong các vùng điều hướng.",
+      "processing": "Ghi đúng địa chỉ đích trong thuộc tính `href` trong bản mẫu và routerLink trong Angular. Nhóm “Khóa học của tôi” khác nhau: liên kết trong bản mẫu, thẻ `span` `aria-disabled` trong Angular. Không suy ra đường dẫn đích tồn tại hoặc trạng thái đăng nhập từ mã HTML.",
+      "element_ids": [
+        "ST-05-EL-001",
+        "ST-05-EL-002",
+        "ST-05-EL-003",
+        "ST-05-EL-004",
+        "ST-05-EL-005",
+        "ST-05-EL-013"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-06; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #1–#5, #13; apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-05-BL-01",
+      "description": "DD API #16 đang ở trạng thái bản nháp và còn cần quyết định; tài liệu API cũ ghi `UNWIRED`/`NOT_FOUND`, trong khi mã nguồn máy chủ đã có tuyến `/orders` và mô-đun xử lý. Mục khai báo API phía máy khách vẫn `UNWIRED`.",
+      "impact": "Cần giữ riêng quy ước thiết kế, mã nguồn phía máy chủ và mức nối ở màn hình; không suy ra API chạy thành công.",
+      "decision": "Đồng bộ DD API #16, danh mục màn hình, kết nối phía máy khách và trạng thái xác minh.",
+      "source_ref": "apps/study-server/docs/dd/16_orders/02_Overview.md; apps/study-server/docs/dd/16_orders/PLAN_RESULT.md; apps/study-server/app/api/v1.py; apps/study-client/src/app/core/constant/api.constants.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-02",
+      "description": "ERD V1 và DDL trong kho không có bảng `orders`, trong khi mã nguồn API #16 thử ghi vào bảng này.",
+      "impact": "Không có bằng chứng vật lý lưu trữ hoặc khả năng tạo đơn hàng trong môi trường triển khai.",
+      "decision": "Cung cấp lược đồ và bản chuyển đổi dữ liệu đã được duyệt, rồi xác minh môi trường. Không xem bảng `payments` là bảng thay thế cho `orders`.",
+      "source_ref": "apps/study-server/docs/diagrams/DB_UNICA_TABLES.md; apps/study-server/docs/diagrams/DB_UNICA_ERD.drawio; infra/postgres/study-server/DB.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-03",
+      "description": "Danh sách giá trị của nhà cung cấp và quan hệ giữa `payment_provider` của #16 với `provider` của #17 chưa được quyết định; mã nguồn hiện chỉ từ chối chuỗi rỗng.",
+      "impact": "Không thể thiết kế danh sách chọn, xác thực danh sách giá trị hoặc bảo đảm cùng nhà cung cấp ở bước thanh toán.",
+      "decision": "Chốt các giá trị được phép, cách người dùng chọn, cách lưu trữ và cách chuyển dữ liệu sang #17.",
+      "source_ref": "apps/study-server/docs/dd/16_orders/OPEN_QUESTIONS.md — Q-16-02; docs/lists/list_api.md — #16/#17; apps/study-server/app/modules/student/api_16_orders/validate.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-04",
+      "description": "Nguồn số tiền/đơn vị tiền tệ chưa được API DD phê duyệt; mã nguồn hiện tại lấy `courses.price` và ghi cố định `VND`.",
+      "impact": "Không thể xác nhận số tiền hiển thị, giảm giá/thuế, làm tròn hoặc xử lý khi giá đổi giữa ST-04 và ST-05.",
+      "decision": "Chốt nguồn giá, phép tính số tiền, đơn vị tiền tệ và chính sách giá cũ.",
+      "source_ref": "apps/study-server/docs/dd/16_orders/OPEN_QUESTIONS.md — Q-16-03; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02; apps/study-server/app/modules/student/api_16_orders/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-05",
+      "description": "Danh mục màn hình yêu cầu đọc lại #08 tại ST-05 nhưng AC-12 không xác định vị trí lần đọc thứ hai hoặc cách xử lý khi giá thay đổi.",
+      "impact": "Không rõ lần đọc nào là căn cứ tạo đơn hàng và điều gì xảy ra khi giá thay đổi.",
+      "decision": "Chốt thứ tự #08, #15, nhánh trả phí, thời điểm xác nhận mức giá và hành vi khi giá khác.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/03-data-flow.md — luồng dự kiến",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-06",
+      "description": "Danh mục màn hình yêu cầu xác nhận rõ ràng nhưng bản mẫu và Angular không có điều khiển xác nhận, số tiền, nhà cung cấp hoặc điều khoản.",
+      "impact": "Chưa thể kiểm tra thao tác xác nhận hoặc việc ghi dữ liệu qua #16 cho tới khi giao diện và quy tắc được duyệt.",
+      "decision": "Duyệt điều khoản, thông tin số tiền và nhà cung cấp cần hiển thị, điều khiển xác nhận và cách kiểm tra trước khi nối API.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-03",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-07",
+      "description": "Cấu trúc bảng đơn hàng, quy tắc giao dịch và hoàn tác, chống gửi trùng, xử lý yêu cầu lặp và quy tắc gọi trực tiếp chưa được quyết định. Mã nguồn máy chủ có lệnh ghi nhưng không chứng minh chính sách đã được duyệt.",
+      "impact": "Không thể xác nhận an toàn việc gửi lặp, lỗi giữa chừng hoặc gọi API #16 ngoài nhánh trả phí.",
+      "decision": "Chốt lược đồ cùng quy tắc ghi dữ liệu và xử lý lỗi, rồi đối chiếu mã nguồn với các quyết định đó.",
+      "source_ref": "apps/study-server/docs/dd/16_orders/OPEN_QUESTIONS.md — Q-16-01, Q-16-05; apps/study-server/app/modules/student/api_16_orders/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-08",
+      "description": "#16 trả `data.id`, danh mục màn hình/ST-06 dùng `order_id`; quan hệ và định danh xuyên suốt chưa được phê duyệt.",
+      "impact": "Không thể handoff an toàn sang #17/ST-06.",
+      "decision": "Xác nhận định dạng, kiểu dữ liệu, quyền sở hữu và ánh xạ mã đơn hàng trước khi chuyển màn hình.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/03-data-flow.md — response source matrix; docs/lists/list_api.md — #16/#17",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-09",
+      "description": "Bản mẫu hiển thị khung trang khách; AC-12 yêu cầu học viên. `StudentLayout` hiện yêu cầu phiên bằng giao diện đăng nhập, không phải cơ chế bảo vệ tuyến.",
+      "impact": "Màn hình trong bản mẫu, khung trang Angular và cách quay lại sau khi đăng nhập chưa thống nhất.",
+      "decision": "Chốt luồng xác thực, đường dẫn quay lại và trạng thái khung trang cho người dùng đã đăng nhập/chưa đăng nhập.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/00-overview.md — §2–§4; apps/study-client/src/app/layouts/student/student-layout.html; apps/study-client/src/app/features/student/student.route.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-10",
+      "description": "Nút hành động và đường dẫn điều hướng ghi “Kiểm tra ghi danh” nhưng trỏ `/courses`; không giữ `courseId` hoặc trạng thái quay lại.",
+      "impact": "Người dùng không quay lại đúng ST-04 theo nhãn.",
+      "decision": "Chốt đường dẫn đích và dữ liệu gửi đi/ngữ cảnh quay về.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #5/#11; apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/06-navigation.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-05-BL-11",
+      "description": "Không tìm thấy kiểm thử API #16 trong danh sách thư mục đã rà soát; lược đồ cơ sở dữ liệu và hành vi khi chạy chưa được xác minh.",
+      "impact": "Không có bằng chứng thực thi cho API hoặc ghi đơn hàng.",
+      "decision": "Bổ sung kiểm chứng API và cơ sở dữ liệu trong môi trường có lược đồ được duyệt; việc kiểm chứng này chưa được thực hiện trong tác vụ tạo UTC.",
+      "source_ref": "apps/study-server/docs/dd/16_orders/PLAN_RESULT.md; apps/study-server/tests/modules/student/; infra/postgres/study-server/DB.sql",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST05-MH-001",
+        "requirement_ids": [
+          "ST-05-YC-001",
+          "ST-05-YC-002"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Mở đường dẫn với `courseId` và gửi yêu cầu đọc khóa học",
+        "precondition": "Có phiên học viên hợp lệ để hiển thị đường dẫn con.",
+        "data": "`courseId=42`; #08 trả một khóa học có trạng thái `PUBLISHED`.",
+        "steps": [
+          "Mở `/student/checkout/42`.",
+          "Quan sát trạng thái ban đầu.",
+          "Theo dõi yêu cầu #08 và đầu trang."
+        ],
+        "expected": "Trang hiện hiển thị “Đang kiểm tra thông tin khóa học…”, gọi GET #08 bằng đường dẫn `/api/v1/courses/42` không gửi tiêu đề `Authorization` rồi xử lý phản hồi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-01, EV-02",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-002",
+        "requirement_ids": [
+          "ST-05-YC-001",
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Xử lý `courseId` rỗng hoặc không hợp lệ",
+        "precondition": "Có thể điều hướng tới thành phần với tham số rỗng hoặc chuỗi sai định dạng.",
+        "data": "Rỗng, `abc`, `0`, số vượt giới hạn int64.",
+        "steps": [
+          "Thử từng giá trị trong đường dẫn bộ hỗ trợ kiểm thử được duyệt.",
+          "Kiểm tra yêu cầu #08 và trạng thái."
+        ],
+        "expected": "Tham số rỗng hiện chuyển không tìm thấy mà không gọi #08; chuỗi khác rỗng được gửi nguyên trạng và lỗi 404 từ #08 chuyển không tìm thấy. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-01, EV-02",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-003",
+        "requirement_ids": [
+          "ST-05-YC-001",
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị không tìm thấy khi thiếu `courseId`",
+        "precondition": "Thành phần nhận chuỗi `courseId` rỗng.",
+        "data": "`courseId=\"\"`.",
+        "steps": [
+          "Mở thành phần theo đường dẫn bộ hỗ trợ kiểm thử.",
+          "Kiểm tra yêu cầu mạng.",
+          "Quan sát tiêu đề và thông báo."
+        ],
+        "expected": "Mã nguồn trả trạng thái không tìm thấy trước khi gọi #08; nội dung nêu khóa học không tồn tại hoặc chưa xuất bản. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-004",
+        "requirement_ids": [
+          "ST-05-YC-002",
+          "ST-05-YC-003"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái thanh toán chưa khả dụng cho khóa học có trạng thái `PUBLISHED`",
+        "precondition": "#08 trả khung phản hồi thành công với khóa học có trạng thái `PUBLISHED`.",
+        "data": "mã khóa học 42, trạng thái `PUBLISHED`, giá `125000.00`.",
+        "steps": [
+          "Mở màn hình.",
+          "Cho #08 trả phản hồi thành công.",
+          "Quan sát thẻ và các lời gọi API phát sinh."
+        ],
+        "expected": "Mã nguồn hiện hiển thị tiêu đề “Kiểm tra đơn hàng” cùng thông báo thanh toán chưa thể bắt đầu; không gửi #16. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08",
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02, EV-04",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-005",
+        "requirement_ids": [
+          "ST-05-YC-005",
+          "ST-05-YC-003"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị giá hoặc số tiền từ phản hồi #08 trong trạng thái hiện tại",
+        "precondition": "#08 trả khóa học có trạng thái `PUBLISHED` với giá dương.",
+        "data": "`price=\"125000.00\"`; dữ liệu đã được kiểm thử mã nguồn dùng.",
+        "steps": [
+          "Cho #08 trả khóa học có giá.",
+          "Kiểm tra toàn bộ chữ hiển thị trong trang."
+        ],
+        "expected": "Mã nguồn hiện không hiển thị `price`, đơn vị tiền tệ hoặc số tiền; không định dạng tiền dựa trên giá thô. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-006",
+        "requirement_ids": [
+          "ST-05-YC-003",
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt #08 trả 404 với lỗi đọc khác",
+        "precondition": "#08 có thể trả 404 hoặc lỗi máy chủ.",
+        "data": "404 `DESIGN_RESOURCE_NOT_FOUND`; 500 `DESIGN_INTERNAL_ERROR`.",
+        "steps": [
+          "Cho #08 trả 404.",
+          "Ghi trạng thái.",
+          "Lặp lại với 500."
+        ],
+        "expected": "404 hiện hiển thị “Không tìm thấy khóa học”; lỗi khác 404 hiện hiển thị trạng thái lỗi tải; không gọi #16 ở cả hai trường hợp. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08",
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-007",
+        "requirement_ids": [
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Xử lý khung phản hồi hoặc mã nghiệp vụ #08 không thành công",
+        "precondition": "#08 phản hồi có HTTP thành công nhưng khung phản hồi nghiệp vụ không hợp lệ.",
+        "data": "`success=false` hoặc `businessCode` khác `DESIGN_RESOURCE_RETRIEVED`; thiếu `data.items`.",
+        "steps": [
+          "Cho #08 trả từng khung phản hồi sai.",
+          "Quan sát trạng thái và lỗi hiển thị."
+        ],
+        "expected": "Mã nguồn hiện chuyển sang lỗi; không diễn giải thành khóa học có trạng thái `PUBLISHED` hoặc tạo đơn hàng. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08",
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-008",
+        "requirement_ids": [
+          "ST-05-YC-003",
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Xử lý mục không có hoặc không có trạng thái `PUBLISHED`",
+        "precondition": "#08 trả khung phản hồi hợp lệ nhưng `data.items[0]` thiếu hoặc trạng thái khác `PUBLISHED`.",
+        "data": "các mục rỗng; trạng thái `DRAFT` hoặc `ARCHIVED` nếu dữ liệu kiểm thử được duyệt.",
+        "steps": [
+          "Cho #08 trả từng trường hợp.",
+          "Quan sát trạng thái và yêu cầu kế tiếp."
+        ],
+        "expected": "Mã nguồn hiện hiển thị không tìm thấy; không gửi #16. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08",
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-009",
+        "requirement_ids": [
+          "ST-05-YC-008",
+          "ST-05-YC-007"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Không gửi #16 khi chỉ mở trang",
+        "precondition": "Đường dẫn hợp lệ và #08 trả khóa học có trạng thái `PUBLISHED`.",
+        "data": "Không thao tác trên trang.",
+        "steps": [
+          "Mở đường dẫn.",
+          "Chờ #08 hoàn tất.",
+          "Theo dõi `/api/v1/orders`."
+        ],
+        "expected": "`ST05Page` không gọi #16 trong khi tải hay sau #08 thành công; mục khai báo API phía máy khách hiện là `UNWIRED`. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08",
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/core/constant/api.constants.ts — API_016"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-010",
+        "requirement_ids": [
+          "ST-05-YC-007"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị điều khiển xác nhận trong giao diện hiện tại",
+        "precondition": "Mở trạng thái chưa khả dụng của Angular.",
+        "data": "khóa học có trạng thái `PUBLISHED`.",
+        "steps": [
+          "Nạp đường dẫn đến chưa khả dụng.",
+          "Tìm ô chọn, nút mua, nhà cung cấp và điều khoản."
+        ],
+        "expected": "Không có điều khiển xác nhận, số tiền, nhà cung cấp hoặc điều khoản trong mã nguồn; danh mục màn hình yêu cầu xác nhận nhưng điều khiển chưa được duyệt. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08",
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-03",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-011",
+        "requirement_ids": [
+          "ST-05-YC-008",
+          "ST-05-YC-010"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Không giả định giao diện ánh xạ cho lỗi #16 khi máy khách chưa gọi API",
+        "precondition": "Mục khai báo API #16 `UNWIRED` và trang không có nơi gọi.",
+        "data": "Các mã danh mục API 401/403/422/500.",
+        "steps": [
+          "Rà mã nguồn trang và mục khai báo API.",
+          "Ghi nhận có/không nơi gọi và nhánh xử lý."
+        ],
+        "expected": "Không có trạng thái hoặc giao diện lỗi #16 trong `ST05Page`; không kiểm thử yêu cầu #16 từ màn hình cho tới khi kết nối/quy ước API được duyệt. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/04-api-integration.md",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/core/constant/api.constants.ts — API_016"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-012",
+        "requirement_ids": [
+          "ST-05-YC-009",
+          "ST-05-YC-011"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Không điều hướng ST-06 khi chưa có đơn hàng phản hồi",
+        "precondition": "Không có nơi gọi #16 hoặc phản hồi đơn hàng trong màn hình hiện tại.",
+        "data": "Không có `data.id` hoặc `order_id`.",
+        "steps": [
+          "Mở đường dẫn và chờ #08.",
+          "Theo dõi URL sau phản hồi."
+        ],
+        "expected": "Mã nguồn giữ nguyên ở ST-05 chưa khả dụng; không tạo mã đơn hàng, không gọi #17 và không điều hướng ST-06. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-013",
+        "requirement_ids": [
+          "ST-05-YC-010",
+          "ST-05-YC-015"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt mã nguồn đường dẫn #16 với lưu trữ có thể chạy",
+        "precondition": "Không gọi API thật; rà mã nguồn tĩnh và DDL được phê duyệt.",
+        "data": "Đường dẫn/mô-đun #16 có; DDL trong kho không có bảng `orders`.",
+        "steps": [
+          "Đối chiếu đường dẫn, lệnh ghi và DDL.",
+          "Ghi nhận trạng thái môi trường."
+        ],
+        "expected": "Mã nguồn có câu lệnh ghi `orders`, nhưng DDL trong kho không có bảng này; không được coi mã nguồn là bằng chứng ghi thành công hoặc gọi cơ sở dữ liệu thật. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-server/app/api/v1.py — route #16",
+          "apps/study-server/app/modules/student/api_16_orders/query.py",
+          "infra/postgres/study-server/DB.sql",
+          "apps/study-server/docs/diagrams/DB_UNICA_TABLES.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-014",
+        "requirement_ids": [
+          "ST-05-YC-006",
+          "ST-05-YC-005"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Ghi rõ khác biệt giữa quy ước API #16 và mã nguồn máy chủ hiện tại",
+        "precondition": "Đối chiếu yêu cầu/bộ kiểm tra/số tiền của #16; không tạo đơn hàng.",
+        "data": "nhà cung cấp bất kỳ chuỗi không rỗng; giá khóa học dương.",
+        "steps": [
+          "Đọc quy ước API trong danh mục và logic kiểm tra trong mã nguồn.",
+          "So sánh nhà cung cấp, số tiền, đơn vị tiền tệ với DD."
+        ],
+        "expected": "Quy ước API danh sách giá trị `PaymentProvider` và giá/đơn vị tiền tệ chưa được duyệt; mã nguồn hiện nhận chuỗi không rỗng, lấy số tiền từ giá và đặt `VND`. Không xem đây là quyết định nghiệp vụ. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/04-api-integration.md",
+          "apps/study-server/app/modules/student/api_16_orders/validate.py",
+          "apps/study-server/app/modules/student/api_16_orders/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-015",
+        "requirement_ids": [
+          "ST-05-YC-012"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu nhãn nút hành động với đích quay lại hiện tại",
+        "precondition": "Thẻ trạng thái thanh toán hiển thị nút hành động.",
+        "data": "Nhãn “Quay lại kiểm tra ghi danh”; đích `/courses`.",
+        "steps": [
+          "Chọn nút hành động trong bản mẫu hoặc Angular.",
+          "Ghi nhãn và URL đích."
+        ],
+        "expected": "Nhãn hướng về kiểm tra ghi danh nhưng đích hiện là `/courses`; `courseId` và trạng thái quay lại không được truyền. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #11",
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-016",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu đích đường dẫn điều hướng và đầu trang/chân trang",
+        "precondition": "Trang khung trang đã hiển thị.",
+        "data": "Liên kết theo mốc #1–#5 và #13.",
+        "steps": [
+          "Kiểm tra từng liên kết theo thuộc tính `href`/`routerLink`.",
+          "So sánh bản mẫu và Angular."
+        ],
+        "expected": "Ghi đúng các đích hiện có; đường dẫn điều hướng “Kiểm tra ghi danh” trỏ `/courses`, nhóm điều hướng “Khóa học của tôi” trong Angular bị vô hiệu hóa; không suy đường dẫn và hành vi khi chạy từ nhãn. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #1–#5, #13",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-017",
+        "requirement_ids": [
+          "ST-05-YC-001",
+          "ST-05-YC-014"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị cổng đăng nhập của `StudentLayout` khi chưa có phiên",
+        "precondition": "Mở đường dẫn học viên khi không có phiên học viên.",
+        "data": "`StudentLayout.session.isAuthenticated()=false`.",
+        "steps": [
+          "Mở đường dẫn ST-05 bằng luồng ứng dụng.",
+          "Quan sát nội dung khung trang và yêu cầu #08."
+        ],
+        "expected": "`StudentLayout` hiện hiển thị biểu mẫu đăng nhập thay vùng hiển thị nội dung con; đường dẫn không khai báo canActivate riêng. Chưa có quy tắc URL quay lại được xác nhận. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/00-overview.md — AC-12"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-018",
+        "requirement_ids": [
+          "ST-05-YC-002"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Tải lại #08 khi đường dẫn nhận `courseId` khác",
+        "precondition": "Trang đang mở và đường dẫn param thay đổi.",
+        "data": "Chuyển từ `42` sang `43`; cả hai phản hồi có dữ liệu kiểm thử.",
+        "steps": [
+          "Điều hướng sang đường dẫn 42.",
+          "Đổi đường dẫn sang 43.",
+          "Kiểm tra yêu cầu #08 theo thứ tự."
+        ],
+        "expected": "Mã nguồn dùng `distinctUntilChanged`; khi mã định danh thay đổi, yêu cầu mới dùng mã định danh mới và trạng thái chuyển đang tải. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-019",
+        "requirement_ids": [
+          "ST-05-YC-013",
+          "ST-05-YC-012"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra liên kết không giữ mã khóa học",
+        "precondition": "Mở bản mẫu hoặc Angular ở màn hình thanh toán.",
+        "data": "mã khóa học 42 trên đường dẫn.",
+        "steps": [
+          "Chọn nút hành động quay lại và đường dẫn điều hướng “Kiểm tra ghi danh”.",
+          "Quan sát URL/truy vấn."
+        ],
+        "expected": "Cả hai liên kết hiện đi `/courses`; không có `courseId`, truy vấn hoặc trạng thái quay lại trong mã HTML. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #5/#11",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-MH-020",
+        "requirement_ids": [
+          "ST-05-YC-015"
+        ],
+        "target_id": "ST-05",
+        "group": "Toàn màn hình",
+        "title": "Chỉ kiểm tra đơn hàng trên lược đồ/môi trường được xác nhận",
+        "precondition": "Có quyết định lược đồ/môi trường do người phụ trách cấp trước khi chạy kiểm thử nghiệp vụ.",
+        "data": "DDL legacy và ERD V1 hiện không khai báo bảng `orders`.",
+        "steps": [
+          "Xác nhận môi trường và bản chuyển đổi dữ liệu với người phụ trách.",
+          "Đối chiếu table/columns trước khi viết kiểm thử tạo đơn hàng.",
+          "Không gửi yêu cầu nếu thiếu xác nhận."
+        ],
+        "expected": "Ca chờ có lược đồ/môi trường kiểm thử được duyệt; các tệp DDL trong kho không chứng minh đang chạy cơ sở data. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/diagrams/DB_UNICA_TABLES.md",
+          "infra/postgres/study-server/DB.sql",
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST05-TP-001",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05-EL-001",
+        "group": "Thành phần",
+        "title": "Liên kết thương hiệu Study2Work",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Địa chỉ đích theo mốc và tương ứng `routerLink` trong mã nguồn hiện tại.",
+        "steps": [
+          "Mở bản mẫu và Angular ở màn hình máy tính và vùng hiển thị hẹp.",
+          "Kiểm tra nhãn, đích, vị trí lấy nét và trạng thái liên kết."
+        ],
+        "expected": "Ánh xạ bản mẫu và Angular được ghi riêng; khác biệt về nhóm điều hướng bị vô hiệu hóa, đường dẫn điều hướng và chân trang thương hiệu không bị xem là cùng một hành vi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #1 / ST05-EL-01"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-002",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05-EL-002",
+        "group": "Thành phần",
+        "title": "Nhóm điều hướng chính",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Địa chỉ đích theo mốc và tương ứng `routerLink` trong mã nguồn hiện tại.",
+        "steps": [
+          "Mở bản mẫu và Angular ở màn hình máy tính và vùng hiển thị hẹp.",
+          "Kiểm tra nhãn, đích, vị trí lấy nét và trạng thái liên kết."
+        ],
+        "expected": "Ánh xạ bản mẫu và Angular được ghi riêng; khác biệt về nhóm điều hướng bị vô hiệu hóa, đường dẫn điều hướng và chân trang thương hiệu không bị xem là cùng một hành vi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #2 / ST05-EL-02"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-003",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05-EL-003",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng nhập",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Địa chỉ đích theo mốc và tương ứng `routerLink` trong mã nguồn hiện tại.",
+        "steps": [
+          "Mở bản mẫu và Angular ở màn hình máy tính và vùng hiển thị hẹp.",
+          "Kiểm tra nhãn, đích, vị trí lấy nét và trạng thái liên kết."
+        ],
+        "expected": "Ánh xạ bản mẫu và Angular được ghi riêng; khác biệt về nhóm điều hướng bị vô hiệu hóa, đường dẫn điều hướng và chân trang thương hiệu không bị xem là cùng một hành vi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #3 / ST05-EL-03"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-004",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05-EL-004",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng ký",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Địa chỉ đích theo mốc và tương ứng `routerLink` trong mã nguồn hiện tại.",
+        "steps": [
+          "Mở bản mẫu và Angular ở màn hình máy tính và vùng hiển thị hẹp.",
+          "Kiểm tra nhãn, đích, vị trí lấy nét và trạng thái liên kết."
+        ],
+        "expected": "Ánh xạ bản mẫu và Angular được ghi riêng; khác biệt về nhóm điều hướng bị vô hiệu hóa, đường dẫn điều hướng và chân trang thương hiệu không bị xem là cùng một hành vi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #4 / ST05-EL-04"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-005",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05-EL-005",
+        "group": "Thành phần",
+        "title": "Đường dẫn điều hướng Trang chủ > Khóa học > Kiểm tra ghi danh > Kiểm tra đơn hàng",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Địa chỉ đích theo mốc và tương ứng `routerLink` trong mã nguồn hiện tại.",
+        "steps": [
+          "Mở bản mẫu và Angular ở màn hình máy tính và vùng hiển thị hẹp.",
+          "Kiểm tra nhãn, đích, vị trí lấy nét và trạng thái liên kết."
+        ],
+        "expected": "Ánh xạ bản mẫu và Angular được ghi riêng; khác biệt về nhóm điều hướng bị vô hiệu hóa, đường dẫn điều hướng và chân trang thương hiệu không bị xem là cùng một hành vi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #5 / ST05-EL-05"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-006",
+        "requirement_ids": [
+          "ST-05-YC-014",
+          "ST-05-YC-003"
+        ],
+        "target_id": "ST-05-EL-006",
+        "group": "Thành phần",
+        "title": "Biểu tượng giỏ hàng và thanh toán",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Thẻ trạng thái chưa khả dụng sau khi #08 trả `PUBLISHED`.",
+        "steps": [
+          "Mở trạng thái chưa khả dụng.",
+          "Kiểm tra biểu tượng trang trí, thứ tự tiêu đề và thông báo.",
+          "Kiểm tra vai trò/đang chạy announcement."
+        ],
+        "expected": "Nội dung chỉ báo trạng thái giao diện; không được hiểu là đơn hàng hoặc phản hồi API. Angular có thuộc tính `role=\"status\"`; biểu tượng bị ẩn khỏi cây hỗ trợ truy cập. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #6 / ST05-EL-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-007",
+        "requirement_ids": [
+          "ST-05-YC-014",
+          "ST-05-YC-003"
+        ],
+        "target_id": "ST-05-EL-007",
+        "group": "Thành phần",
+        "title": "Thẻ trạng thái",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Thẻ trạng thái chưa khả dụng sau khi #08 trả `PUBLISHED`.",
+        "steps": [
+          "Mở trạng thái chưa khả dụng.",
+          "Kiểm tra biểu tượng trang trí, thứ tự tiêu đề và thông báo.",
+          "Kiểm tra vai trò/đang chạy announcement."
+        ],
+        "expected": "Nội dung chỉ báo trạng thái giao diện; không được hiểu là đơn hàng hoặc phản hồi API. Angular có thuộc tính `role=\"status\"`; biểu tượng bị ẩn khỏi cây hỗ trợ truy cập. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #7 / ST05-EL-07"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-008",
+        "requirement_ids": [
+          "ST-05-YC-014",
+          "ST-05-YC-003"
+        ],
+        "target_id": "ST-05-EL-008",
+        "group": "Thành phần",
+        "title": "Tiêu đề Kiểm tra đơn hàng",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Thẻ trạng thái chưa khả dụng sau khi #08 trả `PUBLISHED`.",
+        "steps": [
+          "Mở trạng thái chưa khả dụng.",
+          "Kiểm tra biểu tượng trang trí, thứ tự tiêu đề và thông báo.",
+          "Kiểm tra vai trò/đang chạy announcement."
+        ],
+        "expected": "Nội dung chỉ báo trạng thái giao diện; không được hiểu là đơn hàng hoặc phản hồi API. Angular có thuộc tính `role=\"status\"`; biểu tượng bị ẩn khỏi cây hỗ trợ truy cập. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #8 / ST05-EL-08"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-009",
+        "requirement_ids": [
+          "ST-05-YC-014",
+          "ST-05-YC-003"
+        ],
+        "target_id": "ST-05-EL-009",
+        "group": "Thành phần",
+        "title": "Thông báo Quy trình thanh toán chưa thể bắt đầu",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Thẻ trạng thái chưa khả dụng sau khi #08 trả `PUBLISHED`.",
+        "steps": [
+          "Mở trạng thái chưa khả dụng.",
+          "Kiểm tra biểu tượng trang trí, thứ tự tiêu đề và thông báo.",
+          "Kiểm tra vai trò/đang chạy announcement."
+        ],
+        "expected": "Nội dung chỉ báo trạng thái giao diện; không được hiểu là đơn hàng hoặc phản hồi API. Angular có thuộc tính `role=\"status\"`; biểu tượng bị ẩn khỏi cây hỗ trợ truy cập. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #9 / ST05-EL-09"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-010",
+        "requirement_ids": [
+          "ST-05-YC-014",
+          "ST-05-YC-003"
+        ],
+        "target_id": "ST-05-EL-010",
+        "group": "Thành phần",
+        "title": "Giải thích chưa thể khởi tạo thông tin đơn hàng",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Thẻ trạng thái chưa khả dụng sau khi #08 trả `PUBLISHED`.",
+        "steps": [
+          "Mở trạng thái chưa khả dụng.",
+          "Kiểm tra biểu tượng trang trí, thứ tự tiêu đề và thông báo.",
+          "Kiểm tra vai trò/đang chạy announcement."
+        ],
+        "expected": "Nội dung chỉ báo trạng thái giao diện; không được hiểu là đơn hàng hoặc phản hồi API. Angular có thuộc tính `role=\"status\"`; biểu tượng bị ẩn khỏi cây hỗ trợ truy cập. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #10 / ST05-EL-10"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-011",
+        "requirement_ids": [
+          "ST-05-YC-012"
+        ],
+        "target_id": "ST-05-EL-011",
+        "group": "Thành phần",
+        "title": "Nút Quay lại kiểm tra ghi danh",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Nhãn nút hành động và `href=/courses`.",
+        "steps": [
+          "Mở trạng thái chưa khả dụng.",
+          "Kiểm tra nhãn, đích, bàn phím và vị trí lấy nét."
+        ],
+        "expected": "Nhãn “Quay lại kiểm tra ghi danh” đi tới `/courses`; không truyền `courseId` hoặc trạng thái quay lại. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #11 / ST05-EL-11"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-012",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05-EL-012",
+        "group": "Thành phần",
+        "title": "Thương hiệu Study2Work ở chân trang",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Địa chỉ đích theo mốc và tương ứng `routerLink` trong mã nguồn hiện tại.",
+        "steps": [
+          "Mở bản mẫu và Angular ở màn hình máy tính và vùng hiển thị hẹp.",
+          "Kiểm tra nhãn, đích, vị trí lấy nét và trạng thái liên kết."
+        ],
+        "expected": "Ánh xạ bản mẫu và Angular được ghi riêng; khác biệt về nhóm điều hướng bị vô hiệu hóa, đường dẫn điều hướng và chân trang thương hiệu không bị xem là cùng một hành vi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #12 / ST05-EL-12"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-013",
+        "requirement_ids": [
+          "ST-05-YC-013"
+        ],
+        "target_id": "ST-05-EL-013",
+        "group": "Thành phần",
+        "title": "Nhóm liên kết chân trang",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Địa chỉ đích theo mốc và tương ứng `routerLink` trong mã nguồn hiện tại.",
+        "steps": [
+          "Mở bản mẫu và Angular ở màn hình máy tính và vùng hiển thị hẹp.",
+          "Kiểm tra nhãn, đích, vị trí lấy nét và trạng thái liên kết."
+        ],
+        "expected": "Ánh xạ bản mẫu và Angular được ghi riêng; khác biệt về nhóm điều hướng bị vô hiệu hóa, đường dẫn điều hướng và chân trang thương hiệu không bị xem là cùng một hành vi. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #13 / ST05-EL-13"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-014",
+        "requirement_ids": [
+          "ST-05-YC-002"
+        ],
+        "target_id": "ST-05-SRC-EL-014",
+        "group": "Thành phần",
+        "title": "Trạng thái đang kiểm tra khóa học",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "Đường dẫn có `courseId` và #08 đang chờ.",
+        "steps": [
+          "Mở đường dẫn hợp lệ.",
+          "Quan sát trạng thái trước phản hồi.",
+          "Kiểm tra `aria-busy`."
+        ],
+        "expected": "Hiển thị thông báo đang kiểm tra và không tạo đơn hàng trong khi #08 đang xử lý. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh loading; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-015",
+        "requirement_ids": [
+          "ST-05-YC-003",
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05-SRC-EL-015",
+        "group": "Thành phần",
+        "title": "Trạng thái không tìm thấy khóa học",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "#08 trả 404 hoặc không có khóa học có trạng thái `PUBLISHED`.",
+        "steps": [
+          "Cho #08 trả 404.",
+          "Cho #08 trả các mục rỗng hoặc trạng thái khác.",
+          "Đối chiếu tiêu đề/thân data."
+        ],
+        "expected": "Hiển thị “Không tìm thấy khóa học”; không nhầm với lỗi #16. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh not-found; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-016",
+        "requirement_ids": [
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05-SRC-EL-016",
+        "group": "Thành phần",
+        "title": "Trạng thái lỗi tải khóa học",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "#08 trả lỗi khác 404 hoặc khung phản hồi sai.",
+        "steps": [
+          "Cho #08 trả 500.",
+          "Cho #08 trả success=false hoặc businessCode sai.",
+          "Quan sát tiêu đề/thân data."
+        ],
+        "expected": "Hiển thị trạng thái lỗi tải khóa học; không tạo đơn hàng và không phân loại 500 thành không tìm thấy. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh error; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-TP-017",
+        "requirement_ids": [
+          "ST-05-YC-007",
+          "ST-05-YC-008"
+        ],
+        "target_id": "ST-05-SRC-EL-017",
+        "group": "Thành phần",
+        "title": "Trạng thái thanh toán chưa thể bắt đầu",
+        "precondition": "Mở trạng thái hoặc dữ liệu kiểm thử của thành phần.",
+        "data": "#08 trả khóa học có trạng thái `PUBLISHED`.",
+        "steps": [
+          "Nạp đường dẫn tới trạng thái cuối hiện có.",
+          "Tìm số tiền, nhà cung cấp, điều khoản, nút xác nhận và dữ liệu đơn hàng."
+        ],
+        "expected": "Hiển thị trạng thái thanh toán chưa thể bắt đầu; không có số tiền, nhà cung cấp, điều khoản, điều khiển xác nhận hoặc mã đơn hàng. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html — nhánh unavailable; apps/study-client/src/app/features/student/ST05/pages/st05-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST05-SK-001",
+        "requirement_ids": [
+          "ST-05-YC-001"
+        ],
+        "target_id": "ST-05-EV-001",
+        "group": "Sự kiện",
+        "title": "Kiểm tra phiên và điểm vào ST-05",
+        "precondition": "Có đường dẫn học viên và `StudentLayout`.",
+        "data": "Phiên có và không có.",
+        "steps": [
+          "Mở ST-05 khi chưa đăng nhập.",
+          "Quan sát biểu mẫu đăng nhập và vùng hiển thị nội dung con.",
+          "Đăng nhập bằng phiên kiểm thử được duyệt rồi quan sát trang."
+        ],
+        "expected": "`StudentLayout` giữ trang con ngoài màn hình khi chưa có phiên; sau đăng nhập mới hiển thị trang con. Tuyến không khai báo `canActivate` riêng; cách giữ URL quay lại chưa được quyết định. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-01",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-SK-002",
+        "requirement_ids": [
+          "ST-05-YC-002",
+          "ST-05-YC-003",
+          "ST-05-YC-004"
+        ],
+        "target_id": "ST-05-EV-002",
+        "group": "Sự kiện",
+        "title": "Đọc lại khóa học và kiểm tra nhánh #08",
+        "precondition": "Có `courseId` và API #08 dữ liệu kiểm thử.",
+        "data": "200 `PUBLISHED`, 404, 500, khung phản hồi không hợp lệ, mục không có trạng thái `PUBLISHED`.",
+        "steps": [
+          "Mở đường dẫn.",
+          "Trả từng phản hồi #08.",
+          "Ghi trạng thái và yêu cầu tiếp theo."
+        ],
+        "expected": "`PUBLISHED` chuyển chưa khả dụng; 404 hoặc không có trạng thái `PUBLISHED` chuyển không tìm thấy; lỗi khác 404/khung phản hồi sai chuyển lỗi. Không gọi #16. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#08",
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-02",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.ts",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-SK-003",
+        "requirement_ids": [
+          "ST-05-YC-007"
+        ],
+        "target_id": "ST-05-EV-003",
+        "group": "Sự kiện",
+        "title": "Xác nhận đơn hàng trước khi tạo",
+        "precondition": "Danh mục màn hình dự kiến có điều khiển xác nhận nhưng giao diện hiện tại chưa có.",
+        "data": "Điều khoản, số tiền, nhà cung cấp và điều khiển chưa được duyệt.",
+        "steps": [
+          "Mở đường dẫn hiện tại.",
+          "Tìm điều khiển xác nhận.",
+          "Không tự tạo thao tác thay thế."
+        ],
+        "expected": "Không thể kích hoạt EV-03 từ mã nguồn hiện tại; cần thiết kế được duyệt trước khi kiểm tra thao tác xác nhận. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-03",
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-SK-004",
+        "requirement_ids": [
+          "ST-05-YC-008",
+          "ST-05-YC-009",
+          "ST-05-YC-010",
+          "ST-05-YC-015"
+        ],
+        "target_id": "ST-05-EV-004",
+        "group": "Sự kiện",
+        "title": "Đối chiếu quy ước API #16 với mã nguồn và giới hạn xác minh lưu trữ",
+        "precondition": "Chưa có kiểm thử/cơ sở dữ liệu đang chạy được duyệt; không gửi yêu cầu thật.",
+        "data": "Danh mục API khai báo POST #16; mục khai báo máy khách `UNWIRED`; mã nguồn máy chủ có lệnh ghi; DDL không có bảng `orders`.",
+        "steps": [
+          "Đối chiếu danh mục API, mục khai báo API phía máy khách/nơi gọi, đường dẫn/mô-đun máy chủ và DDL.",
+          "Ghi nhận 401/403/422/500 quy ước API riêng với mã nguồn hành vi.",
+          "Không gọi API/cơ sở data."
+        ],
+        "expected": "Màn hình hiện không gửi #16; mã nguồn máy chủ có tuyến tạo đơn hàng nhưng chưa xác minh được việc ghi vào cơ sở data. Không kết luận về phản hồi, hoàn tác hoặc chuyển mã đơn hàng khi chưa có bằng chứng khi chạy. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [
+          "#16"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-04",
+          "apps/study-client/src/app/core/constant/api.constants.ts — API_016",
+          "apps/study-server/app/modules/student/api_16_orders/view.py",
+          "infra/postgres/study-server/DB.sql"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-SK-005",
+        "requirement_ids": [
+          "ST-05-YC-012"
+        ],
+        "target_id": "ST-05-EV-005",
+        "group": "Sự kiện",
+        "title": "Quay lại sau trạng thái thanh toán",
+        "precondition": "Bản mẫu hoặc Angular hiển thị nút hành động bên dưới thẻ.",
+        "data": "Nhãn nút hành động “Quay lại kiểm tra ghi danh”.",
+        "steps": [
+          "Chọn nút hành động.",
+          "Quan sát đích và dữ liệu đường dẫn."
+        ],
+        "expected": "Đích hiện là `/courses`, không phải đường dẫn ST-04 và không mang `courseId`; cần quyết định trước khi nghiệm thu điều hướng. Nghiệm thu vẫn chờ xác nhận theo DD ở trạng thái `BLOCKED`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-05",
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md — marker #11",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST05-SK-006",
+        "requirement_ids": [
+          "ST-05-YC-013",
+          "ST-05-YC-014"
+        ],
+        "target_id": "ST-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Kiểm tra khung trang, đường dẫn điều hướng, liên kết và khả năng tiếp cận",
+        "precondition": "Bản mẫu và mã nguồn Angular được truy cập ở vùng hiển thị phù hợp.",
+        "data": "Mốc #1–#5, #12–#13.",
+        "steps": [
+          "Kiểm tra thuộc tính `href`/`routerLink`.",
+          "Dùng bàn phím và trình đọc màn hình.",
+          "So sánh nhóm điều hướng “Khóa học của tôi” ở bản mẫu và Angular."
+        ],
+        "expected": "Đã ghi nhận đúng các địa chỉ và khác biệt; việc xác minh đường dẫn, vị trí lấy nét và khả năng thích ứng trên các kích thước màn hình còn chờ xác nhận trong DD. Không xem kết quả ghi nhận hiện trạng là tiêu chí nghiệm thu đã chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/02-events.md — EV-06",
+          "apps/study-client/docs/dd_screens/ST-05-KiemTraDonHangCheckout/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST05/pages/st05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

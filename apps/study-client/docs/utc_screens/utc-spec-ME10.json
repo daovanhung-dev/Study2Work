@@ -1,0 +1,3464 @@
+{
+  "metadata": {
+    "screen_id": "ME-10",
+    "screen_name": "Chấm điểm và phản hồi",
+    "module": "Mentor / Study Web",
+    "route": "/mentor/submissions/:submissionId",
+    "actor": "Mentor có vai trò MENTOR; API hiện yêu cầu subject số. Quyền Mentor được phân công chưa được xác nhận.",
+    "dd_status": "DD ME-10 ghi DD Sẵn sàng; người dùng xác nhận dùng tài liệu hiện có làm chuẩn. API #55–#57 vẫn ghi Draft — Needs Confirmation và các điểm chặn được giữ nguyên.",
+    "runtime_status": "Chưa xác minh trình duyệt, triển khai, cơ sở dữ liệu đang chạy hoặc môi trường kiểm thử.",
+    "version": "1.0",
+    "dd_version": "0.1 (cập nhật nguồn đến 2026-11-20)",
+    "author": "Chưa được cung cấp",
+    "reviewer": "Chưa được cung cấp",
+    "approver": "Người dùng xác nhận dùng DD hiện có làm baseline; danh tính người duyệt không được cung cấp.",
+    "date": "2026-11-24",
+    "source_name": "DD ME-10 00–07, ảnh/HTML Stitch 39 marker, trang Mentor hiện tại và API #55–#57.",
+    "baseline_authorization": "Người dùng xác nhận dùng DD hiện có, kể cả điểm đang bị chặn, làm chuẩn. Không tự đóng quyết định rubric, điểm, tệp, quyền, schema hoặc vòng đời.",
+    "environment": "Chỉ đối chiếu tĩnh DD, ảnh, mã nguồn và kiểm thử nguồn; không có môi trường lúc chạy được xác nhận.",
+    "release_readiness": "UTC chính thức theo cơ sở đối chiếu được người dùng xác nhận; còn 8 nhóm quyết định cần xác nhận. 80 ca chưa chạy và lúc chạy chưa xác minh.",
+    "discrepancy_note": "Một số đoạn cũ trong mục điều hướng/tổng quan nói Study Web chưa nối, nhưng cập nhật 2026-11-20, inventory và mã hiện tại xác nhận tuyến/trang đã đăng ký và chỉ gọi GET #55. #56/#57 chưa được trang gọi."
+  },
+  "overall": {
+    "objective": "Kiểm tra đúng bài nộp được chọn, dữ liệu #55 và trạng thái khóa các thao tác ghi cho tới khi hợp đồng được chốt. Phân biệt rõ ảnh thiết kế, mã nguồn hiện tại và hành vi chưa xác nhận.",
+    "inputs": "SubmissionId từ tuyến; phong bì #55; các trường của Submission và metadata tệp; mã lỗi theo nguồn; dữ liệu giả, không dùng thông tin nhận dạng cá nhân (PII).",
+    "outputs": "Trạng thái đang tải/rỗng/sẵn sàng/lỗi; hàng hiển thị theo các trường #55; phân trang và điều hướng bằng item.id; không thay đổi data.",
+    "main_flow": "Mở /mentor/submissions/:submissionId → kiểm tra ID → GET #55 → kiểm tra phong bì/mã/ID/fields/tệp → render dữ liệu được phép hoặc trạng thái lỗi → có thể quay về /mentor/submissions.",
+    "states": [
+      "ID không hợp lệ",
+      "Đang tải",
+      "Đã tải bài nộp",
+      "Không tìm thấy",
+      "Không có quyền",
+      "Lỗi và thử lại",
+      "Điểm/feedback chỉ đọc",
+      "Thao tác ghi đang khóa"
+    ],
+    "preconditions": "Mentor đã đăng nhập trong môi trường kiểm thử tương lai; session/auth runtime chưa được xác minh. Chỉ dùng fixture giả.",
+    "security": "Không hiển thị dữ liệu khi 401/403/404 hoặc phản hồi sai; không đưa token, content, feedback hoặc file URL vào query hay thông báo. API #55 dùng chủ sở hữu trực tiếp làm phương án dự phòng; Mentor được phân công chưa được xác nhận.",
+    "out_of_scope": "Không bật ghi điểm/feedback; không tạo rubric, max_score, file URL, audit, quyền, trạng thái hoặc chính sách mới; không tuyên bố DB, trình duyệt hay lúc chạy đã xác minh.",
+    "summary": {
+      "requirements": 13,
+      "elements": 39,
+      "events": 11,
+      "apis": 3,
+      "blockers": 8,
+      "test_cases": {
+        "screen": 30,
+        "elements": 39,
+        "events": 11,
+        "total": 80
+      }
+    }
+  },
+  "apis": [
+    {
+      "id": "API #55",
+      "number": "55",
+      "method": "GET",
+      "path": "/api/v1/mentor/submissions/{submission_id}",
+      "event_ids": [
+        "ME-10-EV-001",
+        "ME-10-EV-002",
+        "ME-10-EV-003",
+        "ME-10-EV-008"
+      ],
+      "request": "Bearer JWT; submission_id là số nguyên có dấu 64-bit trong đường dẫn; không có truy vấn hoặc thân yêu cầu. Mã nguồn kiểm tra MENTOR và subject số trước khi phân tích đường dẫn.",
+      "response": "HTTP 200, businessCode DESIGN_RESOURCE_RETRIEVED; data là Submission gồm id, assignment_id, user_id, content?, files[], status, submitted_at, score? Và feedback?. Files có tối đa một UploadAsset; không có rubric, max_score hay feedback attachments.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND cho ID sai hoặc không có row; 500 DESIGN_INTERNAL_ERROR cho lỗi dữ liệu/DB/ánh xạ.",
+      "auth": "Bộ kiểm tra dùng chung yêu cầu MENTOR; quyền khóa học dựa vào courses.mentor_id và JWT subject theo phương án hiện tại. Mentor được phân công chưa được hỗ trợ.",
+      "design_status": "Chờ xác nhận hợp đồng; mã nguồn GET hiện đã có và được trang gọi.",
+      "source_ref": "api/v1.py; api_55_mentor_submissions_detail/{models,query,view,validate}.py; ME-10 API DD #55"
+    },
+    {
+      "id": "API #56",
+      "number": "56",
+      "method": "POST",
+      "path": "/api/v1/mentor/submissions/{submission_id}/grade",
+      "event_ids": [
+        "ME-10-EV-001",
+        "ME-10-EV-006",
+        "ME-10-EV-008"
+      ],
+      "request": "Bearer JWT; JSON nghiêm ngặt {score:int32, rubric_items:string}; trường thừa bị từ chối. Rubric_items được nhận nhưng mã nguồn hiện không lưu. Giới hạn điểm dựa trên assignments.max_score theo phương án dự phòng.",
+      "response": "HTTP 200, businessCode DESIGN_RESOURCE_UPDATED; trả Submission mới. Mã nguồn cập nhật score thành NUMERIC(6,2) và status=GRADED, giữ feedback; giao dịch riêng.",
+      "errors": "401/403/404/422/500 theo nhánh mã nguồn; body sai/range có thể trả 422 trước view-level auth; không có nhánh 409 hiện thực.",
+      "auth": "Bearer JWT; vai trò MENTOR; khóa học thuộc chủ sở hữu trực tiếp theo phương án dự phòng; quyền Mentor được phân công chưa có nguồn.",
+      "design_status": "Chờ xác nhận; trang không gọi API này và hợp đồng rubric/thang điểm còn mở.",
+      "source_ref": "api/v1.py; api_56_mentor_submissions_grade/{models,query,view,validate}.py; OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "API #57",
+      "number": "57",
+      "method": "POST",
+      "path": "/api/v1/mentor/submissions/{submission_id}/feedback",
+      "event_ids": [
+        "ME-10-EV-001",
+        "ME-10-EV-007",
+        "ME-10-EV-008"
+      ],
+      "request": "Bearer JWT; JSON nghiêm ngặt {feedback_text:string, attachments:string}; trường thừa bị từ chối. Attachments là chuỗi chưa có định dạng, mã nguồn bỏ qua và không lưu.",
+      "response": "HTTP 200, businessCode DESIGN_RESOURCE_UPDATED; trả Submission mới. Mã nguồn chỉ cập nhật feedback, giữ score/status và commit riêng; lần gọi sau ghi đè feedback trước.",
+      "errors": "401/403/404/422/500 theo nhánh mã nguồn; body sai có thể trả 422 trước view-level auth; không có nhánh 409 hiện thực.",
+      "auth": "Bearer JWT; vai trò MENTOR; khóa học thuộc chủ sở hữu trực tiếp theo phương án dự phòng; quyền Mentor được phân công chưa có nguồn.",
+      "design_status": "Chờ xác nhận; trang không gọi API này; attachment, độ dài và lịch sử feedback còn mở.",
+      "source_ref": "api/v1.py; api_57_mentor_submissions_feedback/{models,query,view,validate}.py; OPEN_QUESTIONS.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ME-10-YC-001",
+      "group": "Điều hướng và định danh",
+      "title": "Nhận đúng mã bài nộp",
+      "description": "Mở /mentor/submissions/:submissionId bằng ID bài nộp dương an toàn; không thay bằng assignment_id hoặc user_id. Route hiện được đăng ký trong mã nguồn.",
+      "source_ref": "list_screen.md hàng 50; mentor.route.ts; ME-10 06-navigation.md",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Xác minh tĩnh từ mã nguồn; điều hướng trên trình duyệt chưa chạy."
+    },
+    {
+      "id": "ME-10-YC-002",
+      "group": "Tải bài nộp",
+      "title": "Đọc chi tiết qua API #55",
+      "description": "Với ID hợp lệ, tải bài nộp bằng GET #55 và chỉ hiển thị dữ liệu từ phong bì hợp lệ có businessCode DESIGN_RESOURCE_RETRIEVED.",
+      "source_ref": "ME-10 03-data-flow.md; API #55 view.py; ME10Page",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "#55 là luồng duy nhất được gọi từ trang hiện tại."
+    },
+    {
+      "id": "ME-10-YC-003",
+      "group": "Quyền truy cập",
+      "title": "Giữ dữ liệu trong phạm vi Mentor được phép",
+      "description": "API #55 yêu cầu vai trò MENTOR và subject số; phương án dự phòng hiện tại cho phép Mentor sở hữu trực tiếp khóa học. Chưa kết luận chính sách Mentor được phân công.",
+      "source_ref": "API #55 view.py; ME-10 05-business-rules.md; Q-55-04/05",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Chủ sở hữu trực tiếp là phương án dự phòng trong mã nguồn; quyền được phân công chưa có nguồn."
+    },
+    {
+      "id": "ME-10-YC-004",
+      "group": "Kiểm tra dữ liệu trả về",
+      "title": "Xác minh phong bì và danh tính bài nộp",
+      "description": "Kiểm tra kiểu phong bì, mã thành công, ID khớp tuyến, các ID bắt buộc, trạng thái, ngày nộp và cấu trúc danh sách tệp trước khi hiển thị.",
+      "source_ref": "ME10Page.isApiEnvelope/isSubmission/isUploadAsset; API #55 models.py",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Lỗi cấu trúc được đưa về trạng thái lỗi tải; chưa chạy trình duyệt."
+    },
+    {
+      "id": "ME-10-YC-005",
+      "group": "Nội dung bài làm",
+      "title": "Hiển thị nội dung bài nộp đúng nguồn",
+      "description": "Hiển thị content khi API trả chuỗi; nếu content vắng/null thì nêu rõ phản hồi không có nội dung văn bản. Không tự tạo nội dung mẫu.",
+      "source_ref": "me10-page.html; API #55 SubmissionResponse",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Không giả lập danh tính hoặc nội dung cá nhân."
+    },
+    {
+      "id": "ME-10-YC-006",
+      "group": "Tệp bài nộp",
+      "title": "Hiển thị metadata tệp an toàn",
+      "description": "Chỉ trình bày metadata trong files[]; khi danh sách rỗng báo không có metadata và không mở URL tệp cho đến khi chính sách lưu trữ được xác nhận.",
+      "source_ref": "me10-page.html; ME-10 00-overview.md; Q-55-02/09",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Nguồn tạo URL từ API #35 và chính sách tải tệp còn mở."
+    },
+    {
+      "id": "ME-10-YC-007",
+      "group": "Điểm số",
+      "title": "Đọc điểm hiện có, không tự đặt thang điểm",
+      "description": "Hiển thị score do #55 trả về dưới dạng chỉ đọc; không mặc định thang 0–100 hoặc tự quy đổi. #55 không trả max_score.",
+      "source_ref": "me10-page.html; API #55 response; Q-55-06; Q-56-03",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Kiểu, độ chính xác và giới hạn điểm còn chờ chủ sở hữu."
+    },
+    {
+      "id": "ME-10-YC-008",
+      "group": "Nhận xét",
+      "title": "Đọc nhận xét hiện có ở chế độ chỉ đọc",
+      "description": "Hiển thị feedback nếu API trả về; không tạo nội dung rỗng như dữ liệu đã lưu. API #57 attachment chưa có nơi lưu được xác nhận.",
+      "source_ref": "me10-page.html; API #55 response; API #57 OPEN_QUESTIONS.md",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Định dạng, độ dài và attachment contract còn mở."
+    },
+    {
+      "id": "ME-10-YC-009",
+      "group": "Thao tác ghi",
+      "title": "Khóa thao tác ghi khi hợp đồng chưa được duyệt",
+      "description": "Không gửi POST #56 hoặc #57 từ trang hiện tại; hai nút riêng đang disabled. Không gộp hai thay đổi thành một kết quả nguyên tử.",
+      "source_ref": "me10-page.html; ME10SubmissionReviewService; ME-10 02-events.md",
+      "priority": "P1",
+      "design_status": "Chờ xác nhận",
+      "notes": "Rubric, score, attachment, partial-success và lịch sử chưa chốt."
+    },
+    {
+      "id": "ME-10-YC-010",
+      "group": "Trạng thái lỗi",
+      "title": "Phân biệt lỗi truy cập và lỗi tải",
+      "description": "403 hiển thị trạng thái không có quyền, 404 hiển thị không tìm thấy; lỗi khác có nút thử tải lại. 401 hiện đi vào lỗi chung, không có nhánh riêng.",
+      "source_ref": "me10-page.ts; ME-10 03-data-flow.md; API #55–#57",
+      "priority": "P1",
+      "design_status": "Đã xác nhận",
+      "notes": "Không hiển thị bài nộp khi lỗi."
+    },
+    {
+      "id": "ME-10-YC-011",
+      "group": "Quay lại danh sách",
+      "title": "Quay về ME-09",
+      "description": "Liên kết quay lại mở /mentor/submissions; không cam kết giữ bộ lọc hoặc vị trí cuộn nếu chưa có hợp đồng trạng thái tuyến.",
+      "source_ref": "me10-page.html; mentor.route.ts; ME10-E08",
+      "priority": "P2",
+      "design_status": "Đã xác nhận",
+      "notes": "Mã nguồn có RouterLink; trình duyệt chưa xác minh."
+    },
+    {
+      "id": "ME-10-YC-012",
+      "group": "Đối chiếu thiết kế",
+      "title": "Không biến dữ liệu mẫu thành bằng chứng lúc chạy",
+      "description": "Đối chiếu đủ 39 dấu đánh số nhưng không coi badge phiên, đồng bộ, quét tệp, AES-256, WCAG, danh tính mẫu hoặc PENDING_AUTH là dữ liệu hay cam kết đang chạy.",
+      "source_ref": "ME-10_markers.json; ME-10.md mục C/F; me10-page.html",
+      "priority": "P2",
+      "design_status": "Đã xác nhận",
+      "notes": "Ảnh và HTML là mẫu tĩnh."
+    },
+    {
+      "id": "ME-10-YC-013",
+      "group": "Khả năng tiếp cận và bố cục",
+      "title": "Kiểm tra nhãn và bố cục theo mã nguồn",
+      "description": "Đối chiếu nhãn trường, trạng thái tải/lỗi, focus và bố cục 1 cột ở ngưỡng CSS hiện có; không tuyên bố đạt WCAG nếu chưa kiểm tra thực tế.",
+      "source_ref": "me10-page.html; me10-page.css; ME-10 05-business-rules.md",
+      "priority": "P2",
+      "design_status": "Chờ xác nhận",
+      "notes": "Chỉ đọc mã nguồn; chưa kiểm tra trình duyệt/thiết bị hỗ trợ."
+    }
+  ],
+  "elements": [
+    {
+      "id": "ME-10-EL-001",
+      "marker": 1,
+      "source_element_id": "ME10-EL-01",
+      "name": "Logo và thương hiệu Study2Work LMS Mentor",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=45, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Logo và thương hiệu Study2Work LMS Mentor. Mã nguồn hiện tại: Khung chung có liên kết thương hiệu Study2Work; nhãn vai trò và hồ sơ lấy từ bố cục Mentor hiện tại, không dùng danh tính mẫu trong ảnh. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-002",
+      "marker": 2,
+      "source_element_id": "ME10-EL-02",
+      "name": "Điều hướng Tổng quan",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=361, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Điều hướng Tổng quan. Mã nguồn hiện tại: Bố cục Mentor có mục Tổng quan gắn với route; không suy quyền từ mục điều hướng. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-003",
+      "marker": 3,
+      "source_element_id": "ME10-EL-03",
+      "name": "Điều hướng Khóa học phụ trách",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=530, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Điều hướng Khóa học phụ trách. Mã nguồn hiện tại: Bố cục Mentor có mục Khóa học; không truyền course context theo dữ liệu ảnh. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-004",
+      "marker": 4,
+      "source_element_id": "ME10-EL-04",
+      "name": "Điều hướng Chấm bài đang chọn",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=690, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Điều hướng Chấm bài đang chọn. Mã nguồn hiện tại: Mục Chấm bài mở nhóm bài nộp; không coi nút mẫu là quyền truy cập. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-005",
+      "marker": 5,
+      "source_element_id": "ME10-EL-05",
+      "name": "Điều hướng Hộp thư hỗ trợ",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=832, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Điều hướng Hộp thư hỗ trợ. Mã nguồn hiện tại: Có mục Hỗ trợ dùng route thật trong bố cục chung; nội dung hộp thư không thuộc ME-10. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-006",
+      "marker": 6,
+      "source_element_id": "ME10-EL-06",
+      "name": "Điều hướng Thông báo",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=980, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Điều hướng Thông báo. Mã nguồn hiện tại: Có mục Thông báo trong bố cục chung; số lượng chưa đọc trong ảnh không phải dữ liệu xác minh. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-007",
+      "marker": 7,
+      "source_element_id": "ME10-EL-07",
+      "name": "Chuông thông báo",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1268, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Chuông thông báo. Mã nguồn hiện tại: Ảnh có chuông/chấm đỏ; bố cục chung không chứng minh trạng thái chưa đọc mẫu. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-008",
+      "marker": 8,
+      "source_element_id": "ME10-EL-08",
+      "name": "Danh tính và avatar Mentor mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1550, y=90 trên ảnh 1600×1556",
+      "properties": "Ảnh: Danh tính và avatar Mentor mẫu. Mã nguồn hiện tại: Tên/vai trò trong bố cục lấy từ trạng thái hiện tại của ứng dụng; không hiển thị Vũ Thành Đạt như dữ liệu thật. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-009",
+      "marker": 9,
+      "source_element_id": "ME10-EL-09",
+      "name": "Breadcrumb Chấm bài đến Chi tiết",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=390, y=119 trên ảnh 1600×1556",
+      "properties": "Ảnh: Breadcrumb Chấm bài đến Chi tiết. Mã nguồn hiện tại: Ảnh có breadcrumb tĩnh; template hiện tại chỉ có liên kết quay lại danh sách và không có breadcrumb này. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-009",
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E08",
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-010",
+      "marker": 10,
+      "source_element_id": "ME10-EL-10",
+      "name": "Badge mã phiên làm việc mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1215, y=110 trên ảnh 1600×1556",
+      "properties": "Ảnh: Badge mã phiên làm việc mẫu. Mã nguồn hiện tại: Mã SES-ME10-SYNC là mẫu; không phải traceId hay session từ máy chủ. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-011",
+      "marker": 11,
+      "source_element_id": "ME10-EL-11",
+      "name": "Eyebrow hệ thống điều phối chấm điểm",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=920, y=158 trên ảnh 1600×1556",
+      "properties": "Ảnh: Eyebrow hệ thống điều phối chấm điểm. Mã nguồn hiện tại: Eyebrow trong ảnh không có ánh xạ sang dữ liệu hoặc trạng thái hiện hành. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-012",
+      "marker": 12,
+      "source_element_id": "ME10-EL-12",
+      "name": "Tiêu đề Đánh giá bài tập và phản hồi học viên",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=720, y=198 trên ảnh 1600×1556",
+      "properties": "Ảnh: Tiêu đề Đánh giá bài tập và phản hồi học viên. Mã nguồn hiện tại: Tiêu đề hiện tại là “Chấm điểm và phản hồi”; tiêu đề dài trong ảnh không được dùng thay tên người học hoặc bài tập. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-002"
+      ],
+      "source_event_refs": [
+        "ME10-E01"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-013",
+      "marker": 13,
+      "source_element_id": "ME10-EL-13",
+      "name": "Mô tả màn hình",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=865, y=245 trên ảnh 1600×1556",
+      "properties": "Ảnh: Mô tả màn hình. Mã nguồn hiện tại: Mô tả hiện tại nêu #55 và khóa ghi; không khẳng định bộ tiêu chí chuẩn như bản thiết kế. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-014",
+      "marker": 14,
+      "source_element_id": "ME10-EL-14",
+      "name": "Nút quay lại danh sách bài nộp phía trên",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1170, y=224 trên ảnh 1600×1556",
+      "properties": "Ảnh: Nút quay lại danh sách bài nộp phía trên. Mã nguồn hiện tại: Có liên kết quay lại /mentor/submissions ở đầu nội dung; không có xử lý giữ bộ lọc được xác nhận. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-009"
+      ],
+      "source_event_refs": [
+        "ME10-E08"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-015",
+      "marker": 15,
+      "source_element_id": "ME10-EL-15",
+      "name": "Tiêu đề panel Tập tin bài làm học viên",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=80, y=390 trên ảnh 1600×1556",
+      "properties": "Ảnh: Tiêu đề panel Tập tin bài làm học viên. Mã nguồn hiện tại: Trang hiện hiển thị nội dung bài nộp và khu vực tệp; tiêu đề khác ảnh và chỉ dữ liệu #55 được dùng. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-002"
+      ],
+      "source_event_refs": [
+        "ME10-E01"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-016",
+      "marker": 16,
+      "source_element_id": "ME10-EL-16",
+      "name": "Badge Đang đồng bộ",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=900, y=350 trên ảnh 1600×1556",
+      "properties": "Ảnh: Badge Đang đồng bộ. Mã nguồn hiện tại: Badge “Đang đồng bộ” trong ảnh không có trong template; trang không polling tự động. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-003"
+      ],
+      "source_event_refs": [
+        "ME10-E02"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-017",
+      "marker": 17,
+      "source_element_id": "ME10-EL-17",
+      "name": "Trạng thái đang chờ kết nối dữ liệu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=83, y=415 trên ảnh 1600×1556",
+      "properties": "Ảnh: Trạng thái đang chờ kết nối data. Mã nguồn hiện tại: Ảnh minh họa chờ kết nối không phải trạng thái runtime; trang có loading/error/loaded riêng. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-002",
+        "ME-10-EV-003"
+      ],
+      "source_event_refs": [
+        "ME10-E01",
+        "ME10-E02"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-018",
+      "marker": 18,
+      "source_element_id": "ME10-EL-18",
+      "name": "Mã nộp bài và tiến trình kiểm định mẫu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=201, y=831 trên ảnh 1600×1556",
+      "properties": "Ảnh: Mã nộp bài và tiến trình kiểm định mẫu. Mã nguồn hiện tại: Mã SUB-VERIFYING và tiến trình quét không có trong response #55 hay template hiện tại. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-002"
+      ],
+      "source_event_refs": [
+        "ME10-E01"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-019",
+      "marker": 19,
+      "source_element_id": "ME10-EL-19",
+      "name": "Nút Làm mới kết nối",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=234, y=1018 trên ảnh 1600×1556",
+      "properties": "Ảnh: Nút Làm mới kết nối. Mã nguồn hiện tại: Nút làm mới kết nối không có; nút thử lại chỉ xuất hiện ở trạng thái lỗi tải. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-003"
+      ],
+      "source_event_refs": [
+        "ME10-E02"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-020",
+      "marker": 20,
+      "source_element_id": "ME10-EL-20",
+      "name": "Nút Báo cáo sự cố tải file",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=455, y=1022 trên ảnh 1600×1556",
+      "properties": "Ảnh: Nút Báo cáo sự cố tải file. Mã nguồn hiện tại: Nút báo cáo sự cố tệp trong ảnh không có handler hoặc API đã ánh xạ ở ME-10. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-010"
+      ],
+      "source_event_refs": [
+        "ME10-E09"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-021",
+      "marker": 21,
+      "source_element_id": "ME10-EL-21",
+      "name": "Claim giao thức bảo mật AES-256",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=81, y=1224 trên ảnh 1600×1556",
+      "properties": "Ảnh: Claim giao thức bảo mật AES-256. Mã nguồn hiện tại: Claim AES-256 chỉ có trong ảnh; không xuất hiện trong template và không được coi là bảo đảm bảo mật. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-022",
+      "marker": 22,
+      "source_element_id": "ME10-EL-22",
+      "name": "Claim khuôn khổ đánh giá WCAG 2.1 AA",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=861, y=1217 trên ảnh 1600×1556",
+      "properties": "Ảnh: Claim khuôn khổ đánh giá WCAG 2.1 AA. Mã nguồn hiện tại: Claim WCAG 2.1 AA chỉ có trong ảnh; không phải kết quả kiểm tra khả năng tiếp cận. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-023",
+      "marker": 23,
+      "source_element_id": "ME10-EL-23",
+      "name": "Dải lưu ý nghiệp vụ về file đính kèm",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=25, y=1278 trên ảnh 1600×1556",
+      "properties": "Ảnh: Dải lưu ý nghiệp vụ về file đính kèm. Mã nguồn hiện tại: Ảnh nêu đã quét và xác thực danh tính; response #55 không có cờ scan/identity và template không đưa ra tuyên bố đó. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-002"
+      ],
+      "source_event_refs": [
+        "ME10-E01"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-024",
+      "marker": 24,
+      "source_element_id": "ME10-EL-24",
+      "name": "Nhãn điểm đánh giá và khóa chỉnh sửa",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=348 trên ảnh 1600×1556",
+      "properties": "Ảnh: Nhãn điểm đánh giá và khóa chỉnh sửa. Mã nguồn hiện tại: Trang hiển thị điểm hiện tại từ #55 ở dạng chỉ đọc; không có khóa chỉnh sửa kiểu ảnh. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-004",
+        "ME-10-EV-006"
+      ],
+      "source_event_refs": [
+        "ME10-E03",
+        "ME10-E05"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-025",
+      "marker": 25,
+      "source_element_id": "ME10-EL-25",
+      "name": "Trường nhập điểm disabled, thang /100 và gợi ý",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=380 trên ảnh 1600×1556",
+      "properties": "Ảnh: Input điểm disabled, thang /100 và gợi ý. Mã nguồn hiện tại: Điểm là trường văn bản chỉ đọc; không có thang /100 hay nhập điểm. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-004"
+      ],
+      "source_event_refs": [
+        "ME10-E03"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-026",
+      "marker": 26,
+      "source_element_id": "ME10-EL-26",
+      "name": "Tiêu đề rubric và bộ đếm tiêu chí 0/0",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=493 trên ảnh 1600×1556",
+      "properties": "Ảnh: Tiêu đề rubric và bộ đếm tiêu chí 0/0. Mã nguồn hiện tại: Rubric không được hiển thị; chỉ có thông báo rằng rubric/persistence chưa có hợp đồng. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-004",
+        "ME-10-EV-006"
+      ],
+      "source_event_refs": [
+        "ME10-E03",
+        "ME10-E05"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-027",
+      "marker": 27,
+      "source_element_id": "ME10-EL-27",
+      "name": "Trạng thái rỗng Chưa có rubric tự động",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=975, y=521 trên ảnh 1600×1556",
+      "properties": "Ảnh: trạng thái rỗng Chưa có rubric tự động. Mã nguồn hiện tại: trạng thái rỗng rubric 0/0 trong ảnh không phải dữ liệu runtime của trang hiện tại. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-004"
+      ],
+      "source_event_refs": [
+        "ME10-E03"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-028",
+      "marker": 28,
+      "source_element_id": "ME10-EL-28",
+      "name": "Nhãn nhận xét và bộ đếm ký tự",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=756 trên ảnh 1600×1556",
+      "properties": "Ảnh: Nhãn nhận xét và bộ đếm ký tự. Mã nguồn hiện tại: Có nhãn Nhận xét; không có bộ đếm ký tự như ảnh. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-005"
+      ],
+      "source_event_refs": [
+        "ME10-E04"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-029",
+      "marker": 29,
+      "source_element_id": "ME10-EL-29",
+      "name": "Textarea nhận xét của giảng viên",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=783 trên ảnh 1600×1556",
+      "properties": "Ảnh: Textarea nhận xét của giảng viên. Mã nguồn hiện tại: Textarea nhận xét hiện chỉ đọc và lấy feedback từ #55; không cho nhập. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-005"
+      ],
+      "source_event_refs": [
+        "ME10-E04"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-030",
+      "marker": 30,
+      "source_element_id": "ME10-EL-30",
+      "name": "Gợi ý Markdown hỗ trợ",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=1010 trên ảnh 1600×1556",
+      "properties": "Ảnh: Gợi ý Markdown hỗ trợ. Mã nguồn hiện tại: Gợi ý Markdown không có trong template; API không xác nhận cú pháp hiển thị. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-031",
+      "marker": 31,
+      "source_element_id": "ME10-EL-31",
+      "name": "Cảnh báo an toàn dữ liệu",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=1078 trên ảnh 1600×1556",
+      "properties": "Ảnh: Cảnh báo an toàn data. Mã nguồn hiện tại: Cảnh báo an toàn trong ảnh không có; không tự khẳng định chữ ký/xác thực phiên. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-032",
+      "marker": 32,
+      "source_element_id": "ME10-EL-32",
+      "name": "Nút Lưu điểm số và gửi nhận xét disabled",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=956, y=1220 trên ảnh 1600×1556",
+      "properties": "Ảnh: Nút Lưu điểm số và gửi nhận xét disabled. Mã nguồn hiện tại: Template có hai nút riêng đang khóa; không có nút gộp “Lưu điểm số và gửi nhận xét”. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-006",
+        "ME-10-EV-007"
+      ],
+      "source_event_refs": [
+        "ME10-E05",
+        "ME10-E06"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-033",
+      "marker": 33,
+      "source_element_id": "ME10-EL-33",
+      "name": "Nút quay lại danh sách bài nộp phía dưới",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=975, y=1287 trên ảnh 1600×1556",
+      "properties": "Ảnh: Nút quay lại danh sách bài nộp phía dưới. Mã nguồn hiện tại: Chỉ có một liên kết quay lại ở đầu; nút cuối trong ảnh không được dựng thêm. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-009"
+      ],
+      "source_event_refs": [
+        "ME10-E08"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-034",
+      "marker": 34,
+      "source_element_id": "ME10-EL-34",
+      "name": "Trạng thái chữ ký số PENDING_AUTH",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=950, y=1420 trên ảnh 1600×1556",
+      "properties": "Ảnh: Trạng thái chữ ký số PENDING_AUTH. Mã nguồn hiện tại: PENDING_AUTH là nội dung mẫu và không có trong template hiện tại. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-035",
+      "marker": 35,
+      "source_element_id": "ME10-EL-35",
+      "name": "Version mẫu v2.4.1",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1552, y=1428 trên ảnh 1600×1556",
+      "properties": "Ảnh: Version mẫu v2.4.1. Mã nguồn hiện tại: Phiên bản v2.4.1 là mẫu, không phải phiên bản của trang đang chạy. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-036",
+      "marker": 36,
+      "source_element_id": "ME10-EL-36",
+      "name": "Logo và copyright chân trang",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=72, y=1478 trên ảnh 1600×1556",
+      "properties": "Ảnh: Logo và chân trang bản quyền. Mã nguồn hiện tại: Bố cục chung có footer đơn giản; thông tin trong ảnh không chứng minh chuẩn đánh giá WCAG. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [],
+      "source_event_refs": [],
+      "requirement_ids": [
+        "ME-10-YC-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-037",
+      "marker": 37,
+      "source_element_id": "ME10-EL-37",
+      "name": "Liên kết Quy chế Giảng viên",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1080, y=1477 trên ảnh 1600×1556",
+      "properties": "Ảnh: Link Quy chế Giảng viên. Mã nguồn hiện tại: Footer hiện tại không có liên kết Quy chế Giảng viên trong mockup. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-038",
+      "marker": 38,
+      "source_element_id": "ME10-EL-38",
+      "name": "Liên kết Tiêu chuẩn đánh giá",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1258, y=1477 trên ảnh 1600×1556",
+      "properties": "Ảnh: Link Tiêu chuẩn đánh giá. Mã nguồn hiện tại: Footer hiện tại không có liên kết Tiêu chuẩn đánh giá trong mockup. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    },
+    {
+      "id": "ME-10-EL-039",
+      "marker": 39,
+      "source_element_id": "ME10-EL-39",
+      "name": "Liên kết Hỗ trợ kỹ thuật",
+      "type": "Thành phần trên ảnh thiết kế",
+      "position": "Tọa độ x=1490, y=1477 trên ảnh 1600×1556",
+      "properties": "Ảnh: Link Hỗ trợ kỹ thuật. Mã nguồn hiện tại: Footer hiện tại không có liên kết Hỗ trợ kỹ thuật trong mockup. Chỉ đối chiếu marker/nguồn; không coi ảnh là bằng chứng lúc chạy.",
+      "event_ids": [
+        "ME-10-EV-011"
+      ],
+      "source_event_refs": [
+        "ME10-E10"
+      ],
+      "requirement_ids": [
+        "ME-10-YC-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md; ME-10_markers.json; ME-10.md mục C; me10-page.html; MentorLayout khi áp dụng"
+    }
+  ],
+  "events": [
+    {
+      "id": "ME-10-EV-001",
+      "source_event_id": "D.1 — Quy tắc API chung #55–#57",
+      "name": "Đối chiếu xác thực, phong bì và giao dịch API",
+      "trigger": "Áp dụng khi có yêu cầu #55, #56 hoặc #57; đây là mục hợp đồng dùng chung, không phải thao tác người dùng.",
+      "element_ids": [],
+      "api_ids": [
+        "API #55",
+        "API #56",
+        "API #57"
+      ],
+      "processing": "#55 kiểm tra MENTOR trước phân tích ID; #56/#57 nhận body Pydantic strict, nên body thiếu/sai/thừa có thể bị trả 422 trước view-level auth. Ba API dùng phong bì chung; mỗi POST commit riêng, không có transaction xuyên request. Thứ tự lỗi auth/body của POST còn cần chốt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-10-ChamDiemVaPhanHoi/02-events.md D.1; ME-10.md D.1; API #55–#57 source"
+    },
+    {
+      "id": "ME-10-EV-002",
+      "source_event_id": "ME10-E01",
+      "name": "Mở màn hình và tải bài nộp",
+      "trigger": "Mở route có submissionId hợp lệ hoặc route thay đổi; trang bắt đầu GET #55.",
+      "element_ids": [
+        "ME-10-EL-012",
+        "ME-10-EL-015",
+        "ME-10-EL-017",
+        "ME-10-EL-018",
+        "ME-10-EL-023"
+      ],
+      "api_ids": [
+        "API #55"
+      ],
+      "processing": "Kiểm tra ID an toàn, hiển thị loading, gọi #55, hủy truy vấn cũ khi route đổi; xác minh phong bì, mã thành công, ID trả về, trường bắt buộc và files trước khi render. Không tạo rubric/max_score hoặc mở URL tệp.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10 02-events.md D.2; me10-page.ts; me10-submission-review.service.ts"
+    },
+    {
+      "id": "ME-10-EV-003",
+      "source_event_id": "ME10-E02",
+      "name": "Thử tải lại chi tiết",
+      "trigger": "Người dùng chọn Thử tải lại khi có lỗi tải bài.",
+      "element_ids": [
+        "ME-10-EL-016",
+        "ME-10-EL-017",
+        "ME-10-EL-019"
+      ],
+      "api_ids": [
+        "API #55"
+      ],
+      "processing": "Trang gọi lại #55 qua retry$ và đặt lại loading/dữ liệu cũ. Không có nút làm mới kết nối thường trực hoặc polling như ảnh mẫu.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10 02-events.md D.3; me10-page.ts; me10-page.html"
+    },
+    {
+      "id": "ME-10-EV-004",
+      "source_event_id": "ME10-E03",
+      "name": "Nhập hoặc sửa điểm",
+      "trigger": "Ảnh thiết kế mô tả nhập điểm tại dấu đánh số #25; trên mã nguồn hiện tại trường điểm là chỉ đọc.",
+      "element_ids": [
+        "ME-10-EL-024",
+        "ME-10-EL-025",
+        "ME-10-EL-026",
+        "ME-10-EL-027"
+      ],
+      "api_ids": [
+        "API #56"
+      ],
+      "processing": "Không bật nhập điểm, không giả định thang 0–100 hoặc max_score; ghi nhận rằng UI hiện giữ giá trị #55 ở chế độ chỉ đọc cho tới khi score/rubric contract được duyệt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-10 02-events.md D.4; ME-10 05-business-rules.md; me10-page.html"
+    },
+    {
+      "id": "ME-10-EV-005",
+      "source_event_id": "ME10-E04",
+      "name": "Nhập nhận xét và cập nhật bộ đếm",
+      "trigger": "Ảnh mô tả nhập textarea và cập nhật số ký tự; textarea hiện tại là chỉ đọc và không có bộ đếm.",
+      "element_ids": [
+        "ME-10-EL-028",
+        "ME-10-EL-029",
+        "ME-10-EL-030"
+      ],
+      "api_ids": [
+        "API #57"
+      ],
+      "processing": "Không nhận trường nhập hay tính số ký tự từ trang hiện tại; không tự đặt độ dài hoặc quy tắc Markdown.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-10 02-events.md D.5; ME-10 05-business-rules.md; me10-page.html"
+    },
+    {
+      "id": "ME-10-EV-006",
+      "source_event_id": "ME10-E05",
+      "name": "Lưu điểm qua API #56",
+      "trigger": "Kịch bản tương lai sau khi nút điểm riêng và hợp đồng đã được duyệt; hiện không có thao tác gửi.",
+      "element_ids": [
+        "ME-10-EL-032"
+      ],
+      "api_ids": [
+        "API #56"
+      ],
+      "processing": "Trang hiện không gọi grade(); nút Lưu điểm bị khóa. Không gửi rubric_items rỗng/tự tạo; không báo thành công. Nếu triển khai sau này, giữ kết quả độc lập và chờ quy tắc retry/audit được duyệt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-10 02-events.md D.6; me10-submission-review.service.ts; API #56 OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "ME-10-EV-007",
+      "source_event_id": "ME10-E06",
+      "name": "Gửi nhận xét qua API #57",
+      "trigger": "Kịch bản tương lai sau khi nút nhận xét riêng và attachments contract được duyệt; hiện không có thao tác gửi.",
+      "element_ids": [
+        "ME-10-EL-032"
+      ],
+      "api_ids": [
+        "API #57"
+      ],
+      "processing": "Trang hiện không gọi feedback(); nút Lưu nhận xét bị khóa. Không gửi chuỗi attachment giả. Nguồn #57 chỉ ghi feedback và ghi đè nội dung cũ; không tự báo đã lưu.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-10 02-events.md D.7; me10-submission-review.service.ts; API #57 OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "ME-10-EV-008",
+      "source_event_id": "ME10-E07",
+      "name": "Đối chiếu khi một thao tác thành công và thao tác kia lỗi",
+      "trigger": "Kịch bản tương lai khi #56 hoặc #57 thành công riêng hoặc yêu cầu tải lại sau ghi thất bại.",
+      "element_ids": [],
+      "api_ids": [
+        "API #55",
+        "API #56",
+        "API #57"
+      ],
+      "processing": "Hai POST có transaction riêng; không được gộp kết quả hay tự hoàn tác. Source DD yêu cầu tải lại #55 sau khi ghi thành công; trang hiện chưa có luồng ghi/đối chiếu này. Không retry POST tự động khi kết quả truyền tải mơ hồ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-10 02-events.md D.8; ME-10 03-data-flow.md E.1; API #56/#57 view.py"
+    },
+    {
+      "id": "ME-10-EV-009",
+      "source_event_id": "ME10-E08",
+      "name": "Quay về danh sách ME-09",
+      "trigger": "Chọn liên kết quay lại từ trang chi tiết.",
+      "element_ids": [
+        "ME-10-EL-009",
+        "ME-10-EL-014",
+        "ME-10-EL-033"
+      ],
+      "api_ids": [],
+      "processing": "Liên kết hiện tại dùng RouterLink về /mentor/submissions. Không cam kết giữ bộ lọc, vị trí cuộn hoặc form nếu chưa có hợp đồng tuyến.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10 02-events.md D.9; me10-page.html; mentor.route.ts"
+    },
+    {
+      "id": "ME-10-EV-010",
+      "source_event_id": "ME10-E09",
+      "name": "Báo cáo sự cố tải tệp",
+      "trigger": "Ảnh có nút báo cáo sự cố; template hiện tại không có nút này.",
+      "element_ids": [
+        "ME-10-EL-020"
+      ],
+      "api_ids": [],
+      "processing": "Không có handler hoặc API báo cáo lỗi tệp được ánh xạ. Không gửi API hỗ trợ #58/#59 như thể đó là hợp đồng báo cáo tệp.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-10 02-events.md D.10; ME-10 04-api-integration.md"
+    },
+    {
+      "id": "ME-10-EV-011",
+      "source_event_id": "ME10-E10",
+      "name": "Điều hướng đầu trang và chân trang",
+      "trigger": "Chọn mục điều hướng chung hoặc liên kết chân trang trong ảnh.",
+      "element_ids": [
+        "ME-10-EL-001",
+        "ME-10-EL-002",
+        "ME-10-EL-003",
+        "ME-10-EL-004",
+        "ME-10-EL-005",
+        "ME-10-EL-006",
+        "ME-10-EL-007",
+        "ME-10-EL-037",
+        "ME-10-EL-038",
+        "ME-10-EL-039"
+      ],
+      "api_ids": [],
+      "processing": "Ảnh dùng href=\"#\"; ứng dụng hiện tại có các liên kết route trong MentorLayout nhưng không có ba liên kết chân trang của ảnh. Chỉ kiểm tra các đích đã được router đăng ký.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-10 02-events.md D.11; mentor.route.ts; ME-09 shared-shell evidence"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ME10-B01",
+      "description": "Chưa có nguồn rubric, cấu trúc item, ID/thứ tự/điểm từng tiêu chí hoặc nơi lưu được duyệt.",
+      "impact": "Không thể hiển thị/chấm theo rubric như ảnh; #56 nhận rubric_items nhưng không lưu.",
+      "decision": "Owner/API/schema xác nhận contract rubric và response trước khi bật form.",
+      "source_ref": "ME-10-B01; #55 Q-55-01/03; #56 Q-56-01/02",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME10-B02",
+      "description": "Thang điểm, integer/decimal, độ chính xác, max_score, giới hạn và ý nghĩa điểm 0 chưa chốt.",
+      "impact": "Ảnh dùng 0–100 nhưng #56 nhận int32 và kiểm tra max_score theo phương án dự phòng; #55 không trả max_score.",
+      "decision": "Owner chốt kiểu, thang, nguồn max_score, bounds và cách hiển thị/rounding.",
+      "source_ref": "ME-10-B02; #55 Q-55-06; #56 Q-56-03",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME10-B03",
+      "description": "Hai thao tác grade/feedback độc lập; ảnh có một nút gộp; idempotency, retry, partial success và audit chưa chốt.",
+      "impact": "Mỗi POST commit riêng và không thể coi hai thay đổi là nguyên tử; timeout có thể không rõ kết quả.",
+      "decision": "Chốt nút riêng/orchestration, kết quả từng phần, refresh, lịch sử và retry trước khi mở thao tác.",
+      "source_ref": "ME-10-B03/04; #56 Q-56-05/07; #57 Q-57-03/06",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME10-B04",
+      "description": "Wire key/độ dài/empty rule của feedback cùng định dạng, lưu trữ, phản hồi và ownership của attachments chưa chốt.",
+      "impact": "#57 hiện ghi đè một cột feedback; attachments nhận nhưng bị bỏ qua.",
+      "decision": "Người phụ trách/API/lược đồ cần duyệt cấu trúc yêu cầu/phản hồi, giới hạn, nơi lưu tệp đính kèm và chính sách lịch sử.",
+      "source_ref": "ME-10-B05; #57 Q-57-01/02/03/07",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME10-B05",
+      "description": "Nguồn và chính sách mở tệp bài nộp chưa được xác minh; API #35 chưa chứng minh tạo cùng URL/quan hệ.",
+      "impact": "#55 chỉ trả tối đa một UploadAsset khớp URL/owner/purpose/course; không thể khẳng định file download hoặc scan.",
+      "decision": "Xác nhận producer, quan hệ, trạng thái, quyền riêng tư và URL/storage policy.",
+      "source_ref": "ME-10-B06/08; #55 Q-55-02/09",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME10-B06",
+      "description": "JWT subject, direct owner so với Mentor được phân công, chính sách 403/404 và thứ tự auth/body 422 còn mở.",
+      "impact": "Không được nới quyền từ ảnh; phần thân yêu cầu lỗi của POST có thể dừng trước xác thực ở lớp xử lý.",
+      "decision": "Chủ sở hữu/bảo mật cần chốt ánh xạ vai trò, phạm vi giao việc, thứ tự ưu tiên phản hồi và cách ẩn dữ liệu.",
+      "source_ref": "ME-10-B07/B10/B11; #55 Q-55-04; #56 Q-56-04/08; #57 Q-57-05/07",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME10-B07",
+      "description": "Schema live, migration, FK nullable và ranh giới legacy/V1-PILOT chưa được xác minh.",
+      "impact": "DDL/test giả lập chỉ là candidate, không chứng minh môi trường hoặc dữ liệu đang triển khai.",
+      "decision": "DB owner xác nhận schema/migration đang chạy trước khi phê duyệt thao tác ghi.",
+      "source_ref": "ME-10-B08; #55 Q-55-05; #56/#57 verification reports",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME10-B08",
+      "description": "Điều kiện chấm lại, lifecycle status, thời điểm học viên thấy điểm/feedback và khả năng tiếp cận thực tế chưa chốt.",
+      "impact": "#56 đặt GRADED; #57 không yêu cầu GRADED; WCAG trong ảnh chỉ là claim.",
+      "decision": "Product/API chốt transition/release; kiểm tra trình duyệt, thiết bị và hỗ trợ truy cập sau khi UI được hoàn thiện.",
+      "source_ref": "ME-10-B09; #55 Q-55-06; #56 Q-56-05; #57 Q-57-06; 05-business-rules.md",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ME10-TS-001",
+        "requirement_ids": [
+          "ME-10-YC-001",
+          "ME-10-YC-002"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Mở chi tiết bằng ID hợp lệ",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "101",
+        "steps": [
+          "Mở /mentor/submissions/101.",
+          "Theo dõi loading và yêu cầu #55."
+        ],
+        "expected": "Trang kiểm tra ID, gọi GET #55 một lần và chỉ hiện kết quả hợp lệ có ID 101; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-002",
+        "requirement_ids": [
+          "ME-10-YC-001",
+          "ME-10-YC-004"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Từ chối ID không hợp lệ trước khi tải",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "0, -1, abc và số vượt int64",
+        "steps": [
+          "Mở tuyến với từng giá trị.",
+          "Ghi nhận trạng thái và số request."
+        ],
+        "expected": "Helper từ chối ID không phải số dương an toàn; trang hiện trạng thái ID không hợp lệ và không gọi #55.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-003",
+        "requirement_ids": [
+          "ME-10-YC-001",
+          "ME-10-YC-002",
+          "ME-10-YC-004"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Chỉ nhận kết quả của ID trên tuyến hiện tại",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "ID cũ 101 phản hồi muộn sau khi tuyến đổi sang 202",
+        "steps": [
+          "Đổi submissionId khi yêu cầu đầu còn chờ.",
+          "Quan sát request và dữ liệu cuối."
+        ],
+        "expected": "SwitchMap hủy yêu cầu cũ; kiểm tra bổ sung loại kết quả không khớp ID hiện hành.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-004",
+        "requirement_ids": [
+          "ME-10-YC-002",
+          "ME-10-YC-004"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái đang tải",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "GET #55 đang chờ",
+        "steps": [
+          "Mở ID hợp lệ trước khi phản hồi."
+        ],
+        "expected": "Hiện thông báo “Đang tải bài nộp…”; không hiện nội dung cũ hoặc dữ liệu mẫu.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-005",
+        "requirement_ids": [
+          "ME-10-YC-002",
+          "ME-10-YC-004",
+          "ME-10-YC-005",
+          "ME-10-YC-006"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Chấp nhận phong bì thành công đúng mã và đúng ID",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "success=true; DESIGN_RESOURCE_RETRIEVED; data.id=101; các trường đúng kiểu",
+        "steps": [
+          "Trả phong bì #55 hợp lệ và đối chiếu từng trường."
+        ],
+        "expected": "Hiển thị Submission có ID khớp cùng content/files/status/submitted_at/score/feedback được trả về.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-006",
+        "requirement_ids": [
+          "ME-10-YC-002",
+          "ME-10-YC-004",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phong bì sai cấu trúc hoặc mã thành công",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Thiếu meta/traceId, sai kiểu success hoặc businessCode khác",
+        "steps": [
+          "Lần lượt trả từng phong bì giả không hợp lệ."
+        ],
+        "expected": "Không render dữ liệu; hiện lỗi an toàn của trang. Không coi mã khác DESIGN_RESOURCE_RETRIEVED là thành công.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-007",
+        "requirement_ids": [
+          "ME-10-YC-001",
+          "ME-10-YC-004",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Từ chối Submission có ID khác ID trên tuyến",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Tuyến 101; data.id=202",
+        "steps": [
+          "Trả phong bì thành công nhưng ID không khớp."
+        ],
+        "expected": "Trang hiện lỗi bài nộp không khớp đường dẫn và không hiển thị data.id=202.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-008",
+        "requirement_ids": [
+          "ME-10-YC-004",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Từ chối trường bắt buộc hoặc ngày không hợp lệ",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "assignment_id/user_id/status/submitted_at thiếu hoặc sai; ngày không phân tích được",
+        "steps": [
+          "Trả các biến thể Submission sai kiểu."
+        ],
+        "expected": "IsSubmission không chấp nhận dữ liệu; hiển thị lỗi tải thay vì render một phần.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-009",
+        "requirement_ids": [
+          "ME-10-YC-003",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Xử lý 401 mà không lộ dữ liệu",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "401 DESIGN_AUTHENTICATION_REQUIRED hoặc HTTP 401",
+        "steps": [
+          "Trả lỗi 401 sau khi trang bắt đầu tải."
+        ],
+        "expected": "Không có trạng thái auth-required riêng trong trang hiện tại; lỗi đi qua thông báo lỗi chung, không hiển thị Submission. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TS-010",
+        "requirement_ids": [
+          "ME-10-YC-003",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Chặn hiển thị khi quyền bị từ chối",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "403 DESIGN_ACCESS_DENIED",
+        "steps": [
+          "Trả 403 từ #55."
+        ],
+        "expected": "Hiện trạng thái “Không có quyền xem bài nộp”; dữ liệu riêng không được render.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-011",
+        "requirement_ids": [
+          "ME-10-YC-001",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái không tìm thấy",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "404 DESIGN_RESOURCE_NOT_FOUND",
+        "steps": [
+          "Trả 404 cho ID sai theo server hoặc row không có."
+        ],
+        "expected": "Hiện trạng thái không tìm thấy; không hiển thị dữ liệu mẫu.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-012",
+        "requirement_ids": [
+          "ME-10-YC-002",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Thử tải lại sau lỗi máy chủ hoặc mạng",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "500 hoặc lỗi mạng, sau đó phản hồi thành công",
+        "steps": [
+          "Gây lỗi tải.",
+          "Chọn “Thử tải lại”."
+        ],
+        "expected": "Lỗi đầu được hiển thị; lần thử lại gọi #55 lại và chỉ render dữ liệu sau phản hồi hợp lệ.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-013",
+        "requirement_ids": [
+          "ME-10-YC-005"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị nội dung khi API có content",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "content là chuỗi giả, không chứa PII",
+        "steps": [
+          "Trả content dạng chuỗi."
+        ],
+        "expected": "Nội dung hiện đúng theo phản hồi; không tự diễn giải thành HTML hoặc bổ sung văn bản.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-014",
+        "requirement_ids": [
+          "ME-10-YC-005"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Nêu rõ khi API không có nội dung văn bản",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "content null hoặc bị lược bỏ",
+        "steps": [
+          "Trả Submission không có content."
+        ],
+        "expected": "Hiện “Không có nội dung văn bản trong phản hồi.”; không thay bằng nội dung từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-015",
+        "requirement_ids": [
+          "ME-10-YC-006"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái danh sách tệp rỗng",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "tệps=[]",
+        "steps": [
+          "Trả Submission hợp lệ với danh sách rỗng."
+        ],
+        "expected": "Hiện số lượng 0 và thông báo API không trả metadata tệp.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-016",
+        "requirement_ids": [
+          "ME-10-YC-006"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị metadata tệp mà không mở URL",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Một UploadAsset giả hợp lệ: id, name, url, content_type, size_bytes, status",
+        "steps": [
+          "Trả metadata giả.",
+          "Kiểm tra phần tử tương tác và request mạng trong kịch bản được duyệt."
+        ],
+        "expected": "Trang hiện tên/loại/kích thước/trạng thái; URL/storage policy chưa duyệt nên không tạo liên kết mở tệp.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-017",
+        "requirement_ids": [
+          "ME-10-YC-004",
+          "ME-10-YC-006",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Từ chối metadata tệp sai kiểu",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "file ID/size/status sai kiểu hoặc files không phải danh sách",
+        "steps": [
+          "Trả UploadAsset malformed."
+        ],
+        "expected": "Phản hồi bị từ chối trước khi render; không gọi URL lạ.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-018",
+        "requirement_ids": [
+          "ME-10-YC-007",
+          "ME-10-YC-008"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị điểm và feedback hiện có ở chế độ chỉ đọc",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "score=\"8.50\"; feedback là chuỗi nhận xét giả",
+        "steps": [
+          "Trả optional các trường hợp lệ từ #55."
+        ],
+        "expected": "Điểm và nhận xét giữ nguyên nội dung phản hồi, trường HTML chỉ đọc, không gửi POST.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-019",
+        "requirement_ids": [
+          "ME-10-YC-007",
+          "ME-10-YC-008"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Không tạo điểm hoặc feedback mặc định",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "score và feedback vắng/null",
+        "steps": [
+          "Trả phản hồi không có hai trường tùy chọn."
+        ],
+        "expected": "Điểm hiện “Chưa có điểm”; feedback để trống theo template. Không coi empty text là feedback đã lưu. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TS-020",
+        "requirement_ids": [
+          "ME-10-YC-007",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Giữ giới hạn rubric và thang điểm",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Ảnh mẫu 0–100 và rubric 0/0; phản hồi không có rubric/max_score",
+        "steps": [
+          "Mở trang với Submission hợp lệ."
+        ],
+        "expected": "Không dựng rubric hoặc thang 0–100 từ ảnh; thông báo khóa ghi nêu thiếu hợp đồng. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TS-021",
+        "requirement_ids": [
+          "ME-10-YC-007",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Không gọi API ghi khi nút điểm đang khóa",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Submission hợp lệ; người dùng kích hoạt mọi nút khả dụng",
+        "steps": [
+          "Đối chiếu thuộc tính disabled và phương thức page/service được gọi."
+        ],
+        "expected": "Nút Lưu điểm đang disabled; không gọi #56 và không báo điểm đã lưu. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TS-022",
+        "requirement_ids": [
+          "ME-10-YC-008",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Không gọi API ghi khi nút nhận xét đang khóa",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Submission hợp lệ; feedback có nội dung giả",
+        "steps": [
+          "Đối chiếu textarea và nút Lưu nhận xét."
+        ],
+        "expected": "Textarea chỉ đọc, nút disabled; không gọi #57 hoặc tuyên bố feedback đã gửi. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TS-023",
+        "requirement_ids": [
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Không gộp hai POST thành một kết quả nguyên tử",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "#56 thành công giả và #57 lỗi giả trong kịch bản hợp đồng",
+        "steps": [
+          "Đối chiếu nguồn flow và nội dung điều khiển hiện tại.",
+          "Không phát request thật."
+        ],
+        "expected": "Trang hiện chưa có luồng POST; hai API commit riêng. Tương lai phải thể hiện trạng thái riêng và thành công một phần. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TS-024",
+        "requirement_ids": [
+          "ME-10-YC-001",
+          "ME-10-YC-002"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Mở trực tiếp tuyến con với ID hợp lệ",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "/mentor/submissions/101",
+        "steps": [
+          "Tải tuyến trực tiếp trong cấu hình kiểm thử sau này.",
+          "Phiên này chỉ đối chiếu router."
+        ],
+        "expected": "Router đăng ký ME10Page cho tuyến chi tiết; hành vi trình duyệt chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-025",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Quay lại danh sách bài nộp",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "/mentor/submissions",
+        "steps": [
+          "Chọn liên kết quay lại trên trang chi tiết."
+        ],
+        "expected": "RouterLink trỏ về danh sách ME-09; không khẳng định giữ bộ lọc hoặc cuộn.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-026",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Không coi nhãn phiên, sync hay claim bảo mật là dữ liệu thật",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "SES-ME10-SYNC, AES-256, WCAG, SUB-VERIFYING, PENDING_AUTH trong ảnh",
+        "steps": [
+          "Đối chiếu ảnh với template và phản hồi #55."
+        ],
+        "expected": "Các giá trị mẫu không được render như dữ liệu bài nộp hoặc bằng chứng bảo mật/kiểm định.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-027",
+        "requirement_ids": [
+          "ME-10-YC-013"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu bố cục khi màn hình hẹp",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "CSS breakpoint 800px",
+        "steps": [
+          "Đọc quy tắc CSS.",
+          "Chụp xác minh trình duyệt ở bước chạy sau."
+        ],
+        "expected": "CSS đổi lưới về một cột tại max-width 800px; phiên này chưa xác minh trực quan lúc chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-028",
+        "requirement_ids": [
+          "ME-10-YC-013"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu nhãn, đang tải và lỗi hỗ trợ truy cập",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Nhãn điểm/feedback; role=status/alert; liên kết và nút",
+        "steps": [
+          "Đọc template và CSS.",
+          "Chưa dùng trình đọc màn hình."
+        ],
+        "expected": "Nhãn trường gắn ID; loading dùng status/live; lỗi dùng alert. Không tuyên bố đạt WCAG nếu chưa kiểm tra thực tế.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TS-029",
+        "requirement_ids": [
+          "ME-10-YC-003"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Không mở rộng quyền sang Mentor được phân công",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Mentor không phải chủ sở hữu trực tiếp; Mentor được phân công chưa có contract",
+        "steps": [
+          "Đối chiếu quyền API #55 và phản hồi 403."
+        ],
+        "expected": "Giữ phương án dự phòng chủ sở hữu trực tiếp; không giả định Mentor được phân công xem được bài nộp. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TS-030",
+        "requirement_ids": [
+          "ME-10-YC-003",
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10",
+        "group": "Toàn màn hình",
+        "title": "Không đặt token hoặc dữ liệu riêng vào đường dẫn hiển thị",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Route chỉ chứa submissionId; content/file URL là dữ liệu riêng",
+        "steps": [
+          "Đối chiếu route, template và quy tắc riêng tư."
+        ],
+        "expected": "Không thêm token, content, feedback hoặc URL tệp vào query/route; không log dữ liệu riêng trong nội dung trang.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/00-overview.md",
+          "03-data-flow.md",
+          "me10-page.ts",
+          "me10-page.html",
+          "API #55"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ME10-TE-001",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #1: Logo và thương hiệu Study2Work LMS Mentor",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-01 tại tọa độ 45,90; nhãn: Logo và thương hiệu Study2Work LMS Mentor",
+        "steps": [
+          "Mở dấu đánh số #1 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Khung chung có liên kết thương hiệu Study2Work; nhãn vai trò và hồ sơ lấy từ bố cục Mentor hiện tại, không dùng danh tính mẫu trong ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-002",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #2: Điều hướng Tổng quan",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-02 tại tọa độ 361,90; nhãn: Điều hướng Tổng quan",
+        "steps": [
+          "Mở dấu đánh số #2 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Bố cục Mentor có mục Tổng quan gắn với route; không suy quyền từ mục điều hướng.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-003",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #3: Điều hướng Khóa học phụ trách",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-03 tại tọa độ 530,90; nhãn: Điều hướng Khóa học phụ trách",
+        "steps": [
+          "Mở dấu đánh số #3 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Bố cục Mentor có mục Khóa học; không truyền course context theo dữ liệu ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-004",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #4: Điều hướng Chấm bài đang chọn",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-04 tại tọa độ 690,90; nhãn: Điều hướng Chấm bài đang chọn",
+        "steps": [
+          "Mở dấu đánh số #4 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Mục Chấm bài mở nhóm bài nộp; không coi nút mẫu là quyền truy cập.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-005",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #5: Điều hướng Hộp thư hỗ trợ",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-05 tại tọa độ 832,90; nhãn: Điều hướng Hộp thư hỗ trợ",
+        "steps": [
+          "Mở dấu đánh số #5 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Có mục Hỗ trợ dùng route thật trong bố cục chung; nội dung hộp thư không thuộc ME-10.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-006",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #6: Điều hướng Thông báo",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-06 tại tọa độ 980,90; nhãn: Điều hướng Thông báo",
+        "steps": [
+          "Mở dấu đánh số #6 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Có mục Thông báo trong bố cục chung; số lượng chưa đọc trong ảnh không phải dữ liệu xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-007",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #7: Chuông thông báo",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-07 tại tọa độ 1268,90; nhãn: Chuông thông báo",
+        "steps": [
+          "Mở dấu đánh số #7 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Ảnh có chuông/chấm đỏ; bố cục chung không chứng minh trạng thái chưa đọc mẫu.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-008",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #8: Danh tính và avatar Mentor mẫu",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-08 tại tọa độ 1550,90; nhãn: Danh tính và avatar Mentor mẫu",
+        "steps": [
+          "Mở dấu đánh số #8 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Tên/vai trò trong bố cục lấy từ trạng thái hiện tại của ứng dụng; không hiển thị Vũ Thành Đạt như dữ liệu thật.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-009",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #9: Breadcrumb Chấm bài đến Chi tiết",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-09 tại tọa độ 390,119; nhãn: Breadcrumb Chấm bài đến Chi tiết",
+        "steps": [
+          "Mở dấu đánh số #9 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Ảnh có breadcrumb tĩnh; template hiện tại chỉ có liên kết quay lại danh sách và không có breadcrumb này.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-010",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #10: Badge mã phiên làm việc mẫu",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-10 tại tọa độ 1215,110; nhãn: Badge mã phiên làm việc mẫu",
+        "steps": [
+          "Mở dấu đánh số #10 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Mã SES-ME10-SYNC là mẫu; không phải traceId hay session từ máy chủ.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-011",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #11: Eyebrow hệ thống điều phối chấm điểm",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-11 tại tọa độ 920,158; nhãn: Eyebrow hệ thống điều phối chấm điểm",
+        "steps": [
+          "Mở dấu đánh số #11 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Eyebrow trong ảnh không có ánh xạ sang dữ liệu hoặc trạng thái hiện hành.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-012",
+        "requirement_ids": [
+          "ME-10-YC-001"
+        ],
+        "target_id": "ME-10-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #12: Tiêu đề Đánh giá bài tập và phản hồi học viên",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-12 tại tọa độ 720,198; nhãn: Tiêu đề Đánh giá bài tập và phản hồi học viên",
+        "steps": [
+          "Mở dấu đánh số #12 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Tiêu đề hiện tại là “Chấm điểm và phản hồi”; tiêu đề dài trong ảnh không được dùng thay tên người học hoặc bài tập.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-013",
+        "requirement_ids": [
+          "ME-10-YC-001"
+        ],
+        "target_id": "ME-10-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #13: Mô tả màn hình",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-13 tại tọa độ 865,245; nhãn: Mô tả màn hình",
+        "steps": [
+          "Mở dấu đánh số #13 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Mô tả hiện tại nêu #55 và khóa ghi; không khẳng định bộ tiêu chí chuẩn như bản thiết kế.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-014",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #14: Nút quay lại danh sách bài nộp phía trên",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-14 tại tọa độ 1170,224; nhãn: Nút quay lại danh sách bài nộp phía trên",
+        "steps": [
+          "Mở dấu đánh số #14 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Có liên kết quay lại /mentor/submissions ở đầu nội dung; không có xử lý giữ bộ lọc được xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-015",
+        "requirement_ids": [
+          "ME-10-YC-005"
+        ],
+        "target_id": "ME-10-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #15: Tiêu đề panel Tập tin bài làm học viên",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-15 tại tọa độ 80,390; nhãn: Tiêu đề panel Tập tin bài làm học viên",
+        "steps": [
+          "Mở dấu đánh số #15 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Trang hiện hiển thị nội dung bài nộp và khu vực tệp; tiêu đề khác ảnh và chỉ dữ liệu #55 được dùng.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-016",
+        "requirement_ids": [
+          "ME-10-YC-002"
+        ],
+        "target_id": "ME-10-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #16: Badge Đang đồng bộ",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-16 tại tọa độ 900,350; nhãn: Badge Đang đồng bộ",
+        "steps": [
+          "Mở dấu đánh số #16 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Badge “Đang đồng bộ” trong ảnh không có trong template; trang không polling tự động.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-017",
+        "requirement_ids": [
+          "ME-10-YC-002"
+        ],
+        "target_id": "ME-10-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #17: Trạng thái đang chờ kết nối dữ liệu",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-17 tại tọa độ 83,415; nhãn: Trạng thái đang chờ kết nối dữ liệu",
+        "steps": [
+          "Mở dấu đánh số #17 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Ảnh minh họa chờ kết nối không phải trạng thái runtime; trang có loading/error/loaded riêng.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-018",
+        "requirement_ids": [
+          "ME-10-YC-002"
+        ],
+        "target_id": "ME-10-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #18: Mã nộp bài và tiến trình kiểm định mẫu",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-18 tại tọa độ 201,831; nhãn: Mã nộp bài và tiến trình kiểm định mẫu",
+        "steps": [
+          "Mở dấu đánh số #18 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Mã SUB-VERIFYING và tiến trình quét không có trong phản hồi #55 hay template hiện tại.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-019",
+        "requirement_ids": [
+          "ME-10-YC-002"
+        ],
+        "target_id": "ME-10-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #19: Nút Làm mới kết nối",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-19 tại tọa độ 234,1018; nhãn: Nút Làm mới kết nối",
+        "steps": [
+          "Mở dấu đánh số #19 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Nút làm mới kết nối không có; nút thử lại chỉ xuất hiện ở trạng thái lỗi tải.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-020",
+        "requirement_ids": [
+          "ME-10-YC-006"
+        ],
+        "target_id": "ME-10-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #20: Nút Báo cáo sự cố tải file",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-20 tại tọa độ 455,1022; nhãn: Nút Báo cáo sự cố tải file",
+        "steps": [
+          "Mở dấu đánh số #20 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Nút báo cáo sự cố tệp trong ảnh không có handler hoặc API đã ánh xạ ở ME-10.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-021",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #21: Claim giao thức bảo mật AES-256",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-21 tại tọa độ 81,1224; nhãn: Claim giao thức bảo mật AES-256",
+        "steps": [
+          "Mở dấu đánh số #21 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Claim AES-256 chỉ có trong ảnh; không xuất hiện trong template và không được coi là bảo đảm bảo mật.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-022",
+        "requirement_ids": [
+          "ME-10-YC-013"
+        ],
+        "target_id": "ME-10-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #22: Claim khuôn khổ đánh giá WCAG 2.1 AA",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-22 tại tọa độ 861,1217; nhãn: Claim khuôn khổ đánh giá WCAG 2.1 AA",
+        "steps": [
+          "Mở dấu đánh số #22 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Claim WCAG 2.1 AA chỉ có trong ảnh; không phải kết quả kiểm tra khả năng tiếp cận.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-023",
+        "requirement_ids": [
+          "ME-10-YC-006"
+        ],
+        "target_id": "ME-10-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #23: Dải lưu ý nghiệp vụ về file đính kèm",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-23 tại tọa độ 25,1278; nhãn: Dải lưu ý nghiệp vụ về file đính kèm",
+        "steps": [
+          "Mở dấu đánh số #23 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Ảnh nêu đã quét và xác thực danh tính; response #55 không có cờ scan/identity và template không đưa ra tuyên bố đó.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-024",
+        "requirement_ids": [
+          "ME-10-YC-007"
+        ],
+        "target_id": "ME-10-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #24: Nhãn điểm đánh giá và khóa chỉnh sửa",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-24 tại tọa độ 956,348; nhãn: Nhãn điểm đánh giá và khóa chỉnh sửa",
+        "steps": [
+          "Mở dấu đánh số #24 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Trang hiển thị điểm hiện tại từ #55 ở dạng chỉ đọc; không có khóa chỉnh sửa kiểu ảnh.",
+        "api_ids": [
+          "API #55",
+          "API #56"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-025",
+        "requirement_ids": [
+          "ME-10-YC-007"
+        ],
+        "target_id": "ME-10-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #25: Trường nhập điểm disabled, thang /100 và gợi ý",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-25 tại tọa độ 956,380; nhãn: Trường nhập điểm disabled, thang /100 và gợi ý",
+        "steps": [
+          "Mở dấu đánh số #25 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Điểm là trường văn bản chỉ đọc; không có thang /100 hay nhập điểm.",
+        "api_ids": [
+          "API #55",
+          "API #56"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-026",
+        "requirement_ids": [
+          "ME-10-YC-007"
+        ],
+        "target_id": "ME-10-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #26: Tiêu đề rubric và bộ đếm tiêu chí 0/0",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-26 tại tọa độ 956,493; nhãn: Tiêu đề rubric và bộ đếm tiêu chí 0/0",
+        "steps": [
+          "Mở dấu đánh số #26 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Rubric không được hiển thị; chỉ có thông báo rằng rubric/persistence chưa có hợp đồng.",
+        "api_ids": [
+          "API #55",
+          "API #56"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-027",
+        "requirement_ids": [
+          "ME-10-YC-007"
+        ],
+        "target_id": "ME-10-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #27: trạng thái rỗng Chưa có rubric tự động",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-27 tại tọa độ 975,521; nhãn: Empty state Chưa có rubric tự động",
+        "steps": [
+          "Mở dấu đánh số #27 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Trạng thái rỗng rubric 0/0 trong ảnh không phải dữ liệu runtime của trang hiện tại.",
+        "api_ids": [
+          "API #55",
+          "API #56"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-028",
+        "requirement_ids": [
+          "ME-10-YC-008"
+        ],
+        "target_id": "ME-10-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #28: Nhãn nhận xét và bộ đếm ký tự",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-28 tại tọa độ 956,756; nhãn: Nhãn nhận xét và bộ đếm ký tự",
+        "steps": [
+          "Mở dấu đánh số #28 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Có nhãn Nhận xét; không có bộ đếm ký tự như ảnh.",
+        "api_ids": [
+          "API #55",
+          "API #57"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-029",
+        "requirement_ids": [
+          "ME-10-YC-008"
+        ],
+        "target_id": "ME-10-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #29: Textarea nhận xét của giảng viên",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-29 tại tọa độ 956,783; nhãn: Textarea nhận xét của giảng viên",
+        "steps": [
+          "Mở dấu đánh số #29 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Textarea nhận xét hiện chỉ đọc và lấy feedback từ #55; không cho nhập.",
+        "api_ids": [
+          "API #55",
+          "API #57"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-030",
+        "requirement_ids": [
+          "ME-10-YC-008"
+        ],
+        "target_id": "ME-10-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #30: Gợi ý Markdown hỗ trợ",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-30 tại tọa độ 956,1010; nhãn: Gợi ý Markdown hỗ trợ",
+        "steps": [
+          "Mở dấu đánh số #30 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Gợi ý Markdown không có trong template; API không xác nhận cú pháp hiển thị.",
+        "api_ids": [
+          "API #55",
+          "API #57"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-031",
+        "requirement_ids": [
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #31: Cảnh báo an toàn dữ liệu",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-31 tại tọa độ 956,1078; nhãn: Cảnh báo an toàn dữ liệu",
+        "steps": [
+          "Mở dấu đánh số #31 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Cảnh báo an toàn trong ảnh không có; không tự khẳng định chữ ký/xác thực phiên.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-032",
+        "requirement_ids": [
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #32: Nút Lưu điểm số và gửi nhận xét disabled",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-32 tại tọa độ 956,1220; nhãn: Nút Lưu điểm số và gửi nhận xét disabled",
+        "steps": [
+          "Mở dấu đánh số #32 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Template có hai nút riêng đang khóa; không có nút gộp “Lưu điểm số và gửi nhận xét”.",
+        "api_ids": [
+          "API #55",
+          "API #56"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-033",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #33: Nút quay lại danh sách bài nộp phía dưới",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-33 tại tọa độ 975,1287; nhãn: Nút quay lại danh sách bài nộp phía dưới",
+        "steps": [
+          "Mở dấu đánh số #33 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Chỉ có một liên kết quay lại ở đầu; nút cuối trong ảnh không được dựng thêm.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-034",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-034",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #34: Trạng thái chữ ký số PENDING_AUTH",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-34 tại tọa độ 950,1420; nhãn: Trạng thái chữ ký số PENDING_AUTH",
+        "steps": [
+          "Mở dấu đánh số #34 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "PENDING_AUTH là nội dung mẫu và không có trong template hiện tại.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-035",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-035",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #35: Version mẫu v2.4.1",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-35 tại tọa độ 1552,1428; nhãn: Version mẫu v2.4.1",
+        "steps": [
+          "Mở dấu đánh số #35 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Phiên bản v2.4.1 là mẫu, không phải phiên bản của trang đang chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-036",
+        "requirement_ids": [
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EL-036",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #36: Logo và copyright chân trang",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-36 tại tọa độ 72,1478; nhãn: Logo và copyright footer",
+        "steps": [
+          "Mở dấu đánh số #36 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Bố cục chung có footer đơn giản; thông tin trong ảnh không chứng minh chuẩn đánh giá WCAG.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-037",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10-EL-037",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #37: liên kết Quy chế Giảng viên",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-37 tại tọa độ 1080,1477; nhãn: Link Quy chế Giảng viên",
+        "steps": [
+          "Mở dấu đánh số #37 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Footer hiện tại không có liên kết Quy chế Giảng viên trong ảnh thiết kế.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-038",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10-EL-038",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #38: liên kết Tiêu chuẩn đánh giá",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-38 tại tọa độ 1258,1477; nhãn: Link Tiêu chuẩn đánh giá",
+        "steps": [
+          "Mở dấu đánh số #38 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Footer hiện tại không có liên kết Tiêu chuẩn đánh giá trong ảnh thiết kế.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TE-039",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10-EL-039",
+        "group": "Thành phần",
+        "title": "Đối chiếu dấu đánh số #39: liên kết Hỗ trợ kỹ thuật",
+        "precondition": "Chỉ đối chiếu ảnh/HTML và mã nguồn đã khai báo; không chạy giao diện.",
+        "data": "Dấu đánh số nguồn ME10-EL-39 tại tọa độ 1490,1477; nhãn: Link Hỗ trợ kỹ thuật",
+        "steps": [
+          "Mở dấu đánh số #39 trên ảnh đánh số.",
+          "Đối chiếu nhãn và vị trí với bảng dấu đánh số trong DD.",
+          "Đối chiếu trạng thái thiết kế với template/route hiện tại."
+        ],
+        "expected": "Footer hiện tại không có liên kết Hỗ trợ kỹ thuật trong ảnh thiết kế.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/01-ui-elements.md",
+          "ME-10_markers.json",
+          "me10-page.html",
+          "mentor.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ME10-TV-001",
+        "requirement_ids": [
+          "ME-10-YC-003",
+          "ME-10-YC-004",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EV-001",
+        "group": "Sự kiện",
+        "title": "Áp dụng quy tắc API dùng chung",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Yêu cầu hợp lệ và lỗi giả cho #55/#56/#57",
+        "steps": [
+          "Đọc route/body models và mapping lỗi; không gửi request."
+        ],
+        "expected": "Giữ thứ tự kiểm tra khác nhau: #55 auth trước parse ID; POST body sai có thể nhận 422 trước view auth. Transaction #56/#57 riêng. Điểm precedence cần owner xác nhận. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [
+          "API #55",
+          "API #56",
+          "API #57"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TV-002",
+        "requirement_ids": [
+          "ME-10-YC-001",
+          "ME-10-YC-002",
+          "ME-10-YC-004",
+          "ME-10-YC-005",
+          "ME-10-YC-006"
+        ],
+        "target_id": "ME-10-EV-002",
+        "group": "Sự kiện",
+        "title": "Vào màn hình và tải bài nộp",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "submissionId hợp lệ; phản hồi giả đúng hoặc sai",
+        "steps": [
+          "Mở tuyến; quan sát đang tải, #55, xác minh dữ liệu và ID trước khi render."
+        ],
+        "expected": "Trang hiện gọi #55, hủy yêu cầu cũ khi tuyến đổi và chỉ hiển thị phản hồi có đúng mã, ID và kiểu dữ liệu. Không suy ra rubric hay mở URL tệp.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TV-003",
+        "requirement_ids": [
+          "ME-10-YC-002",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10-EV-003",
+        "group": "Sự kiện",
+        "title": "Thử tải lại chi tiết",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Lỗi tải ban đầu rồi phản hồi thành công",
+        "steps": [
+          "Trong trạng thái lỗi chọn “Thử tải lại”."
+        ],
+        "expected": "Nút lỗi gọi lại #55 và reset trạng thái request; không có polling/nút sync thường trực.",
+        "api_ids": [
+          "API #55"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TV-004",
+        "requirement_ids": [
+          "ME-10-YC-007",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EV-004",
+        "group": "Sự kiện",
+        "title": "Nhập hoặc sửa điểm",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Giá trị điểm giả; scale/max_score chưa chốt",
+        "steps": [
+          "Thử sửa trường điểm trên UI hiện hành."
+        ],
+        "expected": "Trường chỉ đọc; không phát input hoặc gọi #56. Không dùng thang /100 làm contract. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [
+          "API #56"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TV-005",
+        "requirement_ids": [
+          "ME-10-YC-008",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EV-005",
+        "group": "Sự kiện",
+        "title": "Nhập nhận xét và cập nhật bộ đếm",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Chuỗi nhận xét giả; độ dài chưa chốt",
+        "steps": [
+          "Thử sửa textarea và quan sát bộ đếm."
+        ],
+        "expected": "Textarea chỉ đọc và không có bộ đếm trong template; không gọi #57. Không tự đặt giới hạn độ dài. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [
+          "API #57"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TV-006",
+        "requirement_ids": [
+          "ME-10-YC-007",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EV-006",
+        "group": "Sự kiện",
+        "title": "Lưu điểm riêng qua API #56",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "score:int32 và rubric_items chưa có serialization được duyệt",
+        "steps": [
+          "Đối chiếu nút/method; không gọi API."
+        ],
+        "expected": "Không có caller #56 từ component và nút đang khóa; không gửi chuỗi rubric tự tạo, không báo thành công. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [
+          "API #56"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TV-007",
+        "requirement_ids": [
+          "ME-10-YC-008",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EV-007",
+        "group": "Sự kiện",
+        "title": "Gửi feedback riêng qua API #57",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "feedback_text và attachments chưa có hợp đồng được duyệt",
+        "steps": [
+          "Đối chiếu nút/method; không gọi API."
+        ],
+        "expected": "Không có caller #57 từ component và nút đang khóa; không gửi attachments giả hoặc báo đã lưu. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [
+          "API #57"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TV-008",
+        "requirement_ids": [
+          "ME-10-YC-009",
+          "ME-10-YC-010"
+        ],
+        "target_id": "ME-10-EV-008",
+        "group": "Sự kiện",
+        "title": "Xử lý thành công một phần và tải lại",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "#56 và #57 có kết quả giả độc lập; #55 tải lại",
+        "steps": [
+          "Đọc từng giao dịch và mô tả trạng thái; không chạy request."
+        ],
+        "expected": "Không gộp hai kết quả; không tự hoàn tác hoặc retry POST. Sau thành công tương lai phải tải lại #55 theo DD; trang hiện chưa triển khai luồng này. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [
+          "API #55",
+          "API #56",
+          "API #57"
+        ],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TV-009",
+        "requirement_ids": [
+          "ME-10-YC-011"
+        ],
+        "target_id": "ME-10-EV-009",
+        "group": "Sự kiện",
+        "title": "Quay về danh sách ME-09",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Tuyến /mentor/submissions",
+        "steps": [
+          "Chọn liên kết quay lại."
+        ],
+        "expected": "RouterLink về /mentor/submissions; cách giữ filter/scroll chưa được xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME10-TV-010",
+        "requirement_ids": [
+          "ME-10-YC-006",
+          "ME-10-YC-009"
+        ],
+        "target_id": "ME-10-EV-010",
+        "group": "Sự kiện",
+        "title": "Báo cáo sự cố tải tệp",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Nút mẫu #20; chưa có endpoint báo cáo tệp",
+        "steps": [
+          "Đối chiếu template và API catalog được dẫn; không tạo request."
+        ],
+        "expected": "Trang không có nút/handler; không dùng API hỗ trợ thay cho API báo cáo tệp chưa tồn tại trong contract. Đây là ghi nhận hiện trạng; hành vi tương lai chờ xác nhận, chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME10-TV-011",
+        "requirement_ids": [
+          "ME-10-YC-011",
+          "ME-10-YC-012"
+        ],
+        "target_id": "ME-10-EV-011",
+        "group": "Sự kiện",
+        "title": "Điều hướng đầu trang và chân trang",
+        "precondition": "Dùng dữ liệu giả với ID số; không dùng dữ liệu người học thật. Ca chưa chạy; đối chiếu mã nguồn và hợp đồng đã ghi.",
+        "data": "Các route thật đã đăng ký và liên kết ảnh thiết kế",
+        "steps": [
+          "Đối chiếu MentorLayout/router và footer; không mở trình duyệt."
+        ],
+        "expected": "Chỉ các đích route hiện có mới được coi là wired; link chân trang của ảnh thiết kế không có trong template hiện tại.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-10-ChamDiemVaPhanHoi/02-events.md",
+          "ME-10.md mục D",
+          "me10-page.ts",
+          "me10-page.html",
+          "api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ]
+  },
+  "source_hashes": {
+    "apps/study-client/docs/list_screen.md": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/00-overview.md": "0563909621eb31f52ac204f8b388072b54970fc797e9b70c2088bfc12f73c44d",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/01-ui-elements.md": "847543de82ad6549f487f15ee05ce1282d5549ce10e592ea314254e04e26d851",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/02-events.md": "663831268351f4828ca200e7cb7c8a91712a8e60565abca42014238bc46dff53",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/03-data-flow.md": "4aa89e3a907a5a91d198c3a98635bbcbbd1036961607718e37517a8dec95a6ef",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/04-api-integration.md": "10144744d034f1e64d0c58bf559a34acbfbac1ea0c38fec139b39b8c06c8a74b",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/05-business-rules.md": "0bdbe0829cfe28933c696fd2bb9a757b945dfff6a6e3b0ae00c48af147029880",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/06-navigation.md": "adb10dd599bfef6a97a5d6a70664ce6f7b08a6bd63d1f1f6b2357919b026d0b3",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/07-test-cases.md": "823e828c75f8940e3166cfa1cfea34bb26662792958649620246c62cff696cbf",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/images/screen-clean.png": "7ea38f3a02bbe2d4e136ff24c854435fa5946eb6ad148bf73e488058b5a7a41a",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/images/screen-numbered.png": "67fb1a4239a378043a10b3681bae12e4fff16e88167a1ce6abce72de101538b9",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/images/README.md": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7",
+    "apps/study-client/docs/dd_screens/ME-10-ChamDiemVaPhanHoi/code.html": "fb1c5ddfdde5dbb47969aa39a4dca2b7ccfdb0bb64cd633d243a78e4690e03cc",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/ME-10.md": "f1b02b6a95466c7cd871d593cde646e1051d300982db3565479dacb680f8b4df",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/ME-10_PLAN.md": "bb240a7d25329be075fa05bb96e14082034cb7d1630c047f16ee7e3c7a6dc1b2",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/ME-10_markers.json": "b2b7f518010747797c2e3008149d4a160579b56f8897a43fca2cd3c1fe18a60b",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/ME-10_markers_overlay.svg": "54a0cbc62a2b9e0f1257de0ab4226721df609b2505156519a7a89ed737267222",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/screen.png": "7ea38f3a02bbe2d4e136ff24c854435fa5946eb6ad148bf73e488058b5a7a41a",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/screen_annotated.png": "67fb1a4239a378043a10b3681bae12e4fff16e88167a1ce6abce72de101538b9",
+    "apps/study-client/docs/screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/code.html": "fb1c5ddfdde5dbb47969aa39a4dca2b7ccfdb0bb64cd633d243a78e4690e03cc",
+    "apps/study-client/src/app/features/mentor/ME10/pages/me10-page.ts": "c8e1e9927dc2603c4452685fde587f91839d83f6ceef1a1e08c5d93863ab346a",
+    "apps/study-client/src/app/features/mentor/ME10/pages/me10-page.html": "146f01c003cc5ea5b1c9c267ea70451325d142e552bc7617521d83dddecd2551",
+    "apps/study-client/src/app/features/mentor/ME10/pages/me10-page.css": "f5bca8118dd1bf9174608ae02bc61ef41ddcf0e1df344565833b751ba8a0c4bc",
+    "apps/study-client/src/app/features/mentor/ME10/data-access/me10-submission-review.service.ts": "3b73ca4e05791b2d5e2d63691c37a4ab67e7fdacd9a5843de3b9204fad7df5e6",
+    "apps/study-client/src/app/features/mentor/ME10/ui/README.md": "278cce3cc74b0621fc6d38dbdd56ff472dd3f8f2346c397eb8fb87c3d1c6f69a",
+    "apps/study-client/src/app/features/mentor/ME10/models/README.md": "e6316386e04eb663f33852546aaf76cb0f5c40c7cb4d3c46f167024b9470e473",
+    "apps/study-client/src/app/features/mentor/mentor.route.ts": "e06357d47f5318efd79109ebd1b4aa4efd06898f19741cbbd0ebeb54b31a89e1",
+    "apps/study-client/src/app/features/mentor/mentor.route.spec.ts": "b4df002b58c815f8fe5f83c59959dce558834c308a05791fabe65d0e96727837",
+    "apps/study-server/app/api/v1.py": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf",
+    "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/models.py": "d8ad496afafb56cb85d2cf08843b2cf3cf5a8270bbe4d630de20c21685cb6ff1",
+    "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/query.py": "0818ee4a9fa4f8d46222e0dd96809d503d28095cc7a781ff02e1500a74a9423a",
+    "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/view.py": "acbc9b481e8a7dbcf753ba7e0b76af7e474a4c87a4a7db022f206b3aeca6c56d",
+    "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/validate.py": "ed797ae3ce4b0bcca95ef8ecb52dcd254f941b2f65f1ee6e4663e8a31bda34df",
+    "apps/study-server/tests/modules/mentor/api_55_mentor_submissions_detail/test_mentor_submission_detail.py": "9dc58c978513ac2486800676d65e0ef5e7d0fcae36ffc87d3d968bfdd21bcfe7",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/02_Overview.md": "7ed6d34788685f35813911247d3a97af1de3bbcf1865c9889db48ccaae661031",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/03_Request.md": "25ca9cee95a1a4609f742ae418cdd3ad6eaeccda3c459f0592f87d4681b88fc3",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/04_Response.md": "f427752be11e9b21d7ee63fac06afe97fab734725d2e2fc969655da8315940a3",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/05_Data_Mapping.md": "bfcac2ca29eb2bc8eabeb5c33fdbe4cad70a833eb562fc3f4c7cfceb2d80aef0",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/06_Error.md": "52f8d43b83d37cabc2c794b791e6ba2b0996916d16d1d1d3b56f5f6a04315a9f",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/07_table.md": "1632eb9a48a9e797382eb12ce4ed22d096069fb0305dea6d8fa9592b6dee7e69",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/OPEN_QUESTIONS.md": "d3cb1bb3ea9384a41dd718d54c72fc5efa9db105f41e0fa4dc93f09f4c6f7b22",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/PLAN_RESULT.md": "f811ac993affb05d2c0d86890d5b9f7ab38ddfc3dc0bb3f3f0258cc2068e3bfd",
+    "apps/study-server/docs/dd/55_mentor_submissions_detail/VERIFICATION_REPORT.md": "3592c10c1024708b9e79cfbac569d493ff118f7a33b1f1e0a18a50d87b7c30a7",
+    "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/models.py": "ab4181aa08c0b351a6f1cecc90b77952df55defaf813f383a75c43579a3b9b41",
+    "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/query.py": "5e8a3f73248076973960193d90c592ac56af4de3b70877d2622090d1b07b5bc2",
+    "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/view.py": "10a75bba76d7524a147fbeaba3da0b618a66afe999e989360ccc2af439a2caea",
+    "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/validate.py": "c2d3b9c98ab824fd10e008d789b8410a584348b29e116b5aa09b59fe7967e46c",
+    "apps/study-server/tests/modules/mentor/api_56_mentor_submissions_grade/test_mentor_submission_grade.py": "7de42f370a679ccbb67af746e83d523b8cdec7a16b5f314699f274258c0781eb",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/02_Overview.md": "c092c06f54cd462d51a43e0db0043dbd7af28d7bd0a5848d9c32185b660db980",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/03_Request.md": "1eea0f9f04ee5229ef79f5fa32cafc9437568aedb8bf92a07e783df564cd4b5e",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/04_Response.md": "1864d76dd2b8e9334ced26863dffad1af08215853141e2e2cd9032aac2d9c8dd",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/05_Data_Mapping.md": "2e8d9078c5cf42a05baf99da9a47450e1f475378e7efd62eafb1a9323571e07f",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/06_Error.md": "a69ab61aca20a96caf8619310e2ddc42f5cec9dc4b786af59a4a2035c1fbd095",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/07_assignment_submissions_update.md": "bec79523e797cd989d8fa17c88d720eaa44236659c8b9cf287ade28768b32be9",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/OPEN_QUESTIONS.md": "419f8bb367e117f5f8711a13b43b8b00e861f8dc09208a684718c90dc61b0462",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/PLAN_RESULT.md": "9c97cfb9c4af3212aae26130fc26a6ea8492fb230547162219ec475d3a9ba275",
+    "apps/study-server/docs/dd/56_mentor_submissions_grade/VERIFICATION_REPORT.md": "f312b72db6fc394b610647efff752ffcc8ec8a4299e30c35bcd08d445868074d",
+    "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/models.py": "d3d741f110e6d86244d522a6e1c9cdb8af1f39d0315bcff6ec02d603e757fe70",
+    "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/query.py": "ec7509e3d097d410d217bef1917d991f76fb657bdca771da20ffa7c4b605ed6e",
+    "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/view.py": "d9657d4ee3ad06ec780a32b8efa34f96fd650e5c301f1d820f14b8c264708a8a",
+    "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/validate.py": "7c7dc82dab56245c8035356f1de12cf173545527faf22d76bf659478d1e7495f",
+    "apps/study-server/tests/modules/mentor/api_57_mentor_submissions_feedback/test_mentor_submission_feedback.py": "df0a875ed52ac27fee25a6829d95f5a8939558572b68ed1115f93db0b242c4a2",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/02_Overview.md": "29d0bc2bb69f1cb17647053b8bbba7d7f2a75f08927f64c926e78720cc0b7c3a",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/03_Request.md": "5dab7765618e72721001f349b1c60097a7d62599ace16f8ed77894217b56603e",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/04_Response.md": "97d45bc87a63a2d683435e6e460735410f2cdc96487194b33750385da023017f",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/05_Data_Mapping.md": "51cc5fc5d22f9388c4ef28c2977808954ae35185c7e38f356f5c215c119dbdef",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/06_Error.md": "21803c98878d9aa21970dad350dc059ef1cc6876b60c4a0d72522689fdcc6083",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/07_assignment_submissions_feedback_update.md": "74e56cfd098bce2009d6ea36a0978afe0f4ae90dba792e13a93fbf1116da0437",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/OPEN_QUESTIONS.md": "45d81daaf80f1f493c650d8191eadfd3d413e6f05d362f569ed83ec2266ba471",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/PLAN_RESULT.md": "9f7ccf0e0a106b36c7b676cd1292f32c0c66b4d7de13380654205957ac7556e5",
+    "apps/study-server/docs/dd/57_mentor_submissions_feedback/VERIFICATION_REPORT.md": "061bdbd244f7d6abd5f8c2698e564bb75d1a358a9e38eea852ec2cbaeeb1009b"
+  }
+}

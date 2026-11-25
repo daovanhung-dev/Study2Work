@@ -1,0 +1,38 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-15_DanhSachBaiKiemTra.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 192,
+  "loi": [],
+  "hop_le": true,
+  "kiem_toan_truy_vet_va_thuc_thi": {
+    "so_ca_trong_json": 120,
+    "so_ca_trong_workbook": 120,
+    "ma_ca_khop_json": true,
+    "so_cong_thuc_kiem_tra_dong_ca": 120,
+    "khong_cong_thuc_kiem_tra_o_dong_trong": true,
+    "tat_ca_ca_deu_chua_chay": true,
+    "cac_o_ket_qua_va_bang_chung_de_trong": true,
+    "so_lien_ket_yeu_cau_voi_ca": 256,
+    "truy_vet_khop_spec": true,
+    "so_yeu_cau_duoc_truy_vet": 20,
+    "ma_yeu_cau_khop_spec": true,
+    "so_marker_thiet_ke": 50,
+    "so_thanh_phan_chi_co_trong_ma_nguon": 20,
+    "so_thanh_phan_khop_spec": true,
+    "so_su_kien_khop_spec": true,
+    "so_cong_thuc_toan_workbook": 192,
+    "tep_zip_khong_loi": true,
+    "khong_con_ma_ca_AD01_den_AD14": true
+  },
+  "kiem_tra_ngon_ngu": {
+    "ket_qua": "Đã rà soát nội dung diễn đạt; các từ còn giữ là tên trường, kiểu dữ liệu, mã trạng thái hoặc giá trị nguyên văn có phần giải nghĩa tiếng Việt.",
+    "so_chuoi_trong_bo_tu_dien_da_soat": 1159,
+    "cum_tu_tieng_anh_can_ra_soat": [],
+    "ghi_chu": "Giữ nguyên tên trường/API, kiểu dữ liệu, literal status Draft — Needs Confirmation và BLOCKED kèm nghĩa tiếng Việt; giữ nguyên nhãn Draft/active/closed của ảnh kèm bản dịch tiếng Việt."
+  }
+}

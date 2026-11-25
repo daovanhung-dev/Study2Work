@@ -1,0 +1,30 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-24_BaoCaoTacDongCongDong.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 294,
+  "so_xml_parse": 11,
+  "so_ca": 98,
+  "so_dropdown_trang_thai": 3,
+  "dropdown_ranges": [
+    "O73:O94",
+    "O72:O134",
+    "O17:O29"
+  ],
+  "tat_ca_ca_chua_chay": true,
+  "cot_actual_evidence_error_tester_date_de_trong": true,
+  "source_hashes_khop": true,
+  "coverage": {
+    "requirements": "22/22",
+    "elements": "63/63",
+    "events": "8/8"
+  },
+  "preview_rendered": false,
+  "preview_limitation": "Canonical generator requires unavailable artifact_tool; stdlib OOXML output was structurally audited, no visual preview renderer available.",
+  "loi": [],
+  "hop_le": true
+}

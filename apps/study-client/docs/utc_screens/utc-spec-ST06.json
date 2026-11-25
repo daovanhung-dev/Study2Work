@@ -1,0 +1,1310 @@
+{
+  "metadata": {
+    "screen_id": "ST-06",
+    "screen_name": "Thực hiện thanh toán",
+    "module": "Học viên — nhánh thanh toán khóa học trả phí",
+    "route": "/student/pay/:orderId",
+    "actor": "Học viên đã đăng nhập theo AC-12; khi chưa có phiên, bố cục StudentLayout hiện biểu mẫu đăng nhập.",
+    "version": "UTC v0.1",
+    "dd_version": "DD v0.1",
+    "dd_status": "BLOCKED",
+    "runtime_status": "Chưa xác minh khi chạy hoặc triển khai; mã nguồn cục bộ đã được đối chiếu.",
+    "author": "Chưa xác định trong DD",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/00-overview.md; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-06_thuc-hien-thanh-toan/ST-06.md; mã nguồn Angular ST06 và Study Server #17/#18.",
+    "release_readiness": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+    "baseline_authorization": "Theo chỉ dẫn của người dùng, dùng DD ST-06 trong kho làm chuẩn dù tài liệu ghi BLOCKED; giữ nguyên mọi điểm cần owner duyệt, không tự quyết định thay.",
+    "discrepancy_note": "DD còn ghi #17/#18 chưa nối và nêu xung đột ID/quyền #18; hiện mã nguồn có tuyến #17 nhưng trả 503 trước khi lưu, còn #18 dùng UUID và chỉ theo dõi thông báo. Tuyến ST-06 nằm dưới StudentLayout có chặn hiển thị bằng phiên. Angular làm footer brand thành liên kết, trái mô tả DD."
+  },
+  "overall": {
+    "objective": "Đối chiếu màn hình thực hiện thanh toán với luồng trả phí AC-12, đồng thời không ghi nhận đã thanh toán khi chưa có xác nhận đáng tin cậy.",
+    "inputs": "Đường dẫn ứng viên `/student/pay/:orderId`; phiên học viên; Order từ ST-05; nhà cung cấp được duyệt; kết quả tin cậy từ Study Server/cổng thanh toán — các dữ liệu nghiệp vụ này chưa được ST-06 hiện tại sử dụng.",
+    "outputs": "Hiện tại: biểu mẫu đăng nhập ở bố cục cha nếu chưa có phiên; nếu đã đăng nhập thì thẻ thông báo chưa có dữ liệu thanh toán. Dự kiến theo DD: trạng thái và điều hướng chỉ sau khi có nguồn thanh toán được xác nhận.",
+    "main_flow": "Dự kiến: ST-05 tạo Order → #17 tiếp nhận thanh toán → có thể theo dõi Operation khi API hỗ trợ → chỉ xác nhận từ nguồn tin cậy → chuyển bước tiếp theo. Hiện tại: StudentLayout kiểm tra phiên; trang ST-06 chỉ hiện nội dung tĩnh và không gọi #17/#18.",
+    "preconditions": "Muốn thấy trang con cần có phiên học viên vì StudentLayout thay trang con bằng biểu mẫu đăng nhập khi chưa xác thực. Route con được đăng ký nhưng không có canActivate riêng. Điều kiện Order, nhà cung cấp và môi trường thanh toán chưa được chốt.",
+    "states": [
+      "Chưa đăng nhập — bố cục cha hiện biểu mẫu đăng nhập",
+      "Đã đăng nhập — trang con hiển thị nội dung tĩnh",
+      "Chưa có thông tin thanh toán — nội dung cố định, không phải trạng thái giao dịch",
+      "Đang chờ / đang chạy / thất bại / đã hủy / thành công — nhãn từ inventory, chưa có mapping được duyệt cho Operation/Payment"
+    ],
+    "security": "#17 theo hợp đồng yêu cầu Bearer JWT vai trò Student; mã nguồn hiện xác thực trước khi trả 503. #18 hiện cho Student/Mentor/Admin nhưng chỉ xem Operation của chính người gọi trong luồng thông báo. Không coi HTTP 202, URL, callback trình duyệt hoặc chữ tĩnh là bằng chứng đã thanh toán.",
+    "out_of_scope": "Không gọi cổng thanh toán, không chạy kiểm thử ứng dụng/API, không truy cập cơ sở dữ liệu đang triển khai, không xác nhận triển khai thật, không tạo Payment/ghi danh và không giả lập ST-07."
+  },
+  "apis": [
+    {
+      "id": "#17",
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "event_ids": [
+        "ST-06-EV-002"
+      ],
+      "request": "Bearer JWT vai trò Student; thân JSON `{order_id:int64!, provider:string!}`. Không thêm trường khác. Mã nguồn hiện còn yêu cầu `order_id` dương trong giới hạn int64 và cắt khoảng trắng đầu/cuối của `provider`; đây là cách xử lý hiện tại, DD không quy định hai chi tiết này.",
+      "response": "Theo hợp đồng thiết kế: HTTP 202 `DESIGN_OPERATION_ACCEPTED`, `ApiEnvelope<Operation>`. 202 chỉ xác nhận tiếp nhận, không chứng minh đã thanh toán. Mã nguồn hiện luôn trả 503 sau bước xác thực/kiểm tra đầu vào vì chưa cấu hình nhà cung cấp; không đọc/ghi Payment hoặc Operation.",
+      "errors": "Thiết kế: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 503 `DESIGN_DEPENDENCY_UNAVAILABLE`, 500 `DESIGN_INTERNAL_ERROR`. Mã nguồn hiện cho 503 khi nhà cung cấp chưa có.",
+      "auth": "Bearer JWT; vai trò Student theo DD và mã nguồn hiện tại.",
+      "design_status": "Bản nháp, còn quyết định; máy chủ có tuyến nhưng đang đóng an toàn bằng 503; máy khách chưa nối.",
+      "source_ref": "docs/lists/list_api.md — API #17; apps/study-server/docs/dd/17_payments/02_Overview.md; apps/study-server/docs/dd/17_payments/03_Request.md; apps/study-server/docs/dd/17_payments/04_Response.md; apps/study-server/docs/dd/17_payments/OPEN_QUESTIONS.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_17_payments/validate.py; apps/study-server/app/modules/student/api_17_payments/view.py; apps/study-client/src/app/core/constant/api.constants.ts"
+    },
+    {
+      "id": "#18",
+      "method": "GET",
+      "path": "/api/v1/operations/{operation_id}",
+      "event_ids": [
+        "ST-06-EV-003"
+      ],
+      "request": "Bearer JWT; `operation_id` là UUID. Nguồn hiện tại cho phép Student/Mentor/Admin nhưng buộc đúng chủ sở hữu; không có truy vấn hoặc thân data.",
+      "response": "Thiết kế chung: HTTP 200 `DESIGN_OPERATION_RETRIEVED`, `ApiEnvelope<Operation>`. Hiện trạng Study chỉ ánh xạ tác vụ gửi thông báo, không phải Operation thanh toán; không dùng kết quả hiện tại để xác nhận Payment.",
+      "errors": "401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED` cho vai trò không được phép, 404 `DESIGN_RESOURCE_NOT_FOUND` khi thiếu hoặc không thuộc người gọi, 500 `DESIGN_INTERNAL_ERROR` khi truy vấn/ánh xạ lỗi.",
+      "auth": "Bearer JWT; Student/Mentor/Admin; chỉ chủ sở hữu, không có bỏ qua quyền cho Admin theo quyết định SH-07.",
+      "design_status": "Bản nháp cho vòng đời Operation nói chung; nguồn hiện tại và quyết định UUID/quyền chỉ áp dụng cho theo dõi gửi thông báo.",
+      "source_ref": "docs/lists/list_api.md — API #18; apps/study-server/docs/dd/18_operations/03_Request.md; apps/study-server/docs/dd/18_operations/04_Response.md; apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md; apps/study-server/docs/dd/18_operations/PLAN_RESULT.md; apps/study-server/app/modules/shared/api_18_operations/validate.py; apps/study-server/app/modules/shared/api_18_operations/query.py; apps/study-server/app/modules/shared/api_18_operations/view.py; apps/study-server/tests/modules/shared/api_18_operations/test_operations.py"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-06-YC-001",
+      "description": "Mở đúng tuyến thanh toán theo mã đơn hàng và giữ ngữ cảnh của học viên.",
+      "group": "Điều hướng / xác thực",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/00-overview.md — trạng thái, phạm vi và tiêu chí; apps/study-client/src/app/features/student/student.route.ts — tuyến `pay/:orderId`",
+      "notes": "Tuyến con có trong `StudentLayout`; bố cục cha chỉ hiển thị trang con khi có phiên học viên. Tuyến không khai báo `canActivate` riêng.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-002",
+      "description": "Chưa có phiên thì yêu cầu đăng nhập trước khi hiện nội dung ST-06.",
+      "group": "Xác thực",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/layouts/student/student-layout.html — nhánh `!session.isAuthenticated()`",
+      "notes": "Hiện trạng mã nguồn: bố cục cha thay vùng nội dung con bằng biểu mẫu đăng nhập. Không khẳng định có chuyển URL quay lại sau đăng nhập.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-003",
+      "description": "Khi mở trang hiện tại, hiển thị trạng thái “Chưa có thông tin thanh toán để hiển thị.”",
+      "group": "Trạng thái giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #10; apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+      "notes": "Đây là nội dung tĩnh của trang, không phải phản hồi thanh toán hay trạng thái từ máy chủ.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-004",
+      "description": "Không suy ra mã đơn, số tiền, nhà cung cấp hoặc kết quả thanh toán khi trang chưa nhận data.",
+      "group": "Dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/03-data-flow.md — Current behavior; apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+      "notes": "Thành phần trang không đọc `orderId`, không có mô hình thanh toán và không gọi dịch vụ.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-005",
+      "description": "Chỉ khởi tạo thanh toán qua #17 sau khi ánh xạ đơn hàng, nhà cung cấp và quyền sở hữu được duyệt.",
+      "group": "Tích hợp API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md — API #17; apps/study-server/docs/dd/17_payments/OPEN_QUESTIONS.md",
+      "notes": "Hợp đồng thiết kế: `POST /api/v1/payments`, thân `{order_id:int64, provider:string}`, Bearer JWT vai trò Student. Mã nguồn hiện trả 503 trước khi ghi data.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-006",
+      "description": "Không coi phản hồi 202 của #17 là bằng chứng đã thanh toán.",
+      "group": "Bảo mật / trạng thái",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/05-business-rules.md; apps/study-server/docs/dd/17_payments/04_Response.md",
+      "notes": "202 chỉ là `DESIGN_OPERATION_ACCEPTED`. Chưa có nguồn duyệt để ánh xạ Operation sang kết quả thanh toán.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-007",
+      "description": "Chỉ yêu cầu trạng thái #18 cho tác vụ thanh toán sau khi có producer và quy ước tác vụ thanh toán được duyệt.",
+      "group": "Tích hợp API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md — cập nhật nguồn hiện tại; apps/study-server/app/modules/shared/api_18_operations/query.py",
+      "notes": "#18 hiện truy vấn tác vụ gửi thông báo và không cung cấp trạng thái thanh toán.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-008",
+      "description": "Chỉ hiển thị đã thanh toán hoặc chuyển tiếp sau xác nhận tin cậy từ máy chủ/cổng thanh toán.",
+      "group": "Bảo mật / điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/05-business-rules.md; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/03-data-flow.md",
+      "notes": "Không dùng URL quay về, callback từ trình duyệt hoặc nội dung tĩnh làm bằng chứng thanh toán.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-009",
+      "description": "Không tự gửi lại #17 sau khi tải lại trang hoặc khi hết thời gian chờ.",
+      "group": "Gửi lại an toàn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-02/EV-03; apps/study-server/docs/dd/17_payments/OPEN_QUESTIONS.md",
+      "notes": "Chưa có quy tắc lặp, khóa chống trùng hoặc kết quả có thể gửi lại; trang hiện tại cũng chưa gọi #17.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-010",
+      "description": "Liên kết quay lại phải có đích hợp lệ và mã khóa học/đơn hàng được xác định.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/06-navigation.md — điểm ra; apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+      "notes": "Hiện trạng: CTA giữ nguyên chuỗi `/student/checkout/:courseId`; liên kết breadcrumb dùng `/student/checkout` không có mã.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-011",
+      "description": "Các liên kết đầu trang, breadcrumb và chân trang giữ đúng nhãn và đích đang khai báo.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #1–#5, #13–#14; apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+      "notes": "Đối chiếu riêng bản Stitch với Angular; ghi nhận chân trang thương hiệu là liên kết trong Angular, dù DD ghi là chữ tĩnh.",
+      "priority": "Trung bình"
+    },
+    {
+      "id": "ST-06-YC-012",
+      "description": "Không tạo quyền học #19 hoặc điều hướng ST-07 khi chưa có xác nhận thanh toán tin cậy.",
+      "group": "Luồng tiếp theo",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/03-data-flow.md — điều hướng; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/07-test-cases.md",
+      "notes": "#19 và ST-07 thuộc luồng phía sau; không được giả lập từ #17 accepted hoặc từ giao diện hiện tại.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-06-YC-013",
+      "description": "Giữ riêng trạng thái tài liệu BLOCKED, tình trạng mã nguồn và kết quả chạy kiểm thử.",
+      "group": "Bằng chứng / phát hành",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/00-overview.md — trạng thái, phạm vi và tiêu chí; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/07-test-cases.md",
+      "notes": "Bản này là kế hoạch UTC; không ghi nhận ca đã chạy hoặc được phê duyệt.",
+      "priority": "Trung bình"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-06-EL-001",
+      "marker": "ST06-EL-01",
+      "name": "Liên kết thương hiệu Study2Work",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên trái",
+      "properties": "Angular dùng `routerLink=\"/\"`; thương hiệu và nhãn trợ năng “Study2Work — trang chủ”.",
+      "event_ids": [
+        "ST-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #1; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-002",
+      "marker": "ST06-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm điều hướng",
+      "position": "Đầu trang, giữa",
+      "properties": "Các đích: `/`, `/courses`, `/student/courses`, `/student/progress`; nhóm có `aria-label=\"Điều hướng chính\"`.",
+      "event_ids": [
+        "ST-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #2; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-003",
+      "marker": "ST06-EL-03",
+      "name": "Liên kết Đăng nhập",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Nhãn “Đăng nhập”; `routerLink=\"/login\"`.",
+      "event_ids": [
+        "ST-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #3; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-004",
+      "marker": "ST06-EL-04",
+      "name": "Liên kết Đăng ký",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Nhãn “Đăng ký”; `routerLink=\"/register\"`.",
+      "event_ids": [
+        "ST-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #4; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-005",
+      "marker": "ST06-EL-05",
+      "name": "Thanh điều hướng breadcrumb",
+      "type": "Nhóm điều hướng",
+      "position": "Dưới đầu trang",
+      "properties": "Liên kết Trang chủ `/`, Khóa học `/courses`, Kiểm tra đơn hàng `/student/checkout`; mục hiện tại là chữ “Thực hiện thanh toán”. Breadcrumb không mang mã đơn hàng.",
+      "event_ids": [
+        "ST-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #5; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-006",
+      "marker": "ST06-EL-06",
+      "name": "Tiêu đề trang",
+      "type": "Tiêu đề",
+      "position": "Phần nội dung đầu trang",
+      "properties": "H1 “Thực hiện thanh toán” và đường phân cách dưới tiêu đề; nội dung cố định.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #6; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-007",
+      "marker": "ST06-EL-07",
+      "name": "Thẻ trạng thái thanh toán",
+      "type": "Vùng nội dung",
+      "position": "Giữa trang",
+      "properties": "Thẻ căn giữa chứa biểu tượng, tiêu đề, thông báo và CTA. Không đại diện cho bản ghi Payment/Operation.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #7; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-008",
+      "marker": "ST06-EL-08",
+      "name": "Biểu tượng thẻ thanh toán",
+      "type": "Biểu tượng trang trí",
+      "position": "Đầu thẻ trạng thái",
+      "properties": "SVG tĩnh có `aria-hidden=\"true\"`; không chọn phương thức thanh toán và không báo trạng thái máy chủ.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #8; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-009",
+      "marker": "ST06-EL-09",
+      "name": "Tiêu đề trong thẻ",
+      "type": "Tiêu đề",
+      "position": "Trong thẻ trạng thái",
+      "properties": "H2 “Thực hiện thanh toán”; lặp lại H1, không lấy dữ liệu từ đơn hàng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #9; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-010",
+      "marker": "ST06-EL-10",
+      "name": "Thông báo chưa có dữ liệu thanh toán",
+      "type": "Thông báo trạng thái",
+      "position": "Trong thẻ trạng thái",
+      "properties": "Chữ tĩnh “Chưa có thông tin thanh toán để hiển thị.”; vùng cha dùng `role=\"status\"` và liên kết tên bằng `aria-labelledby`.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #10; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-011",
+      "marker": "ST06-EL-11",
+      "name": "Nội dung giải thích trạng thái",
+      "type": "Nội dung hướng dẫn",
+      "position": "Dưới thông báo trạng thái",
+      "properties": "Chữ cố định nói chưa tìm thấy thông tin thanh toán và gợi ý quay lại; không được xem là phản hồi `failed`/`cancelled`.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #11; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-012",
+      "marker": "ST06-EL-12",
+      "name": "Nút quay lại kiểm tra đơn hàng",
+      "type": "Liên kết dạng nút",
+      "position": "Cuối thẻ trạng thái",
+      "properties": "`routerLink=\"/student/checkout/:courseId\"` là chuỗi tĩnh, không được gắn `courseId` thật.",
+      "event_ids": [
+        "ST-06-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #12; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-013",
+      "marker": "ST06-EL-13",
+      "name": "Thương hiệu ở chân trang",
+      "type": "Liên kết",
+      "position": "Chân trang, bên trái",
+      "properties": "Angular hiện dùng thẻ liên kết `routerLink=\"/\"`; DD mô tả đây là chữ tĩnh. Ghi nhận khác biệt, không đồng nhất hai phiên bản.",
+      "event_ids": [
+        "ST-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #13; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EL-014",
+      "marker": "ST06-EL-14",
+      "name": "Nhóm điều hướng chân trang",
+      "type": "Nhóm điều hướng",
+      "position": "Chân trang, bên phải",
+      "properties": "Các liên kết Trang chủ `/`, Khóa học `/courses`, Đăng nhập `/login`, Đăng ký `/register`.",
+      "event_ids": [
+        "ST-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #14; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-06-EV-001",
+      "name": "Mở tuyến ST-06 và kiểm tra phiên học viên",
+      "trigger": "Mở `/student/pay/:orderId` từ luồng trả phí hoặc truy cập trực tiếp.",
+      "element_ids": [
+        "ST-06-EL-001",
+        "ST-06-EL-005"
+      ],
+      "api_ids": [],
+      "processing": "Tuyến `pay/:orderId` được đăng ký dưới `StudentLayout`. Khi chưa có phiên, bố cục cha hiển thị biểu mẫu đăng nhập và chưa hiện trang con; khi có phiên, trang ST-06 hiện thông báo tĩnh. Trang không đọc `orderId`. Không khai báo `canActivate` riêng.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-01; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/layouts/student/student-layout.html"
+    },
+    {
+      "id": "ST-06-EV-002",
+      "name": "Khởi tạo thanh toán qua API #17 — thiết kế chưa thể chạy từ màn hình",
+      "trigger": "Theo luồng dự kiến sau khi có Order hợp lệ và nhà cung cấp được duyệt; màn hình hiện không có nút hoặc nơi gọi.",
+      "element_ids": [
+        "ST-06-EL-007",
+        "ST-06-EL-012"
+      ],
+      "api_ids": [
+        "#17"
+      ],
+      "processing": "Theo danh mục: POST `/api/v1/payments`, Bearer Student, thân `{order_id:int64, provider:string}`, thành công thiết kế 202 `DESIGN_OPERATION_ACCEPTED`. Mã nguồn máy chủ hiện kiểm tra Bearer/role và dữ liệu, sau đó trả 503 `DESIGN_DEPENDENCY_UNAVAILABLE` trước mọi thao tác lưu. Mã nguồn trang không gọi API này.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-02; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_17_payments/view.py; apps/study-client/src/app/features/student/ST06/pages/st06-page.ts"
+    },
+    {
+      "id": "ST-06-EV-003",
+      "name": "Tra cứu tác vụ qua API #18 — hiện chỉ hỗ trợ gửi thông báo",
+      "trigger": "Chỉ sau khi có mã tác vụ và phạm vi nghiệp vụ được API #18 hỗ trợ; không có trình kích hoạt trong trang hiện tại.",
+      "element_ids": [
+        "ST-06-EL-007",
+        "ST-06-EL-010"
+      ],
+      "api_ids": [
+        "#18"
+      ],
+      "processing": "API #18 nhận UUID, yêu cầu vai trò Student/Mentor/Admin và chỉ trả tác vụ thuộc chủ sở hữu. Mã nguồn hiện truy vấn nhóm thông báo, với trạng thái `QUEUED`/`FAILED`/`SENT`; không có producer thanh toán hay kết quả Payment. Trang ST-06 không gọi #18.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-03; apps/study-server/app/modules/shared/api_18_operations/validate.py; apps/study-server/app/modules/shared/api_18_operations/query.py; apps/study-server/app/modules/shared/api_18_operations/view.py; apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "ST-06-EV-004",
+      "name": "Xác nhận kết quả thanh toán và quyết định bước tiếp",
+      "trigger": "Chỉ khi có phản hồi tin cậy từ máy chủ/cổng thanh toán; giao diện hiện không có sự kiện này.",
+      "element_ids": [
+        "ST-06-EL-010",
+        "ST-06-EL-011"
+      ],
+      "api_ids": [
+        "#17",
+        "#18"
+      ],
+      "processing": "Không dùng 202, tham số URL, chuyển hướng trình duyệt hoặc thông báo tĩnh để suy ra đã trả tiền. Chỉ chuyển tiếp khi nguồn xác nhận và ánh xạ trạng thái được duyệt; mapping hiện chưa có.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-04; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/05-business-rules.md; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/03-data-flow.md"
+    },
+    {
+      "id": "ST-06-EV-005",
+      "name": "Quay lại màn kiểm tra đơn hàng",
+      "trigger": "Bấm CTA “Quay lại kiểm tra đơn hàng”.",
+      "element_ids": [
+        "ST-06-EL-005",
+        "ST-06-EL-012"
+      ],
+      "api_ids": [],
+      "processing": "Angular khai báo CTA đến chuỗi cố định `/student/checkout/:courseId`; breadcrumb đến `/student/checkout`. Cả hai đích thiếu mã định danh thật; ghi nhận sai khác để chờ chốt, không tự sửa liên kết trong UTC.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-05; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/06-navigation.md; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    },
+    {
+      "id": "ST-06-EV-006",
+      "name": "Điều hướng đầu trang và chân trang",
+      "trigger": "Bấm một liên kết thương hiệu, điều hướng, đăng nhập, đăng ký hoặc breadcrumb.",
+      "element_ids": [
+        "ST-06-EL-001",
+        "ST-06-EL-002",
+        "ST-06-EL-003",
+        "ST-06-EL-004",
+        "ST-06-EL-005",
+        "ST-06-EL-013",
+        "ST-06-EL-014"
+      ],
+      "api_ids": [],
+      "processing": "Các đích là `routerLink` tĩnh được khai báo trong mẫu Angular. Mã nguồn của ST-06 không truyền mã đơn hàng hoặc gọi API khi bấm các liên kết này. Tình trạng đích ngoài màn hình chưa được xác minh.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-06; apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-06-BL-01",
+      "description": "DD màn hình còn `BLOCKED`; luồng thanh toán chưa được chốt đầy đủ.",
+      "impact": "Không thể phê duyệt kết quả kỳ vọng như thể toàn bộ luồng đã có thể kiểm thử.",
+      "decision": "Giữ nhãn bản kế hoạch UTC và cập nhật khi owner duyệt các quyết định còn mở.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/00-overview.md — trạng thái, phạm vi và tiêu chí; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/07-test-cases.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-06-BL-02",
+      "description": "Chưa có nguồn vật lý đã duyệt cho Order và liên kết Order–Payment; chưa chốt quyền sở hữu, trạng thái đủ điều kiện, giá/tiền tệ và mapping `payment_provider` sang `provider`.",
+      "impact": "Không thể tạo Payment chính xác hoặc xác định người được phép trả cho Order.",
+      "decision": "Duyệt schema/quan hệ, nguồn số tiền và tiền tệ, điều kiện Order, quyền sở hữu và danh sách nhà cung cấp.",
+      "source_ref": "apps/study-server/docs/dd/17_payments/OPEN_QUESTIONS.md; infra/postgres/study-server/DB.sql — bảng `payments`; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-06-BL-03",
+      "description": "API #17 hiện trả 503 trước khi lưu vì chưa cấu hình nhà cung cấp; trang ST-06 chưa gọi #17.",
+      "impact": "Chưa thể chạy đường đi khởi tạo thanh toán từ màn hình hoặc nhận Operation do thanh toán tạo ra.",
+      "decision": "Sau khi có cấu hình/contract nhà cung cấp và producer, cập nhật trạng thái nối của máy khách và nguồn kiểm chứng API.",
+      "source_ref": "apps/study-server/app/modules/student/api_17_payments/view.py; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-06-BL-04",
+      "description": "API #18 hiện chỉ tra Operation gửi thông báo; chưa có producer, dữ liệu, vòng đời hoặc kết quả Operation cho thanh toán.",
+      "impact": "Không thể theo dõi giao dịch thanh toán bằng #18 hay suy ra `pending/running/failed/cancelled/succeeded` từ các trạng thái thông báo.",
+      "decision": "Duyệt producer thanh toán, schema lưu trữ, loại/trạng thái Operation, quy tắc chuyển trạng thái và polling theo phạm vi Study.",
+      "source_ref": "apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md; apps/study-server/app/modules/shared/api_18_operations/query.py; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-06-BL-05",
+      "description": "Chưa có quy tắc xác nhận kết quả cổng thanh toán, xử lý callback, gửi lặp, hết thời gian chờ hoặc thử lại an toàn.",
+      "impact": "Có thể báo đã thanh toán sai hoặc gửi yêu cầu trùng nếu tự đặt chính sách.",
+      "decision": "Duyệt giao thức xác minh tin cậy, trạng thái cuối, tính lặp an toàn và hành vi phục hồi trước khi mở các ca tương ứng.",
+      "source_ref": "apps/study-server/docs/dd/17_payments/OPEN_QUESTIONS.md; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/05-business-rules.md; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-06-BL-06",
+      "description": "CTA và breadcrumb quay lại thiếu mã định danh; riêng DD còn ghi footer brand là chữ tĩnh trong khi Angular là liên kết.",
+      "impact": "Không thể nghiệm thu chính xác luồng quay lại hoặc đồng nhất hành vi giữa bản Stitch và mã nguồn.",
+      "decision": "Duyệt quy tắc chuyển `orderId`/`courseId` cho chiều quay lại; cập nhật DD để khớp phần tử footer Angular hoặc giải thích khác biệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/06-navigation.md; apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #13; apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST06-MH-001",
+        "requirement_ids": [
+          "ST-06-YC-001",
+          "ST-06-YC-002"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Mở ST-06 khi chưa đăng nhập",
+        "precondition": "Bộ định tuyến có `StudentLayout`; chưa có phiên học viên.",
+        "data": "Mở `/student/pay/42`.",
+        "steps": [
+          "Mở trực tiếp đường dẫn ST-06 khi phiên trống.",
+          "Quan sát vùng nội dung chính và trạng thái trang con."
+        ],
+        "expected": "Bố cục cha hiện biểu mẫu đăng nhập và chưa hiện nội dung con ST-06. Không có tuyến `canActivate` riêng. Cách quay lại URL sau đăng nhập chưa được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-002",
+        "requirement_ids": [
+          "ST-06-YC-001",
+          "ST-06-YC-003",
+          "ST-06-YC-004"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Mở ST-06 khi có phiên học viên",
+        "precondition": "Có phiên học viên hợp lệ và tuyến con được kích hoạt.",
+        "data": "`orderId=42`; mã nguồn trang hiện không đọc mã này.",
+        "steps": [
+          "Mở `/student/pay/42` bằng phiên đã đăng nhập.",
+          "Quan sát tiêu đề, thẻ trạng thái và các liên kết.",
+          "Theo dõi lời gọi mạng của riêng trang."
+        ],
+        "expected": "Hiện H1 “Thực hiện thanh toán” và thông báo “Chưa có thông tin thanh toán để hiển thị.”; không hiển thị đơn hàng, số tiền hay kết quả; trang không gọi #17/#18. Bản kế hoạch này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.spec.ts",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/00-overview.md — trạng thái, phạm vi và tiêu chí"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-003",
+        "requirement_ids": [
+          "ST-06-YC-003",
+          "ST-06-YC-004"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Xác minh `orderId` không tạo dữ liệu thanh toán",
+        "precondition": "Trang được mở bằng phiên học viên.",
+        "data": "Thử đường dẫn `42`, `0` và `abc`.",
+        "steps": [
+          "Mở ST-06 lần lượt với từng giá trị đường dẫn.",
+          "Quan sát nội dung và các yêu cầu mạng."
+        ],
+        "expected": "Trang con hiện không đọc tham số nên nội dung vẫn là trạng thái tĩnh; không phát sinh yêu cầu thanh toán. Quy tắc từ chối mã sai định dạng chưa được DD chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-01"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-004",
+        "requirement_ids": [
+          "ST-06-YC-003",
+          "ST-06-YC-008",
+          "ST-06-YC-013"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Không diễn giải thông báo tĩnh thành giao dịch thất bại",
+        "precondition": "Trang con ST-06 đã hiển thị.",
+        "data": "Không có phản hồi Payment hoặc Operation.",
+        "steps": [
+          "Đọc tiêu đề và nội dung thẻ trạng thái.",
+          "So sánh chữ hiển thị với dữ liệu mạng của trang."
+        ],
+        "expected": "Thông báo hiện tại là chữ tĩnh. Không có dữ liệu chứng minh `failed`, `cancelled`, `succeeded` hoặc giao dịch đã kết thúc; không ghi nhận bất kỳ kết quả thanh toán nào.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #10–#11",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/03-data-flow.md — Current behavior"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-005",
+        "requirement_ids": [
+          "ST-06-YC-010",
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu liên kết breadcrumb quay lại",
+        "precondition": "Trang được mở bằng phiên học viên.",
+        "data": "Breadcrumb “Kiểm tra đơn hàng”.",
+        "steps": [
+          "Quan sát thuộc tính điều hướng của breadcrumb.",
+          "Đối chiếu đích với tuyến ST-05 có tham số khóa học."
+        ],
+        "expected": "Angular khai báo `/student/checkout` không có mã. Ghi nhận thiếu định danh; không tự xem đây là đường quay lại Order đã hợp lệ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/06-navigation.md — Điểm ra",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-05"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-006",
+        "requirement_ids": [
+          "ST-06-YC-010"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu CTA quay lại với mã khóa học thật",
+        "precondition": "Trang được mở bằng phiên học viên.",
+        "data": "CTA “Quay lại kiểm tra đơn hàng”; chưa có `courseId` nào được truyền.",
+        "steps": [
+          "Đọc cấu hình `routerLink` của CTA.",
+          "So sánh với tuyến `/student/checkout/:courseId`."
+        ],
+        "expected": "CTA giữ nguyên chuỗi `/student/checkout/:courseId`, không nội suy mã thật. Đánh dấu chờ quyết định tuyến quay lại; không tự thay đích.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/06-navigation.md — Điểm ra",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-007",
+        "requirement_ids": [
+          "ST-06-YC-005",
+          "ST-06-YC-009"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Không gọi #17 chỉ vì mở hoặc tải lại trang",
+        "precondition": "Trang được mở bằng phiên học viên.",
+        "data": "Tải mới và làm mới cùng `/student/pay/42`.",
+        "steps": [
+          "Mở trang lần đầu.",
+          "Làm mới trang.",
+          "Quan sát yêu cầu `POST /api/v1/payments`."
+        ],
+        "expected": "Mã nguồn trang không có dịch vụ, sự kiện hoặc lời gọi #17; mở/tải lại không gửi thanh toán tự động. Quy tắc khởi tạo trong tương lai vẫn chờ duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.spec.ts",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-02"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-008",
+        "requirement_ids": [
+          "ST-06-YC-005",
+          "ST-06-YC-006",
+          "ST-06-YC-013"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Không gán trạng thái thất bại từ 503 của #17",
+        "precondition": "Chỉ dùng nguồn mã cục bộ; không gọi cổng thanh toán.",
+        "data": "#17 hiện trả 503 `DESIGN_DEPENDENCY_UNAVAILABLE` trước khi lưu.",
+        "steps": [
+          "Đối chiếu handler #17 với trạng thái màn hình.",
+          "Xác nhận màn hình hiện không gọi #17."
+        ],
+        "expected": "Mã nguồn #17 fail-closed trước khi đọc/ghi Payment hoặc Operation; trang không gọi API và không ánh xạ 503 thành thất bại thanh toán. Mã nguồn hiện không có kiểm thử tập trung cho #17; ca chưa chạy.",
+        "api_ids": [
+          "#17"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_17_payments/view.py",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md — cập nhật nguồn hiện tại"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-009",
+        "requirement_ids": [
+          "ST-06-YC-007",
+          "ST-06-YC-013"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Không dùng #18 để tra giao dịch thanh toán",
+        "precondition": "Có mã nguồn #18 và DD cập nhật của API.",
+        "data": "API #18 hiện trả các Operation gửi thông báo.",
+        "steps": [
+          "Đối chiếu truy vấn #18 và trường `kind` được tạo.",
+          "Xác nhận trang ST-06 không gọi #18."
+        ],
+        "expected": "#18 hiện chỉ truy vấn thông báo, đặt `kind=NOTIFICATION_DISPATCH` và không trả Payment. Không xem `QUEUED`/`FAILED`/`SENT` là trạng thái thanh toán.",
+        "api_ids": [
+          "#18"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/shared/api_18_operations/query.py",
+          "apps/study-server/app/modules/shared/api_18_operations/view.py",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-010",
+        "requirement_ids": [
+          "ST-06-YC-006",
+          "ST-06-YC-008",
+          "ST-06-YC-012"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Không chuyển sang kết quả ghi danh khi chưa có xác nhận tin cậy",
+        "precondition": "Không có kết quả xác minh thanh toán từ máy chủ/cổng thanh toán.",
+        "data": "HTTP 202 nếu có trong hợp đồng chỉ là `DESIGN_OPERATION_ACCEPTED`; hiện trang không nhận phản hồi.",
+        "steps": [
+          "Tìm thao tác hoặc luồng tự chuyển sang ST-07 trong trang.",
+          "Đối chiếu hợp đồng #17 và tiêu chí AC-12."
+        ],
+        "expected": "Trang hiện không có thao tác/chuyển tiếp sang ST-07. Không tạo quyền học #19 và không kết luận đã thanh toán từ 202, URL hoặc nội dung trang.",
+        "api_ids": [
+          "#17",
+          "#18"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/03-data-flow.md — điều hướng"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-011",
+        "requirement_ids": [
+          "ST-06-YC-005",
+          "ST-06-YC-009"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Xác minh không có thao tác thử lại tự động",
+        "precondition": "Trang được mở khi không có dữ liệu thanh toán.",
+        "data": "Không có mã Operation hoặc phản hồi #17.",
+        "steps": [
+          "Mở và làm mới trang.",
+          "Kiểm tra có bộ đếm, nút thử lại hoặc yêu cầu lặp hay không."
+        ],
+        "expected": "Không có bộ đếm, nút thử lại hay lời gọi #17 trong trang hiện tại. Không thiết kế thử lại tự động vì chưa có quy tắc chống trùng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/05-business-rules.md — quy tắc thử lại"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-MH-012",
+        "requirement_ids": [
+          "ST-06-YC-003",
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06",
+        "group": "Toàn màn hình",
+        "title": "Giữ đúng nội dung tiếng Việt của trạng thái hiện tại",
+        "precondition": "Trang con được hiển thị bằng phiên học viên.",
+        "data": "Tiêu đề, thông báo, điều hướng đầu trang và chân trang.",
+        "steps": [
+          "Đọc H1, H2, thông báo, nội dung giải thích, CTA và nhãn điều hướng.",
+          "Đối chiếu với mẫu và mã nguồn Angular."
+        ],
+        "expected": "Nội dung hướng tới người học dùng tiếng Việt rõ ràng; giữ nguyên tên sản phẩm Study2Work và các định danh kỹ thuật khi cần. Khác biệt giữa mẫu và Angular được ghi trong danh mục thành phần.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-06_thuc-hien-thanh-toan/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST06-TP-001",
+        "requirement_ids": [
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EL-001",
+        "group": "Thành phần",
+        "title": "Liên kết thương hiệu Study2Work",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Kiểm tra nhãn trợ năng và đích `/`.",
+          "Kiểm tra liên kết ở đầu trang."
+        ],
+        "expected": "Nhãn “Study2Work — trang chủ”; đích Angular là `/`. Đích trang ngoài phạm vi chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #1",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-002",
+        "requirement_ids": [
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EL-002",
+        "group": "Thành phần",
+        "title": "Nhóm điều hướng chính",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc bốn nhãn.",
+          "Đối chiếu từng `routerLink`."
+        ],
+        "expected": "Có Trang chủ, Khóa học, Khóa học của tôi, Tiến độ với các đích đã khai báo; không truyền mã thanh toán.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #2",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-003",
+        "requirement_ids": [
+          "ST-06-YC-002",
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EL-003",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng nhập",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc nhãn và thuộc tính điều hướng."
+        ],
+        "expected": "Nhãn “Đăng nhập”; đích `/login`. Không suy ra phiên đã đăng nhập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #3",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-004",
+        "requirement_ids": [
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EL-004",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng ký",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc nhãn và thuộc tính điều hướng."
+        ],
+        "expected": "Nhãn “Đăng ký”; đích `/register`.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #4",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-005",
+        "requirement_ids": [
+          "ST-06-YC-010",
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EL-005",
+        "group": "Thành phần",
+        "title": "Thanh điều hướng breadcrumb",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc thứ tự các mục.",
+          "Kiểm tra ba đích liên kết và mục hiện tại."
+        ],
+        "expected": "Hiện Trang chủ, Khóa học, Kiểm tra đơn hàng, Thực hiện thanh toán. Mục quay lại đơn hàng chưa mang mã.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #5",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-006",
+        "requirement_ids": [
+          "ST-06-YC-003"
+        ],
+        "target_id": "ST-06-EL-006",
+        "group": "Thành phần",
+        "title": "Tiêu đề trang",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Kiểm tra H1 và đường phân cách."
+        ],
+        "expected": "H1 là “Thực hiện thanh toán”; đường phân cách là phần trang trí, không phụ thuộc API.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #6",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-007",
+        "requirement_ids": [
+          "ST-06-YC-003",
+          "ST-06-YC-004"
+        ],
+        "target_id": "ST-06-EL-007",
+        "group": "Thành phần",
+        "title": "Thẻ trạng thái thanh toán",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Quan sát vùng thẻ và nội dung bên trong."
+        ],
+        "expected": "Thẻ chỉ là vỏ bố cục cho trạng thái tĩnh; không có dữ liệu Order/Payment/Operation.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #7",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-008",
+        "requirement_ids": [
+          "ST-06-YC-004"
+        ],
+        "target_id": "ST-06-EL-008",
+        "group": "Thành phần",
+        "title": "Biểu tượng thẻ thanh toán",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Kiểm tra biểu tượng và thuộc tính ẩn trợ năng."
+        ],
+        "expected": "Biểu tượng SVG chỉ để trang trí (`aria-hidden`); không biểu thị phương thức hoặc kết quả giao dịch.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #8",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-009",
+        "requirement_ids": [
+          "ST-06-YC-003"
+        ],
+        "target_id": "ST-06-EL-009",
+        "group": "Thành phần",
+        "title": "Tiêu đề trong thẻ",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc H2 trong thẻ."
+        ],
+        "expected": "H2 là “Thực hiện thanh toán”; không lấy từ dữ liệu máy chủ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #9",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-010",
+        "requirement_ids": [
+          "ST-06-YC-003",
+          "ST-06-YC-008",
+          "ST-06-YC-013"
+        ],
+        "target_id": "ST-06-EL-010",
+        "group": "Thành phần",
+        "title": "Thông báo chưa có dữ liệu thanh toán",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc nội dung.",
+          "Kiểm tra vùng cha có `role=\"status\"` và nhãn liên kết."
+        ],
+        "expected": "Hiển thị đúng câu “Chưa có thông tin thanh toán để hiển thị.”. Không gán trạng thái thanh toán thất bại hoặc thành công.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #10",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-011",
+        "requirement_ids": [
+          "ST-06-YC-003",
+          "ST-06-YC-013"
+        ],
+        "target_id": "ST-06-EL-011",
+        "group": "Thành phần",
+        "title": "Nội dung giải thích trạng thái",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc nội dung dưới thông báo."
+        ],
+        "expected": "Nội dung là chữ cố định; không phải mã lỗi hoặc bằng chứng giao dịch đã kết thúc.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #11",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-012",
+        "requirement_ids": [
+          "ST-06-YC-010"
+        ],
+        "target_id": "ST-06-EL-012",
+        "group": "Thành phần",
+        "title": "Nút quay lại kiểm tra đơn hàng",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc nhãn CTA và giá trị `routerLink`."
+        ],
+        "expected": "Nhãn “Quay lại kiểm tra đơn hàng”; đích là mẫu `/student/checkout/:courseId` chưa nội suy. Ghi nhận chờ sửa/duyệt đích.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #12",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-013",
+        "requirement_ids": [
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EL-013",
+        "group": "Thành phần",
+        "title": "Thương hiệu ở chân trang",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Kiểm tra loại phần tử và đích trong Angular.",
+          "Đối chiếu mô tả trong DD."
+        ],
+        "expected": "Angular dùng liên kết `/`; DD ghi là chữ tĩnh. Ghi nhận khác biệt, chưa xem hai nguồn là tương đương.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #13",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-TP-014",
+        "requirement_ids": [
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EL-014",
+        "group": "Thành phần",
+        "title": "Nhóm điều hướng chân trang",
+        "precondition": "Trang ST-06 được hiển thị ở kích thước máy tính; dùng DOM Angular làm nguồn hiện trạng.",
+        "data": "So sánh nhãn, loại phần tử, đích điều hướng và thuộc tính trợ năng với danh mục thành phần.",
+        "steps": [
+          "Đọc các nhãn.",
+          "Đối chiếu từng `routerLink`."
+        ],
+        "expected": "Có Trang chủ, Khóa học, Đăng nhập, Đăng ký với đích được khai báo trong Angular.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md — marker #14",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST06-SK-001",
+        "requirement_ids": [
+          "ST-06-YC-001",
+          "ST-06-YC-002",
+          "ST-06-YC-003"
+        ],
+        "target_id": "ST-06-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở tuyến ST-06 và xử lý phiên học viên",
+        "precondition": "Có cấu hình tuyến Student và phiên có/không có.",
+        "data": "Đường dẫn `/student/pay/42`.",
+        "steps": [
+          "Mở tuyến khi chưa có phiên.",
+          "Xác nhận biểu mẫu đăng nhập của bố cục cha thay trang con.",
+          "Mở lại bằng phiên hợp lệ."
+        ],
+        "expected": "Khi chưa đăng nhập, `StudentLayout` không hiện ST-06; sau khi có phiên, trang con hiển thị thẻ trạng thái tĩnh. Không có `canActivate` riêng trên tuyến con.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-SK-002",
+        "requirement_ids": [
+          "ST-06-YC-005",
+          "ST-06-YC-006",
+          "ST-06-YC-009"
+        ],
+        "target_id": "ST-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Giữ hành vi hiện tại của API #17 và giới hạn khởi tạo",
+        "precondition": "Chưa có cấu hình nhà cung cấp; không gọi môi trường thật.",
+        "data": "Bearer Student cùng thân hợp lệ `{order_id:42, provider:\"<giá trị được duyệt>\"}`; nội dung trong ngoặc là chỗ giữ chỗ, không phải giá trị hợp lệ.",
+        "steps": [
+          "Đọc tuyến và handler #17.",
+          "Kiểm tra thứ tự xác thực/kiểm tra đầu vào và phản hồi khi nhà cung cấp chưa cấu hình.",
+          "Xác nhận ST-06 không gửi #17 khi mở/làm mới."
+        ],
+        "expected": "Mã nguồn hiện trả 503 `DESIGN_DEPENDENCY_UNAVAILABLE` trước khi lưu; trang hiện không gọi #17. Không gửi lại yêu cầu và không coi 503 là trạng thái giao dịch thất bại.",
+        "api_ids": [
+          "#17"
+        ],
+        "source_refs": [
+          "apps/study-server/app/api/v1.py",
+          "apps/study-server/app/modules/student/api_17_payments/validate.py; apps/study-server/app/modules/student/api_17_payments/view.py",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-SK-003",
+        "requirement_ids": [
+          "ST-06-YC-007",
+          "ST-06-YC-013"
+        ],
+        "target_id": "ST-06-EV-003",
+        "group": "Sự kiện",
+        "title": "Giới hạn API #18 vào tác vụ gửi thông báo hiện có",
+        "precondition": "Chỉ đọc mã nguồn và kiểm thử đã có; không chạy API.",
+        "data": "UUID của một Operation gửi thông báo; không dùng làm dữ liệu thanh toán.",
+        "steps": [
+          "Kiểm tra xác thực vai trò và so khớp chủ sở hữu.",
+          "Đọc truy vấn và ánh xạ `kind`/`status`.",
+          "Xác nhận không có nhánh Payment."
+        ],
+        "expected": "Nguồn hiện tại cho phép Student/Mentor/Admin nhưng chỉ truy vấn Operation của chủ sở hữu. Kết quả hiện là tác vụ gửi thông báo; chưa có hợp đồng/nguồn để dùng làm trạng thái thanh toán.",
+        "api_ids": [
+          "#18"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/shared/api_18_operations/validate.py; apps/study-server/app/modules/shared/api_18_operations/query.py; apps/study-server/app/modules/shared/api_18_operations/view.py",
+          "apps/study-server/tests/modules/shared/api_18_operations/test_operations.py",
+          "apps/study-server/docs/dd/18_operations/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-SK-004",
+        "requirement_ids": [
+          "ST-06-YC-006",
+          "ST-06-YC-008",
+          "ST-06-YC-012",
+          "ST-06-YC-013"
+        ],
+        "target_id": "ST-06-EV-004",
+        "group": "Sự kiện",
+        "title": "Chỉ tiếp tục sau khi có kết quả thanh toán tin cậy",
+        "precondition": "Không có xác nhận tin cậy từ máy chủ/cổng thanh toán.",
+        "data": "202 accepted, URL quay về hoặc callback trình duyệt không được coi là bằng chứng đã thanh toán.",
+        "steps": [
+          "Đối chiếu hợp đồng #17, luồng AC-12 và nguồn #18 hiện tại.",
+          "Kiểm tra trang không điều hướng tới ST-07 và không gọi #19."
+        ],
+        "expected": "Không có nguồn tin cậy hoặc ánh xạ trạng thái thanh toán trong hiện trạng; không ghi đã thanh toán, không tạo quyền học và không chuyển tiếp. Ca này chờ quyết định và chưa chạy.",
+        "api_ids": [
+          "#17",
+          "#18"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-04",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/03-data-flow.md — Điều hướng",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/04-api-integration.md",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-SK-005",
+        "requirement_ids": [
+          "ST-06-YC-010"
+        ],
+        "target_id": "ST-06-EV-005",
+        "group": "Sự kiện",
+        "title": "Đánh dấu sai khác ở liên kết quay lại",
+        "precondition": "Trang con đã hiển thị.",
+        "data": "CTA dùng `/student/checkout/:courseId`; breadcrumb dùng `/student/checkout`.",
+        "steps": [
+          "Kiểm tra hai giá trị điều hướng.",
+          "So sánh với tuyến ST-05 và dữ liệu cần thiết."
+        ],
+        "expected": "Cả hai liên kết đều thiếu mã thật; không tạo giả định `courseId` từ `orderId`. Chờ owner duyệt mapping và đích quay lại.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-05",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST06-SK-006",
+        "requirement_ids": [
+          "ST-06-YC-011"
+        ],
+        "target_id": "ST-06-EV-006",
+        "group": "Sự kiện",
+        "title": "Kiểm tra liên kết đầu trang, breadcrumb và chân trang",
+        "precondition": "Trang con đã hiển thị.",
+        "data": "Các liên kết thương hiệu, điều hướng, đăng nhập, đăng ký và breadcrumb.",
+        "steps": [
+          "Đọc nhãn và `routerLink` của từng nhóm.",
+          "Đối chiếu số lượng, loại phần tử và đích trong mẫu Angular."
+        ],
+        "expected": "Các nhãn/đích khớp với danh mục Angular. Ghi riêng thương hiệu chân trang là liên kết trong Angular dù DD ghi là chữ tĩnh; không xác nhận các tuyến đích ngoài phạm vi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/02-events.md — EV-06",
+          "apps/study-client/docs/dd_screens/ST-06-ThucHienThanhToan/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST06/pages/st06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

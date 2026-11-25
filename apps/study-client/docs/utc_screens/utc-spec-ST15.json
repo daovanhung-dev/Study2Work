@@ -1,0 +1,3125 @@
+{
+  "metadata": {
+    "screen_id": "ST-15",
+    "screen_name": "Xác nhận nộp bài kiểm tra",
+    "module": "Học viên — xác nhận nộp bài kiểm tra",
+    "route": "/student/attempts/:attemptId/submit",
+    "actor": "Học viên đăng nhập; yêu cầu dùng Bearer JWT. Quyền sở hữu và điều kiện nộp còn câu hỏi mở trong tài liệu API.",
+    "version": "UTC v1.0",
+    "dd_version": "DD v0.2; API #31 bản nháp — cần xác nhận",
+    "dd_status": "Bị chặn (BLOCKED)",
+    "runtime_status": "ứng dụng Study hiện có tuyến ST-15 và thành phần giao diện gọi POST #31 khi người học xác nhận. Máy chủ có tuyến và mô-đun #31. Không có hoàn tất lưu #30 hoặc bàn giao bản tổng hợp trong thành phần giao diện; không tìm thấy kiểm thử chuyên biệt #31; chưa kiểm tra trình duyệt, API hoặc CSDL đang chạy.",
+    "author": "Chưa xác định trong DD",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/07-test-cases.md; apps/study-server/docs/dd/31_attempts_submit/02_Overview.md; apps/study-server/docs/dd/31_attempts_submit/03_Request.md; apps/study-server/docs/dd/31_attempts_submit/04_Response.md; apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md; apps/study-server/docs/dd/31_attempts_submit/06_Error.md; apps/study-server/docs/dd/31_attempts_submit/OPEN_QUESTIONS.md",
+    "release_readiness": "Người dùng chỉ đạo dùng DD trong kho làm nguồn chuẩn và cho biết các DD đã được duyệt. Tài liệu trong kho vẫn ghi Bị chặn/Bản nháp và còn câu hỏi mở; không tự điền quyết định thiếu. Bộ UTC hợp lệ về cấu trúc, tất cả ca ở trạng thái Chưa chạy; chưa đủ cơ sở kết luận các câu hỏi nghiệp vụ đã được giải quyết.",
+    "baseline_authorization": "Theo chỉ đạo người dùng, dùng DD hiện có dù trạng thái ghi Bị chặn/Bản nháp. Giữ nguyên nhãn, câu hỏi mở và đối chiếu riêng hành vi mã nguồn hiện tại; không suy diễn quyết định chưa có trong tài liệu.",
+    "discrepancy_note": "Ảnh PNG xác nhận có 18 dấu đánh số và nhiều số liệu mẫu; trang HTML là trạng thái lỗi tĩnh khác ảnh; thành phần giao diện hiện tại là thẻ xác nhận cơ bản. DD yêu cầu hoàn tất lưu #30 trước #31 nhưng thành phần giao diện không có hoàn tất lưu; tuyến/mô-đun #31 hiện đã tồn tại dù lịch sử DD nói thiếu. Tài liệu API chưa chốt quyền, trạng thái, chấm tay, chính sách tiết lộ và dữ liệu; mã hiện trả GRADED và đáp án đúng/điểm."
+  },
+  "overall": {
+    "objective": "Cho học viên xác nhận nộp một lượt làm; giữ riêng luồng theo DD và cách thành phần giao diện/API hiện tại hoạt động. Chỉ chuyển tới ST-16 sau phản hồi được kiểm tra.",
+    "inputs": "`attemptId` từ tuyến; Bearer của học viên do dịch vụ dùng chung thêm; phản hồi theo cấu trúc `ApiEnvelope` của POST #31. Bản tổng hợp và hàng đợi #30 theo DD chưa có bàn giao được chốt.",
+    "outputs": "Thông báo xác nhận/lỗi, thao tác nộp, liên kết xem kết quả và điều hướng sang ST-16 khi ứng dụng chấp nhận phản hồi.",
+    "main_flow": "ST-14 dự kiến chuyển `attemptId` và trạng thái lưu → ST-15 chờ mọi lần lưu #30 đang chờ hoàn tất → gửi một POST #31 → kiểm tra phản hồi → sang ST-16. Hiện thành phần giao diện mở xác nhận → người dùng nhấn gửi #31 ngay → kiểm mã, ID và `GRADED` → sang ST-16; không chờ #30.",
+    "preconditions": "Tuyến `/student/attempts/:attemptId/submit`; ID dương an toàn; phiên học viên hợp lệ. Quyền sở hữu, điều kiện nộp, bản tổng hợp bàn giao, trạng thái lưu và môi trường chạy chưa được xác minh.",
+    "states": [
+      "Xác nhận nộp",
+      "Đang nộp",
+      "Lỗi thông thường",
+      "Kết quả chưa rõ",
+      "Lượt làm đã đóng và có liên kết kết quả",
+      "Đã nộp và có liên kết kết quả",
+      "Không có trạng thái tải bản tổng hợp",
+      "Không có đồng hồ hoặc thống kê thực trong thành phần giao diện hiện tại",
+      "DD và API còn câu hỏi mở",
+      "Chưa xác minh môi trường chạy"
+    ],
+    "security": "Chỉ gửi `attemptId` trong đường dẫn và token Bearer của học viên qua dịch vụ dùng chung. Không gửi danh tính, đáp án hoặc điểm trong nội dung yêu cầu. Tài liệu API chưa chốt quyền và chính sách tiết lộ; mã hiện trả thông tin đúng sai và điểm, đây là hành vi mã nguồn chứ chưa phải chính sách đã xác nhận.",
+    "out_of_scope": "Tạo lượt làm #29, xả/lưu câu trả lời #30 tại thành phần giao diện hiện tại, đọc lượt làm/bản tổng hợp, chốt câu hỏi tài liệu API, gọi #32 trực tiếp trong ST-15, xác minh CSDL đang sử dụng hoặc kiểm tra trình duyệt/API/môi trường chạy."
+  },
+  "apis": [
+    {
+      "id": "#30",
+      "method": "PUT",
+      "path": "/api/v1/attempts/{attempt_id}/answers",
+      "event_ids": [
+        "ST-15-EV-003",
+        "ST-15-EV-005"
+      ],
+      "request": "DD yêu cầu chờ các lần lưu đang chờ; danh mục API ghi `question_id` và `answer(s):string` nhưng biểu diễn và thứ tự hàng đợi chưa chốt. ST-15 hiện không gọi #30, không gửi nội dung và không chờ hàng đợi.",
+      "response": "Danh mục API ghi `ApiEnvelope<QuizAttempt>`, HTTP 200 và `DESIGN_RESOURCE_UPDATED`; phản hồi này không chứng minh toàn bộ hàng đợi đã được lưu.",
+      "errors": "Theo danh mục API: 401, 403, 404, 422, 500; không khai báo 409. Màn hình ST-15 hiện không gọi trực tiếp API này.",
+      "auth": "Bearer của học viên theo danh mục API; thao tác lưu thuộc ST-14.",
+      "design_status": "DD/API #30 còn bản nháp với câu hỏi về dữ liệu, thứ tự, tính lặp, đồng thời và khôi phục; đây là điều kiện phụ thuộc của luồng ST-15.",
+      "source_ref": "docs/lists/list_api.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md; apps/study-client/src/app/features/student/ST14/data-access/st14-attempt.service.ts; apps/study-server/app/modules/student/api_30_attempts_answers/"
+    },
+    {
+      "id": "#31",
+      "method": "POST",
+      "path": "/api/v1/attempts/{attempt_id}/submit",
+      "event_ids": [
+        "ST-15-EV-003",
+        "ST-15-EV-004",
+        "ST-15-EV-005",
+        "ST-15-EV-008"
+      ],
+      "request": "Bearer của học viên; `attempt_id:int64!` trên đường dẫn; không có tham số truy vấn/nội dung gửi theo danh mục API. Mã ứng dụng truyền tham số đường dẫn `{attempt_id}`.",
+      "response": "Danh mục API quy định `ApiEnvelope<QuizAttempt>`, HTTP 200 và `DESIGN_RESOURCE_UPDATED`. AC-16 nêu `PENDING_GRADE` hoặc `GRADED`. Mã máy chủ hiện trả `GRADED`, trường `score`, `passed` và danh sách đáp án có trường `correct`/`score`; tài liệu API chưa chốt việc tiết lộ các trường này hoặc cấu trúc phản hồi.",
+      "errors": "Danh mục API: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 422 DESIGN_VALIDATION_ERROR; 409 DESIGN_STATE_CONFLICT; 500 DESIGN_INTERNAL_ERROR. Mã hiện trả 404 khi thiếu, 403 sai chủ, 409 không IN_PROGRESS/cấu hình không hợp lệ/loại câu hỏi không hỗ trợ, 422 ID sai, 500 lỗi xử lý.",
+      "auth": "Bearer của học viên được thêm bởi `StudentApiService`; máy chủ kiểm vai trò học viên rồi so chủ lượt làm với danh tính xác thực. Quy tắc che giấu 403/404 còn mở trong DD.",
+      "design_status": "tài liệu API bản nháp — cần xác nhận; Q-31-01…06 còn mở. Bộ định tuyến/mô-đun hiện có nhưng không tìm thấy bộ kiểm thử chuyên biệt; không chạy kiểm thử hoặc xác minh môi trường.",
+      "source_ref": "docs/lists/list_api.md; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/http/study-api.service.ts; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_31_attempts_submit/{view.py,query.py,models.py,validate.py}; apps/study-server/docs/dd/31_attempts_submit/{02_Overview.md,03_Request.md,04_Response.md,05_Data_Mapping.md,06_Error.md,OPEN_QUESTIONS.md}"
+    },
+    {
+      "id": "#32",
+      "method": "GET",
+      "path": "/api/v1/attempts/{attempt_id}/result",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "request": "Không được gọi trực tiếp từ thành phần giao diện ST-15; liên kết mở tuyến kết quả với attemptId.",
+      "response": "Danh mục API và tuyến ST-16 xác định việc đọc kết quả.",
+      "errors": "Theo API #32 và DD màn hình kết quả; không tự tạo yêu cầu hoặc mã lỗi mới tại ST-15.",
+      "auth": "Theo Bearer của học viên/API #32 khi ST-16 được mở.",
+      "design_status": "API ranh giới thuộc ST-16, không phải lời gọi trực tiếp từ trang xác nhận.",
+      "source_ref": "docs/lists/list_api.md; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-15-YC-001",
+      "description": "Tuyến `/student/attempts/:attemptId/submit` mở `ST15Page` trong giao diện thi; mã đã đăng ký tuyến nhưng chưa xác minh môi trường chạy.",
+      "group": "Tuyến và màn hình",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "notes": "Tuyến hiện tại gắn metadata API #30/#31; thành phần giao diện vẫn hiển thị màn hình xác nhận cơ bản.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-15-YC-002",
+      "description": "Chỉ tiếp tục khi `attemptId` là ID dương an toàn; ID sai hiển thị lỗi và không gửi yêu cầu nộp.",
+      "group": "Kiểm tra ID tuyến",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+      "notes": "Ứng dụng giao diện dùng `toSafeStudyId`; máy chủ hiện phân tích số dương trong miền int64 và trả 422 khi sai.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-003",
+      "description": "Người dùng thao tác với tư cách học viên; yêu cầu #31 lấy token Bearer của học viên từ dịch vụ dùng chung, không nhận danh tính từ URL hoặc nội dung gửi.",
+      "group": "Xác thực người học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+      "notes": "Dịch vụ ứng dụng giao diện tự thêm Bearer; máy chủ xác thực vai trò học viên.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-004",
+      "description": "Khi mở hoặc tải lại tuyến, màn hình không tự gọi #30, #31 hay API đọc lượt làm; dữ liệu tóm tắt chỉ được dùng từ bàn giao đã duyệt.",
+      "group": "Mở màn hình và nguồn dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md",
+      "notes": "Mã hiện không gọi API khi mở; không có đọc trạng thái lượt làm hoặc đáp án từ màn hình này.",
+      "priority": "Cao",
+      "api_ids": [
+        "#30",
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-005",
+      "description": "Nếu mở trực tiếp hoặc tải lại mà không có bàn giao, không dựng số câu, đáp án đang chờ, đồng hồ hay lịch sử lần làm từ ảnh mẫu.",
+      "group": "Mở trực tiếp và khôi phục",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "notes": "Bàn giao số liệu và hàng đợi từ ST-14 chưa có hợp đồng; mã hiện không khôi phục các dữ liệu này.",
+      "priority": "Cao",
+      "api_ids": [
+        "#30"
+      ]
+    },
+    {
+      "id": "ST-15-YC-006",
+      "description": "Theo thiết kế, trước #31 phải chờ tất cả lần lưu #30 đang chờ được xác nhận thành công.",
+      "group": "Chờ lưu đáp án",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md",
+      "notes": "Đây là điều kiện thiết kế trong DD; ST-15 hiện không có cơ chế chờ hoặc xả hàng đợi #30.",
+      "priority": "Cao",
+      "api_ids": [
+        "#30",
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-007",
+      "description": "Nếu một lần lưu #30 lỗi hoặc có kết quả không rõ, dừng tại màn hình và không gọi #31.",
+      "group": "Lỗi khi chờ lưu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md",
+      "notes": "Mã ST-15 hiện không gọi #30 nên cũng không kiểm tra được hàng đợi; giữ khác biệt giữa kỳ vọng và hiện trạng.",
+      "priority": "Cao",
+      "api_ids": [
+        "#30",
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-008",
+      "description": "Khi người học xác nhận, gửi đúng một `POST /api/v1/attempts/{attempt_id}/submit` với `attempt_id` trên đường dẫn; không gửi nội dung hoặc tham số truy vấn.",
+      "group": "Gửi yêu cầu nộp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+      "notes": "Dịch vụ hiện gọi API_031 với `pathParams`; descriptor là POST và không truyền nội dung gửi/tham số truy vấn.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-009",
+      "description": "Trong khi một yêu cầu nộp đang chạy, lần nhấn lặp không tạo thêm yêu cầu #31.",
+      "group": "Chống nhấn lặp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md",
+      "notes": "Mã hiện khóa nút theo `busy` và chặn gọi lại khi đang bận hoặc đã có kết quả cần kiểm tra.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-010",
+      "description": "Sau hết thời gian chờ hoặc phản hồi không thể xác nhận, không gửi lại #31 tự động; hướng người dùng sang kiểm tra kết quả theo luồng được duyệt.",
+      "group": "Kết quả nộp chưa rõ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "notes": "Mã hiện khóa gửi lại khi HTTP 0 hoặc phản hồi thành công nhưng sai cấu trúc; liên kết kết quả được hiển thị.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31",
+        "#32"
+      ]
+    },
+    {
+      "id": "ST-15-YC-011",
+      "description": "Chỉ coi nộp thành công khi phản hồi có `success=true`, mã `DESIGN_RESOURCE_UPDATED` và dữ liệu lượt làm khớp ID trên tuyến.",
+      "group": "Xác nhận phản hồi thành công",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+      "notes": "Ứng dụng giao diện kiểm mã nghiệp vụ, ID, bài kiểm tra ID, trạng thái, thời điểm, điểm, kết quả đạt và danh sách đáp án.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-012",
+      "description": "AC-16 cho phép nhánh `PENDING_GRADE` khi còn câu cần chấm tay hoặc `GRADED` khi đã chấm xong; không hứa điểm cuối ngay khi nộp.",
+      "group": "Trạng thái sau khi nộp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+      "notes": "Tài liệu API còn mở về nhận diện câu chấm tay; mã hiện chỉ chấp nhận `GRADED`, nên phản hồi `PENDING_GRADE` bị coi là kết quả chưa rõ.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-013",
+      "description": "Chỉ chuyển tới ST-16 sau phản hồi được xác nhận là đã chấp nhận; nếu chuyển tuyến thất bại, vẫn có liên kết xem kết quả.",
+      "group": "Chuyển đến kết quả",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "notes": "Mã hiện điều hướng sau khi kiểm tra phản hồi; nếu điều hướng lỗi thì giữ thông báo và liên kết kết quả.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31",
+        "#32"
+      ]
+    },
+    {
+      "id": "ST-15-YC-014",
+      "description": "Với 409 hoặc kết quả mạng chưa rõ, không tự coi là nộp thành công; chỉ hiển thị liên kết kiểm tra kết quả theo luồng được xác nhận.",
+      "group": "Xung đột và kiểm tra lại kết quả",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+      "notes": "Ứng dụng giao diện tạo liên kết ST-16 cho 409 và HTTP 0; #32 thuộc màn hình ST-16, ST-15 không gọi API này trực tiếp.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31",
+        "#32"
+      ]
+    },
+    {
+      "id": "ST-15-YC-015",
+      "description": "Giữ riêng các mã lỗi API #31 đã khai báo: 401, 403, 404, 422, 409 và 500; không tự thêm mã nghiệp vụ.",
+      "group": "Mã lỗi API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+      "notes": "Danh mục API và DD liệt kê sáu mã; ứng dụng giao diện dùng thông báo tiếng Việt dùng chung.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-016",
+      "description": "Đối chiếu xử lý lỗi hiện tại: HTTP 0 khóa gửi lại và mở liên kết kết quả; 409 mở liên kết kết quả; lỗi HTTP khác hiện thông báo và có thể để nút nộp hoạt động lại.",
+      "group": "Thông báo lỗi hiện tại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+      "notes": "Phân biệt các nhánh để không ghi nhận thử lại hoặc khôi phục như hành vi đã được DD chốt.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31",
+        "#32"
+      ]
+    },
+    {
+      "id": "ST-15-YC-017",
+      "description": "Không gửi `user_id`, điểm, câu trả lời hay trạng thái nộp trong yêu cầu #31; danh tính lấy từ phiên Bearer của học viên.",
+      "group": "Bảo vệ dữ liệu gửi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+      "notes": "Yêu cầu ứng dụng giao diện hiện chỉ có path parameter; hàm xử lý hiện xác thực học viên và không đọc danh tính từ payload.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-018",
+      "description": "ID trên đường dẫn phải qua kiểm tra số dương trong miền int64; ghi nhận riêng quy tắc phân tích hiện tại với giới hạn chưa chốt trong tài liệu API.",
+      "group": "Kiểm tra ID ở máy chủ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+      "notes": "Máy chủ hiện từ chối ID sai bằng 422; tài liệu API để dương/range/overflow là câu hỏi mở.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-019",
+      "description": "Phân biệt lượt làm không tồn tại với lượt làm của người khác theo chính sách được duyệt; không tự kết luận 403 hay 404 là quy tắc chuẩn.",
+      "group": "Quyền sở hữu lượt làm",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+      "notes": "Tài liệu API để mở 403 so với che giấu bằng 404; mã hiện trả 404 khi không có lượt làm và 403 khi sai chủ.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-020",
+      "description": "Không giả định trạng thái cho phép nộp, nộp lặp, hết hạn hay xử lý đồng thời khi tài liệu API chưa chốt.",
+      "group": "Vòng đời và nộp lặp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+      "notes": "Mã hiện chỉ nhận `IN_PROGRESS`; trạng thái khác trả 409, nhưng chính sách lặp/hết hạn còn là câu hỏi mở.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-021",
+      "description": "Theo phần sửa quy tắc chấm đã ghi trong tài liệu API, phạm vi hiện tại gồm câu `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE`; không suy rộng sang câu tự luận.",
+      "group": "Phạm vi chấm tự động",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md",
+      "notes": "Phần sửa quy tắc chấm chỉ định ba loại khách quan; mã hiện trả 409 với loại khác.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-022",
+      "description": "Với câu thuộc phạm vi tự chấm, điểm chỉ được tính khi tập lựa chọn khớp chính xác tập lựa chọn đúng; câu bỏ trống hoặc sai nhận 0 điểm.",
+      "group": "Quy tắc tính điểm",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md",
+      "notes": "Đây là quy tắc sửa ngày 15-11 và trùng với cách so khớp trong mã hiện tại.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-023",
+      "description": "Điểm đạt được so với điểm tối đa và `passing_score` phải dùng phép tính thập phân chính xác; `passed` tách biệt với trạng thái lượt làm.",
+      "group": "Kết quả đạt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md; apps/study-server/04_Response.md",
+      "notes": "Quy tắc sửa ghi `earned_points * 100 >= possible_points * passing_score`; mã hiện áp dụng phép so sánh thập phân.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-024",
+      "description": "Bài kiểm tra không có câu hỏi, tổng điểm tối đa không dương hoặc cấu hình điểm sai không được xác nhận là đã chấm thành công.",
+      "group": "Cấu hình chấm không hợp lệ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md; apps/study-server/06_Error.md",
+      "notes": "Mã hiện hoàn tác giao dịch và trả 409 khi cấu hình không hợp lệ hoặc loại câu hỏi không hỗ trợ.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-025",
+      "description": "Việc khóa lượt làm, cập nhật đáp án và trạng thái phải được đánh giá trong cùng giao dịch theo mã nguồn hiện tại; không coi mã nguồn là bằng chứng CSDL đang sử dụng.",
+      "group": "Giao dịch và lưu kết quả",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md",
+      "notes": "Hàm xử lý hiện khóa hàng lượt làm, lưu giao dịch khi thành công và hoàn tác khi gặp lỗi CSDL/ánh xạ; chưa kiểm tra CSDL.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-026",
+      "description": "Không kết luận `PENDING_GRADE`/`GRADED`, điểm và thông tin đúng sai được trả về đã thống nhất khi tài liệu API còn câu hỏi về trạng thái và chính sách tiết lộ.",
+      "group": "Cấu trúc phản hồi và tiết lộ điểm",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+      "notes": "Tài liệu API cho phép trạng thái đang chờ nhưng chưa chốt việc trả trường đúng sai/điểm của đáp án; mã hiện trả `GRADED`, `score` và `correct`.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-027",
+      "description": "Không gọi #32 trực tiếp từ ST-15; liên kết xem kết quả chuyển sang tuyến ST-16, nơi #32 thuộc phạm vi đọc kết quả.",
+      "group": "Ranh giới API kết quả",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "notes": "Tuyến ST-16 được gắn API #32; ST-15 chỉ điều hướng đến tuyến này.",
+      "priority": "Cao",
+      "api_ids": [
+        "#32"
+      ]
+    },
+    {
+      "id": "ST-15-YC-028",
+      "description": "Nút tiếp tục theo thiết kế trở về ST-14 cùng `attemptId`; ghi nhận rằng mã hiện gọi lịch sử trình duyệt và không bảo đảm đích này.",
+      "group": "Quay lại bài làm",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "notes": "Hành vi khôi phục câu đang chọn hoặc hàng đợi lưu chưa được chốt.",
+      "priority": "Cao",
+      "api_ids": [
+        "#30"
+      ]
+    },
+    {
+      "id": "ST-15-YC-029",
+      "description": "Nút xác nhận nộp chỉ gọi #31 sau thao tác rõ ràng của người học; không tự nộp khi mở trang hoặc do đồng hồ.",
+      "group": "Kích hoạt nộp bài",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+      "notes": "Mã hiện chỉ gọi thao tác nộp khi người dùng nhấn nút; trang không có đồng hồ hoặc tự gửi.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-030",
+      "description": "Các số 18/20, 2 câu chưa làm, câu 15 được đánh dấu, 90%, còn 1 lượt và tên bài trong PNG là dữ liệu mẫu, không phải dữ liệu lượt làm hiện tại.",
+      "group": "Số liệu trong ảnh mẫu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md",
+      "notes": "Không có cấu trúc dữ liệu tổng hợp hoặc bàn giao đã chốt để kiểm chứng các chỉ số này.",
+      "priority": "Cao",
+      "api_ids": [
+        "#30"
+      ]
+    },
+    {
+      "id": "ST-15-YC-031",
+      "description": "Hai đồng hồ 45:20 và 12 phút 15 giây khác nhau; không suy ra thời gian chuẩn, hết hạn hay tự nộp từ ảnh.",
+      "group": "Đồng hồ và thời hạn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+      "notes": "Không có nguồn đồng hồ hoặc chính sách thời hạn được xác nhận cho ST-15.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-15-YC-032",
+      "description": "Không khẳng định cờ xem lại, số lượt làm, số lượt còn lại hoặc biểu đồ kỹ năng có nguồn dữ liệu trong màn hình này.",
+      "group": "Cờ và quy chế làm bài",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+      "notes": "Các trường này là mẫu; chưa có API hoặc ánh xạ dữ liệu tương ứng trong hợp đồng đã xác nhận.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-033",
+      "description": "Đối chiếu riêng tương tác thoát, hồ sơ, nền mờ, phím Escape, bàn phím và quản lý tiêu điểm; ảnh chưa xác định đích hoặc cách đóng hộp thoại.",
+      "group": "Tương tác và trợ năng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+      "notes": "Mã giao diện hiện tại không có nhóm thành phần của ảnh mẫu; yêu cầu trợ năng chưa được xác minh trong môi trường chạy.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-15-YC-034",
+      "description": "Ghi rõ khác biệt giữa ảnh xác nhận, trang HTML báo chưa thể nộp và thành phần giao diện hiện tại; không coi ba nguồn là cùng một trạng thái.",
+      "group": "Khác biệt giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md",
+      "notes": "Ảnh có hộp thoại/số liệu; trang HTML là trạng thái lỗi tĩnh; thành phần hiện tại chỉ có xác nhận cơ bản, lỗi và hành động.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-035",
+      "description": "Nếu `attemptId` đổi trong lúc #31 đang chạy, không gán kết quả lượt làm cũ cho ID mới; đối chiếu trạng thái bận và liên kết theo ID.",
+      "group": "Đổi tuyến khi đang nộp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "notes": "Ứng dụng giao diện so sánh ID trước khi hiển thị lỗi/điều hướng nhưng yêu cầu vẫn có thể hoàn tất; trạng thái bận được dọn khi xử lý xong.",
+      "priority": "Cao",
+      "api_ids": [
+        "#31"
+      ]
+    },
+    {
+      "id": "ST-15-YC-036",
+      "description": "Ghi nhận DD/API #31 còn bản nháp/bị chặn và giữ nguyên câu hỏi mở về quyền, trạng thái, chấm tay, lưu đáp án, chính sách tiết lộ và giao dịch; UTC không tự quyết định thay người phụ trách.",
+      "group": "Trạng thái phê duyệt và giới hạn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/07-test-cases.md",
+      "notes": "Người dùng chỉ đạo dùng DD trong kho làm chuẩn và cho biết đã duyệt; bản trong kho vẫn ghi trạng thái chặn/câu hỏi mở, chưa có nội dung quyết định cụ thể.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#30",
+        "#31"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-15-EL-001",
+      "marker": "ST15-EL-01",
+      "name": "Nút thoát bài thi",
+      "type": "Liên kết thoát",
+      "position": "Đầu trang, bên trái",
+      "properties": "Ảnh mẫu có nhãn thoát; đích đến và cách bảo vệ dữ liệu chưa lưu chưa được chốt.",
+      "event_ids": [
+        "ST-15-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-002",
+      "marker": "ST15-EL-02",
+      "name": "Thương hiệu Study2Work Exam",
+      "type": "Thương hiệu",
+      "position": "Đầu trang, bên trái",
+      "properties": "Nội dung nhận diện trong ảnh; nguồn và hành vi liên kết chưa được đối chiếu với thành phần giao diện hiện tại.",
+      "event_ids": [
+        "ST-15-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-003",
+      "marker": "ST15-EL-03",
+      "name": "Đồng hồ thời gian ở đầu trang",
+      "type": "Nhãn thời gian",
+      "position": "Đầu trang, bên phải",
+      "properties": "45:20 là giá trị minh họa; không có nguồn thời gian hoặc quy tắc hết hạn được xác nhận.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-004",
+      "marker": "ST15-EL-04",
+      "name": "Thông tin hồ sơ học viên",
+      "type": "Thông tin tài khoản",
+      "position": "Đầu trang, bên phải",
+      "properties": "Tên và hình đại diện là dữ liệu mẫu; không dùng làm bằng chứng xác thực.",
+      "event_ids": [
+        "ST-15-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-005",
+      "marker": "ST15-EL-05",
+      "name": "Nền bài thi được làm mờ",
+      "type": "Lớp phủ nền",
+      "position": "Toàn màn hình, phía sau hộp thoại",
+      "properties": "Nền minh họa; hành vi nhấn ngoài hoặc phím Escape chưa có hợp đồng.",
+      "event_ids": [
+        "ST-15-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-006",
+      "marker": "ST15-EL-06",
+      "name": "Hộp thoại xác nhận nộp",
+      "type": "Hộp thoại",
+      "position": "Trung tâm màn hình",
+      "properties": "Khung xác nhận trong PNG; khác với HTML báo chưa thể nộp và thành phần giao diện hiện tại.",
+      "event_ids": [
+        "ST-15-EV-001",
+        "ST-15-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-007",
+      "marker": "ST15-EL-07",
+      "name": "Ô biểu tượng bài kiểm tra",
+      "type": "Biểu tượng trang trí",
+      "position": "Trong hộp thoại, phía trên",
+      "properties": "Biểu tượng không mang trạng thái nộp hoặc điểm.",
+      "event_ids": [
+        "ST-15-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-008",
+      "marker": "ST15-EL-08",
+      "name": "Nhãn xác nhận nộp bài",
+      "type": "Nhãn phụ",
+      "position": "Đầu nội dung hộp thoại",
+      "properties": "Nhãn tĩnh trong ảnh mẫu.",
+      "event_ids": [
+        "ST-15-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-009",
+      "marker": "ST15-EL-09",
+      "name": "Tiêu đề “Bạn đã sẵn sàng hoàn thành?”",
+      "type": "Tiêu đề",
+      "position": "Trong hộp thoại",
+      "properties": "Nội dung tĩnh trong PNG; không phải xác nhận nộp thành công.",
+      "event_ids": [
+        "ST-15-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-010",
+      "marker": "ST15-EL-10",
+      "name": "Lời giải thích trước khi nộp",
+      "type": "Đoạn mô tả",
+      "position": "Dưới tiêu đề",
+      "properties": "Ảnh hứa chấm điểm tức thì; AC-16 còn có nhánh chờ chấm tay nên cần giữ là nội dung chưa duyệt.",
+      "event_ids": [
+        "ST-15-EV-001",
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-011",
+      "marker": "ST15-EL-11",
+      "name": "Thẻ số câu đã trả lời và tiến độ",
+      "type": "Thẻ thống kê",
+      "position": "Hàng thống kê",
+      "properties": "18/20 và 90% là ví dụ; nguồn tổng hợp và cách tính chưa chốt.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-012",
+      "marker": "ST15-EL-12",
+      "name": "Thẻ câu chưa trả lời",
+      "type": "Thẻ thống kê và nhãn câu",
+      "position": "Hàng thống kê",
+      "properties": "2 câu và nhãn C.19/C.20 là ví dụ; hành vi nhấn nhãn chưa xác định.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-013",
+      "marker": "ST15-EL-13",
+      "name": "Thẻ câu được đánh dấu xem lại",
+      "type": "Thẻ thống kê và nhãn câu",
+      "position": "Hàng thống kê",
+      "properties": "Một cờ và nhãn Câu 15 là ví dụ; không có hợp đồng lưu cờ.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-014",
+      "marker": "ST15-EL-14",
+      "name": "Dải thời gian còn lại",
+      "type": "Thẻ thời gian",
+      "position": "Dưới hàng thống kê",
+      "properties": "12 phút 15 giây mâu thuẫn đồng hồ đầu trang; không dùng để khóa hoặc nộp tự động.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-015",
+      "marker": "ST15-EL-15",
+      "name": "Nhãn trạng thái đã đồng bộ",
+      "type": "Nhãn trạng thái",
+      "position": "Bên phải dải thời gian",
+      "properties": "“Đã đồng bộ 18/20” là ví dụ; không xác nhận các lần PUT #30 đã được máy chủ ghi nhận.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-016",
+      "marker": "ST15-EL-16",
+      "name": "Thẻ quy chế và lịch sử lần làm",
+      "type": "Thẻ thông tin",
+      "position": "Cuối nội dung hộp thoại",
+      "properties": "Tự chấm, lần 2/3, lượt còn lại và biểu đồ kỹ năng là thông tin mẫu chưa có nguồn.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-017",
+      "marker": "ST15-EL-17",
+      "name": "Nút tiếp tục kiểm tra",
+      "type": "Nút phụ",
+      "position": "Cuối hộp thoại, bên trái",
+      "properties": "Theo thiết kế trở về ST-14 với cùng ID; ảnh chưa xác nhận cách khôi phục trạng thái.",
+      "event_ids": [
+        "ST-15-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-018",
+      "marker": "ST15-EL-18",
+      "name": "Nút nộp bài ngay",
+      "type": "Nút chính",
+      "position": "Cuối hộp thoại, bên phải",
+      "properties": "Chỉ nhấn mới bắt đầu luồng nộp; nhấn không đồng nghĩa máy chủ đã chấp nhận.",
+      "event_ids": [
+        "ST-15-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+    },
+    {
+      "id": "ST-15-EL-019",
+      "marker": "",
+      "name": "Liên kết điều hướng “Trang học tập”",
+      "type": "Liên kết",
+      "position": "Dòng điều hướng đầu trang",
+      "properties": "Liên kết có trong trang HTML tĩnh; khi nhấn mở `/student`.",
+      "event_ids": [
+        "ST-15-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-020",
+      "marker": "",
+      "name": "Dấu vị trí “Nộp bài kiểm tra”",
+      "type": "Dòng điều hướng",
+      "position": "Đầu trang",
+      "properties": "Có trong trang HTML tĩnh; không có trong ảnh PNG xác nhận.",
+      "event_ids": [
+        "ST-15-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-021",
+      "marker": "",
+      "name": "Tiêu đề “Nộp bài kiểm tra?”",
+      "type": "Tiêu đề chính",
+      "position": "Thẻ xác nhận",
+      "properties": "Có trong thành phần giao diện hiện tại; khác tiêu đề ảnh mẫu.",
+      "event_ids": [
+        "ST-15-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-022",
+      "marker": "",
+      "name": "Mô tả không thể sửa sau khi nộp",
+      "type": "Đoạn mô tả",
+      "position": "Dưới tiêu đề chính",
+      "properties": "Có trong thành phần giao diện hiện tại; không nêu số liệu tổng hợp.",
+      "event_ids": [
+        "ST-15-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-023",
+      "marker": "",
+      "name": "Thông báo lỗi chung",
+      "type": "Vùng cảnh báo",
+      "position": "Trong thẻ xác nhận",
+      "properties": "Dùng `role=alert`; nội dung lấy từ xử lý lỗi hiện tại.",
+      "event_ids": [
+        "ST-15-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-024",
+      "marker": "",
+      "name": "Cảnh báo chưa rõ kết quả",
+      "type": "Vùng cảnh báo",
+      "position": "Trong thẻ xác nhận",
+      "properties": "Hiện khi phản hồi thành công sai cấu trúc hoặc kết nối mất; khóa lần gửi tiếp.",
+      "event_ids": [
+        "ST-15-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-025",
+      "marker": "",
+      "name": "Thông báo lượt làm đã đóng",
+      "type": "Vùng trạng thái",
+      "position": "Trong thẻ xác nhận",
+      "properties": "Hiện khi có liên kết kiểm tra kết quả nhưng chưa phải nhánh chưa rõ.",
+      "event_ids": [
+        "ST-15-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-026",
+      "marker": "",
+      "name": "Nút quay lại bài làm",
+      "type": "Nút phụ",
+      "position": "Cuối thẻ xác nhận",
+      "properties": "Gọi `Location.back()`; không bảo đảm trở về ST-14 cùng lượt làm.",
+      "event_ids": [
+        "ST-15-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-027",
+      "marker": "",
+      "name": "Liên kết xem kết quả",
+      "type": "Liên kết phụ",
+      "position": "Cuối thẻ xác nhận",
+      "properties": "Hiện sau xung đột/kết quả chưa rõ hoặc đã nộp; mở tuyến ST-16.",
+      "event_ids": [
+        "ST-15-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-028",
+      "marker": "",
+      "name": "Nút xác nhận nộp bài",
+      "type": "Nút chính",
+      "position": "Cuối thẻ xác nhận",
+      "properties": "Bị khóa khi bận, ID sai, kết quả chưa rõ, đang kiểm tra kết quả hoặc đã nộp.",
+      "event_ids": [
+        "ST-15-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-15-EL-029",
+      "marker": "",
+      "name": "Nhãn đang nộp",
+      "type": "Nhãn trạng thái của nút",
+      "position": "Trong nút xác nhận",
+      "properties": "Đổi sang “Đang nộp…” khi `busy`; không tự khẳng định đã hoàn tất.",
+      "event_ids": [
+        "ST-15-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST15/pages/st15-page.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-15-EV-001",
+      "name": "Mở tuyến và kiểm tra ID",
+      "trigger": "Mở trang, tải lại hoặc đổi `attemptId`",
+      "element_ids": [
+        "ST-15-EL-019",
+        "ST-15-EL-020",
+        "ST-15-EL-021"
+      ],
+      "api_ids": [],
+      "processing": "Đọc ID từ tuyến và dùng `toSafeStudyId`. ID sai hiện thông báo; mở trang không tự gọi API đọc lượt làm hay nộp bài.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+        "apps/study-client/src/app/features/student/student.route.ts"
+      ]
+    },
+    {
+      "id": "ST-15-EV-002",
+      "name": "Quay lại bài làm",
+      "trigger": "Nhấn “Tiếp tục kiểm tra” theo thiết kế hoặc nút quay lại hiện tại",
+      "element_ids": [
+        "ST-15-EL-017",
+        "ST-15-EL-026"
+      ],
+      "api_ids": [
+        "#30"
+      ],
+      "processing": "DD dự kiến trở về ST-14 cùng `attemptId`, không gọi #31. Mã hiện gọi lịch sử trình duyệt; không bảo đảm đích hoặc phục hồi đáp án chờ lưu.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.html"
+      ]
+    },
+    {
+      "id": "ST-15-EV-003",
+      "name": "Xác nhận nộp và chờ lần lưu",
+      "trigger": "Nhấn nút xác nhận nộp",
+      "element_ids": [
+        "ST-15-EL-018",
+        "ST-15-EL-028",
+        "ST-15-EL-029"
+      ],
+      "api_ids": [
+        "#30",
+        "#31"
+      ],
+      "processing": "DD yêu cầu chặn nhấn trùng, chờ mọi lần PUT #30 đang chờ hoàn tất rồi mới gửi đúng một POST #31. Mã hiện chặn khi bận và chỉ gọi POST #31; không chờ hoặc kiểm tra hàng đợi #30.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/src/app/features/student/ST15/data-access/st15-submit.service.ts",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+        "apps/study-server/app/modules/student/api_31_attempts_submit/view.py"
+      ]
+    },
+    {
+      "id": "ST-15-EV-004",
+      "name": "Kiểm tra phản hồi chấp nhận",
+      "trigger": "#31 trả HTTP 200 và bao phản hồi thành công",
+      "element_ids": [
+        "ST-15-EL-009",
+        "ST-15-EL-022",
+        "ST-15-EL-027"
+      ],
+      "api_ids": [
+        "#31"
+      ],
+      "processing": "DD cho phép trạng thái `PENDING_GRADE` hoặc `GRADED`. Mã hiện đòi mã DESIGN_RESOURCE_UPDATED, ID khớp và trạng thái GRADED cùng các trường cần thiết; sau đó điều hướng ST-16. Phản hồi `PENDING_GRADE` hiện bị coi là kết quả chưa rõ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+        "apps/study-server/app/modules/student/api_31_attempts_submit/models.py"
+      ]
+    },
+    {
+      "id": "ST-15-EV-005",
+      "name": "Xử lý lỗi, xung đột hoặc mạng gián đoạn",
+      "trigger": "#30 hoặc #31 trả lỗi hay mất phản hồi",
+      "element_ids": [
+        "ST-15-EL-023",
+        "ST-15-EL-024",
+        "ST-15-EL-025"
+      ],
+      "api_ids": [
+        "#30",
+        "#31",
+        "#32"
+      ],
+      "processing": "DD yêu cầu không gọi #31 nếu #30 lỗi và không gửi lại mù sau 409/hết thời gian chờ. Mã hiện khóa gửi lại với HTTP 0 hoặc phản hồi sai; với 409 hiện liên kết kết quả; lỗi HTTP khác dùng thông báo tiếng Việt dùng chung.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+        "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+        "apps/study-server/app/modules/student/api_31_attempts_submit/view.py"
+      ]
+    },
+    {
+      "id": "ST-15-EV-006",
+      "name": "Mở liên kết kiểm tra kết quả",
+      "trigger": "Nhấn “Xem kết quả” khi liên kết xuất hiện",
+      "element_ids": [
+        "ST-15-EL-027"
+      ],
+      "api_ids": [
+        "#32"
+      ],
+      "processing": "Mã mở tuyến `/student/attempts/:attemptId/result` với cùng `attemptId`; API #32 thuộc ST-16 và không được gọi trực tiếp trong ST-15.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+        "apps/study-client/src/app/features/student/student.route.ts"
+      ]
+    },
+    {
+      "id": "ST-15-EV-007",
+      "name": "Đối chiếu nội dung hộp thoại và tương tác phụ",
+      "trigger": "Hiển thị hộp thoại hoặc thao tác thoát/nền/phím",
+      "element_ids": [
+        "ST-15-EL-001",
+        "ST-15-EL-003",
+        "ST-15-EL-004",
+        "ST-15-EL-005",
+        "ST-15-EL-006",
+        "ST-15-EL-011",
+        "ST-15-EL-012",
+        "ST-15-EL-013",
+        "ST-15-EL-014",
+        "ST-15-EL-015",
+        "ST-15-EL-016"
+      ],
+      "api_ids": [],
+      "processing": "Đối chiếu riêng ảnh PNG, trang HTML và thành phần giao diện hiện tại. Không dùng số mẫu, tự chạy đồng hồ, bỏ qua thao tác bàn phím hoặc tự gán đích đóng hộp thoại.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen.png",
+        "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/code.html",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.html"
+      ]
+    },
+    {
+      "id": "ST-15-EV-008",
+      "name": "Đổi ID khi yêu cầu đang chờ",
+      "trigger": "Điều hướng sang `attemptId` khác trong lúc POST #31 chưa hoàn tất",
+      "element_ids": [
+        "ST-15-EL-022",
+        "ST-15-EL-023",
+        "ST-15-EL-027"
+      ],
+      "api_ids": [
+        "#31"
+      ],
+      "processing": "Đối chiếu ID gắn với phản hồi. Mã chỉ cập nhật lỗi hoặc điều hướng khi `attemptId` vẫn khớp; yêu cầu cũ vẫn có thể chạy đến khi có phản hồi và trạng thái bận chưa được kiểm chứng trong môi trường chạy.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+        "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+        "apps/study-client/src/app/features/student/ST15/data-access/st15-submit.service.ts"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST15-B01",
+      "description": "DD yêu cầu hoàn tất mọi lần lưu #30 đang chờ nhưng chưa chốt nội dung, thứ tự, lỗi và cách xác nhận toàn bộ đã lưu.",
+      "impact": "Không thể chứng minh bài làm đã được ghi trước khi gửi #31.",
+      "decision": "Chốt hợp đồng hàng đợi và điểm đồng bộ của #30 trước khi phát hành hành vi nộp.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-server/docs/dd/31_attempts_submit/../30_attempts_answers/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B02",
+      "description": "ST-14 chưa có hợp đồng bàn giao bản tổng hợp, hàng đợi đang chờ, tải lại và mở tuyến trực tiếp.",
+      "impact": "Tuyến ST-15 có thể mở mà không có dữ liệu xác nhận; hiện có thể bỏ qua chặn từ ST-14.",
+      "decision": "Chốt nguồn dữ liệu và hành vi khi mở trực tiếp/tải lại.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B03",
+      "description": "API #31 chưa chốt quyền sở hữu lượt làm, che giấu 403/404, ghi danh và điều kiện được nộp.",
+      "impact": "Không thể khẳng định ai được nộp và điều kiện truy cập cuối cùng.",
+      "decision": "Người phụ trách chốt điều kiện quyền và mã lỗi tương ứng.",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B04",
+      "description": "API #31 chưa chốt trạng thái được nộp, nộp lặp, hết hạn, khóa đồng thời và giao dịch.",
+      "impact": "409 hoặc kết quả lặp có thể khác kỳ vọng; cách khôi phục chưa xác định.",
+      "decision": "Người phụ trách chốt vòng đời, tính lặp, khóa và khôi phục.",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B05",
+      "description": "AC-16 cho phép `PENDING_GRADE` nhưng mã nguồn #31 hiện chỉ đặt `GRADED` cho loại câu khách quan hỗ trợ.",
+      "impact": "Ứng dụng hiện coi `PENDING_GRADE` là phản hồi chưa rõ; lời hứa chấm ngay trên PNG không đáng tin cậy.",
+      "decision": "Chốt cách nhận diện câu chấm tay, trạng thái và hành vi ứng dụng giao diện.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md; apps/study-server/app/modules/student/api_31_attempts_submit/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B06",
+      "description": "Cấu trúc đáp án cho phép danh sách lựa chọn hoặc văn bản, trong khi cấu trúc dữ liệu cũ lưu một `choice_id` mỗi dòng và trường `is_correct` là bắt buộc.",
+      "impact": "Chưa xác nhận cách lưu hoặc chấm mọi dạng câu và trạng thái chưa chấm.",
+      "decision": "Chọn cấu trúc dữ liệu/ánh xạ chính thức; không coi DDL ứng viên là CSDL đang chạy.",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/OPEN_QUESTIONS.md; apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B07",
+      "description": "Phản hồi API #31 có thể trả trường `correct`/`score` nhưng chính sách tiết lộ và phần dữ liệu phản hồi còn mở.",
+      "impact": "Có nguy cơ hiển thị thông tin chấm trước khi chính sách cho phép.",
+      "decision": "Người phụ trách chốt trường trả về cho đang chờ và đã chấm.",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/04_Response.md; apps/study-server/docs/dd/31_attempts_submit/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B08",
+      "description": "Ảnh PNG, trang HTML lỗi tĩnh và thành phần giao diện hiện tại mô tả ba giao diện khác nhau.",
+      "impact": "Không thể xem ảnh mẫu là giao diện đang chạy hoặc xác nhận các trường tổng hợp đã được nối data.",
+      "decision": "Duyệt lại giao diện và trạng thái; đồng bộ DD với mã nguồn được chọn.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen.png; apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/code.html; apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B09",
+      "description": "Các số liệu, đồng hồ, cờ, lịch sử lần làm và giới hạn lượt chưa có nguồn dữ liệu hay quy tắc nhất quán.",
+      "impact": "Không thể xác minh số câu chưa làm, thời gian còn lại hoặc khẳng định chấm tức thì.",
+      "decision": "Chốt nguồn dữ liệu, công thức, đồng hồ và nội dung chính sách hoặc bỏ khỏi giao diện.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B10",
+      "description": "Tương tác đóng hộp thoại, thoát, hồ sơ, bàn phím/tiêu điểm và quay lại chưa có hợp đồng.",
+      "impact": "Hành vi người dùng có thể làm mất trạng thái hoặc đi sai màn hình.",
+      "decision": "Duyệt đích đến, tiêu điểm bàn phím và cách bảo vệ dữ liệu chưa lưu.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST15-B11",
+      "description": "Tài liệu API còn bản nháp và không tìm thấy bộ kiểm thử riêng cho #31; chưa kiểm tra trình duyệt/API/CSDL trong công việc này.",
+      "impact": "Không thể tuyên bố hợp đồng đã hoàn tất hoặc môi trường chạy đã đạt.",
+      "decision": "Giữ trạng thái kiểm thử chưa chạy; xác minh riêng khi có môi trường và bộ kiểm thử.",
+      "source_ref": "apps/study-server/docs/dd/31_attempts_submit/OPEN_QUESTIONS.md; apps/study-server/tests/",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST15-TM-001",
+        "requirement_ids": [
+          "ST-15-YC-001"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tuyến `/student/attempts/:attemptId/submit` mở `ST15Page` trong giao diện thi; mã đã đăng ký tuyến nhưng chưa xác minh môi trường chạy.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Tuyến hiện tại gắn metadata API #30/#31; thành phần giao diện vẫn hiển thị màn hình xác nhận cơ bản.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-002",
+        "requirement_ids": [
+          "ST-15-YC-002"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ tiếp tục khi `attemptId` là ID dương an toàn; ID sai hiển thị lỗi và không gửi yêu cầu nộp.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Ứng dụng giao diện dùng `toSafeStudyId`; máy chủ hiện phân tích số dương trong miền int64 và trả 422 khi sai.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-003",
+        "requirement_ids": [
+          "ST-15-YC-003"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Người dùng thao tác với tư cách học viên; yêu cầu #31 lấy token Bearer của học viên từ dịch vụ dùng chung, không nhận danh tính từ URL hoặc nội dung gửi.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Dịch vụ ứng dụng giao diện tự thêm Bearer; máy chủ xác thực vai trò học viên.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-004",
+        "requirement_ids": [
+          "ST-15-YC-004"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi mở hoặc tải lại tuyến, màn hình không tự gọi #30, #31 hay API đọc lượt làm; dữ liệu tóm tắt chỉ được dùng từ bàn giao đã duyệt.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã hiện không gọi API khi mở; không có đọc trạng thái lượt làm hoặc đáp án từ màn hình này.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-005",
+        "requirement_ids": [
+          "ST-15-YC-005"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nếu mở trực tiếp hoặc tải lại mà không có bàn giao, không dựng số câu, đáp án đang chờ, đồng hồ hay lịch sử lần làm từ ảnh mẫu.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Bàn giao số liệu và hàng đợi từ ST-14 chưa có hợp đồng; mã hiện không khôi phục các dữ liệu này.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-006",
+        "requirement_ids": [
+          "ST-15-YC-006"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Theo thiết kế, trước #31 phải chờ tất cả lần lưu #30 đang chờ được xác nhận thành công.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Đây là điều kiện thiết kế trong DD; ST-15 hiện không có cơ chế chờ hoặc xả hàng đợi #30.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-007",
+        "requirement_ids": [
+          "ST-15-YC-007"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nếu một lần lưu #30 lỗi hoặc có kết quả không rõ, dừng tại màn hình và không gọi #31.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã ST-15 hiện không gọi #30 nên cũng không kiểm tra được hàng đợi; giữ khác biệt giữa kỳ vọng và hiện trạng.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-008",
+        "requirement_ids": [
+          "ST-15-YC-008"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi người học xác nhận, gửi đúng một `POST /api/v1/attempts/{attempt_id}/submit` với `attempt_id` trên đường dẫn; không gửi nội dung hoặc tham số truy vấn.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Dịch vụ hiện gọi API_031 với `pathParams`; descriptor là POST và không truyền nội dung gửi/tham số truy vấn.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-009",
+        "requirement_ids": [
+          "ST-15-YC-009"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Trong khi một yêu cầu nộp đang chạy, lần nhấn lặp không tạo thêm yêu cầu #31.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã hiện khóa nút theo `busy` và chặn gọi lại khi đang bận hoặc đã có kết quả cần kiểm tra.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-010",
+        "requirement_ids": [
+          "ST-15-YC-010"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Sau hết thời gian chờ hoặc phản hồi không thể xác nhận, không gửi lại #31 tự động; hướng người dùng sang kiểm tra kết quả theo luồng được duyệt.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã hiện khóa gửi lại khi HTTP 0 hoặc phản hồi thành công nhưng sai cấu trúc; liên kết kết quả được hiển thị.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31",
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-011",
+        "requirement_ids": [
+          "ST-15-YC-011"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ coi nộp thành công khi phản hồi có `success=true`, mã `DESIGN_RESOURCE_UPDATED` và dữ liệu lượt làm khớp ID trên tuyến.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Ứng dụng giao diện kiểm mã nghiệp vụ, ID, bài kiểm tra ID, trạng thái, thời điểm, điểm, kết quả đạt và danh sách đáp án.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-012",
+        "requirement_ids": [
+          "ST-15-YC-012"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "AC-16 cho phép nhánh `PENDING_GRADE` khi còn câu cần chấm tay hoặc `GRADED` khi đã chấm xong; không hứa điểm cuối ngay khi nộp.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Tài liệu API còn mở về nhận diện câu chấm tay; mã hiện chỉ chấp nhận `GRADED`, nên phản hồi `PENDING_GRADE` bị coi là kết quả chưa rõ.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-013",
+        "requirement_ids": [
+          "ST-15-YC-013"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ chuyển tới ST-16 sau phản hồi được xác nhận là đã chấp nhận; nếu chuyển tuyến thất bại, vẫn có liên kết xem kết quả.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã hiện điều hướng sau khi kiểm tra phản hồi; nếu điều hướng lỗi thì giữ thông báo và liên kết kết quả.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31",
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-014",
+        "requirement_ids": [
+          "ST-15-YC-014"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Với 409 hoặc kết quả mạng chưa rõ, không tự coi là nộp thành công; chỉ hiển thị liên kết kiểm tra kết quả theo luồng được xác nhận.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Ứng dụng giao diện tạo liên kết ST-16 cho 409 và HTTP 0; #32 thuộc màn hình ST-16, ST-15 không gọi API này trực tiếp.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31",
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-015",
+        "requirement_ids": [
+          "ST-15-YC-015"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ riêng các mã lỗi API #31 đã khai báo: 401, 403, 404, 422, 409 và 500; không tự thêm mã nghiệp vụ.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Danh mục API và DD liệt kê sáu mã; ứng dụng giao diện dùng thông báo tiếng Việt dùng chung.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-016",
+        "requirement_ids": [
+          "ST-15-YC-016"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Đối chiếu xử lý lỗi hiện tại: HTTP 0 khóa gửi lại và mở liên kết kết quả; 409 mở liên kết kết quả; lỗi HTTP khác hiện thông báo và có thể để nút nộp hoạt động lại.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Phân biệt các nhánh để không ghi nhận thử lại hoặc khôi phục như hành vi đã được DD chốt.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31",
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-017",
+        "requirement_ids": [
+          "ST-15-YC-017"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không gửi `user_id`, điểm, câu trả lời hay trạng thái nộp trong yêu cầu #31; danh tính lấy từ phiên Bearer của học viên.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Yêu cầu ứng dụng giao diện hiện chỉ có path parameter; hàm xử lý hiện xác thực học viên và không đọc danh tính từ payload.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-018",
+        "requirement_ids": [
+          "ST-15-YC-018"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "ID trên đường dẫn phải qua kiểm tra số dương trong miền int64; ghi nhận riêng quy tắc phân tích hiện tại với giới hạn chưa chốt trong tài liệu API.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Máy chủ hiện từ chối ID sai bằng 422; tài liệu API để dương/range/overflow là câu hỏi mở.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-019",
+        "requirement_ids": [
+          "ST-15-YC-019"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Phân biệt lượt làm không tồn tại với lượt làm của người khác theo chính sách được duyệt; không tự kết luận 403 hay 404 là quy tắc chuẩn.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Tài liệu API để mở 403 so với che giấu bằng 404; mã hiện trả 404 khi không có lượt làm và 403 khi sai chủ.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-020",
+        "requirement_ids": [
+          "ST-15-YC-020"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không giả định trạng thái cho phép nộp, nộp lặp, hết hạn hay xử lý đồng thời khi tài liệu API chưa chốt.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã hiện chỉ nhận `IN_PROGRESS`; trạng thái khác trả 409, nhưng chính sách lặp/hết hạn còn là câu hỏi mở.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-021",
+        "requirement_ids": [
+          "ST-15-YC-021"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Theo phần sửa quy tắc chấm đã ghi trong tài liệu API, phạm vi hiện tại gồm câu `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE`; không suy rộng sang câu tự luận.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Phần sửa quy tắc chấm chỉ định ba loại khách quan; mã hiện trả 409 với loại khác.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-022",
+        "requirement_ids": [
+          "ST-15-YC-022"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Với câu thuộc phạm vi tự chấm, điểm chỉ được tính khi tập lựa chọn khớp chính xác tập lựa chọn đúng; câu bỏ trống hoặc sai nhận 0 điểm.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Đây là quy tắc sửa ngày 15-11 và trùng với cách so khớp trong mã hiện tại.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-023",
+        "requirement_ids": [
+          "ST-15-YC-023"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Điểm đạt được so với điểm tối đa và `passing_score` phải dùng phép tính thập phân chính xác; `passed` tách biệt với trạng thái lượt làm.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Quy tắc sửa ghi `earned_points * 100 >= possible_points * passing_score`; mã hiện áp dụng phép so sánh thập phân.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md",
+          "apps/study-server/04_Response.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-024",
+        "requirement_ids": [
+          "ST-15-YC-024"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Bài kiểm tra không có câu hỏi, tổng điểm tối đa không dương hoặc cấu hình điểm sai không được xác nhận là đã chấm thành công.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã hiện hoàn tác giao dịch và trả 409 khi cấu hình không hợp lệ hoặc loại câu hỏi không hỗ trợ.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md",
+          "apps/study-server/06_Error.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-025",
+        "requirement_ids": [
+          "ST-15-YC-025"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Việc khóa lượt làm, cập nhật đáp án và trạng thái phải được đánh giá trong cùng giao dịch theo mã nguồn hiện tại; không coi mã nguồn là bằng chứng CSDL đang sử dụng.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Hàm xử lý hiện khóa hàng lượt làm, lưu giao dịch khi thành công và hoàn tác khi gặp lỗi CSDL/ánh xạ; chưa kiểm tra CSDL.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/31_attempts_submit/05_Data_Mapping.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-026",
+        "requirement_ids": [
+          "ST-15-YC-026"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không kết luận `PENDING_GRADE`/`GRADED`, điểm và thông tin đúng sai được trả về đã thống nhất khi tài liệu API còn câu hỏi về trạng thái và chính sách tiết lộ.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Tài liệu API cho phép trạng thái đang chờ nhưng chưa chốt việc trả trường đúng sai/điểm của đáp án; mã hiện trả `GRADED`, `score` và `correct`.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-027",
+        "requirement_ids": [
+          "ST-15-YC-027"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không gọi #32 trực tiếp từ ST-15; liên kết xem kết quả chuyển sang tuyến ST-16, nơi #32 thuộc phạm vi đọc kết quả.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Tuyến ST-16 được gắn API #32; ST-15 chỉ điều hướng đến tuyến này.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-028",
+        "requirement_ids": [
+          "ST-15-YC-028"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nút tiếp tục theo thiết kế trở về ST-14 cùng `attemptId`; ghi nhận rằng mã hiện gọi lịch sử trình duyệt và không bảo đảm đích này.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Hành vi khôi phục câu đang chọn hoặc hàng đợi lưu chưa được chốt.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-029",
+        "requirement_ids": [
+          "ST-15-YC-029"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nút xác nhận nộp chỉ gọi #31 sau thao tác rõ ràng của người học; không tự nộp khi mở trang hoặc do đồng hồ.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã hiện chỉ gọi thao tác nộp khi người dùng nhấn nút; trang không có đồng hồ hoặc tự gửi.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-030",
+        "requirement_ids": [
+          "ST-15-YC-030"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Các số 18/20, 2 câu chưa làm, câu 15 được đánh dấu, 90%, còn 1 lượt và tên bài trong PNG là dữ liệu mẫu, không phải dữ liệu lượt làm hiện tại.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Không có cấu trúc dữ liệu tổng hợp hoặc bàn giao đã chốt để kiểm chứng các chỉ số này.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-031",
+        "requirement_ids": [
+          "ST-15-YC-031"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Hai đồng hồ 45:20 và 12 phút 15 giây khác nhau; không suy ra thời gian chuẩn, hết hạn hay tự nộp từ ảnh.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Không có nguồn đồng hồ hoặc chính sách thời hạn được xác nhận cho ST-15.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-032",
+        "requirement_ids": [
+          "ST-15-YC-032"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không khẳng định cờ xem lại, số lượt làm, số lượt còn lại hoặc biểu đồ kỹ năng có nguồn dữ liệu trong màn hình này.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Các trường này là mẫu; chưa có API hoặc ánh xạ dữ liệu tương ứng trong hợp đồng đã xác nhận.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-033",
+        "requirement_ids": [
+          "ST-15-YC-033"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Đối chiếu riêng tương tác thoát, hồ sơ, nền mờ, phím Escape, bàn phím và quản lý tiêu điểm; ảnh chưa xác định đích hoặc cách đóng hộp thoại.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Mã giao diện hiện tại không có nhóm thành phần của ảnh mẫu; yêu cầu trợ năng chưa được xác minh trong môi trường chạy.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-034",
+        "requirement_ids": [
+          "ST-15-YC-034"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Ghi rõ khác biệt giữa ảnh xác nhận, trang HTML báo chưa thể nộp và thành phần giao diện hiện tại; không coi ba nguồn là cùng một trạng thái.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Ảnh có hộp thoại/số liệu; trang HTML là trạng thái lỗi tĩnh; thành phần hiện tại chỉ có xác nhận cơ bản, lỗi và hành động.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-035",
+        "requirement_ids": [
+          "ST-15-YC-035"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nếu `attemptId` đổi trong lúc #31 đang chạy, không gán kết quả lượt làm cũ cho ID mới; đối chiếu trạng thái bận và liên kết theo ID.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Ứng dụng giao diện so sánh ID trước khi hiển thị lỗi/điều hướng nhưng yêu cầu vẫn có thể hoàn tất; trạng thái bận được dọn khi xử lý xong.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TM-036",
+        "requirement_ids": [
+          "ST-15-YC-036"
+        ],
+        "target_id": "ST-15",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Ghi nhận DD/API #31 còn bản nháp/bị chặn và giữ nguyên câu hỏi mở về quyền, trạng thái, chấm tay, lưu đáp án, chính sách tiết lộ và giao dịch; UTC không tự quyết định thay người phụ trách.",
+        "precondition": "Chỉ đối chiếu DD, thành phần giao diện và hợp đồng đã khai báo; chưa xác minh trên trình duyệt hoặc môi trường API.",
+        "data": "Người dùng chỉ đạo dùng DD trong kho làm chuẩn và cho biết đã duyệt; bản trong kho vẫn ghi trạng thái chặn/câu hỏi mở, chưa có nội dung quyết định cụ thể.",
+        "steps": [
+          "Kiểm tra đúng nguồn dẫn và đầu vào của ca.",
+          "Đối chiếu kỳ vọng DD với mã hiện tại, ghi riêng mọi khác biệt.",
+          "Không đánh dấu đạt hoặc đã chạy khi chưa có bằng chứng môi trường."
+        ],
+        "expected": "Kết quả được ghi theo đúng nguồn; điểm mở vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/07-test-cases.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST15-TP-001",
+        "requirement_ids": [
+          "ST-15-YC-033"
+        ],
+        "target_id": "ST-15-EL-001",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút thoát bài thi",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Ảnh mẫu có nhãn thoát; đích đến và cách bảo vệ dữ liệu chưa lưu chưa được chốt.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-002",
+        "requirement_ids": [
+          "ST-15-YC-034"
+        ],
+        "target_id": "ST-15-EL-002",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thương hiệu Study2Work Exam",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Nội dung nhận diện trong ảnh; nguồn và hành vi liên kết chưa được đối chiếu với thành phần giao diện hiện tại.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-003",
+        "requirement_ids": [
+          "ST-15-YC-031"
+        ],
+        "target_id": "ST-15-EL-003",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Đồng hồ thời gian ở đầu trang",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "45:20 là giá trị minh họa; không có nguồn thời gian hoặc quy tắc hết hạn được xác nhận.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-004",
+        "requirement_ids": [
+          "ST-15-YC-033"
+        ],
+        "target_id": "ST-15-EL-004",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thông tin hồ sơ học viên",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Tên và hình đại diện là dữ liệu mẫu; không dùng làm bằng chứng xác thực.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-005",
+        "requirement_ids": [
+          "ST-15-YC-033"
+        ],
+        "target_id": "ST-15-EL-005",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nền bài thi được làm mờ",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Nền minh họa; hành vi nhấn ngoài hoặc phím Escape chưa có hợp đồng.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-006",
+        "requirement_ids": [
+          "ST-15-YC-034"
+        ],
+        "target_id": "ST-15-EL-006",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Hộp thoại xác nhận nộp",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Khung xác nhận trong PNG; khác với HTML báo chưa thể nộp và thành phần giao diện hiện tại.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-007",
+        "requirement_ids": [
+          "ST-15-YC-034"
+        ],
+        "target_id": "ST-15-EL-007",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Ô biểu tượng bài kiểm tra",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Biểu tượng không mang trạng thái nộp hoặc điểm.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-008",
+        "requirement_ids": [
+          "ST-15-YC-034"
+        ],
+        "target_id": "ST-15-EL-008",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn xác nhận nộp bài",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Nhãn tĩnh trong ảnh mẫu.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-009",
+        "requirement_ids": [
+          "ST-15-YC-034",
+          "ST-15-YC-012"
+        ],
+        "target_id": "ST-15-EL-009",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề “Bạn đã sẵn sàng hoàn thành?”",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Nội dung tĩnh trong PNG; không phải xác nhận nộp thành công.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-010",
+        "requirement_ids": [
+          "ST-15-YC-012",
+          "ST-15-YC-030"
+        ],
+        "target_id": "ST-15-EL-010",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Lời giải thích trước khi nộp",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Ảnh hứa chấm điểm tức thì; AC-16 còn có nhánh chờ chấm tay nên cần giữ là nội dung chưa duyệt.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-011",
+        "requirement_ids": [
+          "ST-15-YC-030"
+        ],
+        "target_id": "ST-15-EL-011",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ số câu đã trả lời và tiến độ",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "18/20 và 90% là ví dụ; nguồn tổng hợp và cách tính chưa chốt.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-012",
+        "requirement_ids": [
+          "ST-15-YC-030"
+        ],
+        "target_id": "ST-15-EL-012",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ câu chưa trả lời",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "2 câu và nhãn C.19/C.20 là ví dụ; hành vi nhấn nhãn chưa xác định.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-013",
+        "requirement_ids": [
+          "ST-15-YC-032"
+        ],
+        "target_id": "ST-15-EL-013",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ câu được đánh dấu xem lại",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Một cờ và nhãn Câu 15 là ví dụ; không có hợp đồng lưu cờ.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-014",
+        "requirement_ids": [
+          "ST-15-YC-031"
+        ],
+        "target_id": "ST-15-EL-014",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Dải thời gian còn lại",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "12 phút 15 giây mâu thuẫn đồng hồ đầu trang; không dùng để khóa hoặc nộp tự động.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-015",
+        "requirement_ids": [
+          "ST-15-YC-006",
+          "ST-15-YC-007"
+        ],
+        "target_id": "ST-15-EL-015",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn trạng thái đã đồng bộ",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "“Đã đồng bộ 18/20” là ví dụ; không xác nhận các lần PUT #30 đã được máy chủ ghi nhận.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-016",
+        "requirement_ids": [
+          "ST-15-YC-032"
+        ],
+        "target_id": "ST-15-EL-016",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ quy chế và lịch sử lần làm",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Tự chấm, lần 2/3, lượt còn lại và biểu đồ kỹ năng là thông tin mẫu chưa có nguồn.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-017",
+        "requirement_ids": [
+          "ST-15-YC-028"
+        ],
+        "target_id": "ST-15-EL-017",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút tiếp tục kiểm tra",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Theo thiết kế trở về ST-14 với cùng ID; ảnh chưa xác nhận cách khôi phục trạng thái.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-018",
+        "requirement_ids": [
+          "ST-15-YC-008",
+          "ST-15-YC-009"
+        ],
+        "target_id": "ST-15-EL-018",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút nộp bài ngay",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Chỉ nhấn mới bắt đầu luồng nộp; nhấn không đồng nghĩa máy chủ đã chấp nhận.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-019",
+        "requirement_ids": [
+          "ST-15-YC-001"
+        ],
+        "target_id": "ST-15-EL-019",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Liên kết điều hướng “Trang học tập”",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Liên kết có trong trang HTML tĩnh; khi nhấn mở `/student`.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-020",
+        "requirement_ids": [
+          "ST-15-YC-001"
+        ],
+        "target_id": "ST-15-EL-020",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Dấu vị trí “Nộp bài kiểm tra”",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Có trong trang HTML tĩnh; không có trong ảnh PNG xác nhận.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-021",
+        "requirement_ids": [
+          "ST-15-YC-001"
+        ],
+        "target_id": "ST-15-EL-021",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề “Nộp bài kiểm tra?”",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Có trong thành phần giao diện hiện tại; khác tiêu đề ảnh mẫu.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-022",
+        "requirement_ids": [
+          "ST-15-YC-016"
+        ],
+        "target_id": "ST-15-EL-022",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Mô tả không thể sửa sau khi nộp",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Có trong thành phần giao diện hiện tại; không nêu số liệu tổng hợp.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-023",
+        "requirement_ids": [
+          "ST-15-YC-010",
+          "ST-15-YC-014"
+        ],
+        "target_id": "ST-15-EL-023",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thông báo lỗi chung",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Dùng `role=alert`; nội dung lấy từ xử lý lỗi hiện tại.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-024",
+        "requirement_ids": [
+          "ST-15-YC-016"
+        ],
+        "target_id": "ST-15-EL-024",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Cảnh báo chưa rõ kết quả",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Hiện khi phản hồi thành công sai cấu trúc hoặc kết nối mất; khóa lần gửi tiếp.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-025",
+        "requirement_ids": [
+          "ST-15-YC-028"
+        ],
+        "target_id": "ST-15-EL-025",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thông báo lượt làm đã đóng",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Hiện khi có liên kết kiểm tra kết quả nhưng chưa phải nhánh chưa rõ.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-026",
+        "requirement_ids": [
+          "ST-15-YC-013",
+          "ST-15-YC-014"
+        ],
+        "target_id": "ST-15-EL-026",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút quay lại bài làm",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Gọi `Location.back()`; không bảo đảm trở về ST-14 cùng lượt làm.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-027",
+        "requirement_ids": [
+          "ST-15-YC-008",
+          "ST-15-YC-009"
+        ],
+        "target_id": "ST-15-EL-027",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Liên kết xem kết quả",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Hiện sau xung đột/kết quả chưa rõ hoặc đã nộp; mở tuyến ST-16.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-028",
+        "requirement_ids": [
+          "ST-15-YC-009"
+        ],
+        "target_id": "ST-15-EL-028",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút xác nhận nộp bài",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Bị khóa khi bận, ID sai, kết quả chưa rõ, đang kiểm tra kết quả hoặc đã nộp.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-TP-029",
+        "requirement_ids": [
+          "ST-15-YC-009"
+        ],
+        "target_id": "ST-15-EL-029",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nhãn đang nộp",
+        "precondition": "Mở đúng ảnh đánh số, DD hoặc thành phần giao diện được dẫn; ca chưa chạy trên môi trường.",
+        "data": "Đổi sang “Đang nộp…” khi `busy`; không tự khẳng định đã hoàn tất.",
+        "steps": [
+          "Xác định thành phần theo dấu đánh số hoặc mã nguồn.",
+          "Đối chiếu nhãn, trạng thái, thao tác và nguồn data.",
+          "Ghi riêng phần có trong ảnh mẫu và phần có trong thành phần giao diện."
+        ],
+        "expected": "Đối chiếu theo nguồn dẫn; điểm chưa chốt vẫn chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST15-SK-001",
+        "requirement_ids": [
+          "ST-15-YC-001",
+          "ST-15-YC-002",
+          "ST-15-YC-004"
+        ],
+        "target_id": "ST-15-EV-001",
+        "group": "Sự kiện màn hình",
+        "title": "Mở tuyến và kiểm tra ID",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "Đọc ID từ tuyến và dùng `toSafeStudyId`. ID sai hiện thông báo; mở trang không tự gọi API đọc lượt làm hay nộp bài.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-SK-002",
+        "requirement_ids": [
+          "ST-15-YC-028",
+          "ST-15-YC-029"
+        ],
+        "target_id": "ST-15-EV-002",
+        "group": "Sự kiện màn hình",
+        "title": "Quay lại bài làm",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "DD dự kiến trở về ST-14 cùng `attemptId`, không gọi #31. Mã hiện gọi lịch sử trình duyệt; không bảo đảm đích hoặc phục hồi đáp án chờ lưu.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [
+          "#30"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-SK-003",
+        "requirement_ids": [
+          "ST-15-YC-006",
+          "ST-15-YC-007",
+          "ST-15-YC-008",
+          "ST-15-YC-009"
+        ],
+        "target_id": "ST-15-EV-003",
+        "group": "Sự kiện màn hình",
+        "title": "Xác nhận nộp và chờ lần lưu",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "DD yêu cầu chặn nhấn trùng, chờ mọi lần PUT #30 đang chờ hoàn tất rồi mới gửi đúng một POST #31. Mã hiện chặn khi bận và chỉ gọi POST #31; không chờ hoặc kiểm tra hàng đợi #30.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [
+          "#30",
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST15/data-access/st15-submit.service.ts",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-server/app/modules/student/api_31_attempts_submit/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-SK-004",
+        "requirement_ids": [
+          "ST-15-YC-011",
+          "ST-15-YC-012",
+          "ST-15-YC-013"
+        ],
+        "target_id": "ST-15-EV-004",
+        "group": "Sự kiện màn hình",
+        "title": "Kiểm tra phản hồi chấp nhận",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "DD cho phép trạng thái `PENDING_GRADE` hoặc `GRADED`. Mã hiện đòi mã DESIGN_RESOURCE_UPDATED, ID khớp và trạng thái GRADED cùng các trường cần thiết; sau đó điều hướng ST-16. Phản hồi `PENDING_GRADE` hiện bị coi là kết quả chưa rõ.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-server/app/modules/student/api_31_attempts_submit/models.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-SK-005",
+        "requirement_ids": [
+          "ST-15-YC-010",
+          "ST-15-YC-014",
+          "ST-15-YC-015",
+          "ST-15-YC-016",
+          "ST-15-YC-019",
+          "ST-15-YC-020"
+        ],
+        "target_id": "ST-15-EV-005",
+        "group": "Sự kiện màn hình",
+        "title": "Xử lý lỗi, xung đột hoặc mạng gián đoạn",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "DD yêu cầu không gọi #31 nếu #30 lỗi và không gửi lại mù sau 409/hết thời gian chờ. Mã hiện khóa gửi lại với HTTP 0 hoặc phản hồi sai; với 409 hiện liên kết kết quả; lỗi HTTP khác dùng thông báo tiếng Việt dùng chung.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [
+          "#30",
+          "#31",
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/04-api-integration.md",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "apps/study-server/app/modules/student/api_31_attempts_submit/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-SK-006",
+        "requirement_ids": [
+          "ST-15-YC-013",
+          "ST-15-YC-014",
+          "ST-15-YC-027"
+        ],
+        "target_id": "ST-15-EV-006",
+        "group": "Sự kiện màn hình",
+        "title": "Mở liên kết kiểm tra kết quả",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "Mã mở tuyến `/student/attempts/:attemptId/result` với cùng `attemptId`; API #32 thuộc ST-16 và không được gọi trực tiếp trong ST-15.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [
+          "#32"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-SK-007",
+        "requirement_ids": [
+          "ST-15-YC-030",
+          "ST-15-YC-031",
+          "ST-15-YC-032",
+          "ST-15-YC-033",
+          "ST-15-YC-034"
+        ],
+        "target_id": "ST-15-EV-007",
+        "group": "Sự kiện màn hình",
+        "title": "Đối chiếu nội dung hộp thoại và tương tác phụ",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "Đối chiếu riêng ảnh PNG, trang HTML và thành phần giao diện hiện tại. Không dùng số mẫu, tự chạy đồng hồ, bỏ qua thao tác bàn phím hoặc tự gán đích đóng hộp thoại.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/code.html",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST15-SK-008",
+        "requirement_ids": [
+          "ST-15-YC-002",
+          "ST-15-YC-010",
+          "ST-15-YC-035"
+        ],
+        "target_id": "ST-15-EV-008",
+        "group": "Sự kiện màn hình",
+        "title": "Đổi ID khi yêu cầu đang chờ",
+        "precondition": "Có nguồn DD và mã nguồn để đối chiếu; ca này chưa chạy trên trình duyệt/API.",
+        "data": "Đối chiếu ID gắn với phản hồi. Mã chỉ cập nhật lỗi hoặc điều hướng khi `attemptId` vẫn khớp; yêu cầu cũ vẫn có thể chạy đến khi có phản hồi và trạng thái bận chưa được kiểm chứng trong môi trường chạy.",
+        "steps": [
+          "Đối chiếu điều kiện kích hoạt, trạng thái ban đầu và ID lượt làm.",
+          "Theo dõi yêu cầu, phản hồi và điều hướng được nêu trong ca.",
+          "Ghi khác biệt DD/mã nguồn và không tự quyết định câu hỏi còn mở."
+        ],
+        "expected": "Ghi đúng kết quả đối chiếu; ca chưa chạy và các điểm mở vẫn chờ xác nhận.",
+        "api_ids": [
+          "#31"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-15-XacNhanNopBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST15/pages/st15-page.ts",
+          "apps/study-client/src/app/features/student/ST15/data-access/st15-submit.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

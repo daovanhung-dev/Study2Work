@@ -1,0 +1,126 @@
+{
+  "screen_id": "AD-03",
+  "report_version": "1.0",
+  "created_date": "2026-11-23",
+  "release_status": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+  "officially_approved": false,
+  "executable_for_acceptance": false,
+  "decision": "Không phát hành UTC chính thức: bản DD trong repository vẫn BLOCKED và có 8 blocker. Người dùng xác nhận tất cả DD đã được duyệt, nhưng chưa có bản AD-03 đã duyệt hoặc sign-off được liên kết để đối chiếu; giữ nguyên trạng thái source và các ca phụ thuộc quyết định ở Chờ xác nhận DD.",
+  "user_statement": "Người dùng xác nhận “tất cả DD đã được duyệt” ngày 2026-11-23; chưa có tài liệu/phiên bản/người duyệt được cung cấp trong workspace để đối chiếu với AD-03 v0.3.",
+  "validation": {
+    "hop_le_ve_cau_truc": true,
+    "du_dieu_kien_phe_duyet": false,
+    "thong_tin": [
+      "14 yêu cầu, 32 thành phần, 6 sự kiện, 1 API",
+      "17 ca toàn màn hình, 32 ca thành phần, 9 ca sự kiện",
+      "Tổng ca: 58; yêu cầu được truy vết: 14/14"
+    ],
+    "loi": [],
+    "canh_bao": [
+      "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+    ]
+  },
+  "workbook_validation": {
+    "tep": "apps/study-client/docs/utc_screens/UTC_AD-03_ChiTietNguoiDung.xlsx",
+    "trang_tinh": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "so_cong_thuc": 622,
+    "loi": [],
+    "hop_le": true,
+    "execution_field_audit": {
+      "case_rows": 58,
+      "all_execution_statuses": "Chưa chạy",
+      "actual_evidence_bug_tester_date": "blank for all cases",
+      "row_check_formulas": 58,
+      "formula_count_total": 622,
+      "template_sheets": [
+        "01. Bìa",
+        "02. Tổng quan",
+        "03. Thành phần",
+        "04. Sự kiện"
+      ],
+      "blank_execution_fields_verified": true
+    }
+  },
+  "workbook_validation_report": "apps/study-client/docs/utc_screens/kiem-tra-excel-AD03.json",
+  "visual_review": {
+    "status": "NOT_RENDERED",
+    "result": "Đã kiểm tra cấu trúc worksheet XML, số công thức, các dòng case, trạng thái Chưa chạy và cột thực thi rỗng. Chưa có công cụ render/xem Excel trong môi trường này; chưa xác nhận trực quan bố cục."
+  },
+  "blockers": [
+    {
+      "id": "AD03-BL-001",
+      "description": "Claim ADMIN là fallback cho quyền user-management AC-31; tenant/MFA/permission relation chưa được owner xác nhận.",
+      "impact": "Không thể xác nhận điều kiện truy cập AD-03.",
+      "decision": "Owner chốt permission, tenant boundary, MFA và mapping claim cho AD-03.",
+      "source_ref": "00-overview.md §API/Expected behavior; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-002",
+      "description": "Local #69 truy vấn legacy BIGINT users; live schema/grants/deployment chưa xác minh, V1-PILOT dùng UUID model khác.",
+      "impact": "Chưa xác minh tương thích với môi trường đích.",
+      "decision": "DB/API owner xác nhận schema, grants và deployment target.",
+      "source_ref": "00-overview.md §Current source; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-003",
+      "description": "PII email/phone, masking, role/status enum, deleted/anonymized visibility và lifecycle chưa chốt.",
+      "impact": "Chưa thể chốt cách hiển thị và tập dữ liệu acceptance.",
+      "decision": "Owner duyệt PII policy, enum/label và lifecycle visibility.",
+      "source_ref": "01-ui-elements.md §3 #20/#24–#26; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-004",
+      "description": "API #69 không có audit/history/count/retention source; prototype có các số liệu và tuyên bố audit/security.",
+      "impact": "Không thể xác nhận audit panel, empty state, retention hoặc compliance copy.",
+      "decision": "Cung cấp audit API/event và policy hoặc phê duyệt loại bỏ các claim khỏi UI.",
+      "source_ref": "01-ui-elements.md §3 #21/#23/#27/#29/#30; 02-events.md §D EV-05",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-005",
+      "description": "Prototype ghi 204/NULL_PAYLOAD, sync và system-health copy, trong khi #69 định nghĩa 200 UserProfile hoặc 401/403/404/500.",
+      "impact": "Không thể dùng prototype response/status labels làm expected runtime.",
+      "decision": "Design/API owner chốt copy; không coi 204/null/sync là success của #69.",
+      "source_ref": "00-overview.md §Expected behavior; 01-ui-elements.md §3 #3/#9/#13/#16/#28",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-006",
+      "description": "User xác nhận “tất cả DD đã được duyệt” ngày 2026-11-23, nhưng AD-03 overview/business rules trong repository vẫn ghi DD BLOCKED và các quyết định chưa giải quyết; chưa có bản revision hoặc sign-off liên kết.",
+      "impact": "Không thể thay trạng thái phê duyệt hiện tại của nguồn bằng lời khẳng định không kèm bản DD được duyệt.",
+      "decision": "Liên kết/cập nhật bản DD đã duyệt và thông tin owner/reviewer/approver, hoặc nêu rõ các quyết định áp dụng cho AD-03.",
+      "source_ref": "Người dùng trả lời ngày 2026-11-23; 00-overview.md metadata/§6; 05-business-rules.md §2",
+      "status": "Cần đối chiếu hồ sơ"
+    },
+    {
+      "id": "AD03-BL-007",
+      "description": "Typography/palette prototype khác Study Web design guide; responsive, accessibility và runtime/deployment chưa được xác minh.",
+      "impact": "Chưa thể chốt visual acceptance hoặc khẳng định hành vi runtime.",
+      "decision": "Design owner duyệt hoặc đồng bộ UI với Study Web guide; xác định môi trường runtime để QA.",
+      "source_ref": "00-overview.md §5; 05-business-rules.md §2; .agents/web-study/design.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-008",
+      "description": "03-data-flow.md mô tả action links AD-04/AD-05 khi có ID, nhưng current ad03-page.html có disabled buttons không gắn routerLink.",
+      "impact": "Expected/current behavior mô tả nút chưa nhất quán.",
+      "decision": "Đồng bộ DD với current template; giữ disabled cho tới khi quyền và contract đích được xác nhận.",
+      "source_ref": "03-data-flow.md §E actions-gated; pages/ad03-page.html; 01-ui-elements.md §3 #15/#17",
+      "status": "Chờ đồng bộ DD"
+    }
+  ],
+  "artifacts": [
+    "apps/study-client/docs/utc_screens/utc-spec-AD03.json",
+    "apps/study-client/docs/utc_screens/UTC_AD-03_ChiTietNguoiDung.xlsx",
+    "apps/study-client/docs/utc_screens/kiem-tra-excel-AD03.json",
+    "apps/study-client/docs/utc_screens/kiem-tra-utc-AD03.json"
+  ]
+}

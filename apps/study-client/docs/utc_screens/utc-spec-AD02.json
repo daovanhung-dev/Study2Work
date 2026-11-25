@@ -1,0 +1,3169 @@
+{
+  "metadata": {
+    "screen_id": "AD-02",
+    "screen_name": "Danh sách người dùng",
+    "module": "Study2Work / Phân hệ Quản trị",
+    "route": "/admin/users",
+    "actor": "Quản trị viên (ADMIN); người phụ trách cần xác nhận quyền quản lý người dùng.",
+    "version": "1.0 – BẢN KẾ HOẠCH UTC, CHỜ XÁC NHẬN",
+    "dd_version": "0.5 (2026-11-22); đối chiếu lại mã nguồn ngày 2026-11-23",
+    "dd_status": "DD BỊ CHẶN (BLOCKED) — các quyết định còn mở",
+    "runtime_status": "Chưa xác minh trình duyệt đã xác thực, API/DB thực tế hoặc môi trường triển khai.",
+    "author": "Codex lập kế hoạch; cần rà soát",
+    "reviewer": "Chưa được xác định",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-23",
+    "source_name": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md–07-test-cases.md; screen.png; screen_annotated.png; mã nguồn Study Web/Study Server hiện hành được đối chiếu lại ngày 2026-11-23",
+    "approval_note": "Người dùng xác nhận tất cả DD đã được duyệt và chỉ định DD AD-02 v0.5 (2026-11-22) trong repository là tài liệu chuẩn, dù chính DD ghi trạng thái BỊ CHẶN (BLOCKED). Dùng đúng phiên bản này làm nguồn; các quyết định còn mở và điều kiện phát hành của skill vẫn được giữ nguyên, nên đây là bản kế hoạch UTC chờ xác nhận, chưa phải UTC chính thức hoặc sẵn sàng nghiệm thu."
+  },
+  "overall": {
+    "objective": "Lập ca UTC có truy vết cho AD-02: xem danh sách người dùng qua API #68, lọc/phân trang và chuyển màn hình bằng ID; tạo người dùng qua API mở rộng #105 đã được duyệt. Bộ ca chỉ là kế hoạch vì DD còn BỊ CHẶN.",
+    "inputs": "Các tham số truy vấn role, status, keyword, page trên URL; Bearer JWT; API #68 trả Page<UserProfile>. Hộp thoại tạo người dùng nhận full_name, email, mật khẩu khởi tạo và role.",
+    "outputs": "Bảng gồm 7 cột, các trạng thái đang tải/đã tải/rỗng/lỗi bộ lọc/lỗi chung, thông tin phân trang và bàn giao sang AD-03/04/05; hộp thoại #105 trả hồ sơ an toàn rồi tải lại truy vấn hiện tại.",
+    "main_flow": "Phiên quản trị viên → đọc tham số truy vấn URL → GET #68 → kiểm tra phong bì phản hồi/Page → hiển thị dữ liệu và trạng thái → bàn giao theo ID an toàn. Nhánh tạo mới: hộp thoại → POST #105 → kiểm tra HTTP 201 và hồ sơ ACTIVE an toàn → đóng hộp thoại/thông báo → gọi lại #68 với cùng truy vấn.",
+    "preconditions": "Môi trường kiểm thử và dữ liệu giả lập; phiên Admin hợp lệ. Mã nguồn hiện yêu cầu claim ADMIN trong bộ kiểm tra quyền, nhưng việc ánh xạ sang quyền quản lý người dùng/phạm vi đơn vị thuê chưa được duyệt; không dùng dữ liệu PII thực.",
+    "states": [
+      "Đang tải",
+      "Ready",
+      "Rỗng",
+      "Lỗi bộ lọc 422 (filter-error)",
+      "Unauthenticated 401",
+      "Forbidden 403",
+      "Error 500/network",
+      "Snapshot mismatch",
+      "Trang nằm ngoài phạm vi (page ngoài phạm vi)",
+      "Hộp thoại tạo mới đang chờ/bị lỗi/thành công."
+    ],
+    "security": "Chỉ dùng Bearer JWT theo hợp đồng; quyền quản lý người dùng/phạm vi tenant và việc hiển thị PII chưa được xác nhận. Không để lộ password/password_hash, không ghi nhật ký truy vấn thô/PII. Không khẳng định có kiểm toán, kiểm tra tình trạng hệ thống hoặc đồng bộ nếu chưa có nguồn.",
+    "out_of_scope": "Không xác nhận lược đồ đang chạy/di trú, trình duyệt đã xác thực, triển khai hoặc môi trường chạy; không thực thi code.html của bản mẫu; không thêm API xuất/trợ giúp/đồng bộ/kiểm toán/tình trạng hệ thống hoặc thao tác thay đổi ngoài #105."
+  },
+  "apis": [
+    {
+      "id": "API-68",
+      "method": "GET",
+      "path": "/api/v1/admin/users",
+      "request": "Authorization dùng Bearer JWT; truy vấn gồm role?:string, status?:string, keyword?:string, page?:int32. Trang mặc định là 1; không có body/size/sort.",
+      "response": "HTTP 200 DESIGN_RESOURCE_RETRIEVED; ApiEnvelope<Page<UserProfile>> với items[] và pagination{page,size,total,total_pages}; size 20 theo mã nguồn hiện tại.",
+      "errors": "401/403 auth; 422 page không hợp lệ; 500 lỗi query/projection. Response lỗi theo safe envelope.",
+      "auth": "Bearer JWT; bộ kiểm tra quyền trong mã nguồn yêu cầu claim ADMIN. Chủ sở hữu chưa xác nhận việc ánh xạ claim này sang quyền quản lý người dùng và phạm vi đơn vị thuê.",
+      "design_status": "Draft — Needs Confirmation; source-backed với paging/filter/order DERIVED.",
+      "source_ref": "apps/study-server/docs/dd/68_admin_users_list/02_Overview.md; 03_Request.md; 04_Response.md; OPEN_QUESTIONS.md; apps/study-server/app/modules/admin/api_68_admin_users_list/view.py",
+      "event_ids": [
+        "AD-02-EV-001",
+        "AD-02-EV-002",
+        "AD-02-EV-003",
+        "AD-02-EV-004",
+        "AD-02-EV-005",
+        "AD-02-EV-010"
+      ]
+    },
+    {
+      "id": "API-105",
+      "method": "POST",
+      "path": "/api/v1/admin/users",
+      "request": "Authorization: Bearer JWT; body full_name, email, password, role ∈ STUDENT|MENTOR|ADMIN. Không đưa password vào log/error.",
+      "response": "HTTP 201 DESIGN_RESOURCE_CREATED; safe UserProfile với status ACTIVE, không có password/password_hash.",
+      "errors": "401/403 auth; 409 email trùng; 422 body không hợp lệ; 500 lỗi an toàn.",
+      "auth": "Bearer JWT; bộ kiểm tra quyền trong mã nguồn yêu cầu claim ADMIN. Người dùng đã duyệt phần mở rộng tạo tài khoản; chính sách quyền/phạm vi đơn vị thuê tổng thể vẫn còn bỏ ngỏ.",
+      "design_status": "Đã duyệt extension người dùng 2026-11-22; source và focused fake-session tests có trong evidence.",
+      "source_ref": "AD-02 DD 04-api-integration.md current source extension 2026-11-22; apps/study-server/app/modules/admin/api_105_admin_users_create/view.py; validate.py",
+      "event_ids": [
+        "AD-02-EV-008"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "AD02-REQ-01",
+      "description": "Chỉ mở màn hình danh sách bằng phiên quản trị viên; quyền quản lý người dùng và phạm vi tenant cần được chủ sở hữu xác nhận.",
+      "group": "Điều kiện truy cập",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §3; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
+      "notes": "Source hiện kiểm tra claim ADMIN; đây là fallback DERIVED cho quyền user-management.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-02",
+      "description": "Màn hình đọc danh sách qua yêu cầu GET API #68 và ánh xạ ApiEnvelope<Page<UserProfile>> theo tham số truy vấn đã được duyệt.",
+      "group": "Dữ liệu/API",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/04-api-integration.md §2; apps/study-server/docs/dd/68_admin_users_list/02_Overview.md",
+      "notes": "API #68 còn Draft — Needs Confirmation; size 20/order id ASC là DERIVED.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-03",
+      "description": "Keyword chỉ tìm chuỗi con nguyên văn trong full_name hoặc email; không tìm theo ID nếu chưa có hợp đồng.",
+      "group": "Tìm kiếm",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #16; apps/study-server/docs/dd/68_admin_users_list/03_Request.md",
+      "notes": "Prototype nói cả mã người dùng; đây là discrepancy cần xác nhận.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-04",
+      "description": "Role và status được gửi dưới dạng chuỗi so khớp chính xác; chủ sở hữu phải duyệt danh sách enum và nhãn bộ lọc.",
+      "group": "Bộ lọc",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #17–18; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md",
+      "notes": "Không map instructor→MENTOR hoặc locked→SUSPENDED khi chưa có quyết định.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-05",
+      "description": "URL giữ keyword, role, status và page; page bắt đầu từ 1, size cố định 20; cần chốt cách hiển thị trang rỗng.",
+      "group": "Query/phân trang",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-01–EV-05; apps/study-server/docs/dd/68_admin_users_list/03_Request.md",
+      "notes": "Không gửi size/sort. Reset và empty pagination vẫn có quyết định mở.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-06",
+      "description": "Phân biệt trạng thái đang tải, sẵn sàng, rỗng, lỗi bộ lọc, chưa xác thực, không đủ quyền và lỗi có thể thử lại.",
+      "group": "Trạng thái giao diện",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md §3; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/04-api-integration.md §2",
+      "notes": "Cách trình bày lỗi quyền vẫn phụ thuộc auth UX được duyệt.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-07",
+      "description": "Bàn giao dòng người dùng tới AD-03/AD-04/AD-05 chỉ bằng ID dương có thể biểu diễn chính xác; AD-02 không gọi API thay đổi dữ liệu.",
+      "group": "Điều hướng dòng",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md §3; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-06–EV-07",
+      "notes": "Permission và policy mutation ở màn đích còn mở.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-08",
+      "description": "Luồng tạo người dùng qua API #105 đã được duyệt, với full_name, email, mật khẩu khởi tạo và role STUDENT|MENTOR|ADMIN; tạo thành công người dùng ACTIVE.",
+      "group": "Tạo người dùng",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/04-api-integration.md §2; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-08",
+      "notes": "Extension API #105 được người dùng duyệt ngày 2026-11-22; user-management policy tổng thể còn mở.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD02-REQ-09",
+      "description": "Tính năng xuất dữ liệu và hướng dẫn nhập liệu bị vô hiệu hóa khi chưa có API hoặc đích đến được phê duyệt.",
+      "group": "Tính năng chưa hỗ trợ",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #14, #27; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-09–EV-10",
+      "notes": "Export/help phải giữ disabled và có thông báo rõ ràng.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD02-REQ-10",
+      "description": "Không trình bày tình trạng hệ thống, đồng bộ, tuyên bố về kiểm soát truy cập theo vai trò (RBAC) hoặc kiểm toán như dữ liệu thực nếu chưa có nguồn tương ứng.",
+      "group": "Tính chính xác thông tin",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #3, #7, #21, #32–34; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-12",
+      "notes": "API #68 không cung cấp health/sync/audit fields hoặc side effect.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD02-REQ-11",
+      "description": "Chỉ hiển thị các trường hồ sơ cần thiết cho danh sách; email (thư điện tử) và phone (số điện thoại), vòng đời và khả năng hiển thị phải theo chính sách PII được duyệt.",
+      "group": "Dữ liệu cá nhân",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §UserProfile; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md",
+      "notes": "Không thêm phone/avatar/updated_at vào bảng theo screenshot hiện tại.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-12",
+      "description": "Giao diện, màu sắc, phông chữ và cách sắp xếp lại của AD-02 phải được rà soát theo hướng dẫn thiết kế Study Web trước khi coi thiết kế đã được duyệt.",
+      "group": "Thiết kế hiển thị",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2; .agents/web-study/design.md",
+      "notes": "Screenshot hiện khác palette/typeface mục tiêu.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-13",
+      "description": "Điều khiển phải có nhãn, trạng thái và tiêu điểm phù hợp; hộp thoại tạo người dùng phải công bố lỗi/thành công bằng ngữ nghĩa truy cập.",
+      "group": "Khả năng tiếp cận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; .agents/web-study/frontend-rules.md",
+      "notes": "Kỳ vọng dựa trên source cục bộ; chưa xác minh bằng trình duyệt/môi trường chạy.",
+      "priority": "Trung bình",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD02-REQ-14",
+      "description": "Điều hướng ở đầu/chân trang chỉ tới tuyến có trong mã nguồn; thông tin hồ sơ lấy từ phiên quản trị; không giả lập liên kết chưa có đích.",
+      "group": "Shell và điều hướng",
+      "source_ref": "apps/study-client/src/app/layouts/admin/admin-layout.html; apps/study-client/src/app/features/admin/admin.routes.ts; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md",
+      "notes": "Các destination privacy/RBAC/support của prototype chưa được map.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-15",
+      "description": "Không trả về hoặc hiển thị password/password_hash; thao tác tạo phải loại thông tin nhạy cảm khỏi nội dung lỗi và phản hồi.",
+      "group": "Bảo mật dữ liệu",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/04-api-integration.md §2; apps/study-server/app/modules/admin/api_105_admin_users_create/view.py; apps/study-server/app/modules/admin/api_68_admin_users_list/view.py",
+      "notes": "API #68/#105 dùng profile allowlist; policy PII khác vẫn mở.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD02-REQ-16",
+      "description": "Tài liệu UTC không tuyên bố đã xác minh cơ sở dữ liệu/lược đồ thực tế, trình duyệt đã xác thực hoặc môi trường triển khai.",
+      "group": "Ranh giới bằng chứng",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2; .agents/server-study/tests.md",
+      "notes": "Test source/fake session không thay thế xác minh runtime.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "AD02-REQ-17",
+      "description": "Khi COUNT/LIST không khớp, giữ các dòng đã trả về nhưng ẩn tổng số/phân trang; trang rỗng ngoài phạm vi phải có lối quay về trang 1.",
+      "group": "Nhất quán trang",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md §3; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md current-source addendum 2026-11-21",
+      "notes": "Hành vi của mã nguồn hiện tại có các bài kiểm thử tập trung được ghi trong context; runtime chưa xác minh.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "AD02-REQ-18",
+      "description": "Khi tạo người dùng thành công, kiểm tra phản hồi HTTP 201, envelope/profile ACTIVE; đóng hộp thoại, hiển thị thông báo và tải lại cùng tham số truy vấn của #68.",
+      "group": "Tạo người dùng",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-08; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-server/app/modules/admin/api_105_admin_users_create/view.py",
+      "notes": "Không đổi filter/page hiện tại sau khi tạo.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-02-EL-001",
+      "marker": "#1",
+      "name": "Thương hiệu cổng quản trị Study2Work LMS",
+      "type": "Nhận diện thương hiệu",
+      "position": "Đầu trang · trái",
+      "properties": "Hiển thị tên Study2Work/LMS và ADMIN PORTAL đúng shell hiện hành; không tự gắn version.",
+      "event_ids": [
+        "AD-02-EV-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/layouts/admin/admin-layout.html"
+    },
+    {
+      "id": "AD-02-EL-002",
+      "marker": "#2",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm liên kết",
+      "position": "Đầu trang · giữa",
+      "properties": "Các mục điều hướng có routerLink đã đăng ký; mục Người dùng có aria-current=page trên /admin/users.",
+      "event_ids": [
+        "AD-02-EV-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/layouts/admin/admin-layout.html; apps/study-client/src/app/features/admin/admin.routes.ts"
+    },
+    {
+      "id": "AD-02-EL-003",
+      "marker": "#3",
+      "name": "Nhãn trạng thái hệ thống",
+      "type": "Nhãn trạng thái",
+      "position": "Đầu trang · phải",
+      "properties": "Không hiển thị “System Normal” như health live khi chưa có health API/contract.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #3; API #68 không có health field"
+    },
+    {
+      "id": "AD-02-EL-004",
+      "marker": "#4",
+      "name": "Nút thông báo",
+      "type": "Liên kết điều hướng",
+      "position": "Đầu trang · phải",
+      "properties": "Đích thông báo chỉ dùng route đã đăng ký; không suy ra có dữ liệu notification từ AD-02.",
+      "event_ids": [
+        "AD-02-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/layouts/admin/admin-layout.html; AD-02 DD 06-navigation.md"
+    },
+    {
+      "id": "AD-02-EL-005",
+      "marker": "#5",
+      "name": "Danh tính và ảnh đại diện quản trị viên",
+      "type": "Thông tin phiên",
+      "position": "Đầu trang · phải",
+      "properties": "Tên/role lấy từ Admin session profile; không lấy danh tính từ API #68.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/layouts/admin/admin-layout.html"
+    },
+    {
+      "id": "AD-02-EL-006",
+      "marker": "#6",
+      "name": "Đường dẫn điều hướng toàn cục",
+      "type": "Đường dẫn điều hướng",
+      "position": "Đầu trang · hàng hai",
+      "properties": "Kỳ vọng screenshot có breadcrumb hệ thống; source hiện là trạng thái phiên đã xác thực, cần design owner chốt.",
+      "event_ids": [
+        "AD-02-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #6; apps/study-client/src/app/layouts/admin/admin-layout.html"
+    },
+    {
+      "id": "AD-02-EL-007",
+      "marker": "#7",
+      "name": "Nhãn xác nhận RBAC",
+      "type": "Huy hiệu về bảo đảm quyền truy cập",
+      "position": "Đầu trang · phải",
+      "properties": "Không tuyên bố chuẩn/version RBAC nếu không có nguồn phê duyệt.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #7; API #68 không xác minh compliance"
+    },
+    {
+      "id": "AD-02-EL-008",
+      "marker": "#8",
+      "name": "Đường dẫn điều hướng danh sách người dùng",
+      "type": "Đường dẫn điều hướng trang",
+      "position": "Đầu nội dung",
+      "properties": "Trang hiện tại hiển thị “Quản trị người dùng” và “Danh sách tài khoản”; current item có aria-current=page.",
+      "event_ids": [
+        "AD-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EL-009",
+      "marker": "#9",
+      "name": "Huy hiệu API #68",
+      "type": "Huy hiệu nguồn dữ liệu",
+      "position": "Đầu nội dung · phải",
+      "properties": "Nếu hiển thị, chỉ ghi API #68; không biến badge thành bằng chứng health/runtime/RBAC version.",
+      "event_ids": [
+        "AD-02-EV-001",
+        "AD-02-EV-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #9"
+    },
+    {
+      "id": "AD-02-EL-010",
+      "marker": "#10",
+      "name": "Nhãn dẫn nhập hệ thống xác thực",
+      "type": "Nhãn phụ",
+      "position": "Trên tiêu đề",
+      "properties": "Screenshot ghi “Hệ thống xác thực”; source hiện ghi “Quản trị người dùng”; chờ design owner chốt copy.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #10; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EL-011",
+      "marker": "#11",
+      "name": "Nhãn mức bảo đảm bảo mật",
+      "type": "Nhãn về mức bảo đảm",
+      "position": "Trên tiêu đề",
+      "properties": "Không hiển thị “Bảo Mật Cấp 3” khi chưa có chuẩn/owner xác nhận.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #11; AD-02 DD 05-business-rules.md §2"
+    },
+    {
+      "id": "AD-02-EL-012",
+      "marker": "#12",
+      "name": "Tiêu đề trang",
+      "type": "Tiêu đề H1",
+      "position": "Đầu nội dung",
+      "properties": "H1 là “Quản lý tài khoản người dùng” và có thứ bậc tên trang duy nhất.",
+      "event_ids": [
+        "AD-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EL-013",
+      "marker": "#13",
+      "name": "Mô tả trang",
+      "type": "Văn bản mô tả",
+      "position": "Dưới H1",
+      "properties": "Mô tả chỉ hứa tra cứu theo họ tên/email, vai trò và trạng thái; không khẳng định thao tác không được hỗ trợ.",
+      "event_ids": [
+        "AD-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EL-014",
+      "marker": "#14",
+      "name": "Nút xuất báo cáo",
+      "type": "Nút chưa hỗ trợ",
+      "position": "Đầu nội dung · phải",
+      "properties": "Nút Xuất báo cáo ở trạng thái disabled và có giải thích; không tải file giả.",
+      "event_ids": [
+        "AD-02-EV-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #14"
+    },
+    {
+      "id": "AD-02-EL-015",
+      "marker": "#15",
+      "name": "Nút thêm người dùng",
+      "type": "Nút tạo tài khoản",
+      "position": "Đầu nội dung · phải",
+      "properties": "Nút mở dialog tạo user theo extension API #105 đã duyệt; không gọi API #68 để ghi data.",
+      "event_ids": [
+        "AD-02-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-016",
+      "marker": "#16",
+      "name": "Ô tìm kiếm từ khóa",
+      "type": "Trường tìm kiếm",
+      "position": "Thanh bộ lọc",
+      "properties": "Placeholder chỉ nêu họ tên/email; keyword không tìm mã user và không biến %/_ thành wildcard.",
+      "event_ids": [
+        "AD-02-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/app/modules/admin/api_68_admin_users_list/query.py"
+    },
+    {
+      "id": "AD-02-EL-017",
+      "marker": "#17",
+      "name": "Bộ lọc vai trò",
+      "type": "Trường nhập chuỗi",
+      "position": "Thanh bộ lọc",
+      "properties": "Gửi role dưới dạng chuỗi nguyên dạng; không dùng danh sách role/chuyển chữ thường trong bản mẫu khi enum chưa được chốt.",
+      "event_ids": [
+        "AD-02-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "AD-02-EL-018",
+      "marker": "#18",
+      "name": "Bộ lọc trạng thái",
+      "type": "Trường nhập chuỗi",
+      "position": "Thanh bộ lọc",
+      "properties": "Gửi status dạng exact string; không map locked sang trạng thái khác khi enum chưa được chốt.",
+      "event_ids": [
+        "AD-02-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "AD-02-EL-019",
+      "marker": "#19",
+      "name": "Nút xóa bộ lọc",
+      "type": "Nút áp dụng/xóa",
+      "position": "Thanh bộ lọc · phải",
+      "properties": "Xóa bộ lọc cập nhật truy vấn và page=1 trong mã nguồn; chính sách đặt lại trang cần chủ sở hữu sản phẩm xác nhận.",
+      "event_ids": [
+        "AD-02-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; AD-02 DD 02-events.md EV-04"
+    },
+    {
+      "id": "AD-02-EL-020",
+      "marker": "#20",
+      "name": "Tóm tắt bộ lọc đang áp dụng",
+      "type": "Tóm tắt trạng thái",
+      "position": "Dưới điều khiển lọc",
+      "properties": "Chỉ liệt kê filter đã áp dụng; khi chưa có filter hiển thị thông báo chưa có bộ lọc.",
+      "event_ids": [
+        "AD-02-EV-002",
+        "AD-02-EV-003",
+        "AD-02-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-021",
+      "marker": "#21",
+      "name": "Nhãn đồng bộ máy chủ",
+      "type": "Nhãn đồng bộ",
+      "position": "Dưới điều khiển lọc · phải",
+      "properties": "Không hiển thị thời điểm/trạng thái sync nếu không có nguồn API; API #68 không trả sync state.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #21; apps/study-server/app/modules/admin/api_68_admin_users_list/view.py"
+    },
+    {
+      "id": "AD-02-EL-022",
+      "marker": "#22",
+      "name": "Hàng tiêu đề bảng người dùng",
+      "type": "Hàng tiêu đề bảng",
+      "position": "Bảng",
+      "properties": "Có 7 cột: mã, họ tên, email, vai trò, trạng thái, ngày tạo, thao tác; không thêm phone/avatar.",
+      "event_ids": [
+        "AD-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-screen.ui.ts; AD-02 DD 01-ui-elements.md #22"
+    },
+    {
+      "id": "AD-02-EL-023",
+      "marker": "#23",
+      "name": "Minh họa trạng thái rỗng",
+      "type": "Hình trang trí",
+      "position": "Trong bảng · trạng thái rỗng",
+      "properties": "Biểu tượng chỉ trang trí; trạng thái rỗng phải được công bố bằng văn bản và không ám chỉ lỗi sync.",
+      "event_ids": [
+        "AD-02-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #23"
+    },
+    {
+      "id": "AD-02-EL-024",
+      "marker": "#24",
+      "name": "Tiêu đề trạng thái rỗng",
+      "type": "Văn bản trạng thái",
+      "position": "Trong bảng · trạng thái rỗng",
+      "properties": "Hiển thị “Chưa có dữ liệu tài khoản người dùng” khi API #68 trả items=[] và HTTP 200.",
+      "event_ids": [
+        "AD-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EL-025",
+      "marker": "#25",
+      "name": "Mô tả trạng thái rỗng",
+      "type": "Văn bản trạng thái",
+      "position": "Trong bảng · trạng thái rỗng",
+      "properties": "Nêu không tìm thấy tài khoản theo điều kiện hiện tại; không khẳng định đang chờ đồng bộ.",
+      "event_ids": [
+        "AD-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; API #68 response"
+    },
+    {
+      "id": "AD-02-EL-026",
+      "marker": "#26",
+      "name": "Nút làm mới danh sách",
+      "type": "Nút tải lại",
+      "position": "Trong bảng · trạng thái rỗng/lỗi",
+      "properties": "Tải lại cùng query hiện hành; khóa thao tác khi request đang tải; không đổi filter/page.",
+      "event_ids": [
+        "AD-02-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EL-027",
+      "marker": "#27",
+      "name": "Nút hướng dẫn nhập liệu",
+      "type": "Nút chưa hỗ trợ",
+      "position": "Trong bảng · trạng thái rỗng",
+      "properties": "Nút guide giữ disabled và có giải thích đến khi có route/tài liệu hướng dẫn được xác định.",
+      "event_ids": [
+        "AD-02-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #27"
+    },
+    {
+      "id": "AD-02-EL-028",
+      "marker": "#28",
+      "name": "Số lượng tài khoản hiển thị",
+      "type": "Tóm tắt phân trang",
+      "position": "Chân bảng · trái",
+      "properties": "Hiển thị số dòng hiện tại và total từ pagination; ẩn số tổng khi snapshot COUNT/LIST mismatch.",
+      "event_ids": [
+        "AD-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-029",
+      "marker": "#29",
+      "name": "Nút trang trước",
+      "type": "Nút phân trang",
+      "position": "Chân bảng · phải",
+      "properties": "Nút disabled ở page 1; khi hợp lệ chuyển đến page-1 và giữ các query khác.",
+      "event_ids": [
+        "AD-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-030",
+      "marker": "#30",
+      "name": "Chỉ báo trang hiện tại/tổng số trang",
+      "type": "Chỉ báo phân trang",
+      "position": "Chân bảng · phải",
+      "properties": "Hiển thị page/total_pages; API trả trang rỗng với page=1,total_pages=0 nhưng ảnh chụp ghi 0/0; cách trình bày chờ xác nhận.",
+      "event_ids": [
+        "AD-02-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/docs/dd/68_admin_users_list/04_Response.md"
+    },
+    {
+      "id": "AD-02-EL-031",
+      "marker": "#31",
+      "name": "Nút trang tiếp theo",
+      "type": "Nút phân trang",
+      "position": "Chân bảng · phải",
+      "properties": "Nút disabled khi page>=total_pages; khi hợp lệ chuyển đến page+1.",
+      "event_ids": [
+        "AD-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-032",
+      "marker": "#32",
+      "name": "Biểu tượng thông báo bảo mật",
+      "type": "Biểu tượng",
+      "position": "Biểu ngữ cuối trang",
+      "properties": "Không render biểu tượng như bằng chứng assurance khi banner/chính sách chưa có nguồn duyệt.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #32; API #68 không có security assurance field"
+    },
+    {
+      "id": "AD-02-EL-033",
+      "marker": "#33",
+      "name": "Tiêu đề chính sách bảo mật",
+      "type": "Tiêu đề biểu ngữ",
+      "position": "Biểu ngữ cuối trang",
+      "properties": "Chỉ hiển thị khi có chính sách/owner được duyệt; source hiện không có banner này.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #33; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EL-034",
+      "marker": "#34",
+      "name": "Nội dung cam kết kiểm toán",
+      "type": "Nội dung chính sách",
+      "position": "Biểu ngữ cuối trang",
+      "properties": "Không khẳng định mọi truy xuất đã được audit khi chưa có audit contract/evidence.",
+      "event_ids": [
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #34; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "AD-02-EL-035",
+      "marker": "#35",
+      "name": "Bản quyền và không gian làm việc ở chân trang",
+      "type": "Chân trang",
+      "position": "Cuối trang",
+      "properties": "Footer nguồn hiển thị © Study2Work LMS và Hệ thống quản trị trung tâm; không tự thêm năm/version.",
+      "event_ids": [
+        "AD-02-EV-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/layouts/admin/admin-layout.html"
+    },
+    {
+      "id": "AD-02-EL-036",
+      "marker": "#36",
+      "name": "Liên kết chính sách riêng tư",
+      "type": "Liên kết chân trang",
+      "position": "Cuối trang",
+      "properties": "Chỉ render link khi đích chính sách thật được map; prototype href=\"#\" không phải đích hợp lệ.",
+      "event_ids": [
+        "AD-02-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #36; apps/study-client/src/app/layouts/admin/admin-layout.html"
+    },
+    {
+      "id": "AD-02-EL-037",
+      "marker": "#37",
+      "name": "Liên kết tiêu chuẩn RBAC",
+      "type": "Liên kết chân trang",
+      "position": "Cuối trang",
+      "properties": "Chỉ render đích RBAC được duyệt; không dùng link placeholder để tuyên bố tuân thủ.",
+      "event_ids": [
+        "AD-02-EV-011",
+        "AD-02-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #37; apps/study-client/src/app/layouts/admin/admin-layout.html"
+    },
+    {
+      "id": "AD-02-EL-038",
+      "marker": "#38",
+      "name": "Liên kết hỗ trợ kỹ thuật",
+      "type": "Liên kết chân trang",
+      "position": "Cuối trang",
+      "properties": "Chỉ render link khi có support destination đã xác định; hiện source không khai báo đích này.",
+      "event_ids": [
+        "AD-02-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-02 DD 01-ui-elements.md #38; apps/study-client/src/app/layouts/admin/admin-layout.html"
+    },
+    {
+      "id": "AD-02-EL-039",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Khung hộp thoại tạo tài khoản",
+      "type": "Hộp thoại bổ sung dạng modal",
+      "position": "Trạng thái bổ sung · lớp phủ",
+      "properties": "Dialog có aria-modal, tên/mô tả được liên kết và giữ focus theo hành vi dialog của trình duyệt.",
+      "event_ids": [
+        "AD-02-EV-008",
+        "AD-02-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html"
+    },
+    {
+      "id": "AD-02-EL-040",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Trường họ và tên",
+      "type": "Trường bắt buộc",
+      "position": "Hộp thoại tạo tài khoản",
+      "properties": "Label gắn input full_name; server trim và chấp nhận 1–150 ký tự sau trim.",
+      "event_ids": [
+        "AD-02-EV-008",
+        "AD-02-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-server/app/modules/admin/api_105_admin_users_create/validate.py"
+    },
+    {
+      "id": "AD-02-EL-041",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Trường email",
+      "type": "Trường bắt buộc",
+      "position": "Hộp thoại tạo tài khoản",
+      "properties": "Label gắn input email; server chuẩn hóa/kiểm tra email, tối đa 255 ký tự và email trùng trả 409.",
+      "event_ids": [
+        "AD-02-EV-008",
+        "AD-02-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-server/app/modules/admin/api_105_admin_users_create/validate.py"
+    },
+    {
+      "id": "AD-02-EL-042",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Trường mật khẩu khởi tạo",
+      "type": "Trường mật khẩu",
+      "position": "Hộp thoại tạo tài khoản",
+      "properties": "Reject giá trị rỗng/toàn khoảng trắng; mật khẩu khác khoảng trắng giữ nguyên để băm; không hiển thị lại.",
+      "event_ids": [
+        "AD-02-EV-008",
+        "AD-02-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts; API #105 validate.py"
+    },
+    {
+      "id": "AD-02-EL-043",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Trường chọn vai trò tạo mới",
+      "type": "Danh sách lựa chọn",
+      "position": "Hộp thoại tạo tài khoản",
+      "properties": "Chỉ có STUDENT, MENTOR, ADMIN với nhãn tiếng Việt tương ứng; giá trị gửi đi là mã role viết hoa.",
+      "event_ids": [
+        "AD-02-EV-008",
+        "AD-02-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+    },
+    {
+      "id": "AD-02-EL-044",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Nút đóng hộp thoại",
+      "type": "Nút đóng",
+      "position": "Hộp thoại · đầu",
+      "properties": "Đóng dialog khi không pending; khi đang gửi thì không đóng và không bỏ form state.",
+      "event_ids": [
+        "AD-02-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+    },
+    {
+      "id": "AD-02-EL-045",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Nút hủy tạo tài khoản",
+      "type": "Nút hủy",
+      "position": "Hộp thoại · cuối",
+      "properties": "Hủy dialog khi không pending; khi pending thì disabled và form không thể bị đóng.",
+      "event_ids": [
+        "AD-02-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+    },
+    {
+      "id": "AD-02-EL-046",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Nút gửi và trạng thái đang tạo",
+      "type": "Nút gửi/trạng thái",
+      "position": "Hộp thoại · cuối",
+      "properties": "Submit hợp lệ gửi một lần; khi pending đổi nhãn sang Đang tạo… và khóa các điều khiển.",
+      "event_ids": [
+        "AD-02-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+    },
+    {
+      "id": "AD-02-EL-047",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Vùng thông báo lỗi trong hộp thoại",
+      "type": "Thông báo lỗi",
+      "position": "Hộp thoại · phía trên biểu mẫu",
+      "properties": "Lỗi được hiển thị bằng role=alert với thông báo an toàn; không phản chiếu password hoặc raw error.",
+      "event_ids": [
+        "AD-02-EV-008",
+        "AD-02-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-048",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Thông báo tạo tài khoản thành công",
+      "type": "Thông báo trạng thái",
+      "position": "Đầu nội dung",
+      "properties": "Sau HTTP 201 hợp lệ, dialog đóng, thông báo polite xuất hiện và query #68 hiện hành được tải lại.",
+      "event_ids": [
+        "AD-02-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-049",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Dòng người dùng và thao tác tương ứng",
+      "type": "Dữ liệu bảng/liên kết",
+      "position": "Bảng · từng dòng",
+      "properties": "Hiển thị profile theo 7 cột; ID/action link chỉ có với ID dương biểu diễn chính xác; action chỉ điều hướng.",
+      "event_ids": [
+        "AD-02-EV-006",
+        "AD-02-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EL-050",
+      "marker": "Bổ sung 2026-11-22",
+      "name": "Vùng trạng thái tải/lỗi/không nhất quán",
+      "type": "Vùng trạng thái",
+      "position": "Bảng · theo trạng thái",
+      "properties": "Loading dùng status/busy; lỗi dùng alert và retry/recovery; mismatch giữ rows, ẩn total/page; không đồng nhất với empty.",
+      "event_ids": [
+        "AD-02-EV-001",
+        "AD-02-EV-005",
+        "AD-02-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-02-EV-001",
+      "name": "EV-01 — Khởi tạo/tải danh sách",
+      "trigger": "Mở /admin/users hoặc query URL thay đổi",
+      "processing": "Đọc role/status/keyword/page; gọi #68 bằng Bearer; kiểm tra DESIGN_RESOURCE_RETRIEVED, Page projection, fixed size, requested page và safe total_pages.",
+      "element_ids": [
+        "AD-02-EL-008",
+        "AD-02-EL-009",
+        "AD-02-EL-012",
+        "AD-02-EL-016",
+        "AD-02-EL-020",
+        "AD-02-EL-022",
+        "AD-02-EL-024",
+        "AD-02-EL-025",
+        "AD-02-EL-028",
+        "AD-02-EL-030",
+        "AD-02-EL-050"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-01; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-client/src/app/features/admin/AD02/data-access/ad02-api.service.ts"
+    },
+    {
+      "id": "AD-02-EV-002",
+      "name": "EV-02 — Tìm kiếm keyword",
+      "trigger": "Nhập keyword và submit bộ lọc",
+      "processing": "Cập nhật keyword trên URL và gọi #68; API trim/lowercase, tìm literal substring full_name/email, không tìm ID.",
+      "element_ids": [
+        "AD-02-EL-016",
+        "AD-02-EL-020"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-02; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-server/app/modules/admin/api_68_admin_users_list/query.py"
+    },
+    {
+      "id": "AD-02-EV-003",
+      "name": "EV-03 — Lọc role/status",
+      "trigger": "Nhập chuỗi role hoặc status và áp dụng",
+      "processing": "Gửi raw exact strings tới #68; không tự đổi chữ hoa/thường hoặc map enum; unknown value có thể trả empty Page 200.",
+      "element_ids": [
+        "AD-02-EL-017",
+        "AD-02-EL-018",
+        "AD-02-EL-020"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-03; apps/study-server/docs/dd/68_admin_users_list/03_Request.md; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EV-004",
+      "name": "EV-04 — Xóa bộ lọc",
+      "trigger": "Chọn Xóa lọc",
+      "processing": "Xóa keyword/role/status khỏi truy vấn; mã nguồn hiện đặt page=1 và giữ các tham số truy vấn không liên quan. Chính sách đặt lại trang cần được xác nhận.",
+      "element_ids": [
+        "AD-02-EL-019",
+        "AD-02-EL-020"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-04; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EV-005",
+      "name": "EV-05 — Chuyển trang",
+      "trigger": "Chọn trang trước hoặc trang tiếp theo",
+      "processing": "Đổi page 1-based trong URL; size/order do server; nút disabled theo metadata; mismatch/ngoài phạm vi có luồng riêng.",
+      "element_ids": [
+        "AD-02-EL-028",
+        "AD-02-EL-029",
+        "AD-02-EL-030",
+        "AD-02-EL-031",
+        "AD-02-EL-050"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-05; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-server/docs/dd/68_admin_users_list/03_Request.md"
+    },
+    {
+      "id": "AD-02-EV-006",
+      "name": "EV-06 — Mở chi tiết user",
+      "trigger": "Chọn ID trong row",
+      "processing": "Dùng ID dương safe integer để điều hướng AD-03/#69; không gửi email/PII trong URL.",
+      "element_ids": [
+        "AD-02-EL-049"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-06; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EV-007",
+      "name": "EV-07 — Handoff chỉnh sửa/quản lý trạng thái",
+      "trigger": "Chọn Chỉnh sửa hoặc Quản lý trạng thái trong row",
+      "processing": "Điều hướng AD-04/AD-05 bằng ID safe; không gọi #70/#71/#72 từ AD-02.",
+      "element_ids": [
+        "AD-02-EL-049"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-07; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EV-008",
+      "name": "EV-08 — Thêm người dùng qua API #105",
+      "trigger": "Mở dialog, nhập trường hợp lệ và gửi",
+      "processing": "Gửi POST #105; bộ kiểm tra quyền ADMIN của máy chủ chạy trước khi phân tích/truy vấn. Phản hồi 201 phải là UserProfile ACTIVE an toàn; sau đó đóng hộp thoại, hiển thị thông báo và tải lại với cùng truy vấn #68.",
+      "element_ids": [
+        "AD-02-EL-015",
+        "AD-02-EL-039",
+        "AD-02-EL-040",
+        "AD-02-EL-041",
+        "AD-02-EL-042",
+        "AD-02-EL-043",
+        "AD-02-EL-046",
+        "AD-02-EL-047",
+        "AD-02-EL-048"
+      ],
+      "api_ids": [
+        "API-105",
+        "API-68"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-08; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-server/app/modules/admin/api_105_admin_users_create/view.py"
+    },
+    {
+      "id": "AD-02-EV-009",
+      "name": "EV-09 — Export báo cáo",
+      "trigger": "Chọn nút Xuất báo cáo",
+      "processing": "Không tải file và không gọi API khác; nút disabled cho tới khi có export contract/quyền.",
+      "element_ids": [
+        "AD-02-EL-014"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-09; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EV-010",
+      "name": "EV-10 — Làm mới / hướng dẫn",
+      "trigger": "Chọn Làm mới hoặc Xem hướng dẫn",
+      "processing": "Làm mới gọi lại #68 với truy vấn hiện tại; trợ giúp vẫn bị vô hiệu hóa vì chưa có đích đến.",
+      "element_ids": [
+        "AD-02-EL-026",
+        "AD-02-EL-027",
+        "AD-02-EL-050"
+      ],
+      "api_ids": [
+        "API-68"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-10; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+    },
+    {
+      "id": "AD-02-EV-011",
+      "name": "EV-11 — Điều hướng đầu trang/chân trang",
+      "trigger": "Chọn mục navigation hoặc liên kết ngoài màn hình",
+      "processing": "Dùng route đã đăng ký trong Admin layout; không dùng href=\"#\" làm đích; link policy/RBAC/support chưa được map.",
+      "element_ids": [
+        "AD-02-EL-002",
+        "AD-02-EL-004",
+        "AD-02-EL-006",
+        "AD-02-EL-008",
+        "AD-02-EL-035",
+        "AD-02-EL-036",
+        "AD-02-EL-037",
+        "AD-02-EL-038"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-11; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md; apps/study-client/src/app/layouts/admin/admin-layout.html; apps/study-client/src/app/features/admin/admin.routes.ts"
+    },
+    {
+      "id": "AD-02-EV-012",
+      "name": "EV-12 — Hiển thị policy/system status",
+      "trigger": "Tải màn hình và quan sát badge/banner/trạng thái",
+      "processing": "Render health/audit/sync/assurance chỉ khi có contract/source; #68 không cung cấp dữ liệu hoặc side effect tương ứng.",
+      "element_ids": [
+        "AD-02-EL-003",
+        "AD-02-EL-007",
+        "AD-02-EL-009",
+        "AD-02-EL-010",
+        "AD-02-EL-011",
+        "AD-02-EL-021",
+        "AD-02-EL-032",
+        "AD-02-EL-033",
+        "AD-02-EL-034",
+        "AD-02-EL-037"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-12; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #3, #7, #9–11, #21, #32–34, #37; API #68"
+    },
+    {
+      "id": "AD-02-EV-013",
+      "name": "EV-13 — Đóng/hủy dialog tạo user",
+      "trigger": "Chọn nút đóng, Hủy hoặc nhấn Escape",
+      "processing": "Khi không pending, dialog đóng và focus trả về nút Thêm; khi pending, đóng/hủy bị chặn.",
+      "element_ids": [
+        "AD-02-EL-039",
+        "AD-02-EL-044",
+        "AD-02-EL-045"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+    },
+    {
+      "id": "AD-02-EV-014",
+      "name": "EV-14 — Chỉnh trường và xóa lỗi dialog",
+      "trigger": "Sửa một trường sau lỗi submit",
+      "processing": "Thay đổi dữ liệu nhập sẽ cập nhật biểu mẫu; lỗi máy chủ được xóa sau khi sửa dữ liệu; role chỉ nhận ba giá trị đã cấu hình.",
+      "element_ids": [
+        "AD-02-EL-040",
+        "AD-02-EL-041",
+        "AD-02-EL-042",
+        "AD-02-EL-043",
+        "AD-02-EL-047"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD02-BL-001",
+      "description": "Claim JWT ADMIN hiện thay cho quyền quản lý người dùng; chính sách đơn vị thuê/phạm vi chưa được chủ sở hữu phê duyệt.",
+      "impact": "Không thể xác nhận actor có quyền xem danh sách hoặc tạo user theo AC-31.",
+      "decision": "Chủ sở hữu xác nhận quyền, ranh giới đơn vị thuê và ánh xạ claim cho AD-02.",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §3; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD02-BL-002",
+      "description": "API #68 còn Draft; role/status là string exact-match nhưng enum và mapping nhãn UI chưa chốt.",
+      "impact": "Không thể xác nhận bộ lọc prototype hoặc test đầy đủ tập role/status.",
+      "decision": "Owner cung cấp enum/value set và nhãn được duyệt; không tự map instructor/locked.",
+      "source_ref": "apps/study-server/docs/dd/68_admin_users_list/02_Overview.md; OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD02-BL-003",
+      "description": "Placeholder prototype hứa tìm mã user nhưng API #68 chỉ tìm full_name/email.",
+      "impact": "Tiêu chí tìm kiếm và copy của màn hình đang lệch nhau.",
+      "decision": "Owner xác nhận bỏ ID khỏi copy hoặc phê duyệt contract tìm ID.",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #16; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-02",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD02-BL-004",
+      "description": "Email/phone là PII; audit access, deleted/suspended visibility, lifecycle và null/omit policy chưa chốt.",
+      "impact": "Không thể chốt hiển thị profile và tập dữ liệu user trong test.",
+      "decision": "Owner phê duyệt PII, logging/audit và lifecycle visibility policy.",
+      "source_ref": "apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD02-BL-005",
+      "description": "Chính sách đặt lại trang/URL và cách hiển thị phân trang khi total_pages=0 vẫn khác nhau giữa ảnh chụp, danh mục kiểm kê và mã nguồn.",
+      "impact": "Không thể chốt ca lọc/reset/empty page/back-forward.",
+      "decision": "Chủ sở hữu sản phẩm/thiết kế chốt chuẩn hóa URL, đặt lại trang về 1 và cách trình bày trang rỗng.",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-04–EV-05; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md §3",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD02-BL-006",
+      "description": "Local #68/#105 truy vấn legacy BIGINT users; live schema/migration và V1-PILOT UUID model chưa đối chiếu.",
+      "impact": "Không xác minh được tương thích môi trường thật hoặc deployment.",
+      "decision": "DB/API owner xác nhận schema live, migration và môi trường đích.",
+      "source_ref": "apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD02-BL-007",
+      "description": "Authenticated browser, live API/DB và deployment chưa được xác minh; UI hiện khác screenshot ở palette/typeface và vài thành phần.",
+      "impact": "Chưa thể phát hành bộ ca để thực thi như tiêu chí đã duyệt.",
+      "decision": "Design owner duyệt screenshot/source discrepancy; QA chạy trên môi trường được xác định sau khi DD được chốt.",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2; .agents/web-study/design.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD02-BL-008",
+      "description": "Chưa xác định owner/reviewer/approver cho DD và chưa có chữ ký phê duyệt; health/sync/audit/RBAC/export/help claims không có contract.",
+      "impact": "Không đạt điều kiện phát hành UTC chính thức có thể thực thi.",
+      "decision": "Gán owner/reviewer/approver và quyết định các thành phần không có nguồn trước khi đổi trạng thái phát hành.",
+      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md metadata; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #3, #7, #14, #21, #27, #32–38",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD02-TC-SCR-001",
+        "requirement_ids": [
+          "AD02-REQ-01",
+          "AD02-REQ-14",
+          "AD02-REQ-16"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến AD-02 bằng phiên quản trị viên",
+        "precondition": "Study Web được triển khai vào môi trường kiểm thử; có phiên Admin được cấp cho tester. Quyền user-management chưa được coi là đã duyệt.",
+        "data": "Route /admin/users; đối chứng không có session và session không có claim ADMIN.",
+        "steps": [
+          "Mở /admin/users khi chưa có phiên.",
+          "Xác nhận màn hình không gửi GET #68 và không hiển thị danh sách rỗng giả.",
+          "Đăng nhập bằng phiên kiểm thử hợp lệ rồi mở lại tuyến."
+        ],
+        "expected": "Quyền quản lý người dùng và phạm vi tenant (đơn vị được quản lý) đang chờ xác nhận trong DD. Khi được duyệt, tuyến phải tuân theo khung xác thực và không gọi #68 trước khi có phiên hợp lệ. Không ghi nhận Đạt khi còn blocker.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §1, §5",
+          "apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-002",
+        "requirement_ids": [
+          "AD02-REQ-01",
+          "AD02-REQ-02",
+          "AD02-REQ-05",
+          "AD02-REQ-06"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Tải danh sách bằng API #68 và tham số URL",
+        "precondition": "Phiên Admin trong môi trường kiểm thử; API giả lập trả về Page hợp lệ theo trang được yêu cầu.",
+        "data": "Từ khóa=ada; role=MENTOR; status=ACTIVE; page=2; phản hồi có size=20, total=21, total_pages=2.",
+        "steps": [
+          "Mở /admin/users với bốn tham số truy vấn đã nêu.",
+          "Quan sát trạng thái đang tải trong lúc #68 đang chờ.",
+          "Kiểm tra yêu cầu và phản hồi phân trang sau khi hoàn tất."
+        ],
+        "expected": "Sau khi #68 được duyệt, yêu cầu chỉ gửi role/status/keyword/page; phản hồi phải có DESIGN_RESOURCE_RETRIEVED, một Page hợp lệ và trường page trong phản hồi khớp với giá trị yêu cầu; size (kích thước trang) là 20. API #68 vẫn ở trạng thái Nháp; chờ xác nhận trước khi thực thi.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-01",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/04-api-integration.md §2",
+          "apps/study-server/docs/dd/68_admin_users_list/03_Request.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-003",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-03",
+          "AD02-REQ-04",
+          "AD02-REQ-05",
+          "AD02-REQ-11",
+          "AD02-REQ-15"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị Page<UserProfile> và dữ liệu an toàn",
+        "precondition": "API #68 test trả tối đa 20 profile tổng hợp; trang được mở bằng phiên test.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Phản hồi có avatar_url=null, phone=null, updated_at; hồ sơ tuyệt đối không chứa password_hash.",
+        "steps": [
+          "Tải danh sách với phản hồi thành công.",
+          "Đối chiếu các cột và giá trị hiển thị với hồ sơ.",
+          "Kiểm tra không có phone/avatar/updated_at/password_hash trong bảng hoặc nhật ký."
+        ],
+        "expected": "Hiển thị các trường theo cột đã duyệt; không để lộ thông tin xác thực. Quyết định về việc hiển thị email/PII, nhãn role/status và lược đồ đang chờ xác nhận DD.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §UserProfile",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/04-api-integration.md §2",
+          "apps/study-server/app/modules/admin/api_68_admin_users_list/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-004",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-05",
+          "AD02-REQ-06",
+          "AD02-REQ-10"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt phản hồi Page rỗng với trạng thái đồng bộ",
+        "precondition": "Phiên Admin test; API #68 trả HTTP 200 với items=[] và total=0.",
+        "data": "pagination={page:1,size:20,total:0,total_pages:0}; không có sync/health fields.",
+        "steps": [
+          "Áp dụng bộ lọc không có kết quả.",
+          "Quan sát trạng thái rỗng và bộ đếm/phân trang.",
+          "Kiểm tra không xuất hiện khẳng định “đang chờ đồng bộ”."
+        ],
+        "expected": "Phản hồi HTTP 200 dạng Page rỗng hiển thị thông báo không có kết quả; không diễn giải thành lỗi hoặc trạng thái đồng bộ. Cách hiển thị phân trang 0/0 đang chờ xác nhận DD.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md §3",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #24–30",
+          "apps/study-server/docs/dd/68_admin_users_list/04_Response.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-005",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-06",
+          "AD02-REQ-17"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Xử lý sai lệch COUNT/LIST mà không hiển thị trạng thái rỗng giả",
+        "precondition": "Phiên Admin test; API #68 trả rows nhưng count dự kiến khác số rows trang.",
+        "data": "page=1,size=20,total=21, items.length=19; dữ liệu còn lại là synthetic.",
+        "steps": [
+          "Tải trang với sai lệch đã cấu hình.",
+          "Quan sát các dòng, cảnh báo, tổng số và phân trang.",
+          "Chọn Tải lại trang này."
+        ],
+        "expected": "Giữ lại 19 dòng do phản hồi trả về; ẩn tổng số/phân trang đã cũ; hiện cảnh báo và cho phép tải lại cùng tham số truy vấn/trang. Hành vi đang chờ xác nhận trong DD trước khi phê duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md current-source addendum 2026-11-21",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md current-source addendum 2026-11-21"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-006",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-05",
+          "AD02-REQ-06",
+          "AD02-REQ-17"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Khôi phục trang nằm ngoài phạm vi",
+        "precondition": "Phiên Admin thử nghiệm; truy vấn có page vượt total_pages và API trả về trang rỗng.",
+        "data": "page=4; total_pages=3; giữ keyword=ada và tab=users.",
+        "steps": [
+          "Mở tham số page=4 cùng bộ lọc đang giữ.",
+          "Quan sát cảnh báo trang không còn dữ liệu.",
+          "Chọn Về trang 1."
+        ],
+        "expected": "Hiển thị trạng thái trang ngoài phạm vi riêng; thao tác quay về trang 1 giữ lại bộ lọc và các tham số truy vấn không liên quan. Tiêu chí này chờ xác nhận DD/API #68.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md §3; empty pagination",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-007",
+        "requirement_ids": [
+          "AD02-REQ-01",
+          "AD02-REQ-02",
+          "AD02-REQ-06"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị lỗi xác thực, phân quyền, bộ lọc và máy chủ",
+        "precondition": "Phiên test có thể cấu hình từng response API; không dùng live credential.",
+        "data": "Lần lượt #68 trả 401, 403, 422 page invalid, 500 và network error.",
+        "steps": [
+          "Gửi yêu cầu danh sách trong từng cấu hình lỗi.",
+          "Quan sát role=alert, thông báo an toàn và thao tác thử lại/khôi phục.",
+          "Xác nhận không hiển thị các dòng cũ như dữ liệu mới và không để lộ lỗi thô/PII."
+        ],
+        "expected": "401/403 tuân theo trải nghiệm xác thực đã duyệt; với 422, khôi phục về trang 1 và giữ bộ lọc; lỗi có thể thử lại phải có nút Thử lại, không để lộ chi tiết nhạy cảm. Cách xử lý UX cho 401/403 đang chờ xác nhận DD.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md §3",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/04-api-integration.md §2",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-008",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13",
+          "AD02-REQ-15",
+          "AD02-REQ-18"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Tạo người dùng thành công và tải lại truy vấn hiện tại",
+        "precondition": "Môi trường test có Admin session được cấp; email chưa tồn tại; #105 trả profile hợp lệ.",
+        "data": "full_name=UTC User; email=utc.user@example.test; password=test-only, không dùng lại; role=MENTOR; query hiện tại keyword=ada&page=2.",
+        "steps": [
+          "Mở hộp thoại và nhập dữ liệu hợp lệ.",
+          "Gửi API #105 một lần.",
+          "Kiểm tra phản hồi, thông báo thành công, tiêu điểm và yêu cầu #68 tiếp theo."
+        ],
+        "expected": "HTTP 201 DESIGN_RESOURCE_CREATED kèm hồ sơ role=MENTOR/status=ACTIVE; không có password/hash; hộp thoại đóng, thông báo được công bố qua vùng trợ năng aria-live=polite và #68 được gọi lại với cùng tham số truy vấn/trang. API mở rộng #105 đã được duyệt.",
+        "api_ids": [
+          "API-105",
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-08 current-source addendum 2026-11-22",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts",
+          "apps/study-server/app/modules/admin/api_105_admin_users_create/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-009",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13",
+          "AD02-REQ-15"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Giữ hộp thoại và bản nháp khi tạo người dùng thất bại",
+        "precondition": "Dialog tạo user đang mở; #105 test được cấu hình trả lỗi an toàn.",
+        "data": "Email utc.user@example.test đã tồn tại; response 409 DESIGN_STATE_CONFLICT; password test-only.",
+        "steps": [
+          "Nhập dữ liệu rồi gửi biểu mẫu.",
+          "Quan sát thông báo lỗi trong hộp thoại.",
+          "Kiểm tra bản nháp còn lại và mật khẩu không bị phản chiếu trong thông báo."
+        ],
+        "expected": "Hộp thoại và bản nháp được giữ lại để sửa; lỗi 409 hiển thị thông báo an toàn; không tự gửi lại hoặc làm lộ mật khẩu. Luồng #105 đã được duyệt.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-08",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-010",
+        "requirement_ids": [
+          "AD02-REQ-07",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Bàn giao dòng dữ liệu an toàn tới màn hình người dùng",
+        "precondition": "API #68 test trả một row có ID an toàn và một row không thể biểu diễn chính xác.",
+        "data": "Row A id=1001; Row B id=9007199254740993; không có email trong route.",
+        "steps": [
+          "Mở danh sách với hai dòng dữ liệu giả lập.",
+          "Chọn ID/thao tác của dòng A và xác nhận tuyến.",
+          "Kiểm tra dòng B không có liên kết chứa ID hoặc thao tác."
+        ],
+        "expected": "Dòng A điều hướng tới AD-03/AD-04/AD-05 theo thao tác; dòng B không tạo liên kết. AD-02 không gọi #70/#71/#72. Quyền và vòng đời ở màn hình đích đang chờ xác nhận.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-06–EV-07",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md §3",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-011",
+        "requirement_ids": [
+          "AD02-REQ-09",
+          "AD02-REQ-10",
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Không giả lập tính năng xuất dữ liệu, trợ giúp, đồng bộ hoặc kiểm toán",
+        "precondition": "Màn hình được tải với response #68 hợp lệ hoặc empty Page.",
+        "data": "Hợp đồng #68 không có điểm cuối API xuất người dùng, hướng dẫn, đồng bộ, kiểm tra tình trạng hệ thống hoặc kiểm toán.",
+        "steps": [
+          "Quan sát các nút xuất dữ liệu/trợ giúp và trạng thái/biểu ngữ.",
+          "Thử kích hoạt các điều khiển chưa được hỗ trợ.",
+          "Kiểm tra yêu cầu mạng và nội dung trang."
+        ],
+        "expected": "Các nút xuất dữ liệu/trợ giúp tiếp tục bị vô hiệu hóa khi chưa có đích đến; không tạo tệp, không gọi API thay thế và không hiển thị tuyên bố về tình trạng hệ thống/đồng bộ/kiểm toán khi chưa có nguồn.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #3, #7, #14, #21, #27, #32–38",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-09–EV-12"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-SCR-012",
+        "requirement_ids": [
+          "AD02-REQ-12",
+          "AD02-REQ-13",
+          "AD02-REQ-16"
+        ],
+        "target_id": "AD-02",
+        "group": "Toàn màn hình",
+        "title": "Rà soát giao diện và khả năng truy cập trước khi phát hành",
+        "precondition": "Có bản build trong môi trường kiểm thử sau khi DD được chốt; không dùng prototype HTML như runtime.",
+        "data": "Screenshot gốc 1600×1425; current Study Web design guide; keyboard-only và viewport hẹp theo tiêu chí owner duyệt.",
+        "steps": [
+          "Đối chiếu nội dung được kết xuất theo mã nguồn với ảnh chụp và hướng dẫn thiết kế.",
+          "Dùng bàn phím kiểm tra tiêu điểm, tên và vai trò truy cập của các điều khiển.",
+          "Ghi nhận khả năng thích ứng bố cục và mọi sai khác thiết kế để chủ sở hữu rà soát."
+        ],
+        "expected": "Chủ sở hữu cần quyết định về sai khác màu sắc/phông chữ và các phần tử còn thiếu. Chỉ thực thi tiêu chí giao diện thích ứng/tiêu điểm đã duyệt. Trình duyệt chưa được xác minh; tiêu chí đang chờ xác nhận DD và chưa sẵn sàng nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html",
+          ".agents/web-study/design.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD02-TC-EL-001",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 01 — Thương hiệu Study2Work LMS quản trị viên",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Thương hiệu Study2Work LMS Admin”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Hiển thị tên Study2Work/LMS và ADMIN PORTAL đúng shell hiện hành; không tự gắn version.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #1; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-002",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 02 — Nhóm điều hướng chính",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nhóm điều hướng chính”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Các mục điều hướng có routerLink đã đăng ký; mục Người dùng có aria-current=page trên /admin/users.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #2; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/layouts/admin/admin-layout.html; apps/study-client/src/app/features/admin/admin.routes.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-003",
+        "requirement_ids": [
+          "AD02-REQ-10"
+        ],
+        "target_id": "AD-02-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 03 — Nhãn trạng thái hệ thống",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nhãn trạng thái hệ thống”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Không hiển thị “System Normal” như health live khi chưa có health API/contract. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #3; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #3; API #68 không có health field"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-004",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 04 — Nút thông báo",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút thông báo”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Đích thông báo chỉ dùng route đã đăng ký; không suy ra có dữ liệu notification từ AD-02. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #4; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/layouts/admin/admin-layout.html; AD-02 DD 06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-005",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 05 — Danh tính và avatar quản trị viên",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Danh tính và avatar Admin”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Tên/role lấy từ Admin session profile; không lấy danh tính từ API #68.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #5; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-006",
+        "requirement_ids": [
+          "AD02-REQ-12",
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 06 — Đường dẫn breadcrumb toàn cục",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Đường dẫn breadcrumb toàn cục”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Kỳ vọng screenshot có breadcrumb hệ thống; source hiện là trạng thái phiên đã xác thực, cần design owner chốt. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #6; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #6; apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-007",
+        "requirement_ids": [
+          "AD02-REQ-10"
+        ],
+        "target_id": "AD-02-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 07 — Nhãn xác nhận RBAC",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nhãn xác nhận RBAC”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Không tuyên bố chuẩn/version RBAC nếu không có nguồn phê duyệt. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #7; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #7; API #68 không xác minh compliance"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-008",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 08 — Breadcrumb danh sách người dùng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Breadcrumb danh sách người dùng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Trang hiện tại hiển thị “Quản trị người dùng” và “Danh sách tài khoản”; current item có aria-current=page.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #8; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-009",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-10"
+        ],
+        "target_id": "AD-02-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 09 — Badge API #68",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Badge API #68”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Nếu hiển thị, chỉ ghi API #68; không biến badge thành bằng chứng health/runtime/RBAC version.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #9; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #9"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-010",
+        "requirement_ids": [
+          "AD02-REQ-12"
+        ],
+        "target_id": "AD-02-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 10 — Nhãn hệ thống xác thực",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nhãn hệ thống xác thực”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Screenshot ghi “Hệ thống xác thực”; source hiện ghi “Quản trị người dùng”; chờ design owner chốt copy. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #10; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #10; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-011",
+        "requirement_ids": [
+          "AD02-REQ-10"
+        ],
+        "target_id": "AD-02-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 11 — Nhãn cấp độ bảo mật",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nhãn cấp độ bảo mật”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Không hiển thị “Bảo Mật Cấp 3” khi chưa có chuẩn/owner xác nhận. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #11; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #11; AD-02 DD 05-business-rules.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-012",
+        "requirement_ids": [
+          "AD02-REQ-12"
+        ],
+        "target_id": "AD-02-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 12 — Tiêu đề trang",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Tiêu đề trang”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "H1 là “Quản lý tài khoản người dùng” và có thứ bậc tên trang duy nhất.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #12; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-013",
+        "requirement_ids": [
+          "AD02-REQ-03",
+          "AD02-REQ-04"
+        ],
+        "target_id": "AD-02-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 13 — Mô tả trang",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Mô tả trang”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Mô tả chỉ hứa tra cứu theo họ tên/email, vai trò và trạng thái; không khẳng định thao tác không được hỗ trợ.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #13; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-014",
+        "requirement_ids": [
+          "AD02-REQ-09"
+        ],
+        "target_id": "AD-02-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 14 — Nút xuất báo cáo",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút xuất báo cáo”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Nút Xuất báo cáo ở trạng thái disabled và có giải thích; không tải file giả.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #14; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #14"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-015",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-18"
+        ],
+        "target_id": "AD-02-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 15 — Nút thêm người dùng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút thêm người dùng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Nút mở dialog tạo user theo extension API #105 đã duyệt; không gọi API #68 để ghi data.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #15; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-016",
+        "requirement_ids": [
+          "AD02-REQ-03",
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 16 — Ô tìm kiếm từ khóa",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Ô tìm kiếm từ khóa”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Placeholder chỉ nêu họ tên/email; keyword không tìm mã user và không biến %/_ thành wildcard.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #16; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/app/modules/admin/api_68_admin_users_list/query.py"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-017",
+        "requirement_ids": [
+          "AD02-REQ-04",
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 17 — Bộ lọc vai trò",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Bộ lọc vai trò”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Gửi role dưới dạng chuỗi nguyên dạng; không dùng danh sách role hoặc chuyển chữ thường theo bản mẫu khi enum chưa được chốt. Kết quả cuối cùng chờ DD xác nhận; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi chủ sở hữu duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #17; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-018",
+        "requirement_ids": [
+          "AD02-REQ-04",
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 18 — Bộ lọc trạng thái",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Bộ lọc trạng thái”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Gửi status dạng exact string; không map locked sang trạng thái khác khi enum chưa được chốt. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #18; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-019",
+        "requirement_ids": [
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 19 — Nút xóa bộ lọc",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút xóa bộ lọc”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Xóa bộ lọc cập nhật truy vấn và page=1 trong mã nguồn; chính sách đặt lại trang cần chủ sở hữu sản phẩm xác nhận. Kết quả cuối cùng chờ DD xác nhận; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi chủ sở hữu duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #19; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; AD-02 DD 02-events.md EV-04"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-020",
+        "requirement_ids": [
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 20 — Tóm tắt bộ lọc đang áp dụng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Tóm tắt bộ lọc đang áp dụng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Chỉ liệt kê filter đã áp dụng; khi chưa có filter hiển thị thông báo chưa có bộ lọc.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #20; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-021",
+        "requirement_ids": [
+          "AD02-REQ-10"
+        ],
+        "target_id": "AD-02-EL-021",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 21 — Nhãn đồng bộ máy chủ",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nhãn đồng bộ máy chủ”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Không hiển thị thời điểm/trạng thái sync nếu không có nguồn API; API #68 không trả sync state.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #21; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #21; apps/study-server/app/modules/admin/api_68_admin_users_list/view.py"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-022",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02-EL-022",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 22 — Hàng tiêu đề bảng người dùng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Hàng tiêu đề bảng người dùng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Có 7 cột: mã, họ tên, email, vai trò, trạng thái, ngày tạo, thao tác; không thêm phone/avatar.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #22; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-screen.ui.ts; AD-02 DD 01-ui-elements.md #22"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-023",
+        "requirement_ids": [
+          "AD02-REQ-06",
+          "AD02-REQ-12"
+        ],
+        "target_id": "AD-02-EL-023",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 23 — Minh họa trạng thái rỗng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Minh họa trạng thái rỗng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Biểu tượng chỉ trang trí; trạng thái rỗng phải được công bố bằng văn bản và không ám chỉ lỗi sync. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #23; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #23"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-024",
+        "requirement_ids": [
+          "AD02-REQ-06"
+        ],
+        "target_id": "AD-02-EL-024",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 24 — Tiêu đề trạng thái rỗng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Tiêu đề trạng thái rỗng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Hiển thị “Chưa có dữ liệu tài khoản người dùng” khi API #68 trả items=[] và HTTP 200.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #24; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-025",
+        "requirement_ids": [
+          "AD02-REQ-06",
+          "AD02-REQ-10"
+        ],
+        "target_id": "AD-02-EL-025",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 25 — Mô tả trạng thái rỗng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Mô tả trạng thái rỗng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Nêu không tìm thấy tài khoản theo điều kiện hiện tại; không khẳng định đang chờ đồng bộ.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #25; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; API #68 response"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-026",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-05",
+          "AD02-REQ-06"
+        ],
+        "target_id": "AD-02-EL-026",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 26 — Nút làm mới danh sách",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút làm mới danh sách”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Tải lại cùng query hiện hành; khóa thao tác khi request đang tải; không đổi filter/page.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #26; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-027",
+        "requirement_ids": [
+          "AD02-REQ-09"
+        ],
+        "target_id": "AD-02-EL-027",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 27 — Nút hướng dẫn nhập liệu",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút hướng dẫn nhập liệu”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Nút guide giữ disabled và có giải thích đến khi có route/tài liệu hướng dẫn được xác định.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #27; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; AD-02 DD 01-ui-elements.md #27"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-028",
+        "requirement_ids": [
+          "AD02-REQ-05",
+          "AD02-REQ-17"
+        ],
+        "target_id": "AD-02-EL-028",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 28 — Số lượng tài khoản hiển thị",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Số lượng tài khoản hiển thị”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Hiển thị số dòng hiện tại và total từ pagination; ẩn số tổng khi snapshot COUNT/LIST mismatch.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #28; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-029",
+        "requirement_ids": [
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-029",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 29 — Nút trang trước",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút trang trước”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Nút disabled ở page 1; khi hợp lệ chuyển đến page-1 và giữ các query khác.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #29; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-030",
+        "requirement_ids": [
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-030",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 30 — Chỉ báo trang hiện tại/tổng số trang",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Chỉ báo trang hiện tại/tổng số trang”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Hiển thị page/total_pages; API trả trang rỗng có page=1,total_pages=0 nhưng ảnh chụp ghi 0/0; cách trình bày chờ xác nhận. Kết quả cuối cùng chờ DD xác nhận; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi chủ sở hữu duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #30; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-server/docs/dd/68_admin_users_list/04_Response.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-031",
+        "requirement_ids": [
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EL-031",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 31 — Nút trang tiếp theo",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút trang tiếp theo”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Nút disabled khi page>=total_pages; khi hợp lệ chuyển đến page+1.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #31; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-032",
+        "requirement_ids": [
+          "AD02-REQ-10",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02-EL-032",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 32 — Biểu tượng thông báo bảo mật",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Biểu tượng thông báo bảo mật”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Không render biểu tượng như bằng chứng assurance khi banner/chính sách chưa có nguồn duyệt. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #32; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #32; API #68 không có security assurance field"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-033",
+        "requirement_ids": [
+          "AD02-REQ-10",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02-EL-033",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 33 — Tiêu đề chính sách bảo mật",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Tiêu đề chính sách bảo mật”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Chỉ hiển thị khi có chính sách/owner được duyệt; source hiện không có banner này. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #33; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #33; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-034",
+        "requirement_ids": [
+          "AD02-REQ-10",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02-EL-034",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 34 — Nội dung cam kết audit",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nội dung cam kết audit”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Không khẳng định mọi truy xuất đã được audit khi chưa có audit contract/evidence. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #34; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #34; apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-035",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-035",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 35 — Bản quyền và workspace chân trang",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Bản quyền và workspace footer”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Footer nguồn hiển thị © Study2Work LMS và Hệ thống quản trị trung tâm; không tự thêm năm/version.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #35; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-036",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-036",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 36 — Liên kết chính sách riêng tư",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Liên kết chính sách riêng tư”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Chỉ render link khi đích chính sách thật được map; prototype href=\"#\" không phải đích hợp lệ. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #36; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #36; apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-037",
+        "requirement_ids": [
+          "AD02-REQ-10",
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-037",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 37 — Liên kết tiêu chuẩn RBAC",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Liên kết tiêu chuẩn RBAC”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Chỉ render đích RBAC được duyệt; không dùng link placeholder để tuyên bố tuân thủ. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #37; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #37; apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-038",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EL-038",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 38 — Liên kết hỗ trợ kỹ thuật",
+        "precondition": "Phiên Admin test hợp lệ và route /admin/users đã mở.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Liên kết hỗ trợ kỹ thuật”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Chỉ render link khi có support destination đã xác định; hiện source không khai báo đích này. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #38; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "AD-02 DD 01-ui-elements.md #38; apps/study-client/src/app/layouts/admin/admin-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-039",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EL-039",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 39 — Khung dialog tạo tài khoản",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Khung dialog tạo tài khoản”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Dialog có aria-modal, tên/mô tả được liên kết và giữ focus theo hành vi dialog của trình duyệt.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-040",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EL-040",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 40 — Trường họ và tên",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Trường họ và tên”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Label gắn input full_name; server trim và chấp nhận 1–150 ký tự sau trim.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-server/app/modules/admin/api_105_admin_users_create/validate.py"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-041",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EL-041",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 41 — Trường email",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Trường email”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Label gắn input email; server chuẩn hóa/kiểm tra email, tối đa 255 ký tự và email trùng trả 409.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-server/app/modules/admin/api_105_admin_users_create/validate.py"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-042",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13",
+          "AD02-REQ-15"
+        ],
+        "target_id": "AD-02-EL-042",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 42 — Trường mật khẩu khởi tạo",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Trường mật khẩu khởi tạo”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Reject giá trị rỗng/toàn khoảng trắng; mật khẩu khác khoảng trắng giữ nguyên để băm; không hiển thị lại.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts; API #105 validate.py"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-043",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EL-043",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 43 — Trường chọn vai trò tạo mới",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Trường chọn vai trò tạo mới”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Chỉ có STUDENT, MENTOR, ADMIN với nhãn tiếng Việt tương ứng; giá trị gửi đi là mã role viết hoa.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-044",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EL-044",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 44 — Nút đóng dialog",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút đóng dialog”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Đóng dialog khi không pending; khi đang gửi thì không đóng và không bỏ form state.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-045",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EL-045",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 45 — Nút hủy tạo tài khoản",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút hủy tạo tài khoản”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Hủy dialog khi không pending; khi pending thì disabled và form không thể bị đóng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-046",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EL-046",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 46 — Nút gửi và trạng thái đang tạo",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Nút gửi và trạng thái đang tạo”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Submit hợp lệ gửi một lần; khi pending đổi nhãn sang Đang tạo… và khóa các điều khiển.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-047",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13",
+          "AD02-REQ-15"
+        ],
+        "target_id": "AD-02-EL-047",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 47 — Vùng thông báo lỗi dialog",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Vùng thông báo lỗi dialog”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Lỗi được hiển thị bằng role=alert với thông báo an toàn; không phản chiếu password hoặc raw error.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-048",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13",
+          "AD02-REQ-18"
+        ],
+        "target_id": "AD-02-EL-048",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 48 — Thông báo tạo tài khoản thành công",
+        "precondition": "Phiên Admin test; dialog tạo tài khoản đang mở, trừ khi bước kiểm tra chính là nút mở dialog.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; kích thước trang=20. Hộp thoại có full_name, email, password chỉ dùng để thử nghiệm và role thử nghiệm.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Thông báo tạo tài khoản thành công”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Sau HTTP 201 hợp lệ, dialog đóng, thông báo polite xuất hiện và query #68 hiện hành được tải lại.",
+        "api_ids": [
+          "API-105"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-049",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-07",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02-EL-049",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 49 — Dòng user và hành động theo dòng",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Dòng user và hành động theo dòng”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Hiển thị profile theo 7 cột; ID/action link chỉ có với ID dương biểu diễn chính xác; action chỉ điều hướng. Kỳ vọng cuối cùng chờ xác nhận DD; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi owner duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EL-050",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-05",
+          "AD02-REQ-06",
+          "AD02-REQ-17"
+        ],
+        "target_id": "AD-02-EL-050",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 50 — Vùng trạng thái tải/lỗi/không nhất quán",
+        "precondition": "AD-02 đã tải trong môi trường test; dùng fixture synthetic, không dùng dữ liệu thật.",
+        "data": "Dữ liệu giả lập, không dùng tài khoản thật: id=1001; Ada Lovelace; ada@example.test; role=STUDENT; status=ACTIVE; created_at=2026-09-15T12:00:00; Page size=20.",
+        "steps": [
+          "Mở hoặc giữ trạng thái giao diện có thành phần “Vùng trạng thái tải/lỗi/không nhất quán”.",
+          "Kiểm tra nội dung, trạng thái, nhãn trợ năng và hành vi đã nêu trong tiêu chí."
+        ],
+        "expected": "Khi tải dùng status/busy; lỗi dùng alert và cho phép thử lại/khôi phục. Nếu dữ liệu không khớp thì giữ các hàng, ẩn total/page; không coi trường hợp này là trạng thái rỗng. Kết quả cuối cùng chờ DD xác nhận; không đánh dấu Đạt hoặc dùng làm tiêu chí chạy trước khi chủ sở hữu duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md marker #bổ sung dialog; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5",
+          "apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD02-TC-EV-001",
+        "requirement_ids": [
+          "AD02-REQ-01",
+          "AD02-REQ-02",
+          "AD02-REQ-05",
+          "AD02-REQ-06",
+          "AD02-REQ-16"
+        ],
+        "target_id": "AD-02-EV-001",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-01 — Khởi tạo/tải danh sách",
+        "precondition": "Mở tuyến bằng phiên Admin; yêu cầu dùng truy vấn tổng hợp và dữ liệu kiểm thử Page hợp lệ.",
+        "data": "Từ khóa=ada; role=MENTOR; status=ACTIVE; page=1; Page phản hồi có size=20.",
+        "steps": [
+          "Mở /admin/users với query keyword=ada&page=1.",
+          "Quan sát trạng thái loading, request #68 và kết quả Page."
+        ],
+        "expected": "Khi contract #68 được duyệt: gửi đúng filter/page, không thêm size/sort; response hợp lệ hiển thị data. Hiện API #68 Draft và quyền còn chờ xác nhận.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-01",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-01; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-client/src/app/features/admin/AD02/data-access/ad02-api.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-002",
+        "requirement_ids": [
+          "AD02-REQ-03",
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EV-002",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-02 — Tìm kiếm keyword",
+        "precondition": "Phiên Admin; dữ liệu giả có Ada Lovelace/ada@example.test và chuỗi %_.",
+        "data": "keyword= Ada ; chuỗi %_ là ký tự literal; dữ liệu synthetic có ada@example.test.",
+        "steps": [
+          "Nhập “ Ada ” rồi chọn Áp dụng.",
+          "Kiểm tra URL/request và kết quả lọc."
+        ],
+        "expected": "Keyword được áp dụng theo policy được duyệt và chỉ match full_name/email; không diễn giải %/_ là wildcard. URL/submit policy vẫn chờ xác nhận DD.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-02",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-02; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-server/app/modules/admin/api_68_admin_users_list/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-003",
+        "requirement_ids": [
+          "AD02-REQ-04",
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EV-003",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-03 — Lọc role/status",
+        "precondition": "Fixture role=MENTOR,status=SUSPENDED; thêm một giá trị unknown để kiểm tra no-match.",
+        "data": "role=MENTOR; status=SUSPENDED; đối chứng role=UNKNOWN cho empty Page.",
+        "steps": [
+          "Nhập role/status chính xác rồi chọn Áp dụng.",
+          "Kiểm tra query gửi đi và kết quả được tải."
+        ],
+        "expected": "Source giữ exact string; không map instructor→MENTOR hoặc locked→SUSPENDED. Tập enum/nhãn lọc đang chờ xác nhận DD trước khi đánh dấu Đạt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-03",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-03; apps/study-server/docs/dd/68_admin_users_list/03_Request.md; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-004",
+        "requirement_ids": [
+          "AD02-REQ-05"
+        ],
+        "target_id": "AD-02-EV-004",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-04 — Xóa bộ lọc",
+        "precondition": "URL có keyword=ada, role=MENTOR, status=ACTIVE, page=3, tab=users.",
+        "data": "Query trước reset: keyword=ada, role=MENTOR, status=ACTIVE, page=3, tab=users.",
+        "steps": [
+          "Chọn Xóa lọc.",
+          "Kiểm tra filter controls, page và query tab còn lại."
+        ],
+        "expected": "Các filter được xóa; quyết định có đặt page về 1 đang chờ xác nhận DD. Source hiện đặt page=1 và giữ tham số khác.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-04",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-04; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-005",
+        "requirement_ids": [
+          "AD02-REQ-05",
+          "AD02-REQ-17"
+        ],
+        "target_id": "AD-02-EV-005",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-05 — Chuyển trang",
+        "precondition": "Fixture 21 users, size=20, total_pages=2; thử trang cuối và page sai.",
+        "data": "21 người dùng synthetic; size=20; total=21; total_pages=2.",
+        "steps": [
+          "Mở page 1 rồi chọn Trang tiếp theo.",
+          "Kiểm tra query page=2, dữ liệu và trạng thái disabled của nút."
+        ],
+        "expected": "Chỉ chuyển trong phạm vi page hợp lệ; không gửi size/sort. Quy tắc page/empty display còn chờ xác nhận DD.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-05",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-05; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-server/docs/dd/68_admin_users_list/03_Request.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-006",
+        "requirement_ids": [
+          "AD02-REQ-07",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02-EV-006",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-06 — Mở chi tiết user",
+        "precondition": "Row giả id=1001; row đối chứng id ngoài safe-integer range.",
+        "data": "Row A id=1001; Row B id=9007199254740993; email không được đưa vào route.",
+        "steps": [
+          "Chọn ID của row 1001.",
+          "Kiểm tra đích /admin/users/1001; lặp lại với ID không an toàn."
+        ],
+        "expected": "ID dương biểu diễn chính xác mở AD-03; ID không an toàn không tạo link. Quyền/lifecycle tại màn đích vẫn chờ xác nhận.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-06",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-06; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-007",
+        "requirement_ids": [
+          "AD02-REQ-07"
+        ],
+        "target_id": "AD-02-EV-007",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-07 — Handoff chỉnh sửa/quản lý trạng thái",
+        "precondition": "Row giả id=1001 có hai action link; network log chỉ ghi nhận #68 list.",
+        "data": "Hàng có id=1001 và thao tác sửa/trạng thái tài khoản; chỉ quan sát việc chuyển tuyến, không gửi yêu cầu thay đổi dữ liệu.",
+        "steps": [
+          "Chọn từng action link.",
+          "Quan sát route và request phát sinh từ AD-02."
+        ],
+        "expected": "Đích là AD-04 hoặc AD-05 theo action; AD-02 chỉ điều hướng, không phát request mutation. Policy quyền ở màn đích chờ xác nhận.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-07",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-07; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-008",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13",
+          "AD02-REQ-15",
+          "AD02-REQ-18"
+        ],
+        "target_id": "AD-02-EV-008",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-08 — Thêm người dùng qua API #105",
+        "precondition": "Dữ liệu kiểm thử: full_name=UTC User, email=utc.user@example.test, role=MENTOR, mật khẩu chỉ dùng cho kiểm thử; query danh sách có keyword=ada&page=2.",
+        "data": "Người dùng UTC giả lập; email utc.user@example.test; role=MENTOR; mật khẩu chỉ dùng để kiểm thử; truy vấn keyword=ada&page=2.",
+        "steps": [
+          "Mở dialog và nhập bốn trường.",
+          "Gửi một lần; kiểm tra yêu cầu/phản hồi #105, thông báo, tiêu điểm và yêu cầu #68 tiếp theo."
+        ],
+        "expected": "Với HTTP 201 DESIGN_RESOURCE_CREATED và profile khớp, dialog đóng, thông báo xuất hiện, cùng query #68 được tải lại; không trả password/hash. Flow #105 đã được duyệt.",
+        "api_ids": [
+          "API-105",
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-08",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-08; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-server/app/modules/admin/api_105_admin_users_create/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-009",
+        "requirement_ids": [
+          "AD02-REQ-09"
+        ],
+        "target_id": "AD-02-EV-009",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-09 — Export báo cáo",
+        "precondition": "Không dùng API #103 hoặc dữ liệu thật.",
+        "data": "Không cung cấp export API/permission/file URL; không gọi API #103.",
+        "steps": [
+          "Quan sát disabled state và nội dung giải thích.",
+          "Thử kích hoạt bằng bàn phím/chuột trong môi trường kiểm thử."
+        ],
+        "expected": "Nút vẫn bị vô hiệu hóa, không phát sinh yêu cầu và không tạo tệp; chức năng xuất danh sách người dùng chưa được hỗ trợ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-09",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-09; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-010",
+        "requirement_ids": [
+          "AD02-REQ-02",
+          "AD02-REQ-05",
+          "AD02-REQ-09"
+        ],
+        "target_id": "AD-02-EV-010",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-10 — Làm mới / hướng dẫn",
+        "precondition": "URL có keyword=ada, role=MENTOR, status=ACTIVE, page=2.",
+        "data": "Truy vấn keyword=ada, role=MENTOR, status=ACTIVE, page=2; hướng dẫn chưa có tuyến điều hướng.",
+        "steps": [
+          "Chọn Làm mới và kiểm tra request query.",
+          "Kiểm tra help disabled và không phát request điều hướng."
+        ],
+        "expected": "Refresh giữ nguyên filter/page; help disabled cho tới khi có đích được duyệt.",
+        "api_ids": [
+          "API-68"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-10",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-10; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-011",
+        "requirement_ids": [
+          "AD02-REQ-14"
+        ],
+        "target_id": "AD-02-EV-011",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-11 — Điều hướng đầu trang/chân trang",
+        "precondition": "Mở màn với Admin session; ghi nhận routerLink và route catalog hiện hành.",
+        "data": "Route đích chỉ lấy từ admin.routes.ts; footer privacy/RBAC/support chưa được map.",
+        "steps": [
+          "Kiểm tra từng liên kết header/footer theo nguồn tuyến.",
+          "Xác nhận mục hiện tại có trạng thái current."
+        ],
+        "expected": "Chỉ các route đã đăng ký được điều hướng; privacy/RBAC/support không được giả lập. Mapping đích footer vẫn chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-11",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-11; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/06-navigation.md; apps/study-client/src/app/layouts/admin/admin-layout.html; apps/study-client/src/app/features/admin/admin.routes.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-012",
+        "requirement_ids": [
+          "AD02-REQ-10",
+          "AD02-REQ-11"
+        ],
+        "target_id": "AD-02-EV-012",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-12 — Hiển thị policy/system status",
+        "precondition": "Không giả lập health, sync, audit hoặc RBAC certification.",
+        "data": "Không có health, sync, audit hoặc RBAC certification API/field trong #68.",
+        "steps": [
+          "Mở màn hình với response #68 hợp lệ.",
+          "Đối chiếu badge/banner hiển thị với source contract."
+        ],
+        "expected": "Không hiển thị claim System Normal, sync đã xong, security tier, audit guarantee hoặc RBAC certification nếu không có nguồn được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-12",
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-12; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #3, #7, #9–11, #21, #32–34, #37; API #68"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-013",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13"
+        ],
+        "target_id": "AD-02-EV-013",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-13 — Đóng/hủy dialog tạo user",
+        "precondition": "Dialog mở; thử trước khi gửi và trong trạng thái pending giả lập.",
+        "data": "Dialog mở trước khi gửi và trạng thái pending được fake trong test harness.",
+        "steps": [
+          "Đóng bằng nút/Hủy/Escape khi chưa gửi.",
+          "Giả lập pending rồi thử đóng/hủy.",
+          "Kiểm tra focus sau khi đóng."
+        ],
+        "expected": "Dialog đóng và trả focus về nút Thêm khi không pending; trạng thái pending chặn đóng và giữ form.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-13",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts; apps/study-client/src/app/features/admin/AD02/pages/ad02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD02-TC-EV-014",
+        "requirement_ids": [
+          "AD02-REQ-08",
+          "AD02-REQ-13",
+          "AD02-REQ-15"
+        ],
+        "target_id": "AD-02-EV-014",
+        "group": "Sự kiện",
+        "title": "Kiểm tra EV-14 — Chỉnh trường và xóa lỗi dialog",
+        "precondition": "Dialog đang hiển thị lỗi 409; test password rỗng/toàn khoảng trắng và role ngoài danh sách.",
+        "data": "Response #105 409; sửa email; thử password rỗng/toàn khoảng trắng.",
+        "steps": [
+          "Sửa email sau lỗi conflict.",
+          "Kiểm tra thông báo lỗi được xóa và draft còn giữ.",
+          "Thử password chỉ có khoảng trắng."
+        ],
+        "expected": "Sửa field xóa lỗi cũ; password rỗng/toàn khoảng trắng không gửi request và có thông báo gắn với trường.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-14",
+          "apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.ts; apps/study-client/src/app/features/admin/AD02/ui/ad02-create-user-dialog.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ]
+  }
+}

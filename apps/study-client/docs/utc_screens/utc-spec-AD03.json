@@ -1,0 +1,1940 @@
+{
+  "metadata": {
+    "screen_id": "AD-03",
+    "screen_name": "Chi tiết người dùng",
+    "module": "Quản trị viên",
+    "route": "/admin/users/:userId",
+    "actor": "Admin đã xác thực; mapping quyền user-management AC-31 còn chờ xác nhận",
+    "version": "0.1 — KẾ HOẠCH UTC",
+    "dd_version": "0.3 / 2026-11-21",
+    "dd_status": "BLOCKED — policy, audit source, live schema và design decisions còn mở",
+    "runtime_status": "NOT VERIFIED — authenticated runtime/deployment chưa xác minh",
+    "author": "AI lập kế hoạch kiểm thử; cần review",
+    "reviewer": "Chưa phân công",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-23",
+    "source_name": "apps/study-client/docs/dd_screens/AD-03-ChiTietNguoiDung/00-overview.md đến 07-test-cases.md; images/screen-clean.png, images/screen-numbered.png; screen-stitch AD-03_PLAN.md và AD-03_markers.json",
+    "approval_note": "Người dùng thông báo tất cả DD đã được duyệt ngày 2026-11-23; repo AD-03 vẫn ghi BLOCKED và chưa có bản duyệt/sign-off đính kèm để đối chiếu."
+  },
+  "overall": {
+    "objective": "Xem hồ sơ người dùng qua API #69, phân biệt trạng thái tải/kết quả/lỗi và không suy diễn audit, đồng bộ hoặc quyền từ prototype.",
+    "inputs": "Route /admin/users/:userId nhận userId từ AD-02; Bearer JWT; không query/body; không truyền email/phone trong URL.",
+    "outputs": "Profile fields id, full_name, email, phone, role, status từ UserProfile; trạng thái lỗi theo API #69; không có audit data trong #69.",
+    "main_flow": "Mở route với ID → loading → GET #69 → kiểm tra envelope 200 DESIGN_RESOURCE_RETRIEVED và UserProfile → map các field được phép; 401/403/404/500/network là nhánh riêng; return về AD-02.",
+    "states": [
+      "Đang tải",
+      "Hồ sơ đã tải",
+      "Chưa xác thực",
+      "Không có quyền",
+      "Không tìm thấy",
+      "Lỗi API/mạng",
+      "Audit chưa có nguồn",
+      "Hành động AD-04/AD-05 bị khóa"
+    ],
+    "preconditions": "Fixture người dùng giả lập; phiên/quyền Admin phải được owner duyệt trước khi acceptance run.",
+    "security": "Không đưa PII vào URL/log; không hiển thị profile khi lỗi; không coi badge RBAC hoặc system-health trong prototype là quyền/health thực.",
+    "out_of_scope": "Không thêm API kiểm toán/đồng bộ, thao tác thay đổi #70/#71/#72, enum role/status, chính sách che dữ liệu, quy tắc đơn vị thuê/MFA hoặc hành vi chưa được DD chốt."
+  },
+  "apis": [
+    {
+      "id": "AD-03-API-001",
+      "method": "GET",
+      "path": "/api/v1/admin/users/{user_id}",
+      "request": "Bearer JWT; path user_id:int64; không query hoặc body. X-Trace-Id tùy chọn theo API DD/middleware.",
+      "response": "HTTP 200; businessCode=DESIGN_RESOURCE_RETRIEVED; ApiEnvelope<UserProfile>. Trường sử dụng: id, full_name, email, phone, role, status.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 500 DESIGN_INTERNAL_ERROR. Network/timeout UI policy chưa được chốt.",
+      "auth": "Bearer JWT; mã nguồn hiện kiểm tra claim ADMIN; việc ánh xạ sang quyền quản lý người dùng theo AC-31 còn chờ chủ sở hữu xác nhận.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "04-api-integration.md §2; API #69 refs trong 00-overview.md",
+      "event_ids": [
+        "AD-03-EV-001"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "AD-03-YC-001",
+      "description": "Mở chi tiết bằng userId từ AD-02; không truyền email hoặc số điện thoại trong URL.",
+      "group": "Điều hướng",
+      "source_ref": "02-events.md §D EV-01/EV-02; 06-navigation.md §handoff",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-002",
+      "description": "Gọi GET #69 với Bearer JWT và user_id trên path, không query hoặc body.",
+      "group": "API",
+      "source_ref": "02-events.md §D EV-01; 04-api-integration.md §2",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-003",
+      "description": "Chỉ xem profile thành công khi nhận HTTP 200, DESIGN_RESOURCE_RETRIEVED và UserProfile hợp lệ.",
+      "group": "API/trạng thái",
+      "source_ref": "00-overview.md §API; 02-events.md §D EV-01",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-004",
+      "description": "Tách phản hồi 401, 403, 404, 500 và network; không hiển thị dữ liệu cũ như mới.",
+      "group": "Trạng thái",
+      "source_ref": "02-events.md §D EV-01; 03-data-flow.md §state model",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-005",
+      "description": "Ánh xạ id, full_name, email, phone, role, status theo UserProfile; không tự tạo giá trị thay thế cho phone null.",
+      "group": "Dữ liệu hồ sơ",
+      "source_ref": "00-overview.md §UserProfile; 02-events.md §D EV-01",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-006",
+      "description": "Giữ chính xác signed-int64 userId khi hiển thị/điều hướng; không chuyển thành UUID hoặc email.",
+      "group": "Dữ liệu/điều hướng",
+      "source_ref": "00-overview.md §UserProfile; 02-events.md §D EV-01; 06-navigation.md §handoff",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-007",
+      "description": "Không suy ra nhật ký, số bản ghi, đồng bộ hoặc retention từ API #69.",
+      "group": "Kiểm toán",
+      "source_ref": "01-ui-elements.md §3 #21/#23/#27; 02-events.md §D EV-05",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-008",
+      "description": "Giữ hành động chỉnh sửa AD-04 và trạng thái AD-05 bị khóa cho tới khi quyền và contract đích được duyệt.",
+      "group": "Hành động quản trị",
+      "source_ref": "01-ui-elements.md §3 #15/#17; 02-events.md §D EV-03/EV-04",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-009",
+      "description": "Quay lại /admin/users; không thêm PII vào URL; giữ filter/page chỉ theo contract được xác nhận.",
+      "group": "Điều hướng",
+      "source_ref": "02-events.md §D EV-02; 06-navigation.md §3–§4",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-010",
+      "description": "Không giả lập route/API cho shell, notification, profile hoặc footer placeholder.",
+      "group": "Điều hướng shell",
+      "source_ref": "01-ui-elements.md §3 #1–#7/#32; 02-events.md §D EV-06",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-011",
+      "description": "Không coi 204, NULL_PAYLOAD, data:null hoặc nhãn “Chưa đồng bộ” là profile thành công.",
+      "group": "Hợp đồng response",
+      "source_ref": "00-overview.md §Expected behavior; 01-ui-elements.md §3 #13/#16/#28",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-012",
+      "description": "Email/phone, role/status, lifecycle và các nhãn RBAC/pháp lý chỉ hiển thị theo chính sách được owner duyệt.",
+      "group": "Quyền riêng tư/chính sách",
+      "source_ref": "01-ui-elements.md §3 #20/#24–#30; 05-business-rules.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-013",
+      "description": "Thống nhất design/runtime expectation với screen image và Study Web guide trước khi nghiệm thu UI.",
+      "group": "Thiết kế UI",
+      "source_ref": "00-overview.md §5; 05-business-rules.md §2; screen-clean.png",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    },
+    {
+      "id": "AD-03-YC-014",
+      "description": "Mô tả nút AD-04/AD-05 phải khớp template hiện hành đang disabled.",
+      "group": "Tính nhất quán DD/source",
+      "source_ref": "03-data-flow.md §E; pages/ad03-page.html",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã yêu cầu nội bộ UTC để truy vết; không thay thế mã AC-31/API nguồn."
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-03-EL-001",
+      "marker": "#1",
+      "name": "Thương hiệu Study2Work/LMS/Cổng quản trị",
+      "type": "Thương hiệu",
+      "position": "Thương hiệu cổng quản trị Study2Work/LMS",
+      "properties": "Nhận diện theo marker #1. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #1; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-002",
+      "marker": "#2",
+      "name": "Nhóm điều hướng quản trị chính",
+      "type": "Nhóm liên kết",
+      "position": "Nhóm điều hướng chính của trang quản trị",
+      "properties": "Nhận diện theo marker #2. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #2; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-003",
+      "marker": "#3",
+      "name": "Nhãn trạng thái hệ thống “System Normal”",
+      "type": "Nhãn trạng thái",
+      "position": "Huy hiệu trạng thái “SYSTEM NORMAL”",
+      "properties": "Nhận diện theo marker #3. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #3; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-004",
+      "marker": "#4",
+      "name": "Biểu tượng thông báo",
+      "type": "Biểu tượng",
+      "position": "Biểu tượng thông báo",
+      "properties": "Nhận diện theo marker #4. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #4; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-005",
+      "marker": "#5",
+      "name": "Thông tin quản trị viên và ảnh đại diện",
+      "type": "Thông tin tài khoản",
+      "position": "Danh tính và ảnh đại diện quản trị viên",
+      "properties": "Nhận diện theo marker #5. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #5; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-006",
+      "marker": "#6",
+      "name": "Đường dẫn điều hướng hệ thống",
+      "type": "Đường dẫn điều hướng",
+      "position": "Đường dẫn điều hướng toàn cục",
+      "properties": "Nhận diện theo marker #6. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #6; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-007",
+      "marker": "#7",
+      "name": "Nhãn xác thực RBAC",
+      "type": "Nhãn xác thực",
+      "position": "RBAC verification huy hiệu",
+      "properties": "Nhận diện theo marker #7. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #7; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-008",
+      "marker": "#8",
+      "name": "Đường dẫn điều hướng quản lý người dùng và chi tiết",
+      "type": "Đường dẫn điều hướng",
+      "position": "Quản lý người dùng/detail đường dẫn điều hướng",
+      "properties": "Nhận diện theo marker #8. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #8; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-009",
+      "marker": "#9",
+      "name": "Nhãn API #69 và trạng thái đồng bộ",
+      "type": "Nhãn API",
+      "position": "Huy hiệu đồng bộ dữ liệu API #69",
+      "properties": "Nhận diện theo marker #9. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #9; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-010",
+      "marker": "#10",
+      "name": "Nút quay lại danh sách người dùng AD-02",
+      "type": "Liên kết điều hướng",
+      "position": "Nút quay lại danh sách người dùng (AD-02)",
+      "properties": "Nhận diện theo marker #10. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #10; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-011",
+      "marker": "#11",
+      "name": "Tiêu đề hồ sơ chi tiết AD-03",
+      "type": "Khối tiêu đề",
+      "position": "Khu vực tiêu đề chi tiết: biểu tượng, tiêu đề, phụ đề và mã màn hình",
+      "properties": "Nhận diện theo marker #11. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #11; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-012",
+      "marker": "#12",
+      "name": "Tiêu đề thẻ thông tin định danh và liên hệ",
+      "type": "Tiêu đề phần",
+      "position": "Danh tính/contact thẻ tiêu đề",
+      "properties": "Nhận diện theo marker #12. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #12; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-013",
+      "marker": "#13",
+      "name": "Nhãn “Chưa đồng bộ”",
+      "type": "Nhãn trạng thái",
+      "position": "Huy hiệu trạng thái chưa đồng bộ",
+      "properties": "Nhận diện theo marker #13. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #13; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-014",
+      "marker": "#14",
+      "name": "Tiêu đề thẻ hành động quản trị",
+      "type": "Tiêu đề phần",
+      "position": "Tiêu đề thẻ thao tác quản trị",
+      "properties": "Nhận diện theo marker #14. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #14; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-015",
+      "marker": "#15",
+      "name": "Nút chỉnh sửa thông tin AD-04",
+      "type": "Nút",
+      "position": "Nút sửa người dùng (AD-04), đang vô hiệu hóa",
+      "properties": "Nhận diện theo marker #15. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #15; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-016",
+      "marker": "#16",
+      "name": "Thông báo chưa chọn người dùng",
+      "type": "Thông báo",
+      "position": "Bảng thông tin chưa chọn người dùng",
+      "properties": "Nhận diện theo marker #16. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #16; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-017",
+      "marker": "#17",
+      "name": "Nút khóa hoặc đổi trạng thái AD-05",
+      "type": "Nút",
+      "position": "Nút khóa/mở khóa trạng thái (AD-05), đang bị vô hiệu hóa",
+      "properties": "Nhận diện theo marker #17. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #17; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-018",
+      "marker": "#18",
+      "name": "Ghi chú điều kiện kích hoạt hành động tài khoản",
+      "type": "Thông báo",
+      "position": "Gợi ý về thao tác trạng thái tài khoản.",
+      "properties": "Nhận diện theo marker #18. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-003",
+        "AD-03-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #18; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-019",
+      "marker": "#19",
+      "name": "Dòng họ và tên",
+      "type": "Trường hồ sơ",
+      "position": "Full-name hàng",
+      "properties": "Nhận diện theo marker #19. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #19; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-020",
+      "marker": "#20",
+      "name": "Dòng địa chỉ email",
+      "type": "Trường hồ sơ",
+      "position": "Email hàng",
+      "properties": "Nhận diện theo marker #20. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #20; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-021",
+      "marker": "#21",
+      "name": "Tiêu đề và số lượng bản ghi nhật ký",
+      "type": "Tiêu đề và số liệu",
+      "position": "Tiêu đề nhật ký đăng nhập/vai trò và số lượng bản ghi",
+      "properties": "Nhận diện theo marker #21. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #21; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-022",
+      "marker": "#22",
+      "name": "Dòng mã định danh người dùng",
+      "type": "Trường hồ sơ",
+      "position": "Hàng User-ID",
+      "properties": "Nhận diện theo marker #22. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #22; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-023",
+      "marker": "#23",
+      "name": "Trạng thái rỗng của nhật ký kiểm toán",
+      "type": "Trạng thái rỗng",
+      "position": "Bảng trạng thái kiểm toán rỗng",
+      "properties": "Nhận diện theo marker #23. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #23; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-024",
+      "marker": "#24",
+      "name": "Dòng số điện thoại",
+      "type": "Trường hồ sơ",
+      "position": "Phone hàng",
+      "properties": "Nhận diện theo marker #24. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #24; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-025",
+      "marker": "#25",
+      "name": "Dòng vai trò hệ thống",
+      "type": "Trường hồ sơ",
+      "position": "System-role hàng",
+      "properties": "Nhận diện theo marker #25. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #25; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-026",
+      "marker": "#26",
+      "name": "Dòng trạng thái tài khoản",
+      "type": "Trường hồ sơ",
+      "position": "Tài khoản-trạng thái hàng",
+      "properties": "Nhận diện theo marker #26. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #26; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-027",
+      "marker": "#27",
+      "name": "Ghi chú giao thức bảo mật và thời hạn lưu trữ",
+      "type": "Ghi chú chính sách",
+      "position": "Ghi chú về quy trình bảo mật và lưu giữ",
+      "properties": "Nhận diện theo marker #27. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #27; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-028",
+      "marker": "#28",
+      "name": "Chú thích endpoint và mã phản hồi API",
+      "type": "Chú thích kỹ thuật",
+      "position": "Chú thích endpoint API và phản hồi",
+      "properties": "Nhận diện theo marker #28. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #28; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-029",
+      "marker": "#29",
+      "name": "Banner bảo vệ dữ liệu và tuân thủ",
+      "type": "Banner",
+      "position": "Biểu ngữ quyền riêng tư/tuân thủ",
+      "properties": "Nhận diện theo marker #29. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #29; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-030",
+      "marker": "#30",
+      "name": "Nhãn “RBAC Strict Audit Active”",
+      "type": "Nhãn xác thực",
+      "position": "Huy hiệu RBAC/kiểm toán nghiêm ngặt đang hoạt động",
+      "properties": "Nhận diện theo marker #30. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #30; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-031",
+      "marker": "#31",
+      "name": "Dòng bản quyền và hệ thống",
+      "type": "Văn bản chân trang",
+      "position": "Văn bản chân trang bản quyền/hệ thống",
+      "properties": "Nhận diện theo marker #31. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #31; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-03-EL-032",
+      "marker": "#32",
+      "name": "Nhóm liên kết quyền riêng tư, RBAC và hỗ trợ",
+      "type": "Nhóm liên kết",
+      "position": "Liên kết chân trang về quyền riêng tư/RBAC/hỗ trợ",
+      "properties": "Nhận diện theo marker #32. Phạm vi/giá trị kỳ vọng được giới hạn bởi DD AD-03; marker ảnh chỉ là bằng chứng tĩnh, không chứng minh runtime.",
+      "event_ids": [
+        "AD-03-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #32; images/screen-numbered.png"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-03-EV-001",
+      "name": "Mở AD-03 và lấy chi tiết người dùng",
+      "trigger": "Route entry từ AD-02 hoặc deep liên kết hợp lệ",
+      "processing": "Đọc userId từ route; gọi GET #69 với Bearer JWT, không query/body; kiểm tra envelope và map các field profile được phép; 401/403/404/500/network là các nhánh riêng; không dùng 204/null làm success.",
+      "element_ids": [
+        "AD-03-EL-010",
+        "AD-03-EL-016",
+        "AD-03-EL-019",
+        "AD-03-EL-020",
+        "AD-03-EL-022",
+        "AD-03-EL-024",
+        "AD-03-EL-025",
+        "AD-03-EL-026",
+        "AD-03-EL-028"
+      ],
+      "api_ids": [
+        "AD-03-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §D EV-01; 03-data-flow.md §3; 04-api-integration.md §2"
+    },
+    {
+      "id": "AD-03-EV-002",
+      "name": "Quay lại AD-02",
+      "trigger": "Kích hoạt liên kết quay lại hoặc breadcrumb danh sách",
+      "processing": "Điều hướng đến /admin/users; không gọi API từ thao tác quay lại; không đưa email/phone vào URL. Chính sách giữ filter/page chưa được xác nhận.",
+      "element_ids": [
+        "AD-03-EL-008",
+        "AD-03-EL-010"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md §D EV-02; 06-navigation.md §3–§4"
+    },
+    {
+      "id": "AD-03-EV-003",
+      "name": "Chuyển sang AD-04 để chỉnh sửa",
+      "trigger": "Nút chỉnh sửa thông tin AD-04",
+      "processing": "Giữ nút ở trạng thái vô hiệu hóa cho đến khi quyền, tuyến/API #70 và quy tắc trường được duyệt; AD-03 không gửi thao tác thay đổi dữ liệu. Luồng dữ liệu trong DD mô tả liên kết khi có ID, nhưng bản mẫu hiện có nút bị vô hiệu hóa; cần đồng bộ mô tả.",
+      "element_ids": [
+        "AD-03-EL-015",
+        "AD-03-EL-018"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §D EV-03; 01-ui-elements.md §3 #15; pages/ad03-page.html"
+    },
+    {
+      "id": "AD-03-EV-004",
+      "name": "Chuyển sang AD-05 để khóa hoặc đổi trạng thái",
+      "trigger": "Nút khóa/thay đổi trạng thái AD-05",
+      "processing": "Giữ nút ở trạng thái vô hiệu hóa cho đến khi chính sách status/delete, quyền và hợp đồng #71/#72 được duyệt; AD-03 không gọi PATCH/DELETE. Đồng bộ mô tả liên kết với nút hiện bị vô hiệu hóa trong bản mẫu.",
+      "element_ids": [
+        "AD-03-EL-017",
+        "AD-03-EL-018"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §D EV-04; 01-ui-elements.md §3 #17; pages/ad03-page.html"
+    },
+    {
+      "id": "AD-03-EV-005",
+      "name": "Hiển thị nhật ký, audit và thông tin bảo mật",
+      "trigger": "Render phần lịch sử/audit và các nhãn bảo mật",
+      "processing": "Không gọi API audit chưa được xác định; #69 không trả history/count/retention/health/compliance. Không coi count 0 hoặc panel rỗng prototype là dữ liệu thật.",
+      "element_ids": [
+        "AD-03-EL-011",
+        "AD-03-EL-021",
+        "AD-03-EL-023",
+        "AD-03-EL-027",
+        "AD-03-EL-029",
+        "AD-03-EL-030"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §D EV-05; 04-api-integration.md §2; 05-business-rules.md §2"
+    },
+    {
+      "id": "AD-03-EV-006",
+      "name": "Điều hướng shell, thông báo, tài khoản và chân trang",
+      "trigger": "Kích hoạt điều hướng đầu trang, thông báo, avatar hoặc liên kết chân trang",
+      "processing": "Chỉ điều hướng qua route đã được xác định ở màn hình/contract liên quan. Không phát sinh API từ nhãn System Normal, RBAC, sync hoặc legal copy; các placeholder # không phải route.",
+      "element_ids": [
+        "AD-03-EL-001",
+        "AD-03-EL-002",
+        "AD-03-EL-004",
+        "AD-03-EL-005",
+        "AD-03-EL-006",
+        "AD-03-EL-007",
+        "AD-03-EL-032"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §D EV-06; 06-navigation.md §3; 01-ui-elements.md §3 #1–#7, #32"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD03-BL-001",
+      "description": "Claim ADMIN là phương án thay thế cho quyền quản lý người dùng theo AC-31; chủ sở hữu chưa xác nhận quan hệ với đơn vị thuê/MFA/quyền.",
+      "impact": "Không thể xác nhận điều kiện truy cập AD-03.",
+      "decision": "Chủ sở hữu chốt quyền, ranh giới đơn vị thuê, MFA và ánh xạ claim cho AD-03.",
+      "source_ref": "00-overview.md §API/Expected behavior; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-002",
+      "description": "Local #69 truy vấn legacy BIGINT users; live schema/grants/deployment chưa xác minh, V1-PILOT dùng UUID model khác.",
+      "impact": "Chưa xác minh tương thích với môi trường đích.",
+      "decision": "DB/API owner xác nhận schema, grants và deployment target.",
+      "source_ref": "00-overview.md §Current source; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-003",
+      "description": "PII email/phone, masking, role/status enum, deleted/anonymized visibility và lifecycle chưa chốt.",
+      "impact": "Chưa thể chốt cách hiển thị và tập dữ liệu acceptance.",
+      "decision": "Owner duyệt PII policy, enum/label và lifecycle visibility.",
+      "source_ref": "01-ui-elements.md §3 #20/#24–#26; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-004",
+      "description": "API #69 không có audit/history/count/retention source; prototype có các số liệu và tuyên bố audit/security.",
+      "impact": "Không thể xác nhận audit panel, trạng thái rỗng, retention hoặc compliance copy.",
+      "decision": "Cung cấp audit API/event và policy hoặc phê duyệt loại bỏ các claim khỏi UI.",
+      "source_ref": "01-ui-elements.md §3 #21/#23/#27/#29/#30; 02-events.md §D EV-05",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-005",
+      "description": "Prototype ghi 204/NULL_PAYLOAD, sync và system-health copy, trong khi #69 định nghĩa 200 UserProfile hoặc 401/403/404/500.",
+      "impact": "Không thể dùng prototype response/status labels làm expected runtime.",
+      "decision": "Design/API owner chốt copy; không coi 204/null/sync là success của #69.",
+      "source_ref": "00-overview.md §Expected behavior; 01-ui-elements.md §3 #3/#9/#13/#16/#28",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-006",
+      "description": "User xác nhận “tất cả DD đã được duyệt” ngày 2026-11-23, nhưng AD-03 overview/business rules trong repository vẫn ghi DD BLOCKED và các quyết định chưa giải quyết; chưa có bản revision hoặc sign-off liên kết.",
+      "impact": "Không thể thay trạng thái phê duyệt hiện tại của nguồn bằng lời khẳng định không kèm bản DD được duyệt.",
+      "decision": "Liên kết/cập nhật bản DD đã duyệt và thông tin owner/reviewer/approver, hoặc nêu rõ các quyết định áp dụng cho AD-03.",
+      "source_ref": "Người dùng trả lời ngày 2026-11-23; 00-overview.md metadata/§6; 05-business-rules.md §2",
+      "status": "Cần đối chiếu hồ sơ"
+    },
+    {
+      "id": "AD03-BL-007",
+      "description": "Typography/palette prototype khác Study Web design guide; responsive, accessibility và runtime/deployment chưa được xác minh.",
+      "impact": "Chưa thể chốt visual acceptance hoặc khẳng định hành vi runtime.",
+      "decision": "Design owner duyệt hoặc đồng bộ UI với Study Web guide; xác định môi trường runtime để QA.",
+      "source_ref": "00-overview.md §5; 05-business-rules.md §2; .agents/web-study/design.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD03-BL-008",
+      "description": "03-data-flow.md mô tả action links AD-04/AD-05 khi có ID, nhưng current ad03-page.html có nút bị vô hiệu hóas không gắn routerLink.",
+      "impact": "Expected/hành vi hiện tại mô tả nút chưa nhất quán.",
+      "decision": "Đồng bộ DD với mẫu hiện tại; giữ disabled cho tới khi quyền và contract đích được xác nhận.",
+      "source_ref": "03-data-flow.md §E actions-gated; pages/ad03-page.html; 01-ui-elements.md §3 #15/#17",
+      "status": "Chờ đồng bộ DD"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-03-TC-MH-001",
+        "requirement_ids": [
+          "AD-03-YC-001",
+          "AD-03-YC-002",
+          "AD-03-YC-003",
+          "AD-03-YC-005"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Mở chi tiết bằng ID hợp lệ và nhận UserProfile",
+        "precondition": "Môi trường test có phiên Admin và fixture user giả lập; quyền AC-31 phải được xác nhận trước khi acceptance run.",
+        "data": "Route /admin/users/123; fixture profile có id=123, full_name, email giả, phone nullable, role/status.",
+        "steps": "1. Mở AD-03 từ user có ID 123.\n2. Quan sát request #69 và loading.\n3. Nhận response 200 DESIGN_RESOURCE_RETRIEVED với UserProfile.\n4. Đối chiếu các dòng profile được phép.",
+        "expected": "Sau response hợp lệ, dữ liệu profile được map vào đúng dòng theo field nguồn; không lấy audit từ profile. Chính sách PII/role/status còn chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §Expected behavior; 02-events.md §D EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-002",
+        "requirement_ids": [
+          "AD-03-YC-001",
+          "AD-03-YC-002"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra hình dạng request GET #69",
+        "precondition": "Route nhận userId dạng signed-int64; dùng token giả do môi trường test cấp.",
+        "data": "userId=123; Authorization Bearer token giả; không cung cấp email/phone.",
+        "steps": "1. Mở route AD-03 với userId=123.\n2. Quan sát request mạng tới API #69.\n3. Kiểm tra method, path, header, query và body.",
+        "expected": "Request là GET /api/v1/admin/users/123; có Bearer JWT; không có query, body, email hoặc phone trong URL.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-003",
+        "requirement_ids": [
+          "AD-03-YC-003",
+          "AD-03-YC-004"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Quan sát trạng thái loading trước khi nhận phản hồi",
+        "precondition": "Route hợp lệ; phản hồi #69 được giữ pending trong môi trường test.",
+        "data": "Một userId hợp lệ; response chưa trả về.",
+        "steps": "1. Mở AD-03.\n2. Trong lúc request pending, quan sát vùng hồ sơ và trạng thái API.",
+        "expected": "Page ở loading; không trình bày placeholder prototype như profile đã tải. Thiết kế loader cụ thể chưa được duyệt nên ca chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §4; 02-events.md §D EV-01"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-004",
+        "requirement_ids": [
+          "AD-03-YC-004",
+          "AD-03-YC-003"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý phản hồi HTTP 401 từ API #69",
+        "precondition": "Mở AD-03; dùng fixture phản hồi kiểm thử có mã lỗi tương ứng.",
+        "data": "HTTP 401 theo API #69; không dùng dữ liệu thật.",
+        "steps": "1. Mở route với ID giả lập.\n2. Trả phản hồi HTTP 401.\n3. Quan sát dữ liệu hồ sơ và thông báo.",
+        "expected": "Không render profile cũ; xử lý theo auth shell đã duyệt. Copy và chuyển auth shell cụ thể còn chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §state model"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-005",
+        "requirement_ids": [
+          "AD-03-YC-004",
+          "AD-03-YC-003"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý phản hồi HTTP 403 từ API #69",
+        "precondition": "Mở AD-03; dùng fixture phản hồi kiểm thử có mã lỗi tương ứng.",
+        "data": "HTTP 403 theo API #69; không dùng dữ liệu thật.",
+        "steps": "1. Mở route với ID giả lập.\n2. Trả phản hồi HTTP 403.\n3. Quan sát dữ liệu hồ sơ và thông báo.",
+        "expected": "Không render profile; không thử vượt quyền bằng client. UI forbidden cụ thể và mapping ADMIN còn chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §state model"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-006",
+        "requirement_ids": [
+          "AD-03-YC-004",
+          "AD-03-YC-003"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý phản hồi HTTP 404 từ API #69",
+        "precondition": "Mở AD-03; dùng fixture phản hồi kiểm thử có mã lỗi tương ứng.",
+        "data": "HTTP 404 theo API #69; không dùng dữ liệu thật.",
+        "steps": "1. Mở route với ID giả lập.\n2. Trả phản hồi HTTP 404.\n3. Quan sát dữ liệu hồ sơ và thông báo.",
+        "expected": "Không render profile; giữ nhánh not-found riêng với network/500. Nội dung và điều hướng cụ thể còn chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §state model"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-007",
+        "requirement_ids": [
+          "AD-03-YC-004",
+          "AD-03-YC-003"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý phản hồi HTTP 500 từ API #69",
+        "precondition": "Mở AD-03; dùng fixture phản hồi kiểm thử có mã lỗi tương ứng.",
+        "data": "HTTP 500 theo API #69; không dùng dữ liệu thật.",
+        "steps": "1. Mở route với ID giả lập.\n2. Trả phản hồi HTTP 500.\n3. Quan sát dữ liệu hồ sơ và thông báo.",
+        "expected": "Không render profile; hiển thị lỗi an toàn, không lộ SQL/PII. Retry/copy cụ thể còn chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §state model"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-008",
+        "requirement_ids": [
+          "AD-03-YC-004"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý lỗi network hoặc timeout",
+        "precondition": "Route hợp lệ; môi trường test có thể mô phỏng mất mạng.",
+        "data": "Request #69 không nhận response do network failure/timeout.",
+        "steps": "1. Mở AD-03.\n2. Chặn kết nối hoặc mô phỏng timeout.\n3. Quan sát page state.",
+        "expected": "Không coi network failure là 404 hoặc “Chưa đồng bộ”; trạng thái error an toàn. Quy tắc timeout/retry và copy còn chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §state model"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-009",
+        "requirement_ids": [
+          "AD-03-YC-003",
+          "AD-03-YC-011"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Từ chối 204 hoặc NULL_PAYLOAD như profile thành công",
+        "precondition": "Môi trường test có response giả lập ngoài success contract #69.",
+        "data": "HTTP 204 hoặc HTTP 200 có data:null/NULL_PAYLOAD.",
+        "steps": "1. Mở AD-03 với userId giả lập.\n2. Trả 204 hoặc envelope không có UserProfile hợp lệ.\n3. Kiểm tra hồ sơ không được đánh dấu đã tải.",
+        "expected": "Không hiển thị phản hồi 204/data:null thành profile hoặc trạng thái rỗng thành công; #69 thành công yêu cầu 200 DESIGN_RESOURCE_RETRIEVED và object. Cách hiển thị lỗi chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §API/Expected behavior; 01-ui-elements.md §3 #16/#28"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-010",
+        "requirement_ids": [
+          "AD-03-YC-006"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Giữ chính xác signed-int64 userId",
+        "precondition": "Dùng ID giả lập trong biên signed-int64; không dùng dữ liệu người thật.",
+        "data": "userId dạng chuỗi signed-int64; có thêm fixture vượt miền safe integer của JavaScript.",
+        "steps": "1. Mở route với ID signed-int64 hợp lệ.\n2. Quan sát request path và dòng mã user.\n3. Lặp lại với ID không thể biểu diễn chính xác bằng JavaScript number.",
+        "expected": "Path giữ nguyên ID chuỗi; ID không thể trình bày chính xác không bị làm tròn hoặc tạo link sai. Quy tắc hiển thị cuối cùng cần xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §UserProfile; 02-events.md §D EV-01; current page source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-011",
+        "requirement_ids": [
+          "AD-03-YC-005",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý phone null theo chính sách được duyệt",
+        "precondition": "Fixture profile tổng hợp; field phone có thể null theo UserProfile.",
+        "data": "phone=null; email giả lập.",
+        "steps": "1. Trả response 200 có phone=null.\n2. Quan sát dòng số điện thoại và cách hiển thị email.",
+        "expected": "Không thay phone null bằng giá trị bịa; cách ẩn/che và copy null của PII phải chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §UserProfile; 01-ui-elements.md §3 #20/#24"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-012",
+        "requirement_ids": [
+          "AD-03-YC-005",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Không tự ánh xạ role/status chưa có enum",
+        "precondition": "Fixture profile tổng hợp dùng value role/status chưa có trong danh sách được duyệt.",
+        "data": "role/status là chuỗi giả lập; chưa có enum/label mapping canonical.",
+        "steps": "1. Trả response profile với role/status chuỗi giả lập.\n2. Quan sát hai dòng tương ứng.",
+        "expected": "Không tự đổi alias, viết hoa/thường hoặc gán nhãn nghiệp vụ; cách hiển thị value/unknown label chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §UserProfile; 01-ui-elements.md §3 #25/#26"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-013",
+        "requirement_ids": [
+          "AD-03-YC-007",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Không trình bày audit hoặc retention từ API #69",
+        "precondition": "Route detail nhận response #69 hợp lệ; không có audit API trong contract.",
+        "data": "Profile hợp lệ; không có lịch sử/count/retention trong response.",
+        "steps": "1. Mở AD-03 và nhận profile 200.\n2. Quan sát khu vực hoạt động/audit và các nhãn chính sách.\n3. Kiểm tra không có request audit suy diễn từ #69.",
+        "expected": "#69 chỉ cung cấp UserProfile; không suy ra “0 bản ghi”, 180 ngày, health hoặc audit đang hoạt động. UI audit chờ contract được duyệt. Nội dung này đang chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-05; 04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-014",
+        "requirement_ids": [
+          "AD-03-YC-008"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Giữ nút sửa và đổi trạng thái bị khóa",
+        "precondition": "Không có quyết định permission/contract AD-04/AD-05.",
+        "data": "AD-03 được mở; API #69 là chỉ đọc.",
+        "steps": "1. Mở AD-03.\n2. Kiểm tra nút AD-04 và AD-05.\n3. Thử kích hoạt bằng thao tác chuột và bàn phím.",
+        "expected": "Hai nút disabled; không phát sinh mutation #70/#71/#72 từ AD-03.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 #15/#17; 02-events.md §D EV-03/EV-04; pages/ad03-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-015",
+        "requirement_ids": [
+          "AD-03-YC-009"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Quay lại danh sách người dùng",
+        "precondition": "Route AD-02 có trong mã nguồn cục bộ; filter/page carryover chưa có contract.",
+        "data": "AD-03 đang mở bằng userId giả lập; không kèm PII.",
+        "steps": "1. Kích hoạt liên kết quay lại danh sách.\n2. Quan sát URL đích và request phát sinh.",
+        "expected": "Điều hướng về /admin/users; thao tác link không gửi PII hoặc tự gọi API mutation. Việc giữ filter/page chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §D EV-02; 06-navigation.md §3–§4; pages/ad03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-016",
+        "requirement_ids": [
+          "AD-03-YC-010",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Không giả lập shell/chân trang route hoặc compliance claim",
+        "precondition": "Route detail hiển thị shell; route/API cho shell, notification, profile, policy/support chưa được xác định ở AD-03.",
+        "data": "Không có screen contract/link destination ngoài AD-03.",
+        "steps": "1. Kiểm tra shell, notification, avatar và footer links.\n2. Kích hoạt các mục chỉ có placeholder nếu có.\n3. Quan sát không có API giả lập từ badge tĩnh.",
+        "expected": "Không phát sinh API/route ngoài contract đã xác định; các link `#` và compliance/RBAC assertion vẫn chờ xác nhận owner/design.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §D EV-06; 01-ui-elements.md §3 #1–#7/#29/#30/#32"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-MH-017",
+        "requirement_ids": [
+          "AD-03-YC-013"
+        ],
+        "target_id": "AD-03",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu giao diện với nguồn thiết kế trước nghiệm thu",
+        "precondition": "Có bản AD-03 DD/design được duyệt và môi trường UI thực tế; hiện DD status BLOCKED.",
+        "data": "screen-clean.png và Study Web design guide; runtime chưa xác minh.",
+        "steps": "1. Mở màn hình ở viewport được thống nhất.\n2. Đối chiếu typography, palette, layout, focus và responsive với design được duyệt.",
+        "expected": "Chỉ đánh giá pass/fail sau khi design owner chốt khác biệt typography/palette và tiêu chí viewport; hiện ca chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md §5; 05-business-rules.md §2; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-03-TC-TP-001",
+        "requirement_ids": [
+          "AD-03-YC-010"
+        ],
+        "target_id": "AD-03-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #1: Thương hiệu Study2Work/LMS/Cổng quản trị",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 1; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #1 (“Thương hiệu Study2Work/LMS/Admin Portal”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #1; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-002",
+        "requirement_ids": [
+          "AD-03-YC-010"
+        ],
+        "target_id": "AD-03-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #2: Nhóm điều hướng quản trị chính",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 2; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #2 (“Nhóm điều hướng quản trị chính”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #2; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-003",
+        "requirement_ids": [
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #3: Nhãn trạng thái hệ thống “System Normal”",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 3; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #3 (“Nhãn trạng thái hệ thống “System Normal””) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #3; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-004",
+        "requirement_ids": [
+          "AD-03-YC-010"
+        ],
+        "target_id": "AD-03-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #4: Biểu tượng thông báo",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 4; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #4 (“Biểu tượng thông báo”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #4; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-005",
+        "requirement_ids": [
+          "AD-03-YC-010",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #5: Thông tin quản trị viên và ảnh đại diện",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 5; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #5 (“Thông tin quản trị viên và ảnh đại diện”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #5; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-006",
+        "requirement_ids": [
+          "AD-03-YC-010"
+        ],
+        "target_id": "AD-03-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #6: Breadcrumb hệ thống",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 6; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #6 (“Breadcrumb hệ thống”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #6; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-007",
+        "requirement_ids": [
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #7: Nhãn xác thực RBAC",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 7; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #7 (“Nhãn xác thực RBAC”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #7; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-008",
+        "requirement_ids": [
+          "AD-03-YC-009"
+        ],
+        "target_id": "AD-03-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #8: Breadcrumb quản lý người dùng và chi tiết",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 8; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #8 (“Breadcrumb quản lý người dùng và chi tiết”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #8; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-009",
+        "requirement_ids": [
+          "AD-03-YC-011"
+        ],
+        "target_id": "AD-03-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #9: Nhãn API #69 và trạng thái đồng bộ",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 9; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #9 (“Nhãn API #69 và trạng thái đồng bộ”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #9; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-010",
+        "requirement_ids": [
+          "AD-03-YC-001",
+          "AD-03-YC-009"
+        ],
+        "target_id": "AD-03-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #10: Nút quay lại danh sách người dùng AD-02",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 10; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Liên kết quay lại đi tới /admin/users theo mẫu hiện tại; không gắn email/phone vào URL. Runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #10; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-011",
+        "requirement_ids": [
+          "AD-03-YC-003"
+        ],
+        "target_id": "AD-03-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #11: Tiêu đề hồ sơ chi tiết AD-03",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 11; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #11 (“Tiêu đề hồ sơ chi tiết AD-03”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #11; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-012",
+        "requirement_ids": [
+          "AD-03-YC-003"
+        ],
+        "target_id": "AD-03-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #12: Tiêu đề thẻ thông tin định danh và liên hệ",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 12; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #12 (“Tiêu đề thẻ thông tin định danh và liên hệ”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #12; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-013",
+        "requirement_ids": [
+          "AD-03-YC-011"
+        ],
+        "target_id": "AD-03-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #13: Nhãn “Chưa đồng bộ”",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 13; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #13 (“Nhãn “Chưa đồng bộ””) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #13; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-014",
+        "requirement_ids": [
+          "AD-03-YC-008"
+        ],
+        "target_id": "AD-03-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #14: Tiêu đề thẻ hành động quản trị",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 14; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #14 (“Tiêu đề thẻ hành động quản trị”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #14; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-015",
+        "requirement_ids": [
+          "AD-03-YC-008"
+        ],
+        "target_id": "AD-03-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #15: Nút chỉnh sửa thông tin AD-04",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 15; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Nút ở trạng thái disabled theo DD và mẫu hiện tại; không gọi mutation #70/#71/#72. Runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #15; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-016",
+        "requirement_ids": [
+          "AD-03-YC-003",
+          "AD-03-YC-011"
+        ],
+        "target_id": "AD-03-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #16: Thông báo chưa chọn người dùng",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 16; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #16 (“Thông báo chưa chọn người dùng”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #16; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-017",
+        "requirement_ids": [
+          "AD-03-YC-008"
+        ],
+        "target_id": "AD-03-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #17: Nút khóa hoặc đổi trạng thái AD-05",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 17; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Nút ở trạng thái disabled theo DD và mẫu hiện tại; không gọi mutation #70/#71/#72. Runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #17; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-018",
+        "requirement_ids": [
+          "AD-03-YC-008"
+        ],
+        "target_id": "AD-03-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #18: Ghi chú điều kiện kích hoạt hành động tài khoản",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 18; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #18 (“Ghi chú điều kiện kích hoạt hành động tài khoản”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #18; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-019",
+        "requirement_ids": [
+          "AD-03-YC-005"
+        ],
+        "target_id": "AD-03-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #19: Dòng họ và tên",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 19; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Khi nhận profile 200 hợp lệ, value full_name được đưa vào dòng họ và tên; không dùng placeholder prototype làm data.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #19; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-020",
+        "requirement_ids": [
+          "AD-03-YC-005",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #20: Dòng địa chỉ email",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 20; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #20 (“Dòng địa chỉ email”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #20; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-021",
+        "requirement_ids": [
+          "AD-03-YC-007"
+        ],
+        "target_id": "AD-03-EL-021",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #21: Tiêu đề và số lượng bản ghi nhật ký",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 21; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #21 (“Tiêu đề và số lượng bản ghi nhật ký”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #21; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-022",
+        "requirement_ids": [
+          "AD-03-YC-005",
+          "AD-03-YC-006"
+        ],
+        "target_id": "AD-03-EL-022",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #22: Dòng mã định danh người dùng",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 22; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Khi nhận profile hợp lệ, ID giữ nguyên chính xác; ID không thể biểu diễn an toàn không bị làm tròn. Hiển thị cuối cùng chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #22; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-023",
+        "requirement_ids": [
+          "AD-03-YC-007"
+        ],
+        "target_id": "AD-03-EL-023",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #23: Trạng thái rỗng của nhật ký kiểm toán",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 23; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #23 (“Trạng thái rỗng của nhật ký kiểm toán”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #23; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-024",
+        "requirement_ids": [
+          "AD-03-YC-005",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-024",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #24: Dòng số điện thoại",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 24; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #24 (“Dòng số điện thoại”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #24; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-025",
+        "requirement_ids": [
+          "AD-03-YC-005",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-025",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #25: Dòng vai trò hệ thống",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 25; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #25 (“Dòng vai trò hệ thống”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #25; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-026",
+        "requirement_ids": [
+          "AD-03-YC-005",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-026",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #26: Dòng trạng thái tài khoản",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 26; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #26 (“Dòng trạng thái tài khoản”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #26; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-027",
+        "requirement_ids": [
+          "AD-03-YC-007",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-027",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #27: Ghi chú giao thức bảo mật và thời hạn lưu trữ",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 27; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #27 (“Ghi chú giao thức bảo mật và thời hạn lưu trữ”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #27; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-028",
+        "requirement_ids": [
+          "AD-03-YC-002",
+          "AD-03-YC-011"
+        ],
+        "target_id": "AD-03-EL-028",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #28: Chú thích endpoint và mã phản hồi API",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 28; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #28 (“Chú thích endpoint và mã phản hồi API”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #28; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-029",
+        "requirement_ids": [
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-029",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #29: Banner bảo vệ dữ liệu và tuân thủ",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 29; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #29 (“Banner bảo vệ dữ liệu và tuân thủ”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #29; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-030",
+        "requirement_ids": [
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EL-030",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #30: Nhãn “RBAC Strict Audit Active”",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 30; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #30 (“Nhãn “RBAC Strict Audit Active””) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #30; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-031",
+        "requirement_ids": [
+          "AD-03-YC-010"
+        ],
+        "target_id": "AD-03-EL-031",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #31: Dòng bản quyền và hệ thống",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 31; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #31 (“Dòng bản quyền và hệ thống”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #31; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-TP-032",
+        "requirement_ids": [
+          "AD-03-YC-010"
+        ],
+        "target_id": "AD-03-EL-032",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #32: Nhóm liên kết quyền riêng tư, RBAC và hỗ trợ",
+        "precondition": "Có bản UI/test environment được xác định; ảnh marker chỉ dùng để định vị thành phần.",
+        "data": "Marker 32; dữ liệu tổng hợp nếu thành phần nhận data.",
+        "steps": "1. Tìm thành phần theo marker #{n} trong bản đã đánh số.\n2. Đối chiếu thành phần tương ứng trên UI khi có runtime.\n3. Kiểm tra phạm vi hiển thị hoặc trạng thái đã nêu.",
+        "expected": "Marker #32 (“Nhóm liên kết quyền riêng tư, RBAC và hỗ trợ”) có trong ảnh đã đánh số; yêu cầu xuất hiện/copy/hành vi tương ứng trên runtime chưa được duyệt, chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #32; images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-03-TC-SK-001",
+        "requirement_ids": [
+          "AD-03-YC-001",
+          "AD-03-YC-002",
+          "AD-03-YC-003",
+          "AD-03-YC-005"
+        ],
+        "target_id": "AD-03-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở chi tiết và nhận profile hợp lệ",
+        "precondition": "Có route/userId giả lập, phiên test được duyệt và fixture profile.",
+        "data": "GET #69 trả 200 DESIGN_RESOURCE_RETRIEVED với UserProfile hợp lệ.",
+        "steps": "1. Mở AD-03 bằng ID được chọn từ AD-02.\n2. Quan sát request #69.\n3. Đối chiếu response và các dòng identity.",
+        "expected": "Request dùng đúng ID/path và profile hợp lệ được map theo field. Acceptance PII/role/status chờ duyệt. Nội dung này đang chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-002",
+        "requirement_ids": [
+          "AD-03-YC-004"
+        ],
+        "target_id": "AD-03-EV-001",
+        "group": "Sự kiện",
+        "title": "Tách lỗi 401, 403, 404 và 500 của #69",
+        "precondition": "Có fixture response giả lập cho từng mã lỗi.",
+        "data": "401, 403, 404, 500 được chạy thành các lượt riêng.",
+        "steps": "1. Gửi route test với userId giả.\n2. Trả từng mã HTTP trong lượt riêng.\n3. Kiểm tra trạng thái và profile cũ.",
+        "expected": "Mỗi mã lỗi giữ nhánh riêng; không render profile như thành công. Auth/error copy và retry policy chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §state model"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-003",
+        "requirement_ids": [
+          "AD-03-YC-004"
+        ],
+        "target_id": "AD-03-EV-001",
+        "group": "Sự kiện",
+        "title": "Xử lý network failure và timeout riêng với HTTP 404",
+        "precondition": "Có môi trường test cho phép mô phỏng lỗi mạng/timeout.",
+        "data": "Request GET #69 không nhận HTTP response.",
+        "steps": "1. Mở trang và khởi tạo GET #69.\n2. Mô phỏng network failure/timeout.\n3. Đối chiếu trạng thái với HTTP 404.",
+        "expected": "Network/timeout không được hiển thị như not-found hoặc sync success; retry/copy chi tiết chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 03-data-flow.md §state model"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-004",
+        "requirement_ids": [
+          "AD-03-YC-011"
+        ],
+        "target_id": "AD-03-EV-001",
+        "group": "Sự kiện",
+        "title": "Không chấp nhận 204 hoặc data:null làm profile",
+        "precondition": "Fixture API test có thể trả response ngoài contract success.",
+        "data": "204; hoặc 200 envelope có data:null.",
+        "steps": "1. Khởi tạo route AD-03.\n2. Trả 204 hoặc data:null.\n3. Kiểm tra profile/identity state.",
+        "expected": "Không đánh dấu loaded/ready với response thiếu object UserProfile; không dùng thông báo prototype “Chưa đồng bộ” làm success.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-01; 01-ui-elements.md §3 #16/#28"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-005",
+        "requirement_ids": [
+          "AD-03-YC-009"
+        ],
+        "target_id": "AD-03-EV-002",
+        "group": "Sự kiện",
+        "title": "Quay lại route AD-02",
+        "precondition": "Mẫu hiện tại có routerLink /admin/users.",
+        "data": "UserId giả lập; không gắn thông tin PII vào route.",
+        "steps": "1. Mở AD-03.\n2. Kích hoạt nút quay lại.\n3. Quan sát URL và request.",
+        "expected": "Điều hướng về /admin/users; không phát sinh mutation hoặc đưa email/phone vào URL. Việc giữ query AD-02 chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §D EV-02; 06-navigation.md §3–§4; pages/ad03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-006",
+        "requirement_ids": [
+          "AD-03-YC-008",
+          "AD-03-YC-014"
+        ],
+        "target_id": "AD-03-EV-003",
+        "group": "Sự kiện",
+        "title": "Chặn handoff chỉnh sửa khi contract chưa mở",
+        "precondition": "Mẫu hiện tại và DD UI mô tả nút disabled; permission/API #70 chưa được duyệt.",
+        "data": "Nút AD-04 disabled.",
+        "steps": "1. Mở AD-03.\n2. Thử kích hoạt nút bằng chuột và bàn phím.\n3. Quan sát router và request.",
+        "expected": "Nút không kích hoạt navigation/mutation khi disabled; DD data-flow cần đồng bộ vì đang mô tả link khi có ID. Nội dung này đang chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §D EV-03; 03-data-flow.md §E; pages/ad03-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-007",
+        "requirement_ids": [
+          "AD-03-YC-008",
+          "AD-03-YC-014"
+        ],
+        "target_id": "AD-03-EV-004",
+        "group": "Sự kiện",
+        "title": "Chặn handoff đổi trạng thái khi contract chưa mở",
+        "precondition": "Mẫu hiện tại và DD UI mô tả nút disabled; policy/API #71/#72 chưa được duyệt.",
+        "data": "Nút AD-05 disabled.",
+        "steps": "1. Mở AD-03.\n2. Thử kích hoạt nút bằng chuột và bàn phím.\n3. Quan sát router và request.",
+        "expected": "Nút không kích hoạt navigation/mutation khi disabled; không giả định khóa/xóa hoặc thu hồi session. Nội dung này đang chờ xác nhận DD.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §D EV-04; 03-data-flow.md §E; pages/ad03-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-008",
+        "requirement_ids": [
+          "AD-03-YC-007",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EV-005",
+        "group": "Sự kiện",
+        "title": "Không hiển thị audit feed chưa có API và policy",
+        "precondition": "Không có API audit/event feed trong contract #69.",
+        "data": "Response #69 không có audit rows/count/retention.",
+        "steps": "1. Tải profile thành công.\n2. Quan sát khu vực hoạt động và các badge/chú thích.\n3. Kiểm tra request list.",
+        "expected": "Không tạo audit data/count từ #69; mọi history/retention/security claim chờ API và policy được duyệt. Nội dung này đang chờ xác nhận DD.",
+        "api_ids": [
+          "AD-03-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §D EV-05; 04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-03-TC-SK-009",
+        "requirement_ids": [
+          "AD-03-YC-010",
+          "AD-03-YC-012"
+        ],
+        "target_id": "AD-03-EV-006",
+        "group": "Sự kiện",
+        "title": "Chỉ dùng route shell/chân trang đã được xác định",
+        "precondition": "Các destination shell/footer chưa được cung cấp trong AD-03.",
+        "data": "Prototype chứa anchor # và badge tĩnh.",
+        "steps": "1. Kiểm tra destination của các liên kết shell/footer.\n2. Quan sát API khi kích hoạt badge tĩnh.",
+        "expected": "Không tự suy diễn route hoặc API từ placeholder; trạng thái chờ xác nhận cho đến khi có screen contract.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md §D EV-06; 06-navigation.md §3; 01-ui-elements.md §3 #1–#7/#32"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

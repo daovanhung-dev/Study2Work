@@ -77,4 +77,4 @@
 
 ## 5. Giới hạn vùng
 
-Mặc định: 17 API, 60 yêu cầu, 8 blocker, 50 thành phần, 50 sự kiện, 150 ca MH, 200 ca TP, 200 ca SK. Nếu vượt, sửa cấu trúc trong `scripts/tao_utc.py` và đồng bộ phạm vi công thức/validator; tuyệt đối không chép thêm ngoài vùng rồi cho rằng dashboard đã nhận.
+Giới hạn hiện hành: 17 API, 60 yêu cầu, 8 blocker, 200 thành phần, 200 sự kiện, 150 ca MH, 200 ca TP và 200 ca SK. Trang `03. Thành phần` và `04. Sự kiện` tự dời bảng ca xuống dưới danh mục khi có hơn 50 dòng; nếu vượt các giới hạn còn lại, mở rộng đồng bộ bộ sinh, validator và công thức trước khi phát hành. Không chép thêm ngoài vùng rồi cho rằng dashboard đã nhận.

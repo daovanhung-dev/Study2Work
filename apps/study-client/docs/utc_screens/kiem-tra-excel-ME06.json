@@ -1,0 +1,49 @@
+{
+  "screen_id": "ME-06",
+  "validator": "kiem_tra_excel.py + kiểm tra tĩnh OOXML/JSON",
+  "checks": {
+    "source_refs": 30,
+    "source_hashes": 35,
+    "source_hash_errors": [],
+    "zip_crc": "PASS",
+    "sheet_names": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "case_sheets": {
+      "screen": {
+        "count": 34,
+        "unique": 34,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      },
+      "elements": {
+        "count": 44,
+        "unique": 44,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      },
+      "events": {
+        "count": 17,
+        "unique": 17,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      }
+    },
+    "formula_count": 139,
+    "data_validation_ranges": 9,
+    "xml_parts_parsed": 11,
+    "requirement_count": 34,
+    "covered_requirement_count": 34,
+    "helper_link_rows": 195
+  },
+  "errors": [],
+  "valid": true,
+  "execution_status": "Tất cả 95 ca giữ Chưa chạy; ô kết quả/bằng chứng/mã lỗi/người/ngày chạy để trống.",
+  "approval_note": "Bộ UTC dùng baseline DD do người dùng xác nhận. Cấu trúc và truy vết hợp lệ; 8 điểm chặn cùng trạng thái runtime chưa xác minh vẫn còn. Đây là bộ ca chưa chạy, không phải kết quả kiểm thử."
+}

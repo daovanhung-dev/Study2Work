@@ -1,0 +1,38 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_ST-07_KetQuaDangKyKhoaHoc.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 622,
+  "kiem_tra_crc": "Đạt",
+  "doi_chieu_ca": {
+    "screen": {
+      "ca_json": 14,
+      "ca_excel": 14,
+      "ma_ca_khop": true,
+      "tat_ca_cho_xac_nhan_va_chua_chay": true,
+      "cot_thuc_thi_trong": true
+    },
+    "elements": {
+      "ca_json": 13,
+      "ca_excel": 13,
+      "ma_ca_khop": true,
+      "tat_ca_cho_xac_nhan_va_chua_chay": true,
+      "cot_thuc_thi_trong": true
+    },
+    "events": {
+      "ca_json": 7,
+      "ca_excel": 7,
+      "ma_ca_khop": true,
+      "tat_ca_cho_xac_nhan_va_chua_chay": true,
+      "cot_thuc_thi_trong": true
+    }
+  },
+  "so_nguon_duoc_kiem_tra": 158,
+  "nguon_khong_ton_tai": [],
+  "loi": [],
+  "hop_le": true
+}

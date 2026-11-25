@@ -1,0 +1,3379 @@
+{
+  "metadata": {
+    "screen_id": "AD-16",
+    "screen_name": "Tạo/chỉnh sửa bài kiểm tra",
+    "module": "Quản trị viên",
+    "route": "/admin/quizzes/new; /admin/quizzes/:quizId/edit",
+    "actor": "Danh mục API ghi Bearer JWT/Admin (token xác thực và vai trò quản trị viên); AC-35 yêu cầu quyền quản lý bài kiểm tra (quiz-management permission) nhưng ánh xạ chưa được xác nhận.",
+    "version": "0.1 — KẾ HOẠCH UTC",
+    "dd_version": "DD màn hình v0.3 (2026-11-21), nguồn Stitch và mã nguồn hiện tại đối chiếu ngày 2026-11-23; API #88/#89 Draft (bản nháp) — Needs Confirmation (chờ xác nhận)",
+    "dd_status": "DD BLOCKED (bị chặn); phần thân yêu cầu #89 và lược đồ lồng nhau #88 chưa chốt; thiếu GET chi tiết; quyền truy cập, quy tắc dữ liệu, lược đồ và khác biệt bản mẫu/mã nguồn còn mở.",
+    "runtime_status": "Đã đối chiếu Angular, danh mục API, mã nguồn API và mã kiểm thử nguồn; chưa xác minh trình duyệt, API đang chạy hoặc cơ sở dữ liệu môi trường đích.",
+    "author": "Lập kế hoạch UTC; cần người rà soát",
+    "reviewer": "Chưa được xác định",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-23",
+    "source_name": "DD AD-16 mục 00–07; 35 dấu mốc và hai ảnh; kế hoạch, tường thuật và bản mẫu Stitch; tuyến, trang/thành phần, giao diện, dịch vụ, ranh giới API, mô hình và mã kiểm thử hiện tại; danh mục/DD/mã nguồn API #73/#88/#89; ngữ cảnh cơ sở dữ liệu và migration (bản chuyển đổi cơ sở dữ liệu) ứng viên.",
+    "approval_note": "Đây là kế hoạch UTC có truy vết. DD/API còn điểm chặn; không có kết quả ca chạy, phê duyệt hay xác minh môi trường. Người dùng xác nhận DD BLOCKED (bị chặn) là tài liệu chuẩn; điều đó không gỡ các quyết định còn mở."
+  },
+  "overall": {
+    "objective": "Bao phủ 35 dấu mốc thiết kế, các nhánh Angular tạo/chỉnh sửa, danh sách khóa học #73, tạo #88, ranh giới cập nhật #89 và các điểm còn mở mà không coi phương án dự phòng là hợp đồng đã duyệt.",
+    "inputs": "Phiên Admin kiểm thử; Page<Course> (kiểu trang khóa học) giả lập; tuyến quizId (mã bài kiểm tra trên tuyến); tên/khóa học/thời lượng/điểm; bản nháp câu hỏi/lựa chọn; phản hồi/lỗi #73/#88; dữ liệu tổng hợp.",
+    "outputs": "Trạng thái tải/lỗi/rỗng/phân trang khóa học; bản nháp trong bộ nhớ; chỉnh sửa bị khóa; dữ liệu gửi đi tạo ứng viên; trạng thái thành công/lỗi/chưa xác nhận; điều hướng về AD-15.",
+    "main_flow": "Mở tạo → GET #73 page=1 (số trang 1) → chọn khóa học và nhập cấu hình/câu hỏi → kiểm tra cục bộ → POST #88 với hai chuỗi → xác nhận phản hồi theo mã trạng thái HTTP/mã nghiệp vụ/cấu trúc; chỉnh sửa tuyến giữ khóa do thiếu GET chi tiết và phần thân yêu cầu #89.",
+    "states": [
+      "Đang tải khóa học",
+      "Đã nạp danh sách",
+      "Danh sách rỗng",
+      "Lỗi",
+      "Đang lưu",
+      "Tạo thành công",
+      "Chưa xác nhận kết quả",
+      "Chế độ chỉnh sửa bị khóa",
+      "Mã bài kiểm tra trên tuyến không hợp lệ",
+      "Chỉ là kế hoạch"
+    ],
+    "preconditions": "Dùng dữ liệu tổng hợp; API hợp đồng #88/#89 và một phần #73 còn cần duyệt. Không chạy ứng dụng/trình duyệt/đang chạy DB trong quá trình lập gói.",
+    "security": "Không dùng dữ liệu học viên thật; không coi vai trò ADMIN là quyền truy cập quiz-management (quyền quản lý bài kiểm tra) đã được duyệt; không đưa đáp án chuẩn qua API Student #28.",
+    "out_of_scope": "Phê duyệt nghiệp vụ/API, mở chỉnh sửa trước khi có chi tiết/phần thân yêu cầu, kiểm chứng lược đồ đang chạy/migration (bản chuyển đổi cơ sở dữ liệu), kiểm thử ứng dụng hoặc môi trường chạy thực tế và xác nhận quyền."
+  },
+  "requirements": [
+    {
+      "id": "AD-16-YC-001",
+      "description": "Tuyến và phiên Admin: Hai tuyến tạo/chỉnh sửa đã có trong Angular; khung Admin xử lý phiên. Quyền quiz-management (quyền quản lý bài kiểm tra) theo AC-35 chưa được ánh xạ từ vai trò ADMIN.",
+      "group": "Điều kiện truy cập",
+      "source_ref": "admin.routes.ts; AD16Page; API #88/#89 DD",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-002",
+      "description": "Nạp khóa học cho chế độ tạo: Chế độ tạo gọi GET #73 theo số trang; chỉ chấp nhận phong bì thành công và Page<AdminCourse> (kiểu trang khóa học dành cho quản trị viên) khớp trang đã yêu cầu.",
+      "group": "Nạp dữ liệu",
+      "source_ref": "AD16Page; AD16ApiService; API catalog #73",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-003",
+      "description": "Phản hồi khóa học không hợp lệ: máy khách từ chối phản hồi #73 sai cấu trúc hoặc lệch tổng/số dòng; không cho chọn khóa học hay lưu.",
+      "group": "Ranh giới phản hồi",
+      "source_ref": "ad16-page.ts; admin-api-guards.ts; ad16-page.spec.ts",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-004",
+      "description": "Phân trang khóa học: máy khách dùng page (số trang) từ 1, giữ các khóa học theo trang và có thể phục hồi trang vượt tổng; quy tắc chi tiết chưa được người phụ trách API duyệt.",
+      "group": "Phân trang",
+      "source_ref": "ad16-page.ts/html; API #73",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-005",
+      "description": "Chế độ chỉnh sửa bị khóa: Không có GET chi tiết để nạp câu hỏi và cấu hình; chỉnh sửa không gọi #73, #88 hoặc #89, và khóa biểu mẫu.",
+      "group": "Chỉnh sửa",
+      "source_ref": "AD-16 00–06; ad16-page.ts/html; API #89",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-006",
+      "description": "Draft (bản nháp) cấu hình trong bộ nhớ: Tên, thời lượng, điểm đạt và khóa học được giữ trong thành phần khi tạo; không có tự lưu vào bộ nhớ trình duyệt.",
+      "group": "Cấu hình",
+      "source_ref": "ad16-page.ts/html; Stitch code.html",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-007",
+      "description": "Chọn khóa học an toàn: Chỉ các ID (mã định danh) khóa học biểu diễn chính xác bằng JavaScript mới thành tùy chọn; ID (mã định danh) không an toàn bị loại và có cảnh báo.",
+      "group": "Chọn khóa học",
+      "source_ref": "ad16-page.ts; ad16-page.html; admin-api.models.ts",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-008",
+      "description": "Biên tập câu hỏi và lựa chọn: Trang hiện cho thêm/xóa câu hỏi và lựa chọn, sửa nội dung/loại/đáp án đúng trong bản nháp; cấu trúc lồng nhau hiện là DERIVED (suy ra từ mã nguồn, chưa được duyệt).",
+      "group": "Trình tạo câu hỏi",
+      "source_ref": "ad16-page.ts/html; API #88 OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-009",
+      "description": "Kiểm tra dữ liệu trước khi tạo: Nguồn máy khách hiện kiểm tra khóa học, tên không rỗng/tối đa 200 ký tự, thời lượng số nguyên số nguyên 32-bit có dấu hoặc rỗng, và điểm dạng thập phân lưu được theo NUMERIC(5,2) (kiểu số thập phân có tối đa hai chữ số lẻ). Đây là ràng buộc lưu trữ hiện tại, chưa phải quy tắc nghiệp vụ được duyệt.",
+      "group": "Kiểm tra dữ liệu",
+      "source_ref": "ad16-page.ts; API #88 validate.py; DD 05",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-010",
+      "description": "Phần thân yêu cầu tạo bài kiểm tra: danh mục API #88 chỉ chốt phần thân yêu cầu ngoài gồm đúng hai chuỗi config (cấu hình) và questions (câu hỏi); JSON bên trong theo bộ kiểm tra dữ liệu hiện tại chưa được duyệt.",
+      "group": "Tạo bài kiểm tra",
+      "source_ref": "docs/lists/list_api.md #88; OPEN_QUESTIONS.md; AD16ApiService",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-011",
+      "description": "Xác nhận tạo thành công: máy khách chỉ báo thành công khi HTTP 201, success=true (xác nhận thành công), businessCode (mã nghiệp vụ) DESIGN_RESOURCE_CREATED (đã tạo tài nguyên) và dữ liệu bài kiểm tra có cấu trúc phù hợp; sau đó khóa bản nháp và đưa liên kết về AD-15.",
+      "group": "Phản hồi thành công",
+      "source_ref": "ad16-page.ts/html; ad16-page.spec.ts; API #88",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-012",
+      "description": "Ngăn gửi lặp khi kết quả chưa rõ: HTTP 2xx không xác nhận hoặc lỗi mạng status (trạng thái) 0 khóa gửi lại và yêu cầu kiểm tra AD-15; đây là cơ chế cục bộ hiện tại.",
+      "group": "Kết quả chưa xác nhận",
+      "source_ref": "ad16-page.ts/html; ad16-page.spec.ts",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-013",
+      "description": "Trạng thái lỗi và phân quyền: máy khách có thông báo cho 401/403/422 và lỗi chung; chính sách quyền truy cập chi tiết, refresh phiên, gửi lại và nội dung lỗi chưa được chốt.",
+      "group": "Lỗi và bảo mật",
+      "source_ref": "ad16-page.ts; API #88/#89 catalog; AdminApiService",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-014",
+      "description": "Hủy và quay lại AD-15: Các liên kết Angular quay về /admin/quizzes; không có cảnh báo mất thay đổi hoặc quy tắc giữ bộ lọc/trang.",
+      "group": "Điều hướng",
+      "source_ref": "ad16-page.html; admin.routes.ts; DD 06",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-015",
+      "description": "Không có tự lưu: Thông báo tự lưu trong bản mẫu không có lưu trữ, bộ hẹn giờ hoặc API; Angular bản nháp mất khi rời thành phần.",
+      "group": "Lưu nháp",
+      "source_ref": "Stitch code.html; AD16Page; DD 01–02",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-016",
+      "description": "Khung Admin và nhãn tĩnh: Các nhãn sức khỏe/RBAC (kiểm soát truy cập theo vai trò)/danh tính/riêng tư trong ảnh không chứng minh kiểm tra môi trường chạy thực tế hoặc quyền; khung giao diện hiện tại có cấu trúc riêng.",
+      "group": "Khung dùng chung",
+      "source_ref": "Ảnh AD-16; AdminLayout; DD 01",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-017",
+      "description": "Bao phủ thiết kế 35 dấu mốc: 35 dấu mốc trong JSON/ảnh là điểm đối chiếu trực quan, không phải ID (mã định danh) điều khiển trong DOM (mô hình đối tượng tài liệu) và không chứng minh hành vi.",
+      "group": "Thành phần thiết kế",
+      "source_ref": "AD-16_markers.json; 01-ui-elements.md; screen-numbered.png",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-018",
+      "description": "Phân biệt các API bài kiểm tra: #73 chỉ tải trang khóa học; #88 tạo; #89 cập nhật theo danh mục API nhưng phần thân yêu cầu chưa công bố. Không có GET chi tiết bài kiểm tra.",
+      "group": "Ranh giới API",
+      "source_ref": "list_api.md #73/#88/#89; v1.py; AD16ApiService",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-019",
+      "description": "Lược đồ và vòng đời dữ liệu: lược đồ lồng nhau, bộ giá trị, đáp án, thứ tự, lịch sử làm bài, migration (bản chuyển đổi cơ sở dữ liệu) 013 và lược đồ đang chạy chưa được người phụ trách/môi trường xác nhận.",
+      "group": "Dữ liệu và cơ sở dữ liệu",
+      "source_ref": "API #88/#89 OPEN_QUESTIONS.md; database.md; migration 013",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    },
+    {
+      "id": "AD-16-YC-020",
+      "description": "Trạng thái phát hành và kiểm chứng: DD màn hình BLOCKED (bị chặn), API #88/#89 Draft (bản nháp), môi trường trình duyệt/cơ sở dữ liệu chưa xác minh, ca UTC chưa chạy và chưa có người phê duyệt.",
+      "group": "Phát hành",
+      "source_ref": "00-overview.md; API covers; 07-test-cases.md",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "notes": "Đối chiếu riêng yêu cầu DD, mã nguồn hiện tại và quyết định chưa được duyệt."
+    }
+  ],
+  "apis": [
+    {
+      "id": "AD-16-API-001",
+      "method": "GET",
+      "path": "/api/v1/admin/courses",
+      "request": "Bearer JWT (token xác thực); tham số truy vấn page (số trang) tùy chọn do AD16 gửi. Danh mục API còn liệt kê status (trạng thái), mentor (người hướng dẫn), category (danh mục) tùy chọn; AD16 không gửi các tham số truy vấn này.",
+      "response": "Danh mục API: ApiEnvelope<Page<Course>> (phong bì chứa trang khóa học); AD16 yêu cầu businessCode (mã nghiệp vụ) DESIGN_RESOURCE_RETRIEVED (đã truy xuất tài nguyên) và Page<AdminCourse> (kiểu trang khóa học dành cho quản trị viên) hợp lệ theo kiểm tra ranh giới dữ liệu hiện tại.",
+      "errors": "Danh mục API #73: 200, 401, 403, 422, 500; AD16 hiện hiển thị lỗi theo tầng giao tiếp API và từ chối phong bì phản hồi/page (số trang) sai.",
+      "auth": "Danh mục API ghi Bearer JWT/Admin (token xác thực và vai trò quản trị viên). Ánh xạ quyền truy cập quiz-management (quyền quản lý bài kiểm tra) riêng chưa được chốt.",
+      "design_status": "Danh mục API hiện hành; phụ thuộc hợp đồng #73 và môi trường chạy thực tế chưa xác minh",
+      "source_ref": "docs/lists/list_api.md #73; AD16ApiService; admin-api-guards.ts",
+      "event_ids": [
+        "AD-16-EV-001"
+      ]
+    },
+    {
+      "id": "AD-16-API-002",
+      "method": "POST",
+      "path": "/api/v1/admin/quizzes",
+      "request": "Bearer JWT (token xác thực); phần thân yêu cầu bắt buộc có đúng hai trường chuỗi config (cấu hình) và questions (câu hỏi) theo danh mục API. Máy khách tuần tự hóa JSON lồng theo phương án dự phòng mã nguồn hiện tại; cấu trúc bên trong là DERIVED (suy ra từ mã nguồn, chưa được duyệt).",
+      "response": "Danh mục API: ApiEnvelope<Quiz> (phong bì phản hồi bài kiểm tra); HTTP 201, businessCode (mã nghiệp vụ) DESIGN_RESOURCE_CREATED (đã tạo tài nguyên). Máy khách còn kiểm tra thành công và cấu trúc data (dữ liệu phản hồi).",
+      "errors": "Danh mục API #88: 401/403/422/500. Máy khách xử lý 401/403/422 và lỗi chung; lỗi mạng status 0 (trạng thái mạng không xác định) hoặc phản hồi thành công lệch cấu trúc được khóa ở trạng thái chưa xác nhận.",
+      "auth": "Bearer JWT/Admin (token xác thực và vai trò quản trị viên) theo danh mục API; AC-35 yêu cầu quyền quản lý bài kiểm tra (quiz-management permission) nhưng chưa có ánh xạ được duyệt.",
+      "design_status": "DD API Draft (bản nháp) — Needs Confirmation (chờ xác nhận); chỉ phần thân yêu cầu ngoài được danh mục API công bố",
+      "source_ref": "docs/lists/list_api.md #88; API #88 DD và OPEN_QUESTIONS.md; AD16ApiService; api_88_admin_quizzes_create",
+      "event_ids": [
+        "AD-16-EV-003",
+        "AD-16-EV-004",
+        "AD-16-EV-005",
+        "AD-16-EV-006",
+        "AD-16-EV-007"
+      ]
+    },
+    {
+      "id": "AD-16-API-003",
+      "method": "PUT",
+      "path": "/api/v1/admin/quizzes/{quiz_id}",
+      "request": "Danh mục API chỉ khai báo path (đường dẫn) quiz_id:int64 (mã bài kiểm tra kiểu số nguyên 64-bit), không khai báo yêu cầu phần thân yêu cầu; không có GET chi tiết bài kiểm tra. DISCREPANCY (khác biệt chưa được giải quyết): OpenAPI (đặc tả giao diện API) tuyến cục bộ hiện công bố phần thân yêu cầu config (cấu hình)/questions (câu hỏi) dạng chuỗi và bộ xử lý nhận phần thân yêu cầu thô; cách này vẫn DERIVED (suy ra từ mã nguồn, chưa được duyệt), chưa được người phụ trách duyệt. AD16 hiện không gửi PUT.",
+      "response": "Danh mục API: ApiEnvelope<Quiz> (phong bì phản hồi bài kiểm tra); HTTP 200, businessCode (mã nghiệp vụ) DESIGN_RESOURCE_UPDATED (đã cập nhật tài nguyên).",
+      "errors": "Danh mục API #89: 401/403/404/422/500. Cách cục bộ dùng lại phần thân yêu cầu #88, thay thế toàn bộ câu hỏi và từ chối lịch sử làm bài là DERIVED (suy ra từ mã nguồn, chưa được duyệt), chưa phải hợp đồng được duyệt.",
+      "auth": "Bearer JWT/Admin (token xác thực và vai trò quản trị viên) theo danh mục API; ánh xạ quyền truy cập AC-35 còn mở.",
+      "design_status": "DD API Draft (bản nháp) — Needs Confirmation (chờ xác nhận); thiếu phần thân yêu cầu đã duyệt và nguồn tải chi tiết",
+      "source_ref": "docs/lists/list_api.md #89; apps/study-server/app/api/v1.py; API #89 DD và OPEN_QUESTIONS.md; admin.routes.ts; không có caller trong AD16ApiService",
+      "event_ids": [
+        "AD-16-EV-002"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-16-EL-001",
+      "marker": "#1",
+      "name": "Khối nhận diện Study2Work",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(276,18) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Nhãn thương hiệu trong ảnh Stitch; bản mẫu dùng HTML tĩnh, không gắn dữ liệu phiên.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #1; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-002",
+      "marker": "#2",
+      "name": "Điều hướng quản trị: Tổng quan",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(336,13) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết trong bản mẫu dùng href (thuộc tính đích liên kết)=\"#\"; chưa định tuyến tới trang Admin.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #2; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-003",
+      "marker": "#3",
+      "name": "Điều hướng quản trị: Người dùng",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(455,13) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết trong bản mẫu dùng href (thuộc tính đích liên kết)=\"#\"; chưa định tuyến tới trang người dùng.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #3; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-004",
+      "marker": "#4",
+      "name": "Điều hướng quản trị: Khóa học và Nội dung",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(599,13) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết trong bản mẫu dùng href (thuộc tính đích liên kết)=\"#\"; trạng thái chọn không chứng minh tuyến đang hoạt động.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #4; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-005",
+      "marker": "#5",
+      "name": "Điều hướng quản trị: Kiểm duyệt",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(817,13) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết trong bản mẫu dùng href (thuộc tính đích liên kết)=\"#\"; chưa có bộ xử lý.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #5; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-006",
+      "marker": "#6",
+      "name": "Điều hướng quản trị: Báo cáo",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(959,13) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết trong bản mẫu dùng href (thuộc tính đích liên kết)=\"#\"; chưa có bộ xử lý.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #6; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-007",
+      "marker": "#7",
+      "name": "Huy hiệu “SYSTEM NORMAL (hệ thống hoạt động bình thường)” tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1085,13) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Chữ “SYSTEM NORMAL (hệ thống hoạt động bình thường)” là nội dung tĩnh; không gọi API trạng thái hệ thống.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #7; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-008",
+      "marker": "#8",
+      "name": "Nút thông báo",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1276,14) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Nút không có bộ lắng nghe sự kiện trong bản mẫu; không mở bảng thông báo.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #8; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-009",
+      "marker": "#9",
+      "name": "Danh tính và ảnh đại diện quản trị viên tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1357,15) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Tên/vai trò/ảnh là mẫu tĩnh; không lấy từ phiên đăng nhập.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #9; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-010",
+      "marker": "#10",
+      "name": "Đường dẫn phân cấp toàn cục",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(37,76) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Breadcrumb trong bản mẫu là chữ/liên kết neo tĩnh; không chứng minh điều hướng môi trường chạy thực tế.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #10; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-011",
+      "marker": "#11",
+      "name": "Chỉ báo RBAC (kiểm soát truy cập theo vai trò) tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1520,76) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Nhãn RBAC (kiểm soát truy cập theo vai trò) là tĩnh; không phải quyết định từ dịch vụ phân quyền.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #11; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-012",
+      "marker": "#12",
+      "name": "Đường dẫn phân cấp cục bộ",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(40,134) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Breadcrumb cục bộ là nội dung tĩnh trong bản mẫu.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #12; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-013",
+      "marker": "#13",
+      "name": "Liên kết quay lại AD-15",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1176,167) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết neo bản mẫu dùng mã hash (đoạn định danh trên URL) #/admin/quizzes; Angular khuôn mẫu dùng RouterLink (liên kết điều hướng của Angular) /admin/quizzes.",
+      "event_ids": [
+        "AD-16-EV-007"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #13; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-014",
+      "marker": "#14",
+      "name": "Tiêu đề thiết lập bài kiểm tra",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(40,170) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Tiêu đề hiển thị theo bản mẫu; Angular dùng tiêu đề từ định nghĩa AD16_SCREEN.",
+      "event_ids": [
+        "AD-16-EV-003",
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #14; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-015",
+      "marker": "#15",
+      "name": "Thông báo “chế độ an toàn” tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(54,262) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Nhãn “chế độ an toàn” không có cờ tính năng hoặc kiểm tra chế độ an toàn.",
+      "event_ids": [
+        "AD-16-EV-008"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #15; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-016",
+      "marker": "#16",
+      "name": "Tiêu đề khu vực cấu hình",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(66,421) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Tiêu đề chia phần cấu hình; nội dung bản bản mẫu khác biểu mẫu Angular hiện tại.",
+      "event_ids": [
+        "AD-16-EV-003",
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #16; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-017",
+      "marker": "#17",
+      "name": "Nhóm trường tên bài kiểm tra",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(55,513) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Bản mẫu có ô text nhưng không bộ lắng nghe sự kiện; Angular có đầu vào và bản nháp trong thành phần.",
+      "event_ids": [
+        "AD-16-EV-003"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #17; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-018",
+      "marker": "#18",
+      "name": "Nhóm trường khóa học",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(55,647) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Bản mẫu chưa cung cấp danh sách ID (mã định danh) khóa học; Angular nạp tùy chọn từ GET #73.",
+      "event_ids": [
+        "AD-16-EV-001",
+        "AD-16-EV-002"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #18; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-019",
+      "marker": "#19",
+      "name": "Nhóm trường thời lượng",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(54,797) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Bản mẫu gợi ý giá trị tối thiểu/tối đa; danh mục API/DD API không xác nhận khoảng nghiệp vụ đó.",
+      "event_ids": [
+        "AD-16-EV-001",
+        "AD-16-EV-002"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #19; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-020",
+      "marker": "#20",
+      "name": "Nhóm trường điểm đạt yêu cầu",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(640,798) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Bản mẫu dùng đầu vào số, trong khi cục bộ #88 nhận chuỗi thập phân; ánh xạ/khoảng giá trị nghiệp vụ còn mở.",
+      "event_ids": [
+        "AD-16-EV-001",
+        "AD-16-EV-002"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #20; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-021",
+      "marker": "#21",
+      "name": "Thông báo “tự lưu cục bộ” tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(612,942) điểm ảnh trên ảnh 1600×1402",
+      "properties": "“tự lưu locally” chỉ là nội dung chữ; không có localStorage (bộ nhớ cục bộ của trình duyệt)/sessionStorage/API/bộ hẹn giờ.",
+      "event_ids": [
+        "AD-16-EV-003"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #21; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-022",
+      "marker": "#22",
+      "name": "Tiêu đề khu vực câu hỏi",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(706,421) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Tiêu đề phần câu hỏi; bản mẫu không render editor hoạt động.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #22; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-023",
+      "marker": "#23",
+      "name": "Thông báo lược đồ tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1512,502) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Thông báo lược đồ trong bản mẫu không chứng minh đồng bộ lược đồ môi trường chạy thực tế.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #23; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-024",
+      "marker": "#24",
+      "name": "Biểu tượng trạng thái chưa có câu hỏi",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1095,641) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Icon trạng thái rỗng trong ảnh là trang trí; bản mẫu không có dữ liệu động.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #24; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-025",
+      "marker": "#25",
+      "name": "Tiêu đề trạng thái chưa có câu hỏi",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(734,752) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Chữ rỗng trong ảnh là nội dung mẫu; Angular hiện cũng có trạng thái danh sách câu hỏi rỗng ban đầu.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #25; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-026",
+      "marker": "#26",
+      "name": "Mô tả trạng thái chưa có câu hỏi",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1502,796) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Mô tả trong ảnh không chứng minh chính sách cho phép lưu bài kiểm tra không câu hỏi.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #26; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-027",
+      "marker": "#27",
+      "name": "Nút thêm câu hỏi bị khóa trong ảnh và nhãn khóa tạm",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(903,888) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Bản mẫu bị vô hiệu hóa; Angular tạo có nút thêm câu hỏi hoạt động theo mã nguồn, chỉnh sửa bị khóa.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #27; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-028",
+      "marker": "#28",
+      "name": "Thông báo cổng trình tạo câu hỏi tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1511,1045) điểm ảnh trên ảnh 1600×1402",
+      "properties": "“Questions Builder Gate (cổng kiểm soát trình tạo câu hỏi)” là nội dung chữ tĩnh, không có cổng kiểm soát API/cờ tính năng.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #28; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-029",
+      "marker": "#29",
+      "name": "Dải thông tin quyền truy cập tĩnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(55,1206) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Chữ quyền truy cập tĩnh; chưa ánh xạ AC-35 quiz-management (quyền quản lý bài kiểm tra) sang ADMIN.",
+      "event_ids": [
+        "AD-16-EV-001",
+        "AD-16-EV-005"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #29; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-030",
+      "marker": "#30",
+      "name": "Liên kết hủy/quay lại danh sách",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1138,1208) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Bản mẫu dùng mã hash (đoạn định danh trên URL); Angular dùng RouterLink (liên kết điều hướng của Angular) về danh sách và không có kiểm tra ranh giới dữ liệu mất bản nháp.",
+      "event_ids": [
+        "AD-16-EV-007"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #30; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-031",
+      "marker": "#31",
+      "name": "Nút lưu bị khóa trong ảnh",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1515,1208) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Bản mẫu bị vô hiệu hóa; Angular cho lưu ở tạo khi có khóa học đã nạp/chọn và chưa ở trạng thái khóa.",
+      "event_ids": [
+        "AD-16-EV-010"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #31; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-032",
+      "marker": "#32",
+      "name": "Thương hiệu và bản quyền chân trang",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(24,1334) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Chân trang tĩnh trong bản mẫu; không có xử lý data.",
+      "event_ids": [
+        "AD-16-EV-001"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #32; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-033",
+      "marker": "#33",
+      "name": "Liên kết chính sách riêng tư",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(882,1347) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết neo href (thuộc tính đích liên kết)=\"#\"; chưa có đích được xác nhận.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #33; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-034",
+      "marker": "#34",
+      "name": "Liên kết tiêu chuẩn RBAC (kiểm soát truy cập theo vai trò)",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1116,1347) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết neo href (thuộc tính đích liên kết)=\"#\"; không thay cho kiểm tra vai trò/quyền truy cập.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #34; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-035",
+      "marker": "#35",
+      "name": "Liên kết hỗ trợ kỹ thuật",
+      "type": "Thành phần được đánh dấu trên ảnh thiết kế",
+      "position": "(1382,1347) điểm ảnh trên ảnh 1600×1402",
+      "properties": "Liên kết neo href (thuộc tính đích liên kết)=\"#\"; chưa có trang hỗ trợ hoặc bộ xử lý.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — DD màn hình BLOCKED (bị chặn)",
+      "source_ref": "01-ui-elements.md marker #35; AD-16_markers.json; screen-numbered.png"
+    },
+    {
+      "id": "AD-16-EL-036",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Tuyến tạo và tuyến sửa của Angular",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Hai tuyến /admin/quizzes/new và /admin/quizzes/:quizId/edit cùng render AD16Page (trang AD-16) dưới AdminLayout (khung quản trị); môi trường chạy thực tế chưa được mở trình duyệt để xác minh.",
+      "event_ids": [
+        "AD-16-EV-001",
+        "AD-16-EV-002"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-037",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Cổng phiên đăng nhập quản trị viên",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Khi chưa có phiên, khung Admin yêu cầu đăng nhập và không gửi API bảo vệ; chưa xác minh hành vi trình duyệt thật.",
+      "event_ids": [
+        "AD-16-EV-001"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-038",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Tải danh sách khóa học theo trang",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Tạo gọi GET #73 với page=1 (số trang 1) lúc khởi tạo; có đang tải, đã nạp, rỗng và lỗi theo phản hồi.",
+      "event_ids": [
+        "AD-16-EV-001"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-039",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Từ chối phản hồi #73 sai cấu trúc",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Yêu cầu businessCode (mã nghiệp vụ) DESIGN_RESOURCE_RETRIEVED (đã truy xuất tài nguyên), page (số trang) đúng yêu cầu và kiểm tra ranh giới dữ liệu trang; đếm/danh sách lệch thành lỗi.",
+      "event_ids": [
+        "AD-16-EV-001"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-040",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Phân trang và phục hồi trang khóa học",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Chỉ chuyển trang số nguyên an toàn từ 1 đến tổng số trang (tối thiểu là 1); trang muộn rỗng có thể phục hồi về trang cuối hợp lệ.",
+      "event_ids": [
+        "AD-16-EV-001"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-041",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Lọc ID (mã định danh) khóa học không an toàn",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Loại ID (mã định danh) không thể biểu diễn chính xác bằng JavaScript khỏi option; hiển thị cảnh báo nếu có ID (mã định danh) như vậy.",
+      "event_ids": [
+        "AD-16-EV-001"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-042",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Trường cấu hình và bản nháp trong bộ nhớ",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Tên/thời lượng/điểm cập nhật thành phần; tên sau khi bỏ khoảng trắng bị rỗng và quá 200, thời lượng ngoài int32, điểm sai định dạng/lưu trữ bị từ chối.",
+      "event_ids": [
+        "AD-16-EV-003"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-043",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Tạo và sửa câu hỏi/lựa chọn",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Tạo cho thêm/xóa câu hỏi/lựa chọn, sửa nội dung/loại/đáp án đúng; hiện không đặt số lượng tối thiểu theo mã nguồn bộ kiểm tra data.",
+      "event_ids": [
+        "AD-16-EV-004"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-044",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Chế độ chỉnh sửa không nạp hoặc ghi dữ liệu",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Chỉnh sửa kiểm tra quizId (mã bài kiểm tra trên tuyến) dương số nguyên int64 có dấu; không gọi GET chi tiết, #73, POST #88 hoặc PUT #89; điều khiển bị khóa.",
+      "event_ids": [
+        "AD-16-EV-002"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-045",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Gửi #88 và xác nhận phản hồi",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Tuần tự hóa config (cấu hình)/questions (câu hỏi) thành đúng hai chuỗi; gửi POST; chỉ HTTP 201 và businessCode (mã nghiệp vụ)/cấu trúc phù hợp mới là thành công.",
+      "event_ids": [
+        "AD-16-EV-005"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-046",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Khóa gửi lại khi trạng thái chưa xác định",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Phong bì phản hồi thành công sai HTTP/status (trạng thái) hoặc lỗi mạng status 0 (trạng thái mạng không xác định) tạo chưa xác nhận và khóa biểu mẫu để kiểm tra AD-15 trước khi gửi lại.",
+      "event_ids": [
+        "AD-16-EV-006"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-047",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Thông báo lỗi API và phiên",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "401/403/422 có thông báo cụ thể; lỗi khác dùng nội dung chung; tầng giao tiếp API xử lý 401 theo cơ chế phiên hiện hành.",
+      "event_ids": [
+        "AD-16-EV-007"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-048",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Hủy quay về AD-15",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Liên kết đầu trang/chân trang dùng RouterLink (liên kết điều hướng của Angular) /admin/quizzes; mã nguồn không có cảnh báo bản nháp đã chỉnh sửa hay lưu lại bộ lọc/page (số trang).",
+      "event_ids": [
+        "AD-16-EV-008"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-049",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Nhãn tự lưu và cổng kiểm soát không có hiệu lực",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Nội dung chữ trên bản mẫu không kích hoạt lưu trữ, bộ hẹn giờ, API hoặc cờ tính năng; bản Angular giữ bản nháp trong bộ nhớ.",
+      "event_ids": [
+        "AD-16-EV-009"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-050",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Khung, breadcrumb và liên kết chân trang",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Bản mẫu có nhiều href (thuộc tính đích liên kết)=\"#\"/nội dung tĩnh; khung giao diện Angular dùng thành phần dùng chung khác; chỉ ghi nhận theo mã nguồn đang chạy.",
+      "event_ids": [
+        "AD-16-EV-010"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-051",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Gọi API #73 danh sách khóa học",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "GET /api/v1/admin/courses có tham số truy vấn page (số trang); danh mục API có tham số truy vấn tùy chọn status (trạng thái)/mentor (người hướng dẫn)/category (danh mục), phản hồi Page<Course> (kiểu trang khóa học); AD16 hiện chỉ gửi page (số trang).",
+      "event_ids": [
+        "AD-16-EV-001"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-052",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Ranh giới API #88 tạo bài kiểm tra",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "POST /api/v1/admin/quizzes; danh mục API phần thân yêu cầu ngoài config (cấu hình)/questions (câu hỏi) dạng chuỗi; phản hồi 201; nội dung lồng hiện DERIVED (suy ra từ mã nguồn, chưa được duyệt).",
+      "event_ids": [
+        "AD-16-EV-005"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-053",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Ranh giới API #89 cập nhật bài kiểm tra",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "PUT /api/v1/admin/quizzes/{quiz_id}; danh mục API không khai báo phần thân yêu cầu; AD16 không có nơi gọi #89.",
+      "event_ids": [
+        "AD-16-EV-002"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-054",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Cơ sở dữ liệu ứng viên và chưa xác minh",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "Migration (bản chuyển đổi cơ sở dữ liệu) 013 là ứng viên cho lược đồ của hệ thống cũ; không có bằng chứng migration (bản chuyển đổi cơ sở dữ liệu) đã triển khai/triển khai; không trộn V1-PILOT (mô hình thí điểm phiên bản 1) UUID (mã định danh duy nhất) với API hiện tại.",
+      "event_ids": [
+        "AD-16-EV-005"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    },
+    {
+      "id": "AD-16-EL-055",
+      "marker": "Chỉ có trong mã nguồn",
+      "name": "Bố cục đáp ứng theo CSS hiện tại",
+      "type": "Trạng thái hoặc hành vi chỉ có trong Angular/API hiện tại",
+      "position": "Không có dấu mốc trên ảnh thiết kế; xác minh từ mã nguồn được dẫn",
+      "properties": "CSS có breakpoint cho màn hẹp; đây chỉ là thuộc tính nguồn, không có bằng chứng kiểm tra trên trình duyệt.",
+      "event_ids": [
+        "AD-16-EV-010"
+      ],
+      "design_status": "Chờ xác nhận — mã nguồn chưa được môi trường chạy thực tế xác minh",
+      "source_ref": "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-16-EV-001",
+      "name": "Mở chế độ tạo và nạp khóa học",
+      "trigger": "Mở /admin/quizzes/new trong phiên quản trị viên đã xác thực.",
+      "processing": "Trang gửi GET #73 page=1 (số trang 1); kiểm tra phong bì phản hồi, page (số trang) và đếm/danh sách rồi hiển thị trạng thái tải, lỗi, rỗng hoặc các khóa học. Không gửi POST khi vừa mở.",
+      "element_ids": [
+        "AD-16-EL-002",
+        "AD-16-EL-003",
+        "AD-16-EL-004",
+        "AD-16-EL-007",
+        "AD-16-EL-010",
+        "AD-16-EL-011",
+        "AD-16-EL-014",
+        "AD-16-EL-016"
+      ],
+      "api_ids": [
+        "AD-16-API-001"
+      ],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-01; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-002",
+      "name": "Mở chế độ sửa",
+      "trigger": "Mở /admin/quizzes/{quizId}/edit.",
+      "processing": "Trang giữ ID (mã định danh) thô; nếu hợp lệ vẫn không tải chi tiết vì chưa có GET chi tiết; chỉnh sửa bị khóa và không gửi #89. ID (mã định danh) sai cũng không gọi API.",
+      "element_ids": [
+        "AD-16-EL-005",
+        "AD-16-EL-007",
+        "AD-16-EL-013",
+        "AD-16-EL-014",
+        "AD-16-EL-018"
+      ],
+      "api_ids": [
+        "AD-16-API-003"
+      ],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-02; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-003",
+      "name": "Nhập cấu hình",
+      "trigger": "Nhập tên, chọn khóa học, thời lượng hoặc passing điểm.",
+      "processing": "Giữ bản nháp trong bộ nhớ; kiểm tra quy tắc lưu trữ hiện có khi gửi biểu mẫu; không tự lưu và không tự áp dụng khoảng giá trị bản mẫu chưa duyệt.",
+      "element_ids": [
+        "AD-16-EL-017",
+        "AD-16-EL-018",
+        "AD-16-EL-019",
+        "AD-16-EL-020",
+        "AD-16-EL-021"
+      ],
+      "api_ids": [
+        "AD-16-API-002"
+      ],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-03; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-004",
+      "name": "Thêm hoặc sửa câu hỏi và lựa chọn",
+      "trigger": "Dùng nút thêm/xóa, đầu vào, select loại câu hỏi, checkbox đáp án.",
+      "processing": "Thay đổi questions (câu hỏi) tín hiệu trạng thái; các loại hiện có là SINGLE_CHOICE (một đáp án), MULTIPLE_CHOICE (nhiều đáp án), TRUE_FALSE (đúng/sai); chưa chứng minh quy tắc nghiệp vụ số lượng/đáp án.",
+      "element_ids": [
+        "AD-16-EL-022",
+        "AD-16-EL-023",
+        "AD-16-EL-024",
+        "AD-16-EL-025",
+        "AD-16-EL-026",
+        "AD-16-EL-027",
+        "AD-16-EL-028"
+      ],
+      "api_ids": [
+        "AD-16-API-002"
+      ],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-04; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-005",
+      "name": "Lưu bài kiểm tra mới",
+      "trigger": "Gửi biểu mẫu biểu mẫu tạo khi khóa học đã nạp/chọn và biểu mẫu qua kiểm tra cục bộ.",
+      "processing": "Tạo đúng phần thân yêu cầu ngoài gồm hai chuỗi JSON config (cấu hình)/questions (câu hỏi) rồi POST #88; khóa nút trong lúc gửi.",
+      "element_ids": [
+        "AD-16-EL-017",
+        "AD-16-EL-018",
+        "AD-16-EL-019",
+        "AD-16-EL-020",
+        "AD-16-EL-022",
+        "AD-16-EL-027",
+        "AD-16-EL-029",
+        "AD-16-EL-031"
+      ],
+      "api_ids": [
+        "AD-16-API-002"
+      ],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-05; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-006",
+      "name": "Nhận kết quả lưu",
+      "trigger": "Nhận phản hồi từ #88.",
+      "processing": "Chỉ thành công với HTTP 201, success=true (xác nhận thành công), businessCode (mã nghiệp vụ) DESIGN_RESOURCE_CREATED (đã tạo tài nguyên) và cấu trúc phù hợp; khóa biểu mẫu, hiện liên kết AD-15, không tự điều hướng/refetch.",
+      "element_ids": [
+        "AD-16-EL-013",
+        "AD-16-EL-030",
+        "AD-16-EL-031"
+      ],
+      "api_ids": [
+        "AD-16-API-002"
+      ],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-06; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-007",
+      "name": "Xử lý lỗi lưu hoặc kết quả chưa rõ",
+      "trigger": "Nhận lỗi HTTP, 2xx sai hợp đồng hoặc lỗi mạng status 0 (trạng thái mạng không xác định).",
+      "processing": "Hiện thông báo tương ứng; 2xx không khớp hoặc status (trạng thái) 0 chuyển chưa xác nhận, khóa gửi lại và hướng dẫn kiểm tra AD-15.",
+      "element_ids": [
+        "AD-16-EL-029",
+        "AD-16-EL-031"
+      ],
+      "api_ids": [
+        "AD-16-API-002"
+      ],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-07; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-008",
+      "name": "Hủy hoặc quay lại",
+      "trigger": "Nhấn liên kết quay lại danh sách ở đầu hoặc cuối trang.",
+      "processing": "RouterLink (liên kết điều hướng của Angular) về /admin/quizzes; không có xác nhận bỏ bản nháp, không lưu/khôi phục bộ lọc/page (số trang) theo mã nguồn hiện tại.",
+      "element_ids": [
+        "AD-16-EL-012",
+        "AD-16-EL-013",
+        "AD-16-EL-030"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-08; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-009",
+      "name": "Hiển thị nội dung chữ trạng thái thiết kế",
+      "trigger": "Quan sát chế độ an toàn, tự lưu, lược đồ, trình tạo cổng kiểm soát, RBAC (kiểm soát truy cập theo vai trò) và nhãn tình trạng sức khỏe trong ảnh/bản mẫu.",
+      "processing": "Bản mẫu là HTML tĩnh, không bộ xử lý, bộ hẹn giờ, API, lưu trữ hay xác thực check; Angular có nội dung chữ và điều khiển khác. Không coi nội dung chữ như môi trường chạy thực tế guarantee.",
+      "element_ids": [
+        "AD-16-EL-007",
+        "AD-16-EL-011",
+        "AD-16-EL-015",
+        "AD-16-EL-021",
+        "AD-16-EL-023",
+        "AD-16-EL-028",
+        "AD-16-EL-029"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-09; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    },
+    {
+      "id": "AD-16-EV-010",
+      "name": "Dùng khung giao diện và chân trang",
+      "trigger": "Thử điều hướng quản trị viên, thông báo, breadcrumb và liên kết chân trang.",
+      "processing": "Bản mẫu liên kết neo không có đích; khung Admin hiện tại có các tuyến riêng. Môi trường chạy thực tế nhấp chưa kiểm tra; không khẳng định liên kết ký hiệu giữ chỗ hoạt động.",
+      "element_ids": [
+        "AD-16-EL-001",
+        "AD-16-EL-002",
+        "AD-16-EL-003",
+        "AD-16-EL-004",
+        "AD-16-EL-005",
+        "AD-16-EL-006",
+        "AD-16-EL-008",
+        "AD-16-EL-009",
+        "AD-16-EL-010",
+        "AD-16-EL-032",
+        "AD-16-EL-033",
+        "AD-16-EL-034",
+        "AD-16-EL-035"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — DD/API còn điểm chặn",
+      "source_ref": "02-events.md EV-10; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD-16-BL-001",
+      "description": "DD màn hình đang BLOCKED (bị chặn); không có người phụ trách, người rà soát hoặc người phê duyệt được xác định trong tài liệu được rà soát.",
+      "impact": "Không thể coi các lựa chọn chưa xác nhận là tiêu chí nghiệp vụ đã duyệt.",
+      "decision": "Người phụ trách/người rà soát chốt phạm vi và phê duyệt bản DD; giữ các ca ở trạng thái chờ xác nhận.",
+      "source_ref": "00-overview.md; 05-business-rules.md",
+      "status": "Đang mở"
+    },
+    {
+      "id": "AD-16-BL-002",
+      "description": "API #88/#89 đều Draft (bản nháp) — Needs Confirmation (chờ xác nhận); JSON lồng nhau #88 và yêu cầu phần thân yêu cầu #89 chưa được quyết định đầy đủ.",
+      "impact": "Không thể khẳng định dữ liệu gửi đi hiện tại của máy khách/máy chủ là hợp đồng chính thức.",
+      "decision": "Duyệt lược đồ/lifecycle của #88 và phần thân yêu cầu, ngữ nghĩa, lỗi, lịch sử của #89; đồng bộ danh mục API/DD/máy khách/máy chủ.",
+      "source_ref": "API #88/#89 covers và OPEN_QUESTIONS.md; docs/lists/list_api.md",
+      "status": "Đang mở"
+    },
+    {
+      "id": "AD-16-BL-003",
+      "description": "Thiếu GET chi tiết bài kiểm tra, nên chế độ chỉnh sửa không có nguồn để tải cấu hình, câu hỏi và lựa chọn.",
+      "impact": "Không thể kiểm thử cập nhật end-to-end; máy khách khóa chỉnh sửa để tránh ghi đè bằng biểu mẫu rỗng.",
+      "decision": "Bổ sung/duyệt nguồn tải chi tiết và luồng chỉnh sửa trước khi mở #89.",
+      "source_ref": "AD-16 00–06; api service; API #89",
+      "status": "Đang mở"
+    },
+    {
+      "id": "AD-16-BL-004",
+      "description": "AC-35 yêu cầu quyền quản lý bài kiểm tra (quiz-management permission), còn điểm cuối API cục bộ hiện dùng vai trò ADMIN; chưa có ánh xạ chính sách.",
+      "impact": "Không thể xác nhận ai được tạo/cập nhật hoặc cách phân biệt 401/403 theo quyền nghiệp vụ.",
+      "decision": "Người phụ trách bảo mật duyệt claim/quyền truy cập và ánh xạ trước kiểm thử phân quyền.",
+      "source_ref": "00-overview.md; API catalog #88/#89; auth source",
+      "status": "Đang mở"
+    },
+    {
+      "id": "AD-16-BL-005",
+      "description": "Các giới hạn giá trị tối thiểu/tối đa trong bản mẫu, quy tắc số câu hỏi/lựa chọn/đáp án, bộ giá trị và khoảng giá trị điểm chưa có người phụ trách approval; bộ kiểm tra dữ liệu cục bộ chỉ chứng minh giới hạn lưu trữ của nó.",
+      "impact": "Không được biến hành vi lưu trữ hiện tại hoặc nội dung chữ mẫu thành quy tắc nghiệp vụ.",
+      "decision": "Chốt trường/khoảng giá trị/bộ giá trị/số lượng phần tử và lỗi nghiệp vụ trong DD/API.",
+      "source_ref": "01-ui-elements.md; 05-business-rules.md; API #88 OPEN_QUESTIONS.md",
+      "status": "Đang mở"
+    },
+    {
+      "id": "AD-16-BL-006",
+      "description": "Ngữ cảnh cơ sở dữ liệu ghi question_type (loại câu hỏi) VARCHAR(32) (chuỗi tối đa 32 ký tự) nhưng migration (bản chuyển đổi cơ sở dữ liệu) 013 trong kho mã nguồn hiện khai báo VARCHAR(24) (chuỗi tối đa 24 ký tự); cả hai là ứng viên hệ thống cũ, chưa chứng minh đã triển khai. V1-PILOT (mô hình thí điểm phiên bản 1) dùng mô hình ID (mã định danh) khác và không thể trộn với bài kiểm tra int64.",
+      "impact": "Tài liệu lược đồ và migration (bản chuyển đổi cơ sở dữ liệu) không thống nhất về giới hạn cột; không thể xác nhận lược đồ/môi trường đang chạy của môi trường đích.",
+      "decision": "Người phụ trách cơ sở dữ liệu đối chiếu ngữ cảnh với migration (bản chuyển đổi cơ sở dữ liệu), chốt mốc chuẩn/FK/khả năng nhận giá trị NULL và xác minh triển khai trên môi trường được duyệt.",
+      "source_ref": ".agents/server-study/database.md mục API #88; migration 013; API #88/#89 OPEN_QUESTIONS.md",
+      "status": "Đang mở — DISCREPANCY (khác biệt chưa được giải quyết)"
+    },
+    {
+      "id": "AD-16-BL-007",
+      "description": "Bản mẫu Stitch tĩnh và khác đáng kể Angular hiện tại; tổng quan có cụm “IMPLEMENTATION 100% STATIC DD-SAFE (triển khai tĩnh hoàn toàn, đáp ứng an toàn theo DD)” nhưng phần khác ghi TÌNH TRẠNG TRIỂN KHAI MỘT PHẦN và mã nguồn đã có tạo luồng.",
+      "impact": "Nếu chỉ lấy ảnh/bản mẫu hoặc chỉ lấy mã nguồn làm hành vi mong đợi sẽ bỏ sót mâu thuẫn giữa tài liệu và hiện trạng.",
+      "decision": "Người phụ trách cập nhật/duyệt DD theo luồng hiện tại và xác định thiết kế đích; giữ DISCREPANCY (khác biệt chưa được giải quyết) tới khi có quyết định.",
+      "source_ref": "00-overview.md; 01-ui-elements.md; AD-16_PLAN.md; Stitch code.html; ad16-page.ts/html",
+      "status": "Đang mở — DISCREPANCY (khác biệt chưa được giải quyết)"
+    },
+    {
+      "id": "AD-16-BL-008",
+      "description": "Chưa xác minh trình duyệt, API/triển khai hoặc cơ sở dữ liệu đang chạy; tất cả ca trong gói được để Chưa chạy.",
+      "impact": "Gói hiện là kế hoạch truy vết, chưa phải bằng chứng nghiệm thu môi trường chạy thực tế.",
+      "decision": "Sau khi gỡ hợp đồng điểm chặn, chạy trên môi trường được duyệt và lưu kết quả/evidence; ghi tên người thực hiện và phê duyệt.",
+      "source_ref": "07-test-cases.md; API verification reports; runtime status",
+      "status": "Đang mở"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-16-TC-MH-001",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến tạo trong phiên quản trị viên",
+        "requirement_ids": [
+          "AD-16-YC-001",
+          "AD-16-YC-002",
+          "AD-16-YC-020"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở /admin/quizzes/new sau khi xác thực phiên.",
+          "Quan sát yêu cầu khởi tạo và trạng thái ban đầu."
+        ],
+        "expected": "Mã nguồn Angular gọi GET #73 page=1 (số trang 1); chưa có bằng chứng trình duyệt/môi trường chạy thực tế. Không phát POST #88 khi chỉ mở trang. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-002",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị đang tải khóa học",
+        "requirement_ids": [
+          "AD-16-YC-002",
+          "AD-16-YC-020"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Giữ phản hồi #73 chưa trả về.",
+          "Quan sát vùng chọn khóa học và nút lưu."
+        ],
+        "expected": "Hiển thị trạng thái tải; chưa cho chọn/lưu trước khi danh sách hợp lệ được nạp. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-003",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Xử lý danh sách khóa học rỗng",
+        "requirement_ids": [
+          "AD-16-YC-002",
+          "AD-16-YC-003"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Trả về phong bì thành công có items (danh sách dữ liệu) rỗng và pagination (thông tin phân trang) hợp lệ.",
+          "Quan sát chọn khóa học, thông báo và nút lưu."
+        ],
+        "expected": "Trang không có khóa học để chọn; không gửi POST #88 khi chưa có selectedCourse (khóa học đang chọn). Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-004",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phản hồi #73 lệch tổng và số dòng",
+        "requirement_ids": [
+          "AD-16-YC-002",
+          "AD-16-YC-003"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Trả về pagination (thông tin phân trang).total khác số dòng theo kiểm tra ranh giới dữ liệu hiện tại.",
+          "Quan sát cảnh báo và thao tác lưu."
+        ],
+        "expected": "Trang chuyển sang lỗi phản hồi không hợp lệ; không cho chọn/lưu bằng dữ liệu lệch. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-005",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Phân trang danh sách khóa học",
+        "requirement_ids": [
+          "AD-16-YC-002",
+          "AD-16-YC-004"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Nạp trang đầu với total_pages (tổng số trang) lớn hơn 1.",
+          "Chọn trang tiếp theo."
+        ],
+        "expected": "Gửi GET #73 với page (số trang) kế tiếp hợp lệ; giữ hiển thị trang đã nhận. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-006",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Phục hồi khi trang khóa học vượt tổng",
+        "requirement_ids": [
+          "AD-16-YC-002",
+          "AD-16-YC-004"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mô phỏng phản hồi trang hiện tại lớn hơn total_pages (tổng số trang) và có danh sách items (danh sách dữ liệu) rỗng.",
+          "Dùng thao tác khôi phục trang."
+        ],
+        "expected": "Máy khách chuyển về trang hợp lệ cuối cùng theo logic hiện tại; không gửi page (số trang) ngoài biên. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-007",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Không đưa ID (mã định danh) khóa học không an toàn vào lựa chọn",
+        "requirement_ids": [
+          "AD-16-YC-002",
+          "AD-16-YC-007"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Trả #73 có một ID (mã định danh) an toàn và một ID (mã định danh) vượt Number.MAX_SAFE_INTEGER (giới hạn số nguyên an toàn của JavaScript).",
+          "Mở select và quan sát cảnh báo."
+        ],
+        "expected": "ID (mã định danh) không an toàn bị loại; không tuần tự hóa mất chính xác giá trị ID (mã định danh) vào phần thân yêu cầu. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-008",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Giữ bản nháp cấu hình khi nhập",
+        "requirement_ids": [
+          "AD-16-YC-006",
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Nạp một khóa học hợp lệ và chọn khóa.",
+          "Nhập tên, thời lượng và passing điểm.",
+          "Quan sát trước khi lưu."
+        ],
+        "expected": "Giá trị nằm trong trạng thái trong thành phần; chưa phát yêu cầu ghi và không có bằng chứng tự lưu sau khi rời trang. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001",
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-009",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Thêm và sửa câu hỏi/lựa chọn",
+        "requirement_ids": [
+          "AD-16-YC-008",
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thêm một câu hỏi và một lựa chọn.",
+          "Nhập nội dung; đổi loại; bật đáp án đúng."
+        ],
+        "expected": "Draft (bản nháp) cập nhật theo thao tác; chưa phát POST cho đến khi gửi biểu mẫu. Các loại/lược đồ hiện là phương án dự phòng chưa được duyệt. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-010",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Chặn tên trống sau trim",
+        "requirement_ids": [
+          "AD-16-YC-006",
+          "AD-16-YC-009",
+          "AD-16-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Nạp/chọn khóa học.",
+          "Để tên trống hoặc chỉ có khoảng trắng rồi gửi biểu mẫu."
+        ],
+        "expected": "Hiển thị thông báo bắt buộc; không gửi POST #88. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-011",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Chặn tên dài hơn giới hạn mã nguồn",
+        "requirement_ids": [
+          "AD-16-YC-006",
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Nhập tên có hơn 200 điểm mã.",
+          "Gửi biểu mẫu biểu mẫu."
+        ],
+        "expected": "Máy khách hiện báo vượt giới hạn và không gửi POST; đây là giới hạn mã nguồn, chưa thay thế quyết định nghiệp vụ. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-012",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra thời lượng theo có dấu int32",
+        "requirement_ids": [
+          "AD-16-YC-006",
+          "AD-16-YC-009",
+          "AD-16-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Nhập thời lượng chữ, thập phân hoặc ngoài có dấu int32 rồi gửi biểu mẫu."
+        ],
+        "expected": "Máy khách từ chối giá trị không hợp lệ; để trống được tuần tự hóa thành null theo hiện trạng. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-013",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra điểm theo thập phân lưu trữ",
+        "requirement_ids": [
+          "AD-16-YC-006",
+          "AD-16-YC-009",
+          "AD-16-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Nhập điểm sai định dạng, hơn hai chữ số lẻ hoặc ngoài ±999.99 rồi gửi biểu mẫu."
+        ],
+        "expected": "Máy khách từ chối theo hàm hỗ trợ hiện tại; khoảng giá trị lưu trữ không được diễn giải là khoảng giá trị điểm nghiệp vụ đã duyệt. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-014",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Tạo bài kiểm tra thành công theo phản hồi được xác nhận",
+        "requirement_ids": [
+          "AD-16-YC-010",
+          "AD-16-YC-011",
+          "AD-16-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Chọn khóa học và nhập cấu hình hợp lệ theo mã nguồn.",
+          "Gửi biểu mẫu và trả HTTP 201, success=true (xác nhận thành công), DESIGN_RESOURCE_CREATED (đã tạo tài nguyên) cùng data (dữ liệu phản hồi) đúng dạng."
+        ],
+        "expected": "Hiện thông báo thành công, khóa biểu mẫu và hiển thị liên kết AD-15; không tự chuyển trang hoặc gọi lại danh sách. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-015",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Khóa gửi lại khi HTTP 2xx sai status (trạng thái)",
+        "requirement_ids": [
+          "AD-16-YC-011",
+          "AD-16-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Gửi biểu mẫu hợp lệ.",
+          "Trả 200 với phong bì phản hồi có businessCode (mã nghiệp vụ) tạo nhưng sai HTTP status (trạng thái)."
+        ],
+        "expected": "Máy khách chuyển trạng thái chưa xác nhận, khóa gửi lại và hướng dẫn kiểm tra AD-15 trước khi thao tác tiếp. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-016",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Khóa gửi lại khi mạng không rõ kết quả",
+        "requirement_ids": [
+          "AD-16-YC-011",
+          "AD-16-YC-012",
+          "AD-16-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Gửi biểu mẫu hợp lệ.",
+          "Giả lập lỗi mạng status (trạng thái) 0."
+        ],
+        "expected": "Hiển thị thông báo kết quả chưa rõ; khóa thao tác gửi tiếp để tránh tạo trùng; yêu cầu kiểm tra AD-15. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-017",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Xử lý từ chối phiên hoặc quyền",
+        "requirement_ids": [
+          "AD-16-YC-001",
+          "AD-16-YC-013",
+          "AD-16-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mô phỏng 401 rồi 403 từ API.",
+          "Quan sát thông báo/session hành vi."
+        ],
+        "expected": "401/403 không được hiển thị thành rỗng thành công; nội dung chữ tương ứng theo mã nguồn. Quyền truy cập quiz-management (quyền quản lý bài kiểm tra) vẫn chưa được chốt. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-018",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến chỉnh sửa với ID (mã định danh) hợp lệ",
+        "requirement_ids": [
+          "AD-16-YC-005",
+          "AD-16-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở /admin/quizzes/123/edit.",
+          "Theo dõi mọi yêu cầu và trạng thái biểu mẫu."
+        ],
+        "expected": "Hiển thị chế độ chỉnh sửa bị khóa; không gửi GET chi tiết, #73, #88 hoặc PUT #89 do chưa có nguồn prefill/phần thân yêu cầu. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-003"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-019",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến chỉnh sửa với ID (mã định danh) sai",
+        "requirement_ids": [
+          "AD-16-YC-005",
+          "AD-16-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở tuyến chỉnh sửa với ID (mã định danh) 0, ký tự hoặc vượt số nguyên int64 có dấu.",
+          "Theo dõi yêu cầu mạng."
+        ],
+        "expected": "Hiển thị ID (mã định danh) không hợp lệ và không gửi yêu cầu API. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-003"
+        ],
+        "source_refs": [
+          "AD-16 DD mục 00–07",
+          "mã nguồn hiện tại AD16"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-020",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Hủy quay lại AD-15",
+        "requirement_ids": [
+          "AD-16-YC-014",
+          "AD-16-YC-015"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Nhập bản nháp rồi chọn liên kết quay lại hoặc hủy.",
+          "Quan sát tuyến và lời nhắc."
+        ],
+        "expected": "RouterLink (liên kết điều hướng của Angular) trỏ /admin/quizzes; mã nguồn không có lời nhắc mất bản nháp hoặc lưu tự động. Môi trường chạy thực tế chưa xác minh. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "06-navigation.md; ad16-page.html; admin.routes.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-021",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt nội dung chữ bản mẫu với chức năng môi trường chạy thực tế",
+        "requirement_ids": [
+          "AD-16-YC-015",
+          "AD-16-YC-016",
+          "AD-16-YC-017"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Đối chiếu nhãn tự lưu/RBAC (kiểm soát truy cập theo vai trò)/lược đồ/cổng kiểm soát trong ảnh với mã nguồn.",
+          "Kiểm tra có lưu trữ, bộ hẹn giờ, API hoặc kiểm tra ranh giới dữ liệu tương ứng không."
+        ],
+        "expected": "Các nội dung chữ tĩnh không được coi là bảo đảm môi trường chạy thực tế; bản mẫu và Angular hiện khác nhau, cần giữ DISCREPANCY (khác biệt chưa được giải quyết). Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16_PLAN.md; AD-16.md; code.html; AD16Page"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-MH-022",
+        "target_id": "AD-16",
+        "group": "Toàn màn hình",
+        "title": "Không phát hành kết quả khi còn điểm chặn",
+        "requirement_ids": [
+          "AD-16-YC-019",
+          "AD-16-YC-020"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Kiểm tra trạng thái DD/API, môi trường, người duyệt và cột kết quả ca."
+        ],
+        "expected": "Gói giữ trạng thái kế hoạch; ca chưa chạy; đủ cấu trúc không đồng nghĩa được phê duyệt hoặc môi trường chạy thực tế đã xác minh. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md; API #88/#89 covers; 07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-16-TC-TP-001",
+        "target_id": "AD-16-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu #1: Khối nhận diện Study2Work",
+        "requirement_ids": [
+          "AD-16-YC-001"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #1 với vùng (276,18) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #1; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-002",
+        "target_id": "AD-16-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu #2: Điều hướng quản trị viên: Tổng quan",
+        "requirement_ids": [
+          "AD-16-YC-002"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #2 với vùng (336,13) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #2; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-003",
+        "target_id": "AD-16-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu #3: Điều hướng quản trị viên: Người dùng",
+        "requirement_ids": [
+          "AD-16-YC-003"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #3 với vùng (455,13) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #3; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-004",
+        "target_id": "AD-16-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu #4: Điều hướng quản trị viên: Khóa học và Nội dung",
+        "requirement_ids": [
+          "AD-16-YC-004"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #4 với vùng (599,13) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #4; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-005",
+        "target_id": "AD-16-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu #5: Điều hướng quản trị viên: Kiểm duyệt",
+        "requirement_ids": [
+          "AD-16-YC-005"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #5 với vùng (817,13) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #5; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-006",
+        "target_id": "AD-16-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu #6: Điều hướng quản trị viên: Báo cáo",
+        "requirement_ids": [
+          "AD-16-YC-006"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #6 với vùng (959,13) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #6; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-007",
+        "target_id": "AD-16-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu #7: Huy hiệu “SYSTEM NORMAL (hệ thống hoạt động bình thường)” tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-007"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #7 với vùng (1085,13) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #7; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-008",
+        "target_id": "AD-16-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu #8: Nút thông báo",
+        "requirement_ids": [
+          "AD-16-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #8 với vùng (1276,14) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #8; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-009",
+        "target_id": "AD-16-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu #9: Danh tính và ảnh đại diện quản trị viên tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #9 với vùng (1357,15) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #9; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-010",
+        "target_id": "AD-16-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu #10: Đường dẫn phân cấp toàn cục",
+        "requirement_ids": [
+          "AD-16-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #10 với vùng (37,76) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #10; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-011",
+        "target_id": "AD-16-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu #11: Chỉ báo RBAC (kiểm soát truy cập theo vai trò) tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-011"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #11 với vùng (1520,76) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #11; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-012",
+        "target_id": "AD-16-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu #12: Đường dẫn phân cấp cục bộ",
+        "requirement_ids": [
+          "AD-16-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #12 với vùng (40,134) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #12; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-013",
+        "target_id": "AD-16-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu #13: Liên kết quay lại AD-15",
+        "requirement_ids": [
+          "AD-16-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #13 với vùng (1176,167) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #13; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-014",
+        "target_id": "AD-16-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu #14: Tiêu đề thiết lập bài kiểm tra",
+        "requirement_ids": [
+          "AD-16-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #14 với vùng (40,170) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #14; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-015",
+        "target_id": "AD-16-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu #15: Thông báo “chế độ an toàn” tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-015"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #15 với vùng (54,262) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #15; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-016",
+        "target_id": "AD-16-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu #16: Tiêu đề khu vực cấu hình",
+        "requirement_ids": [
+          "AD-16-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #16 với vùng (66,421) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #16; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-017",
+        "target_id": "AD-16-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu #17: Nhóm trường tên bài kiểm tra",
+        "requirement_ids": [
+          "AD-16-YC-017"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #17 với vùng (55,513) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #17; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-018",
+        "target_id": "AD-16-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu #18: Nhóm trường khóa học",
+        "requirement_ids": [
+          "AD-16-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #18 với vùng (55,647) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #18; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-019",
+        "target_id": "AD-16-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu #19: Nhóm trường thời lượng",
+        "requirement_ids": [
+          "AD-16-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #19 với vùng (54,797) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #19; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-020",
+        "target_id": "AD-16-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu #20: Nhóm trường điểm đạt yêu cầu",
+        "requirement_ids": [
+          "AD-16-YC-020"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #20 với vùng (640,798) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #20; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-021",
+        "target_id": "AD-16-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu #21: Thông báo “tự lưu cục bộ” tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-001"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #21 với vùng (612,942) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #21; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-022",
+        "target_id": "AD-16-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu #22: Tiêu đề khu vực câu hỏi",
+        "requirement_ids": [
+          "AD-16-YC-002"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #22 với vùng (706,421) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #22; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-023",
+        "target_id": "AD-16-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu #23: Thông báo lược đồ tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-003"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #23 với vùng (1512,502) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #23; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-024",
+        "target_id": "AD-16-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu #24: Biểu tượng trạng thái chưa có câu hỏi",
+        "requirement_ids": [
+          "AD-16-YC-004"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #24 với vùng (1095,641) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #24; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-025",
+        "target_id": "AD-16-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu #25: Tiêu đề trạng thái chưa có câu hỏi",
+        "requirement_ids": [
+          "AD-16-YC-005"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #25 với vùng (734,752) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #25; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-026",
+        "target_id": "AD-16-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu #26: Mô tả trạng thái chưa có câu hỏi",
+        "requirement_ids": [
+          "AD-16-YC-006"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #26 với vùng (1502,796) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #26; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-027",
+        "target_id": "AD-16-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu #27: Nút thêm câu hỏi bị khóa trong ảnh và nhãn khóa tạm",
+        "requirement_ids": [
+          "AD-16-YC-007"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #27 với vùng (903,888) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #27; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-028",
+        "target_id": "AD-16-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu #28: Thông báo cổng trình tạo câu hỏi tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #28 với vùng (1511,1045) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #28; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-029",
+        "target_id": "AD-16-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu #29: Dải thông tin quyền truy cập tĩnh",
+        "requirement_ids": [
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #29 với vùng (55,1206) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #29; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-030",
+        "target_id": "AD-16-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu #30: Liên kết hủy/quay lại danh sách",
+        "requirement_ids": [
+          "AD-16-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #30 với vùng (1138,1208) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #30; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-031",
+        "target_id": "AD-16-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu #31: Nút lưu bị khóa trong ảnh",
+        "requirement_ids": [
+          "AD-16-YC-011"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #31 với vùng (1515,1208) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #31; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-032",
+        "target_id": "AD-16-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu #32: Thương hiệu và bản quyền chân trang",
+        "requirement_ids": [
+          "AD-16-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #32 với vùng (24,1334) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #32; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-033",
+        "target_id": "AD-16-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu #33: Liên kết chính sách riêng tư",
+        "requirement_ids": [
+          "AD-16-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #33 với vùng (882,1347) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #33; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-034",
+        "target_id": "AD-16-EL-034",
+        "group": "Thành phần",
+        "title": "Đối chiếu #34: Liên kết tiêu chuẩn RBAC (kiểm soát truy cập theo vai trò)",
+        "requirement_ids": [
+          "AD-16-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #34 với vùng (1116,1347) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #34; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-035",
+        "target_id": "AD-16-EL-035",
+        "group": "Thành phần",
+        "title": "Đối chiếu #35: Liên kết hỗ trợ kỹ thuật",
+        "requirement_ids": [
+          "AD-16-YC-015"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu dấu mốc #35 với vùng (1382,1347) trên ảnh; ghi nhận đúng nội dung/kiểu tĩnh đã mô tả, không suy ra hành vi môi trường chạy thực tế. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #35; AD-16_markers.json; screen-numbered.png",
+          "screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-036",
+        "target_id": "AD-16-EL-036",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Tuyến tạo và tuyến sửa của Angular",
+        "requirement_ids": [
+          "AD-16-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-037",
+        "target_id": "AD-16-EL-037",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Cổng phiên đăng nhập quản trị viên",
+        "requirement_ids": [
+          "AD-16-YC-017"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-038",
+        "target_id": "AD-16-EL-038",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Tải danh sách khóa học theo trang",
+        "requirement_ids": [
+          "AD-16-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-039",
+        "target_id": "AD-16-EL-039",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Từ chối phản hồi #73 sai cấu trúc",
+        "requirement_ids": [
+          "AD-16-YC-019"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-040",
+        "target_id": "AD-16-EL-040",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Phân trang và phục hồi trang khóa học",
+        "requirement_ids": [
+          "AD-16-YC-020"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-041",
+        "target_id": "AD-16-EL-041",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Lọc ID (mã định danh) khóa học không an toàn",
+        "requirement_ids": [
+          "AD-16-YC-001"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-042",
+        "target_id": "AD-16-EL-042",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Trường cấu hình và bản nháp trong bộ nhớ",
+        "requirement_ids": [
+          "AD-16-YC-002"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-043",
+        "target_id": "AD-16-EL-043",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Tạo và sửa câu hỏi/lựa chọn",
+        "requirement_ids": [
+          "AD-16-YC-003"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-044",
+        "target_id": "AD-16-EL-044",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Chế độ chỉnh sửa không nạp hoặc ghi dữ liệu",
+        "requirement_ids": [
+          "AD-16-YC-004"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-045",
+        "target_id": "AD-16-EL-045",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Gửi #88 và xác nhận phản hồi",
+        "requirement_ids": [
+          "AD-16-YC-005"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-046",
+        "target_id": "AD-16-EL-046",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Khóa gửi lại khi trạng thái chưa xác định",
+        "requirement_ids": [
+          "AD-16-YC-006"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-047",
+        "target_id": "AD-16-EL-047",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Thông báo lỗi API và phiên",
+        "requirement_ids": [
+          "AD-16-YC-007"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-048",
+        "target_id": "AD-16-EL-048",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Hủy quay về AD-15",
+        "requirement_ids": [
+          "AD-16-YC-008"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-049",
+        "target_id": "AD-16-EL-049",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Nhãn tự lưu và cổng kiểm soát không có hiệu lực",
+        "requirement_ids": [
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-050",
+        "target_id": "AD-16-EL-050",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Khung, breadcrumb và liên kết chân trang",
+        "requirement_ids": [
+          "AD-16-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-051",
+        "target_id": "AD-16-EL-051",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Gọi API #73 danh sách khóa học",
+        "requirement_ids": [
+          "AD-16-YC-011"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-052",
+        "target_id": "AD-16-EL-052",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Ranh giới API #88 tạo bài kiểm tra",
+        "requirement_ids": [
+          "AD-16-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-053",
+        "target_id": "AD-16-EL-053",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Ranh giới API #89 cập nhật bài kiểm tra",
+        "requirement_ids": [
+          "AD-16-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-054",
+        "target_id": "AD-16-EL-054",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Cơ sở dữ liệu ứng viên và chưa xác minh",
+        "requirement_ids": [
+          "AD-16-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-TP-055",
+        "target_id": "AD-16-EL-055",
+        "group": "Thành phần",
+        "title": "Đối chiếu Chỉ có trong mã nguồn: Bố cục đáp ứng theo CSS hiện tại",
+        "requirement_ids": [
+          "AD-16-YC-015"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh đánh số hoặc đoạn mã nguồn được dẫn.",
+          "Đối chiếu nhãn, trạng thái, tuyến/API và giới hạn nêu trong thuộc tính.",
+          "Ghi nhận kết quả cùng bằng chứng khi có môi trường được duyệt."
+        ],
+        "expected": "Đối chiếu đúng hiện trạng mã nguồn được mô tả; chưa có xác minh trình duyệt/API/cơ sở dữ liệu môi trường chạy thực tế nên không ghi kết quả như thể đã chạy. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-16 DD; ad16-page.ts/html; ad16-api.service.ts; admin.routes.ts; API catalog/DD/source; ad16-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-16-TC-SK-001",
+        "target_id": "AD-16-EV-001",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Mở chế độ tạo và nạp khóa học",
+        "requirement_ids": [
+          "AD-16-YC-001",
+          "AD-16-YC-002",
+          "AD-16-YC-003"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Trang gửi GET #73 page=1 (số trang 1); kiểm tra phong bì phản hồi, page (số trang) và đếm/danh sách rồi hiển thị trạng thái tải, lỗi, rỗng hoặc các khóa học. Không gửi POST khi vừa mở. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-002",
+        "target_id": "AD-16-EV-002",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Mở chế độ sửa",
+        "requirement_ids": [
+          "AD-16-YC-005",
+          "AD-16-YC-018"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Trang giữ ID (mã định danh) thô; nếu hợp lệ vẫn không tải chi tiết vì chưa có GET chi tiết; chỉnh sửa bị khóa và không gửi #89. ID (mã định danh) sai cũng không gọi API. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-003"
+        ],
+        "source_refs": [
+          "02-events.md EV-02; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-003",
+        "target_id": "AD-16-EV-003",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Nhập cấu hình",
+        "requirement_ids": [
+          "AD-16-YC-006",
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Giữ bản nháp trong bộ nhớ; kiểm tra quy tắc lưu trữ hiện có khi gửi biểu mẫu; không tự lưu và không tự áp dụng khoảng giá trị bản mẫu chưa duyệt. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "02-events.md EV-03; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-004",
+        "target_id": "AD-16-EV-004",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Thêm hoặc sửa câu hỏi và lựa chọn",
+        "requirement_ids": [
+          "AD-16-YC-008",
+          "AD-16-YC-009"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Thay đổi questions (câu hỏi) tín hiệu trạng thái; các loại hiện có là SINGLE_CHOICE (một đáp án), MULTIPLE_CHOICE (nhiều đáp án), TRUE_FALSE (đúng/sai); chưa chứng minh quy tắc nghiệp vụ số lượng/đáp án. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "02-events.md EV-04; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-005",
+        "target_id": "AD-16-EV-005",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Lưu bài kiểm tra mới",
+        "requirement_ids": [
+          "AD-16-YC-010"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Tạo đúng phần thân yêu cầu ngoài gồm hai chuỗi JSON config (cấu hình)/questions (câu hỏi) rồi POST #88; khóa nút trong lúc gửi. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "02-events.md EV-05; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-006",
+        "target_id": "AD-16-EV-006",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Nhận kết quả lưu",
+        "requirement_ids": [
+          "AD-16-YC-011",
+          "AD-16-YC-012"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Chỉ thành công với HTTP 201, success=true (xác nhận thành công), businessCode (mã nghiệp vụ) DESIGN_RESOURCE_CREATED (đã tạo tài nguyên) và cấu trúc phù hợp; khóa biểu mẫu, hiện liên kết AD-15, không tự điều hướng/refetch. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "02-events.md EV-06; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-007",
+        "target_id": "AD-16-EV-007",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Xử lý lỗi lưu hoặc kết quả chưa rõ",
+        "requirement_ids": [
+          "AD-16-YC-012",
+          "AD-16-YC-013"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Hiện thông báo tương ứng; 2xx không khớp hoặc status (trạng thái) 0 chuyển chưa xác nhận, khóa gửi lại và hướng dẫn kiểm tra AD-15. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [
+          "AD-16-API-002"
+        ],
+        "source_refs": [
+          "02-events.md EV-07; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-008",
+        "target_id": "AD-16-EV-008",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Hủy hoặc quay lại",
+        "requirement_ids": [
+          "AD-16-YC-014"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "RouterLink (liên kết điều hướng của Angular) về /admin/quizzes; không có xác nhận bỏ bản nháp, không lưu/khôi phục bộ lọc/page (số trang) theo mã nguồn hiện tại. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-08; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-009",
+        "target_id": "AD-16-EV-009",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Hiển thị nội dung chữ trạng thái thiết kế",
+        "requirement_ids": [
+          "AD-16-YC-015",
+          "AD-16-YC-016",
+          "AD-16-YC-017"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Bản mẫu là HTML tĩnh, không bộ xử lý, bộ hẹn giờ, API, lưu trữ hay xác thực check; Angular có nội dung chữ và điều khiển khác. Không coi nội dung chữ như môi trường chạy thực tế guarantee. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-09; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-16-TC-SK-010",
+        "target_id": "AD-16-EV-010",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Dùng khung giao diện và chân trang",
+        "requirement_ids": [
+          "AD-16-YC-001",
+          "AD-16-YC-016"
+        ],
+        "precondition": "Dùng môi trường kiểm thử được duyệt và dữ liệu tổng hợp; API/trình duyệt môi trường chạy thực tế chưa xác minh. Chỉ đánh dấu kết quả sau khi chạy thực tế.",
+        "data": "Dữ liệu tổng hợp; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Thực hiện điều kiện/kích hoạt mô tả.",
+          "Theo dõi trạng thái giao diện, yêu cầu và điều hướng.",
+          "So sánh với hợp đồng danh mục API và ghi nhận chênh lệch chưa được duyệt."
+        ],
+        "expected": "Bản mẫu liên kết neo không có đích; khung Admin hiện tại có các tuyến riêng. Môi trường chạy thực tế nhấp chưa kiểm tra; không khẳng định liên kết ký hiệu giữ chỗ hoạt động. Đây là tiêu chí theo tài liệu/mã nguồn còn chờ xác nhận; chưa phải kết quả đã chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-10; 03-data-flow.md; 04-api-integration.md; mã nguồn AD16 hiện tại"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

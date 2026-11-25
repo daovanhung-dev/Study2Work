@@ -1,0 +1,40 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-04_ChinhSuaNguoiDung.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 622,
+  "loi": [],
+  "hop_le": true,
+  "execution_field_audit": {
+    "total_cases": 67,
+    "all_cases_chua_chay_and_O_to_S_blank": true,
+    "row_check_formula_count": 67,
+    "by_sheet": [
+      {
+        "sheet": "02. Tổng quan",
+        "case_count": 15,
+        "status_chua_chay": 15,
+        "rows_execution_fields_blank": 15,
+        "row_check_formulas": 15
+      },
+      {
+        "sheet": "03. Thành phần",
+        "case_count": 40,
+        "status_chua_chay": 40,
+        "rows_execution_fields_blank": 40,
+        "row_check_formulas": 40
+      },
+      {
+        "sheet": "04. Sự kiện",
+        "case_count": 12,
+        "status_chua_chay": 12,
+        "rows_execution_fields_blank": 12,
+        "row_check_formulas": 12
+      }
+    ]
+  }
+}

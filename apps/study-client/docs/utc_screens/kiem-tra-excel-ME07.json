@@ -1,0 +1,50 @@
+{
+  "screen_id": "ME-07",
+  "validator": "kiem_tra_excel.py + kiểm tra tĩnh OOXML/JSON",
+  "checks": {
+    "source_refs": 47,
+    "source_hashes": 47,
+    "source_hash_errors": [],
+    "zip_crc": "PASS",
+    "sheet_names": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "case_sheets": {
+      "screen": {
+        "count": 20,
+        "unique": 20,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      },
+      "elements": {
+        "count": 31,
+        "unique": 31,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      },
+      "events": {
+        "count": 11,
+        "unique": 11,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      }
+    },
+    "formula_count": 139,
+    "data_validation_ranges": 9,
+    "xml_parts_parsed": 11,
+    "requirement_count": 9,
+    "covered_requirement_count": 9,
+    "helper_link_rows": 148,
+    "stale_me06_text": []
+  },
+  "errors": [],
+  "valid": true,
+  "execution_status": "Tất cả 62 ca giữ Chưa chạy; ô kết quả/bằng chứng/mã lỗi/người/ngày chạy để trống.",
+  "approval_note": "UTC dùng baseline DD theo xác nhận của người dùng. Cấu trúc/truy vết đã kiểm tra tĩnh; 8 điểm chặn và trạng thái runtime chưa xác minh vẫn còn. Đây không phải kết quả kiểm thử."
+}

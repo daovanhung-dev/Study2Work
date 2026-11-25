@@ -1,0 +1,35 @@
+{
+  "hop_le": true,
+  "kiem_tra": {
+    "ZIP và XML hợp lệ": true,
+    "Bốn tên trang tính đúng": true,
+    "Mã ca trong Excel khớp JSON": true,
+    "Tất cả ca giữ trạng thái Chưa chạy": true,
+    "Các cột kết quả/bằng chứng/lỗi/người kiểm thử/ngày chạy để trống": true,
+    "336 công thức đạt/không đạt/bị chặn đúng": true,
+    "Ba vùng chọn trạng thái đúng": true,
+    "118 mã băm nguồn khớp": true,
+    "Không còn nội dung mẫu của AD-25/GS-01/GS-02": true
+  },
+  "so_ca": 112,
+  "trang_thai_ca": "Chưa chạy",
+  "so_cong_thuc": 336,
+  "vung_chon_trang_thai": {
+    "01. Bìa": [],
+    "02. Tổng quan": [
+      "O78:O118"
+    ],
+    "03. Thành phần": [
+      "O46:O82"
+    ],
+    "04. Sự kiện": [
+      "O26:O59"
+    ]
+  },
+  "ma_bam_nguon": {
+    "so_luong": 118,
+    "so_khop": 118
+  },
+  "ra_soat_tieng_viet": "Đã rà soát câu chữ; phần diễn đạt bằng tiếng Việt, còn lại là mã API, tên trường/kiểu dữ liệu, enum, thuộc tính truy cập, phím bàn phím, tên framework và dẫn chiếu nguồn cần giữ nguyên.",
+  "loi": []
+}

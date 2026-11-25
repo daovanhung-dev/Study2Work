@@ -1,0 +1,3872 @@
+{
+  "metadata": {
+    "screen_id": "GS-01",
+    "screen_name": "Danh sách khóa học",
+    "module": "Khách truy cập",
+    "route": "/courses",
+    "actor": "Guest; #05/#06 public, không có Bearer token",
+    "version": "1.0",
+    "dd_version": "0.1 plus current-source audit 2026-11-21",
+    "dd_status": "DD BỊ CHẶN — ảnh chỉ thể hiện trạng thái rỗng; thiết kế trạng thái đã tải/cache/tìm kiếm/danh mục/khôi phục còn bỏ ngỏ.",
+    "runtime_status": "Tuyến và caller Angular đã nối trong mã nguồn; chưa xác minh trình duyệt/API/DB/triển khai. Các đoạn DD lịch sử nói chưa có tuyến đang mâu thuẫn với mã nguồn hiện tại.",
+    "author": "AI lập kế hoạch kiểm thử; cần rà soát.",
+    "reviewer": "CẦN XÁC NHẬN",
+    "approver": "CẦN XÁC NHẬN",
+    "date": "2026-11-24",
+    "source_name": "GS-01 DD 00–07, Stitch 16 markers, current Guest Angular source, API #05/#06 source/catalog/tests, AC-03 and DDL"
+  },
+  "overall": {
+    "objective": "Lập kế hoạch kiểm thử danh sách khóa học công khai, metadata category, sorting, pagination, search handoff, empty/error/race states và course navigation.",
+    "inputs": "#05 công khai trả categories theo locale tùy chọn; #06 trả khóa học PUBLISHED với page,size,sort. Máy khách hiện gọi #05 không có locale; #06 gửi page/size 20 và sort tùy chọn, không gửi category.",
+    "outputs": "Metadata danh mục và trạng thái danh mục; catalog có trạng thái đang tải/rỗng/sẵn sàng/ngoài phạm vi/lỗi/lệch số lượng; tuyến từ thẻ/tìm kiếm. Thiết kế UI trạng thái đã tải chưa được duyệt.",
+    "main_flow": "Luồng chính: mở `/courses` → #05 metadata → #06 `page=1,size=20` → kiểm tra envelope/phép chiếu/trang → hiển thị trạng thái; sắp xếp/chuyển trang gọi #06; tìm kiếm chuyển tới GS-02; thẻ khóa học dùng tuyến `course.id`.",
+    "preconditions": "Tuyến Guest công khai; tuyến và các bên gọi đã được nối trong mã nguồn Angular hiện tại; chưa xác minh trên trình duyệt/môi trường trực tiếp.",
+    "states": [
+      "INITIAL",
+      "LOADING",
+      "EMPTY",
+      "READY",
+      "EMPTY_PAGE_UNRESOLVED / OUT-OF-RANGE",
+      "QUERY_ERROR",
+      "CATEGORY_ERROR",
+      "COUNT_LIST_MISMATCH",
+      "NAVIGATING"
+    ],
+    "security": "#05/#06 là API công khai; không cần token xác thực hoặc PII. Chỉ hiển thị mục PUBLISHED. Không gửi category vì #06 từ chối tham số này.",
+    "out_of_scope": "Không có bộ lọc category, chính sách cache, số lượng giả phía máy khách, định dạng tiền tệ, API mới, chính sách thử lại/phân trang ngoài mã nguồn hoặc thiết kế trạng thái đã tải chưa được phê duyệt."
+  },
+  "apis": [
+    {
+      "id": "API-05",
+      "catalog_ref": "#05",
+      "method": "GET",
+      "path": "/api/v1/categories",
+      "request": "Query locale:string tùy chọn; dịch vụ Guest hiện tại không gửi tham số; máy chủ dùng mặc định vi-VN khi locale bị lược bỏ. Không có body/path/auth.",
+      "response": "HTTP 200 DESIGN_RESOURCE_RETRIEVED; items gồm Category{id,name,slug,description?}; pagination page=1,size=items.length,total=items.length,total_pages=1. Kết quả rỗng vẫn là 200 với size=0,total=0,total_pages=1.",
+      "errors": "422 DESIGN_VALIDATION_ERROR khi locale đầu vào không hợp lệ; 500 DESIGN_INTERNAL_ERROR khi truy vấn/ánh xạ lỗi.",
+      "auth": "Công khai; không có Bearer. Lệnh gọi StudyApiService hiện tại không thêm header xác thực riêng cho tính năng.",
+      "design_status": "WIRED source; runtime NOT VERIFIED",
+      "source_ref": "04-api-integration.md; list_api.md #05; api_05_categories view/models/validate/query/tests",
+      "event_ids": [
+        "GS-01-EV-001",
+        "GS-01-EV-013",
+        "GS-01-EV-016"
+      ]
+    },
+    {
+      "id": "API-06",
+      "catalog_ref": "#06",
+      "method": "GET",
+      "path": "/api/v1/courses",
+      "request": "Category?:int64,page?:int32,size?:int32,sort?:string. Máy khách hiện gửi page, size=20 và sort tùy chọn; không gửi category.",
+      "response": "HTTP 200 DESIGN_RESOURCE_RETRIEVED; Page<Course> chỉ có các mục status=PUBLISHED; Course{id,title,description?,thumbnail_url?,price:string,status,mentor{id,full_name,avatar_url?}} cùng page,size,total,total_pages. COUNT và LIST là hai lần đọc riêng.",
+      "errors": "422 DESIGN_VALIDATION_ERROR khi page/size/sort sai hoặc category khác null; 500 DESIGN_INTERNAL_ERROR khi query/toàn vẹn mentor/ánh xạ lỗi. Kết quả rỗng/ngoài phạm vi vẫn trả 200.",
+      "auth": "Public; no Bearer.",
+      "design_status": "Đã nối trong mã nguồn; chưa hỗ trợ bộ lọc danh mục; môi trường chạy CHƯA XÁC MINH.",
+      "source_ref": "04-api-integration.md; list_api.md #06; api_06_courses view/models/validate/query; course_catalog helpers/tests",
+      "event_ids": [
+        "GS-01-EV-001",
+        "GS-01-EV-005",
+        "GS-01-EV-006",
+        "GS-01-EV-013",
+        "GS-01-EV-014",
+        "GS-01-EV-015",
+        "GS-01-EV-016"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "GS-01-YC-001",
+      "description": "Route /courses được cung cấp cho Guest public; source registration hiện có, deployment/runtime chưa xác minh.",
+      "group": "Tuyến",
+      "source_ref": "00-overview.md § current source; app.routes.ts; guest.route.ts",
+      "notes": "Source wiring không chứng minh deployed runtime.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-002",
+      "description": "#05 là API công khai; máy khách hiện gọi không kèm locale, máy chủ mặc định `vi-VN` và lọc đúng locale của danh mục ACTIVE.",
+      "group": "API #05",
+      "source_ref": "04-api-integration.md; API #05 models/view/tests",
+      "notes": "Cache locale behavior trong inventory chưa được source hiện thực.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-003",
+      "description": "Inventory yêu cầu cache-first #05 nhưng current GS01 service không có cache hoặc TTL.",
+      "group": "Bộ nhớ đệm",
+      "source_ref": "00-overview.md § expected/current; gs01-catalog.service.ts",
+      "notes": "Cache requirement và hành vi hiện tại lệch nhau.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-004",
+      "description": "Xử lý khi #05 lỗi và tiếp tục/tạm dừng #06 phải giữ hành vi theo mã nguồn riêng, không coi lỗi category là catalog rỗng.",
+      "group": "Partial tải",
+      "source_ref": "02-events.md EV-01; GS01Page",
+      "notes": "Current code ghi lỗi category rồi vẫn gọi #06; policy UI partial-load chưa được duyệt.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-005",
+      "description": "Initial #06 request dùng page=1,size=20 và không gửi category.",
+      "group": "API #06",
+      "source_ref": "04-api-integration.md; gs01-catalog.service.ts; test source",
+      "notes": "Mã nguồn hiện tại gửi size cố định 20 và không có category.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-006",
+      "description": "Client xác nhận success envelope, businessCode DESIGN_RESOURCE_RETRIEVED và projection category.",
+      "group": "Envelope #05",
+      "source_ref": "guest-course.models.ts; GS01Page",
+      "notes": "Mã nguồn kiểm thử đã tồn tại nhưng chưa chạy.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-007",
+      "description": "Course page projection chứa id/title/description/thumbnail_url/price/status/mentor; chỉ PUBLISHED được hiển thị.",
+      "group": "Projection #06",
+      "source_ref": "API #06 models/query/view; GS01Page",
+      "notes": "Không hiển thị giá/currency trên card mẫu hiện tại.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-008",
+      "description": "Pagination response phải khớp requested page, fixed size 20, total_pages; total=0 có total_pages=0 theo #06.",
+      "group": "Pagination",
+      "source_ref": "API #06 view; models; GS01Page",
+      "notes": "Page/ngoài phạm vi state riêng.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-009",
+      "description": "Sort chỉ dùng allowlist API id|name|price|created_at và asc|desc; server default created_at DESC,id ASC.",
+      "group": "Sort",
+      "source_ref": "API #06 validate; course_catalog constants/helpers",
+      "notes": "Các lựa chọn trên giao diện chỉ là một tập con; tên trường sắp xếp ánh xạ sang tên trong cơ sở data.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-010",
+      "description": "Khi đổi sort, đặt lại page về 1 và giữ lựa chọn sort khi tải lại trang.",
+      "group": "Sắp xếp/trang",
+      "source_ref": "02-events.md EV-05; GS01Page",
+      "notes": "Loaded-state UI design chưa được duyệt.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-011",
+      "description": "Chuyển trang giữ fixed size 20 và sort hiện hành; không gửi category.",
+      "group": "Pagination",
+      "source_ref": "02-events.md EV-06; GS01Page",
+      "notes": "Điều khiển phân trang chỉ tồn tại trong mã nguồn hiện tại, không trong screenshot.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-012",
+      "description": "Khi COUNT/LIST cardinality lệch nhưng projection hợp lệ, giữ items, ẩn total/điều khiển phân trang, báo mismatch, chặn paging và cho reload cùng page/sort.",
+      "group": "Sai lệch giữa COUNT và LIST",
+      "source_ref": "00-overview.md current source; GS01Page; helper",
+      "notes": "Chưa xác minh trên trình duyệt/môi trường chạy.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-013",
+      "description": "Catalog EMPTY chỉ khi items=[] và total=0; ngoài phạm vi empty-page khi total>0 phải tách riêng.",
+      "group": "Trống/vượt phạm vi",
+      "source_ref": "03-data-flow.md § state; GS01Page; API #06 tests source",
+      "notes": "API #06 trả 200 với items rỗng khi yêu cầu trang ngoài phạm vi.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-014",
+      "description": "HTTP/network/schema/query errors không được ánh xạ thành EMPTY; show error/retry state.",
+      "group": "Trạng thái lỗi",
+      "source_ref": "03-data-flow.md; GS01Page; API #05/#06 sources",
+      "notes": "Nội dung chính xác hiển thị cho người dùng/chính sách thử lại vẫn đang bị chặn.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-015",
+      "description": "Category filter không hoạt động và không được gửi; #06 trả 422 cho non-null category.",
+      "group": "Khóa chức năng danh mục",
+      "source_ref": "05-business-rules.md GS01-B02; API #06 validate; DDL",
+      "notes": "DDL đã commit không có quan hệ course-category.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-016",
+      "description": "Category list được hiển thị như metadata tham khảo, không như filter control.",
+      "group": "Giao diện danh mục",
+      "source_ref": "GS01 page template; 00-overview.md current source",
+      "notes": "Thiết kế trạng thái đã tải chưa được phê duyệt.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-017",
+      "description": "Search header nonblank query được trim và chuyển sang GS-02 q; GS01 không gọi #07.",
+      "group": "Bàn giao tìm kiếm",
+      "source_ref": "02-events.md EV-02/04; GuestSiteLayout",
+      "notes": "Header behavior hiện có trong source; URL handoff acceptance vẫn còn bỏ ngỏ.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-018",
+      "description": "Search hero nonblank query được trim và chuyển sang /courses/search?q=...; truy vấn rỗng không điều hướng.",
+      "group": "Bàn giao tìm kiếm",
+      "source_ref": "02-events.md EV-03/04; gs01-hero.ts",
+      "notes": "Có mã nguồn tuyến hiện tại; ngữ nghĩa/trạng thái query chưa được phê duyệt.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-019",
+      "description": "#07 chỉ thuộc GS-02; không gọi #07 khi nhập hoặc submit tìm kiếm từ GS-01.",
+      "group": "API ownership",
+      "source_ref": "02-events.md EV-04; GS01Hero; GS02 routing",
+      "notes": "GS01 transfers trimmed q to GS02.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-020",
+      "description": "Course card mở GS-03 theo đúng response course.id; không dùng title làm ID.",
+      "group": "Điều hướng khóa học",
+      "source_ref": "02-events.md EV-07; gs01-course-card.html",
+      "notes": "Mã nguồn hiện có RouterLink; thiết kế thẻ hiển thị còn thiếu.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-021",
+      "description": "Trạng thái rỗng copy/illustration phải được duyệt lại vì screenshot và mã nguồn hiện tại copy khác nhau.",
+      "group": "Giao diện trống",
+      "source_ref": "01-ui-elements.md #9–#11; GS01 page template",
+      "notes": "Ảnh chụp gộp trạng thái không có dữ liệu với trạng thái đang cập nhật.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-022",
+      "description": "Thẻ ở trạng thái đã tải, danh mục, sort, count và phân trang cần bố cục đã duyệt trước khi xem hành vi mã nguồn là UX cuối cùng.",
+      "group": "Tảied UI",
+      "source_ref": "05-business-rules.md GS01-B01; 07-test-cases.md §3",
+      "notes": "Hình ảnh chỉ mô tả trạng thái rỗng.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-023",
+      "description": "Đích liên kết header/chân trang trong ảnh khác các liên kết tuyến của GuestSiteLayout hiện tại.",
+      "group": "Điều hướng khung giao diện",
+      "source_ref": "01-ui-elements.md #1–#4/#12–#16; GuestSiteLayout",
+      "notes": "Layout hiện tại không có đăng nhập/đăng ký/trang chủ.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-024",
+      "description": "Không định dạng hoặc hiển thị giá như tiền tệ: API trả chuỗi thập phân nhưng không có đơn vị tiền; thẻ Course hiện tại không hiển thị giá.",
+      "group": "Hiển thị dữ liệu",
+      "source_ref": "05-business-rules.md §7; API #06 projection; card template",
+      "notes": "Không được tự suy đoán loại tiền tệ.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-025",
+      "description": "Chỉ hiển thị Course PUBLISHED công khai; yêu cầu #05/#06 không cần Bearer token hoặc PII người dùng.",
+      "group": "Quyền riêng tư/truy cập",
+      "source_ref": "05-business-rules.md §7; API route/source",
+      "notes": "Đăng ký API công khai và các bên gọi hiện tại.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    },
+    {
+      "id": "GS-01-YC-026",
+      "description": "Tìm kiếm/select/nút/liên kết cần nhãn ngữ nghĩa và focus rõ ràng; bố cục cần tự sắp xếp lại theo hướng dẫn thiết kế Study.",
+      "group": "Accessibility/responsive",
+      "source_ref": "05-business-rules.md §7; design.md; current templates/CSS",
+      "notes": "Khả năng tiếp cận và bố cục trên trình duyệt chưa được xác minh trong môi trường chạy.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-YC-027",
+      "description": "Giữ riêng trạng thái DD BỊ CHẶN, trạng thái implementation/source MỘT PHẦN và runtime CHƯA XÁC MINH trong UTC.",
+      "group": "Trạng thái/bằng chứng",
+      "source_ref": "00-overview.md status/current addendum; 07-test-cases.md",
+      "notes": "Phần bổ sung từ mã nguồn thay thế các nhận định cũ rằng chưa có tuyến/bên gọi.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận"
+    }
+  ],
+  "elements": [
+    {
+      "id": "GS-01-EL-001",
+      "marker": "#1",
+      "source_element_id": "GS01-EL-01",
+      "name": "Điều hướng Khóa học đang chọn",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (275,32); tâm phần tử (355,32) px trong ảnh 1280×1114",
+      "properties": "Ảnh cho biết mục Khóa học đang active. Current GuestLayout có RouterLink /courses; runtime chưa xác minh.",
+      "event_ids": [
+        "GS-01-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #1; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-002",
+      "marker": "#2",
+      "source_element_id": "GS01-EL-02",
+      "name": "Ô tìm kiếm ở đầu trang",
+      "type": "Ô nhập liệu",
+      "position": "Tâm marker (972,32); tâm phần tử (726,32) px trong ảnh 1280×1114",
+      "properties": "Ảnh có ô tìm kiếm header. Current GuestLayout có form và điều hướng q đã trim tới /courses/search khi submit chuỗi không rỗng.",
+      "event_ids": [
+        "GS-01-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #2; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-003",
+      "marker": "#3",
+      "source_element_id": "GS01-EL-03",
+      "name": "Liên kết Đăng nhập",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (1036,32); tâm phần tử (1096,32) px trong ảnh 1280×1114",
+      "properties": "Ảnh đề xuất link /login; current GuestLayout không hiển thị link này.",
+      "event_ids": [
+        "GS-01-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #3; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-004",
+      "marker": "#4",
+      "source_element_id": "GS01-EL-04",
+      "name": "Nút Đăng ký",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (1258,72); tâm phần tử (1204,32) px trong ảnh 1280×1114",
+      "properties": "Ảnh đề xuất link /register; current GuestLayout không hiển thị CTA này.",
+      "event_ids": [
+        "GS-01-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #4; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-005",
+      "marker": "#5",
+      "source_element_id": "GS01-EL-05",
+      "name": "Tiêu đề Danh sách khóa học",
+      "type": "Văn bản/ảnh",
+      "position": "Tâm marker (20,82); tâm phần tử (218,120) px trong ảnh 1280×1114",
+      "properties": "Ảnh ghi “Danh sách khóa học”; trang hiện tại H1 là “Khám phá khóa học”.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #5; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-006",
+      "marker": "#6",
+      "source_element_id": "GS01-EL-06",
+      "name": "Mô tả hỗ trợ",
+      "type": "Văn bản/ảnh",
+      "position": "Tâm marker (610,143); tâm phần tử (300,161) px trong ảnh 1280×1114",
+      "properties": "Copy ở ảnh khác mô tả current hero; trạng thái loaded/error chưa có thiết kế được duyệt.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #6; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-007",
+      "marker": "#7",
+      "source_element_id": "GS01-EL-07",
+      "name": "Ô tìm kiếm chính",
+      "type": "Ô nhập liệu",
+      "position": "Tâm marker (640,182); tâm phần tử (350,224) px trong ảnh 1280×1114",
+      "properties": "Ảnh có search chính. Current GS01Hero lưu text local và trim khi submit.",
+      "event_ids": [
+        "GS-01-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #7; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-008",
+      "marker": "#8",
+      "source_element_id": "GS01-EL-08",
+      "name": "Nút Tìm kiếm",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (810,181); tâm phần tử (727,222) px trong ảnh 1280×1114",
+      "properties": "Ảnh ghi “Tìm kiếm”; current button ghi “Tìm khóa học” và route sang GS-02 khi q không rỗng.",
+      "event_ids": [
+        "GS-01-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #8; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-009",
+      "marker": "#9",
+      "source_element_id": "GS01-EL-09",
+      "name": "Minh họa trạng thái rỗng",
+      "type": "Văn bản/ảnh",
+      "position": "Tâm marker (640,303); tâm phần tử (640,368) px trong ảnh 1280×1114",
+      "properties": "Ảnh minh họa sách ở trạng thái rỗng; trang hiện tại cũng dùng icon book. Chưa xác nhận semantics screen reader.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #9; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-010",
+      "marker": "#10",
+      "source_element_id": "GS01-EL-10",
+      "name": "Tiêu đề trạng thái rỗng",
+      "type": "Văn bản/ảnh",
+      "position": "Tâm marker (480,441); tâm phần tử (640,441) px trong ảnh 1280×1114",
+      "properties": "Ảnh ghi “Chưa có khóa học để hiển thị”; current empty heading là “Chưa có khóa học nào”.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #10; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-011",
+      "marker": "#11",
+      "source_element_id": "GS01-EL-11",
+      "name": "Mô tả trạng thái rỗng",
+      "type": "Văn bản/ảnh",
+      "position": "Tâm marker (878,475); tâm phần tử (640,475) px trong ảnh 1280×1114",
+      "properties": "Ảnh copy gộp chưa có dữ liệu/đang cập nhật; current copy chỉ nói khóa học đã xuất bản sẽ xuất hiện tại đây.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #11; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-012",
+      "marker": "#12",
+      "source_element_id": "GS01-EL-12",
+      "name": "Thương hiệu Study2Work ở chân trang",
+      "type": "Văn bản/ảnh",
+      "position": "Tâm marker (20,1019); tâm phần tử (85,1054) px trong ảnh 1280×1114",
+      "properties": "Ảnh có brand footer; current GuestLayout có brand link /courses.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #12; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-013",
+      "marker": "#13",
+      "source_element_id": "GS01-EL-13",
+      "name": "Liên kết Trang chủ ở chân trang",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (958,1017); tâm phần tử (980,1054) px trong ảnh 1280×1114",
+      "properties": "Ảnh đề xuất Trang chủ; current footer không có link trang chủ.",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #13; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-014",
+      "marker": "#14",
+      "source_element_id": "GS01-EL-14",
+      "name": "Liên kết Khóa học ở chân trang",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (1041,1017); tâm phần tử (1062,1054) px trong ảnh 1280×1114",
+      "properties": "Ảnh có Khóa học; current footer link tới /courses.",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #14; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-015",
+      "marker": "#15",
+      "source_element_id": "GS01-EL-15",
+      "name": "Liên kết Đăng nhập ở chân trang",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (1123,1017); tâm phần tử (1145,1054) px trong ảnh 1280×1114",
+      "properties": "Ảnh đề xuất link đăng nhập; current footer không có link này.",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #15; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-016",
+      "marker": "#16",
+      "source_element_id": "GS01-EL-16",
+      "name": "Liên kết Đăng ký ở chân trang",
+      "type": "Nút điều hướng",
+      "position": "Tâm marker (1248,1017); tâm phần tử (1218,1054) px trong ảnh 1280×1114",
+      "properties": "Ảnh đề xuất link đăng ký; current footer không có link này.",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 marker #16; screen-numbered.png"
+    },
+    {
+      "id": "GS-01-EL-017",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Landmark chính của GS-01",
+      "type": "Khu vực",
+      "position": "Trang danh sách",
+      "properties": "Vùng nội dung chính có data-screen-id=GS01.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-018",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Thương hiệu trên đầu trang current",
+      "type": "Thương hiệu",
+      "position": "Đầu trang GuestLayout",
+      "properties": "GuestSiteLayout brand Study2Work, link /courses; vắng trong ảnh đánh số.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-019",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Liên kết tìm kiếm ở chính nav",
+      "type": "Liên kết",
+      "position": "Đầu trang GuestLayout",
+      "properties": "RouterLink /courses/search ngoài nav item Khóa học.",
+      "event_ids": [
+        "GS-01-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-020",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Nút gửi tìm kiếm đầu trang",
+      "type": "Nút",
+      "position": "Đầu trang GuestLayout",
+      "properties": "Nút “Tìm”; cùng form header search.",
+      "event_ids": [
+        "GS-01-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-021",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Hero current và H1",
+      "type": "Khu vực",
+      "position": "Đầu trang",
+      "properties": "Hero H1 “Khám phá khóa học” và mô tả hiện hành; khác copy marker.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-022",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Tiêu đề khu danh mục",
+      "type": "Tiêu đề",
+      "position": "Phần danh mục",
+      "properties": "Heading “Danh mục khóa học”.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-023",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Trạng thái đang tải danh mục",
+      "type": "Trạng thái",
+      "position": "Phần danh mục",
+      "properties": "Thông báo role=status trong lúc #05 đang nạp.",
+      "event_ids": [
+        "GS-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-024",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Lỗi danh mục và nút thử lại",
+      "type": "Thông báo/nút",
+      "position": "Phần danh mục",
+      "properties": "Thông báo role=status; nút gọi retryAll() và nạp lại #05 rồi #06.",
+      "event_ids": [
+        "GS-01-EV-013"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-025",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Danh sách category tham khảo",
+      "type": "Danh sách",
+      "position": "Phần danh mục",
+      "properties": "Danh sách tên category; không phải filter control.",
+      "event_ids": [
+        "GS-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-026",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Trạng thái không có danh mục",
+      "type": "Trạng thái",
+      "position": "Phần danh mục",
+      "properties": "Copy “Hiện chưa có danh mục.” sau response rỗng.",
+      "event_ids": [
+        "GS-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-027",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Tiêu đề khu khóa học",
+      "type": "Tiêu đề",
+      "position": "Phần danh sách",
+      "properties": "Heading “Tất cả khóa học”.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-028",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Điều khiển sort",
+      "type": "Ô chọn",
+      "position": "Đầu trang danh sách",
+      "properties": "Select xuất hiện khi catalog ready; chọn sort đặt page về 1.",
+      "event_ids": [
+        "GS-01-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-029",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Các lựa chọn sort",
+      "type": "Lựa chọn",
+      "position": "Điều khiển sort",
+      "properties": "Mặc định, created_at:asc, name:asc.",
+      "event_ids": [
+        "GS-01-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-030",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Trạng thái đang tải khóa học",
+      "type": "Trạng thái",
+      "position": "Phần danh sách",
+      "properties": "Thông báo role=status aria-live polite/aria-busy.",
+      "event_ids": [
+        "GS-01-EV-001",
+        "GS-01-EV-016"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-031",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Panel lỗi truy vấn và retry",
+      "type": "Thông báo/nút",
+      "position": "Phần danh sách",
+      "properties": "Role=alert; retryCatalog gọi lại #06; ở error thường về page 1.",
+      "event_ids": [
+        "GS-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-032",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "CTA tìm kiếm ở trạng thái rỗng",
+      "type": "Liên kết",
+      "position": "Trạng thái rỗng",
+      "properties": "Liên kết /courses/search; trang này không gọi API danh mục #07.",
+      "event_ids": [
+        "GS-01-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-033",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Panel trang ngoài phạm vi",
+      "type": "Trạng thái",
+      "position": "Trạng thái danh mục",
+      "properties": "Render page,total,total_pages và hành động tải lại; chỉ khi items rỗng, total>0, page>total_pages.",
+      "event_ids": [
+        "GS-01-EV-001",
+        "GS-01-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-034",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Nút tải lại trang ngoài phạm vi",
+      "type": "Nút",
+      "position": "Bảng trang vượt phạm vi",
+      "properties": "Gọi retryCatalog; trạng thái hiện tại ngoài phạm vi thường nạp lại trang 1.",
+      "event_ids": [
+        "GS-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-035",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Bảng COUNT/LIST mismatch",
+      "type": "Thông báo",
+      "position": "Trạng thái sẵn sàng",
+      "properties": "Giữ items, ẩn summary/pagination, báo mismatch và khóa phân trang.",
+      "event_ids": [
+        "GS-01-EV-015"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-036",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Nút reload mismatch",
+      "type": "Nút",
+      "position": "Mismatch bảng",
+      "properties": "Gọi lại đúng page response hiện tại và sort; không tự polling.",
+      "event_ids": [
+        "GS-01-EV-015"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-037",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Tóm tắt tổng và trang",
+      "type": "Tóm tắt",
+      "position": "Trạng thái sẵn sàng",
+      "properties": "Hiển thị total và page/total_pages chỉ khi không mismatch.",
+      "event_ids": [
+        "GS-01-EV-001",
+        "GS-01-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-038",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Grid khóa học",
+      "type": "Lưới",
+      "position": "Trạng thái sẵn sàng",
+      "properties": "Grid hiển thị items từ #06; loaded visual chưa có Stitch approval.",
+      "event_ids": [
+        "GS-01-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-039",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Liên kết đến thẻ theo mã khóa học",
+      "type": "Liên kết",
+      "position": "Khóa học thẻ",
+      "properties": "RouterLink /courses/{id}, aria-label gồm tên khóa học.",
+      "event_ids": [
+        "GS-01-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-040",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Ảnh cover hoặc placeholder",
+      "type": "Ảnh",
+      "position": "Khóa học thẻ",
+      "properties": "Thumbnail_url lazy image; nếu thiếu dùng icon book.",
+      "event_ids": [
+        "GS-01-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-041",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Tên và mô tả khóa học",
+      "type": "Văn bản",
+      "position": "Khóa học thẻ",
+      "properties": "Title luôn; description chỉ khi có giá trị.",
+      "event_ids": [
+        "GS-01-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-042",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Tên mentor",
+      "type": "Văn bản",
+      "position": "Khóa học thẻ",
+      "properties": "Hiển thị mentor.full_name; avatar_url không render trong card template.",
+      "event_ids": [
+        "GS-01-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-043",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "CTA xem chi tiết",
+      "type": "Nút/liên kết",
+      "position": "Khóa học thẻ",
+      "properties": "Nhãn và icon trong anchor card; cùng RouterLink theo course ID.",
+      "event_ids": [
+        "GS-01-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-044",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Điều hướng phân trang",
+      "type": "Điều hướng",
+      "position": "Trạng thái sẵn sàng",
+      "properties": "Chỉ hiện khi total_pages>1 và không mismatch.",
+      "event_ids": [
+        "GS-01-EV-006",
+        "GS-01-EV-015"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-045",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Nút Trang trước",
+      "type": "Nút",
+      "position": "Phân trang",
+      "properties": "Disabled ở trang 1; gọi goToPage(page-1).",
+      "event_ids": [
+        "GS-01-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-046",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Nút Trang sau",
+      "type": "Nút",
+      "position": "Phân trang",
+      "properties": "Disabled ở trang cuối; gọi goToPage(page+1).",
+      "event_ids": [
+        "GS-01-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    },
+    {
+      "id": "GS-01-EL-047",
+      "marker": "Không có — source Angular chỉ",
+      "source_element_id": "Angular source node",
+      "name": "Brand và điều hướng chân trang current",
+      "type": "Điều hướng",
+      "position": "Chân trang GuestLayout",
+      "properties": "Footer link /courses và /courses/search; khác các link trong ảnh.",
+      "event_ids": [
+        "GS-01-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+    }
+  ],
+  "events": [
+    {
+      "id": "GS-01-EV-001",
+      "source_event_id": "EV-01",
+      "name": "Khởi tạo catalog",
+      "trigger": "Mở route /courses.",
+      "processing": "Gọi #05 rồi #06, page=1,size=20, không category. #05 failure ghi category error nhưng source vẫn tiếp tục #06.",
+      "element_ids": [
+        "GS-01-EL-001",
+        "GS-01-EL-004",
+        "GS-01-EL-005",
+        "GS-01-EL-007",
+        "GS-01-EL-008",
+        "GS-01-EL-014"
+      ],
+      "api_ids": [
+        "API-05",
+        "API-06"
+      ],
+      "source_ref": "02-events.md EV-01; GS01Page; API source",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-002",
+      "source_event_id": "EV-02",
+      "name": "Nhập search đầu trang",
+      "trigger": "Input vào đầu trang search.",
+      "processing": "GuestSiteLayout giữ local query; không gọi API khi nhập.",
+      "element_ids": [
+        "GS-01-EL-002",
+        "GS-01-EL-034",
+        "GS-01-EL-035"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md EV-02; GuestSiteLayout",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-003",
+      "source_event_id": "EV-03",
+      "name": "Nhập search hero",
+      "trigger": "Input vào hero search.",
+      "processing": "GS01Hero giữ local query; không gọi API khi nhập.",
+      "element_ids": [
+        "GS-01-EL-003",
+        "GS-01-EL-007"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md EV-03; GS01Hero",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-004",
+      "source_event_id": "EV-04",
+      "name": "Gửi tìm kiếm từ khu vực chính",
+      "trigger": "Submit hero form khi q khác rỗng.",
+      "processing": "Trim q, navigate /courses/search với query q; không gọi #07 trong GS01. Truy vấn rỗng không route.",
+      "element_ids": [
+        "GS-01-EL-008",
+        "GS-01-EL-007",
+        "GS-01-EL-016"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md EV-04; GS01Hero",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-005",
+      "source_event_id": "EV-05",
+      "name": "Thay đổi sort",
+      "trigger": "Thay đổi lựa chọn sắp xếp khi đã sẵn sàng.",
+      "processing": "Lưu option và gọi #06 page=1,size=20 với sort nếu nonempty; request cũ bị hủy.",
+      "element_ids": [
+        "GS-01-EL-012",
+        "GS-01-EL-013",
+        "GS-01-EL-014",
+        "GS-01-EL-016"
+      ],
+      "api_ids": [
+        "API-06"
+      ],
+      "source_ref": "02-events.md EV-05; GS01Page; service",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-006",
+      "source_event_id": "EV-06",
+      "name": "Chuyển trang",
+      "trigger": "Kích hoạt điều khiển trang.",
+      "processing": "Chỉ page hợp lệ/current state ready/không có mismatch; gọi #06 page,size20 và sort hiện tại.",
+      "element_ids": [
+        "GS-01-EL-027",
+        "GS-01-EL-028",
+        "GS-01-EL-029",
+        "GS-01-EL-030"
+      ],
+      "api_ids": [
+        "API-06"
+      ],
+      "source_ref": "02-events.md EV-06; GS01Page",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-007",
+      "source_event_id": "EV-07",
+      "name": "Mở course card",
+      "trigger": "Kích hoạt liên kết trên thẻ.",
+      "processing": "Navigate /courses/{id} theo course.id response; không gọi #08 từ GS01.",
+      "element_ids": [
+        "GS-01-EL-023",
+        "GS-01-EL-024",
+        "GS-01-EL-025",
+        "GS-01-EL-026"
+      ],
+      "api_ids": [
+        "API-06"
+      ],
+      "source_ref": "02-events.md EV-07; gs01-course-card.html",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-008",
+      "source_event_id": "EV-08",
+      "name": "Click nav Khóa học",
+      "trigger": "Activate đầu trang Khóa học.",
+      "processing": "RouterLink /courses; không tạo API request riêng do active nav.",
+      "element_ids": [
+        "GS-01-EL-001",
+        "GS-01-EL-032",
+        "GS-01-EL-033"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md EV-08; GuestSiteLayout",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-009",
+      "source_event_id": "EV-09",
+      "name": "Click Đăng nhập",
+      "trigger": "Activate marker liên kết Đăng nhập.",
+      "processing": "Prototype href=\"#\" / data-path mock; current layout không render login link.",
+      "element_ids": [
+        "GS-01-EL-003"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md EV-09; current GuestSiteLayout",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-010",
+      "source_event_id": "EV-10",
+      "name": "Click Đăng ký",
+      "trigger": "Activate marker CTA Đăng ký.",
+      "processing": "Prototype href=\"#\" / data-path mock; current layout không render register CTA.",
+      "element_ids": [
+        "GS-01-EL-004"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md EV-10; current GuestSiteLayout",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-011",
+      "source_event_id": "EV-11",
+      "name": "Điều hướng chân trang",
+      "trigger": "Kích hoạt các đích ở chân trang trong ảnh/bố cục hiện tại.",
+      "processing": "Liên kết home/login/register trong prototype khác với các route /courses và /courses/search hiện tại; chỉ RouterLink hiện tại xác định hành vi theo mã nguồn.",
+      "element_ids": [
+        "GS-01-EL-013",
+        "GS-01-EL-014",
+        "GS-01-EL-015",
+        "GS-01-EL-016",
+        "GS-01-EL-031"
+      ],
+      "api_ids": [],
+      "source_ref": "02-events.md EV-11; GuestSiteLayout",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-012",
+      "source_event_id": "Current-source event",
+      "name": "Gửi tìm kiếm từ đầu trang",
+      "trigger": "Gửi tìm kiếm ở đầu trang với q không rỗng.",
+      "processing": "Cắt khoảng trắng của q rồi điều hướng đến /courses/search?q=...; nếu query rỗng thì không điều hướng.",
+      "element_ids": [
+        "GS-01-EL-035",
+        "GS-01-EL-036"
+      ],
+      "api_ids": [],
+      "source_ref": "Sự kiện `GuestSiteLayout.submitSearch` trong mã nguồn hiện tại, không phải hợp đồng API mới",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-013",
+      "source_event_id": "Current-source event",
+      "name": "Thử tải lại danh mục",
+      "trigger": "Kích hoạt thử lại danh mục sau lỗi #05.",
+      "processing": "RetryAll khởi chạy lại #05 rồi #06; giữ nguyên kiểu sắp xếp đang chọn và đặt trang về 1.",
+      "element_ids": [
+        "GS-01-EL-008"
+      ],
+      "api_ids": [
+        "API-05",
+        "API-06"
+      ],
+      "source_ref": "GS01Page retryAll/loadInitialCatalog; current source",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-014",
+      "source_event_id": "Current-source event",
+      "name": "Thử lại khi danh mục gặp lỗi",
+      "trigger": "Kích hoạt thử lại danh mục sau lỗi #06 thông thường.",
+      "processing": "Implementation hiện gọi #06 với page=1 và sort đang chọn; điều này khác phụ lục DD nói thử lại trang đang hiển thị.",
+      "element_ids": [
+        "GS-01-EL-015"
+      ],
+      "api_ids": [
+        "API-06"
+      ],
+      "source_ref": "GS01Page retryCatalog; DD current-source addendum discrepancy",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-015",
+      "source_event_id": "Current-source event",
+      "name": "Retry số lượng/list mismatch",
+      "trigger": "Kích hoạt tải lại khi trạng thái sai khác.",
+      "processing": "Implementation hiện thử lại bằng pagination.page trong response và sort đang chọn; trạng thái mismatch được xóa khi bắt đầu tải.",
+      "element_ids": [
+        "GS-01-EL-019",
+        "GS-01-EL-020"
+      ],
+      "api_ids": [
+        "API-06"
+      ],
+      "source_ref": "GS01Page retryCatalog; current source",
+      "design_status": "Chờ xác nhận"
+    },
+    {
+      "id": "GS-01-EV-016",
+      "source_event_id": "Current-source event",
+      "name": "Thay thế yêu cầu đang hoạt động",
+      "trigger": "Sort/page/retry trong khi #05/#06 yêu cầu đang chờ.",
+      "processing": "Phần triển khai hiện hủy đăng ký yêu cầu danh mục trước đó và tăng số thứ tự yêu cầu; phản hồi cũ đến muộn sẽ bị bỏ qua.",
+      "element_ids": [
+        "GS-01-EL-014"
+      ],
+      "api_ids": [
+        "API-05",
+        "API-06"
+      ],
+      "source_ref": "GS01Page cancelActiveCatalogRequest; current source",
+      "design_status": "Chờ xác nhận"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "GS01-B01",
+      "description": "Giao diện trạng thái đã tải không có trong ảnh chụp được phê duyệt: cần Product/Design phê duyệt bố cục thẻ, số lượng, sắp xếp và phân trang.",
+      "impact": "Không xem template hiện tại là chuẩn nghiệm thu giao diện đã được phê duyệt.",
+      "decision": "Phê duyệt thiết kế trạng thái đã tải và các trường trên thẻ.",
+      "source_ref": "05-business-rules.md GS01-B01",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B02",
+      "description": "Danh mục có bộ lọc category nhưng validator #06 từ chối và DDL đã commit không có quan hệ course-category.",
+      "impact": "Tuyệt đối không gửi danh mục; không kích hoạt các nút danh mục.",
+      "decision": "Phê duyệt quan hệ/ngữ nghĩa bộ lọc và migration trước khi thêm bộ lọc category.",
+      "source_ref": "05-business-rules.md GS01-B02; API #06 validate; DB.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B03",
+      "description": "Ngữ nghĩa ô tìm kiếm/bàn giao và URL chưa được duyệt trong thiết kế gốc.",
+      "impact": "Không sao chép số lượng giả từ prototype hoặc gọi #07 từ GS01.",
+      "decision": "Phê duyệt quy tắc truy vấn, kết quả rỗng, cắt khoảng trắng, phím Enter, thao tác nhấp và URL.",
+      "source_ref": "05-business-rules.md GS01-B03; 02-events.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B04",
+      "description": "Danh mục yêu cầu ưu tiên cache rồi gọi #05 nhưng hiện không có chính sách cache/TTL/xử lý lỗi.",
+      "impact": "Không khẳng định có bộ nhớ đệm hoặc phương án hiển thị dữ liệu cũ dự phòng.",
+      "decision": "Phê duyệt chính sách ngôn ngữ/bộ nhớ đệm/tải một phần.",
+      "source_ref": "05-business-rules.md GS01-B04; source service",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B05",
+      "description": "Lược đồ khóa học thiếu tiền tệ/danh mục/đánh giá/thời lượng/số bài học; mô hình Course dùng chung cũng khác.",
+      "impact": "Không tự tạo trường thẻ hoặc định dạng giá như tiền tệ.",
+      "decision": "Đối chiếu lược đồ nguồn với các trường hiển thị trên thẻ.",
+      "source_ref": "05-business-rules.md GS01-B05; API #06 models",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B06",
+      "description": "Cần duyệt nội dung/cách khôi phục riêng cho trang rỗng, lỗi mạng/HTTP và catalog rỗng; quy tắc thử lại trong DD và mã nguồn đang khác nhau.",
+      "impact": "Không ánh xạ lỗi/trang ngoài phạm vi thành danh sách rỗng hoặc ngụ ý chính sách thử lại đã được phê duyệt.",
+      "decision": "Phê duyệt nội dung trạng thái/cách khôi phục và thống nhất hành vi thử lại trang.",
+      "source_ref": "05-business-rules.md GS01-B06; 00-overview current-source addendum",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS01-B07",
+      "description": "Văn bản DD lịch sử nói chưa có tuyến/caller, nhưng phụ lục 2026-11-21 và mã nguồn Angular hiện tại cho thấy tuyến/caller đã có.",
+      "impact": "Không báo việc thiếu dữ liệu đã cũ như hiện trạng; môi trường chạy vẫn chưa xác minh.",
+      "decision": "Giữ riêng trạng thái DD với trạng thái mã nguồn hiện tại và đối chiếu lại hồ sơ trạng thái.",
+      "source_ref": "00-overview.md source addendum; 06-navigation.md; current source",
+      "status": "Một phần đã được source addendum cập nhật"
+    },
+    {
+      "id": "GS01-B08",
+      "description": "Ảnh chụp/đầu trang/chân trang khác bản mẫu/khung giao diện hiện tại; tập lệnh bản mẫu tham chiếu các phần tử DOM còn thiếu và phông/CDN bên ngoài.",
+      "impact": "Không xem prototype là môi trường chạy hiện tại hoặc chỉnh sửa asset gốc.",
+      "decision": "Chọn nguồn dữ liệu chuẩn và cập nhật nguồn thiết kế được quản lý.",
+      "source_ref": "05-business-rules.md GS01-B08; code.html; GuestSiteLayout",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "GS01-TS-001",
+        "requirement_ids": [
+          "GS-01-YC-001"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Route /courses được cung cấp cho Guest public; source registration hiện có, deployment/runtime chưa xác minh.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Tuyến nguồn được đăng ký tại /courses trong tuyến Guest công khai; chưa xác lập môi trường triển khai/trình duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md § current source; app.routes.ts; guest.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-002",
+        "requirement_ids": [
+          "GS-01-YC-002"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "#05 là API công khai; máy khách hiện gọi không kèm locale, máy chủ mặc định `vi-VN` và lọc đúng locale của danh mục ACTIVE.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Service hiện không gửi locale; mã nguồn #05 mặc định vi-VN và trả các danh mục đang hoạt động cho locale chính xác đó.",
+        "api_ids": [
+          "API-05"
+        ],
+        "source_refs": [
+          "04-api-integration.md; API #05 models/view/tests"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-003",
+        "requirement_ids": [
+          "GS-01-YC-003"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Inventory yêu cầu cache-first #05 nhưng current GS01 service không có cache hoặc TTL.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Cache requirement và hành vi hiện tại lệch nhau.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md § expected/current; gs01-catalog.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-004",
+        "requirement_ids": [
+          "GS-01-YC-004"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Xử lý khi #05 lỗi và tiếp tục/tạm dừng #06 phải giữ hành vi theo mã nguồn riêng, không coi lỗi category là catalog rỗng.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Current code ghi lỗi category rồi vẫn gọi #06; policy UI partial-load chưa được duyệt.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [
+          "API-05"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; GS01Page"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-005",
+        "requirement_ids": [
+          "GS-01-YC-005"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Initial #06 request dùng page=1,size=20 và không gửi category.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Request #06 ban đầu hiện là GET với page=1,size=20 và không có category.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "04-api-integration.md; gs01-catalog.service.ts; test source"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-006",
+        "requirement_ids": [
+          "GS-01-YC-006"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Client xác nhận success envelope, businessCode DESIGN_RESOURCE_RETRIEVED và projection category.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Client hiện chỉ chấp nhận success=true, DESIGN_RESOURCE_RETRIEVED và projection trang danh mục hợp lệ.",
+        "api_ids": [
+          "API-05"
+        ],
+        "source_refs": [
+          "guest-course.models.ts; GS01Page"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-007",
+        "requirement_ids": [
+          "GS-01-YC-007"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Course page projection chứa id/title/description/thumbnail_url/price/status/mentor; chỉ PUBLISHED được hiển thị.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Schema mã nguồn hiện yêu cầu các trường Course/Mentor đã liệt kê; template chỉ hiển thị các dòng PUBLISHED được trả về.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "API #06 models/query/view; GS01Page"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-008",
+        "requirement_ids": [
+          "GS-01-YC-008"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Pagination response phải khớp requested page, fixed size 20, total_pages; total=0 có total_pages=0 theo #06.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Client hiện yêu cầu page phản hồi khớp và size=20; #06 dùng total_pages=0 khi total=0.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "API #06 view; models; GS01Page"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-009",
+        "requirement_ids": [
+          "GS-01-YC-009"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Sort chỉ dùng allowlist API id|name|price|created_at và asc|desc; server default created_at DESC,id ASC.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Mã nguồn hiện chấp nhận allowlist sort/direction đã tài liệu hóa và mặc định created_at DESC rồi id ASC.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "API #06 validate; course_catalog constants/helpers"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-010",
+        "requirement_ids": [
+          "GS-01-YC-010"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Khi đổi sort, đặt lại page về 1 và giữ lựa chọn sort khi tải lại trang.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Loaded-state UI design chưa được duyệt.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-05; GS01Page"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-011",
+        "requirement_ids": [
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Chuyển trang giữ fixed size 20 và sort hiện hành; không gửi category.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: điều khiển phân trang chỉ tồn tại trong mã nguồn hiện tại, không trong screenshot.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-06; GS01Page"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-012",
+        "requirement_ids": [
+          "GS-01-YC-012"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Khi COUNT/LIST cardinality lệch nhưng projection hợp lệ, giữ items, ẩn total/điều khiển phân trang, báo mismatch, chặn paging và cho reload cùng page/sort.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Khi số lượng không khớp trong mã nguồn hiện tại, vẫn giữ các mục đã trả về, ẩn phần tóm tắt/phân trang và cho phép thử lại.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "00-overview.md current source; GS01Page; helper"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-013",
+        "requirement_ids": [
+          "GS-01-YC-013"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Catalog EMPTY chỉ khi items=[] và total=0; ngoài phạm vi empty-page khi total>0 phải tách riêng.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "UI hiện phân biệt items=[] total=0 (rỗng) với items=[] total>0 nhưng page vượt total_pages.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "03-data-flow.md § state; GS01Page; API #06 tests source"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-014",
+        "requirement_ids": [
+          "GS-01-YC-014"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "HTTP/network/schema/query errors không được ánh xạ thành EMPTY; show error/retry state.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Exact user-facing copy/retry policy remains blocked.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "03-data-flow.md; GS01Page; API #05/#06 sources"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-015",
+        "requirement_ids": [
+          "GS-01-YC-015"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Category filter không hoạt động và không được gửi; #06 trả 422 cho non-null category.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Máy khách hiện tại bỏ category; validator #06 hiện trả 422 nếu gửi category khác null.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "05-business-rules.md GS01-B02; API #06 validate; DDL"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-016",
+        "requirement_ids": [
+          "GS-01-YC-016"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Category list được hiển thị như metadata tham khảo, không như filter control.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Loaded design remains unapproved.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01 page template; 00-overview.md current source"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-017",
+        "requirement_ids": [
+          "GS-01-YC-017"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Search đầu trang nonblank query được trim và chuyển sang GS-02 q; GS01 không gọi #07.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Header behavior hiện có trong source; URL handoff acceptance vẫn còn bỏ ngỏ.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [
+          "API-05"
+        ],
+        "source_refs": [
+          "02-events.md EV-02/04; GuestSiteLayout"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-018",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Search hero nonblank query được trim và chuyển sang /courses/search?q=...; truy vấn rỗng không điều hướng.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Current nguồn tuyến; semantics/query state not approved.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-03/04; gs01-hero.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-019",
+        "requirement_ids": [
+          "GS-01-YC-019"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "#07 chỉ thuộc GS-02; không gọi #07 khi nhập hoặc submit tìm kiếm từ GS-01.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Bộ xử lý tìm kiếm GS-01 hiện điều hướng tới GS-02 và không gọi #07 từ màn này.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-04; GS01Hero; GS02 routing"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-020",
+        "requirement_ids": [
+          "GS-01-YC-020"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Course card mở GS-03 theo đúng response course.id; không dùng title làm ID.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Current RouterLink exists; visual card design missing.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-07; gs01-course-card.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-021",
+        "requirement_ids": [
+          "GS-01-YC-021"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Trạng thái rỗng copy/illustration phải được duyệt lại vì screenshot và mã nguồn hiện tại copy khác nhau.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Screenshot conflates không có dữ liệu và updating.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "01-ui-elements.md #9–#11; GS01 page template"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-022",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Bố cục trạng thái đã tải, danh mục, sort, count và phân trang cần được duyệt trước khi xem là UX cuối.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Image chỉ documents trạng thái rỗng.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md GS01-B01; 07-test-cases.md §3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-023",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Đích đầu trang/chân trang trong ảnh khác liên kết tuyến của GuestSiteLayout hiện tại",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: bố cục hiện tại không có màn hình đăng nhập/đăng ký/trang chủ. Không dùng nội dung này làm tiêu chí đã duyệt cho tới khi chốt blocker tương ứng.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md #1–#4/#12–#16; GuestSiteLayout"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-024",
+        "requirement_ids": [
+          "GS-01-YC-024"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Không định dạng hoặc hiển thị giá như tiền tệ: API trả chuỗi thập phân nhưng không có đơn vị tiền; thẻ Course hiện tại không hiển thị giá",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "API hiện tại không có trường tiền tệ; template thẻ hiện không kết xuất giá.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "05-business-rules.md §7; API #06 projection; card template"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-025",
+        "requirement_ids": [
+          "GS-01-YC-025"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Chỉ hiển thị Course PUBLISHED công khai; yêu cầu #05/#06 không cần Bearer token hoặc PII người dùng",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Route #05/#06 hiện là public và query #06 lọc khóa học status PUBLISHED.",
+        "api_ids": [
+          "API-05"
+        ],
+        "source_refs": [
+          "05-business-rules.md §7; API route/source"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS01-TS-026",
+        "requirement_ids": [
+          "GS-01-YC-026"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Tìm kiếm/select/nút/liên kết cần nhãn ngữ nghĩa/focus; bố cục cần reflow theo hướng dẫn thiết kế Study.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Accessibility/browser layout not runtime verified.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "05-business-rules.md §7; design.md; current templates/CSS"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TS-027",
+        "requirement_ids": [
+          "GS-01-YC-027"
+        ],
+        "target_id": "GS-01",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt DD BỊ CHẶN, source MỘT PHẦN và runtime CHƯA XÁC MINH trong UTC.",
+        "precondition": "Có build Guest được duyệt; chưa chạy app/runtime trong task này.",
+        "data": "Dữ liệu giả lập public; không đưa PII/token thật.",
+        "steps": [
+          "Mở route hoặc trạng thái liên quan trong môi trường đã được phê duyệt.",
+          "Quan sát UI, query/API, URL và state theo source_ref.",
+          "Ghi actual/evidence sau khi có kiểm thử runtime riêng."
+        ],
+        "expected": "Chờ xác nhận DD: Source addendum supersedes stale no-route/no-caller claims.; không dùng làm tiêu chí đã duyệt cho tới khi blocker tương ứng được chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "00-overview.md status/current addendum; 07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "GS01-TC-001",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra Điều hướng Khóa học đang chọn",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-001 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh cho biết mục Khóa học đang active. Current GuestLayout có RouterLink /courses; runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #1; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-002",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra Ô tìm kiếm ở đầu trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-002 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh có ô tìm kiếm header. Current GuestLayout có form và điều hướng q đã trim tới /courses/search khi submit chuỗi không rỗng.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #2; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-003",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra Liên kết Đăng nhập",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-003 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh đề xuất link /login; current GuestLayout không hiển thị link này.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #3; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-004",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra Nút Đăng ký",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-004 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh đề xuất link /register; current GuestLayout không hiển thị CTA này.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #4; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-005",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra Tiêu đề Danh sách khóa học",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-005 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh ghi “Danh sách khóa học”; trang hiện tại H1 là “Khám phá khóa học”.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #5; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-006",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra Mô tả hỗ trợ",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-006 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Copy ở ảnh khác mô tả current hero; trạng thái loaded/error chưa có thiết kế được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #6; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-007",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra Ô tìm kiếm chính",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-007 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh có search chính. Current GS01Hero lưu text local và trim khi submit.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #7; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-008",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra Nút Tìm kiếm",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-008 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh ghi “Tìm kiếm”; current button ghi “Tìm khóa học” và route sang GS-02 khi q không rỗng.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #8; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-009",
+        "requirement_ids": [
+          "GS-01-YC-021"
+        ],
+        "target_id": "GS-01-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra Minh họa trạng thái rỗng",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-009 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh minh họa sách ở trạng thái rỗng; trang hiện tại cũng dùng icon book. Chưa xác nhận semantics screen reader.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #9; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-010",
+        "requirement_ids": [
+          "GS-01-YC-021"
+        ],
+        "target_id": "GS-01-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra Tiêu đề trạng thái rỗng",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-010 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh ghi “Chưa có khóa học để hiển thị”; current empty heading là “Chưa có khóa học nào”.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #10; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-011",
+        "requirement_ids": [
+          "GS-01-YC-021"
+        ],
+        "target_id": "GS-01-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra Mô tả trạng thái rỗng",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-011 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh copy gộp chưa có dữ liệu/đang cập nhật; current copy chỉ nói khóa học đã xuất bản sẽ xuất hiện tại đây.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #11; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-012",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra Thương hiệu Study2Work ở chân trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-012 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh có brand footer; current GuestLayout có brand link /courses.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #12; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-013",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra Liên kết Trang chủ ở chân trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-013 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh đề xuất Trang chủ; current footer không có link trang chủ.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #13; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-014",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra Liên kết Khóa học ở chân trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-014 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh có Khóa học; current footer link tới /courses.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #14; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-015",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra Liên kết Đăng nhập ở chân trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-015 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh đề xuất link đăng nhập; current footer không có link này.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #15; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-016",
+        "requirement_ids": [
+          "GS-01-YC-023"
+        ],
+        "target_id": "GS-01-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra Liên kết Đăng ký ở chân trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-016 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Ảnh đề xuất link đăng ký; current footer không có link này.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §3 marker #16; screen-numbered.png"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-017",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra Landmark chính của GS-01",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-017 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Vùng nội dung chính có data-screen-id=GS01.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-018",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra Thương hiệu trên đầu trang current",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-018 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. GuestSiteLayout brand Study2Work, link /courses; vắng trong ảnh đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-019",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra Liên kết tìm kiếm ở chính nav",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-019 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. RouterLink /courses/search ngoài nav item Khóa học.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-020",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra Nút gửi tìm kiếm đầu trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-020 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Nút “Tìm”; cùng form header search.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-021",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-021",
+        "group": "Thành phần",
+        "title": "Kiểm tra Hero current và H1",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-021 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Hero H1 “Khám phá khóa học” và mô tả hiện hành; khác copy marker.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-022",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-022",
+        "group": "Thành phần",
+        "title": "Kiểm tra Tiêu đề khu danh mục",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-022 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Heading “Danh mục khóa học”.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-023",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-023",
+        "group": "Thành phần",
+        "title": "Kiểm tra Trạng thái đang tải danh mục",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-023 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Thông báo role=status trong lúc #05 đang nạp.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-024",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-024",
+        "group": "Thành phần",
+        "title": "Kiểm tra Lỗi danh mục và nút thử lại",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-024 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Thông báo role=status; nút gọi retryAll() và nạp lại #05 rồi #06.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-025",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-025",
+        "group": "Thành phần",
+        "title": "Kiểm tra Danh sách category tham khảo",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-025 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Danh sách tên category; không phải filter control.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-026",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-026",
+        "group": "Thành phần",
+        "title": "Kiểm tra Trạng thái không có danh mục",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-026 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Copy “Hiện chưa có danh mục.” sau response rỗng.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-027",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-027",
+        "group": "Thành phần",
+        "title": "Kiểm tra Tiêu đề khu khóa học",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-027 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Heading “Tất cả khóa học”.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-028",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-028",
+        "group": "Thành phần",
+        "title": "Kiểm tra Điều khiển sort",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-028 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa với nghiệm thu hình ảnh. Danh sách chọn xuất hiện khi catalog sẵn sàng; chọn cách sắp xếp sẽ đặt page về 1.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-029",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-029",
+        "group": "Thành phần",
+        "title": "Kiểm tra Các lựa chọn sort",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-029 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Mặc định, created_at:asc, name:asc.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-030",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-030",
+        "group": "Thành phần",
+        "title": "Kiểm tra Trạng thái đang tải khóa học",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-030 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Thông báo role=status aria-live polite/aria-busy.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-031",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-031",
+        "group": "Thành phần",
+        "title": "Kiểm tra Panel lỗi truy vấn và retry",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-031 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Role=alert; retryCatalog gọi lại #06; ở error thường về page 1.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-032",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-032",
+        "group": "Thành phần",
+        "title": "Kiểm tra CTA tìm kiếm ở trạng thái rỗng",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-032 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Link /courses/search; không có catalog request #07 từ this page.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-033",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-033",
+        "group": "Thành phần",
+        "title": "Kiểm tra Panel trang ngoài phạm vi",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-033 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Render page,total,total_pages và hành động tải lại; chỉ khi items rỗng, total>0, page>total_pages.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-034",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-034",
+        "group": "Thành phần",
+        "title": "Kiểm tra Nút tải lại trang ngoài phạm vi",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-034 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Gọi retryCatalog; trạng thái hiện tại ngoài phạm vi thường nạp lại trang 1.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-035",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-035",
+        "group": "Thành phần",
+        "title": "Kiểm tra Panel COUNT/LIST mismatch",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-035 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Giữ items, ẩn summary/pagination, báo mismatch và khóa phân trang.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-036",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-036",
+        "group": "Thành phần",
+        "title": "Kiểm tra Nút reload mismatch",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-036 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa với nghiệm thu hình ảnh. Gọi lại đúng trang/phản hồi hiện tại và cách sắp xếp; không tự thăm dò định kỳ.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-037",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-037",
+        "group": "Thành phần",
+        "title": "Kiểm tra Tóm tắt tổng và trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-037 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Hiển thị total và page/total_pages chỉ khi không mismatch.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-038",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-038",
+        "group": "Thành phần",
+        "title": "Kiểm tra Grid khóa học",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-038 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Grid hiển thị items từ #06; loaded visual chưa có Stitch approval.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-039",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-039",
+        "group": "Thành phần",
+        "title": "Kiểm tra liên kết card theo course ID",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-039 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. RouterLink /courses/{id}, aria-label gồm tên khóa học.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-040",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-040",
+        "group": "Thành phần",
+        "title": "Kiểm tra Ảnh cover hoặc placeholder",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-040 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Thumbnail_url lazy image; nếu thiếu dùng icon book.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-041",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-041",
+        "group": "Thành phần",
+        "title": "Kiểm tra Tên và mô tả khóa học",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-041 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Title luôn; description chỉ khi có giá trị.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-042",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-042",
+        "group": "Thành phần",
+        "title": "Kiểm tra Tên mentor",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-042 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Hiển thị mentor.full_name; avatar_url không render trong card template.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-043",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-043",
+        "group": "Thành phần",
+        "title": "Kiểm tra CTA xem chi tiết",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-043 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Nhãn và icon trong anchor card; cùng RouterLink theo course ID.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-044",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-044",
+        "group": "Thành phần",
+        "title": "Kiểm tra Điều hướng phân trang",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-044 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Chỉ hiện khi total_pages>1 và không mismatch.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-045",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-045",
+        "group": "Thành phần",
+        "title": "Kiểm tra Nút Trang trước",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-045 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Disabled ở trang 1; gọi goToPage(page-1).",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-046",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-046",
+        "group": "Thành phần",
+        "title": "Kiểm tra Nút Trang sau",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-046 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Disabled ở trang cuối; gọi goToPage(page+1).",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TC-047",
+        "requirement_ids": [
+          "GS-01-YC-022"
+        ],
+        "target_id": "GS-01-EL-047",
+        "group": "Thành phần",
+        "title": "Kiểm tra Brand và điều hướng chân trang current",
+        "precondition": "Màn hình Guest render trong browser test build; task hiện tại không chạy app tests.",
+        "data": "Guest giả lập; dữ liệu khóa học/category không chứa thật PII.",
+        "steps": [
+          "Định vị GS-01-EL-047 theo source_ref.",
+          "Đối chiếu nhãn, trạng thái, role, link và visibility với source/design.",
+          "Ghi chênh lệch riêng giữa screenshot, DD và Angular hiện tại."
+        ],
+        "expected": "Chờ xác nhận DD: đối chiếu phần tử theo nguồn; mã nguồn hiện tại chưa đồng nghĩa visual acceptance. Footer link /courses và /courses/search; khác các link trong ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "GS01 page/template/service; GuestSiteLayout; source audit 2026-11-21"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "GS01-TE-001",
+        "requirement_ids": [
+          "GS-01-YC-001"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Sự kiện",
+        "title": "Khởi tạo catalog",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Gọi #05 rồi #06, page=1,size=20, không category. #05 failure ghi category error nhưng source vẫn tiếp tục #06. Runtime chưa xác minh.",
+        "api_ids": [
+          "API-05",
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; GS01Page; API source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-002",
+        "requirement_ids": [
+          "GS-01-YC-017"
+        ],
+        "target_id": "GS-01-EV-002",
+        "group": "Sự kiện",
+        "title": "Nhập search đầu trang",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: GuestSiteLayout giữ local query; không gọi API khi nhập. Runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-02; GuestSiteLayout"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-003",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EV-003",
+        "group": "Sự kiện",
+        "title": "Nhập search hero",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: GS01Hero giữ local query; không gọi API khi nhập. Runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-03; GS01Hero"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-004",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EV-004",
+        "group": "Sự kiện",
+        "title": "Gửi tìm kiếm từ vùng chính",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Trim q, navigate /courses/search với query q; không gọi #07 trong GS01. Truy vấn rỗng không route. Runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-04; GS01Hero"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-005",
+        "requirement_ids": [
+          "GS-01-YC-009"
+        ],
+        "target_id": "GS-01-EV-005",
+        "group": "Sự kiện",
+        "title": "Thay đổi sort",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Lưu option và gọi #06 page=1,size=20 với sort nếu nonempty; request cũ bị hủy. Runtime chưa xác minh.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-05; GS01Page; service"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-006",
+        "requirement_ids": [
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01-EV-006",
+        "group": "Sự kiện",
+        "title": "Chuyển trang",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: chỉ khi page hợp lệ/trạng thái hiện tại sẵn sàng/không có khác biệt thì gọi #06 với page,size20 và sort hiện tại. Môi trường chạy chưa được xác minh.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-06; GS01Page"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-007",
+        "requirement_ids": [
+          "GS-01-YC-020"
+        ],
+        "target_id": "GS-01-EV-007",
+        "group": "Sự kiện",
+        "title": "Mở course card",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Navigate /courses/{id} theo course.id response; không gọi #08 từ GS01. Runtime chưa xác minh.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-07; gs01-course-card.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-008",
+        "requirement_ids": [
+          "GS-01-YC-001"
+        ],
+        "target_id": "GS-01-EV-008",
+        "group": "Sự kiện",
+        "title": "Click nav Khóa học",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: RouterLink /courses; không tạo API request riêng do active nav. Runtime chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-08; GuestSiteLayout"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-009",
+        "requirement_ids": [
+          "GS-01-YC-001"
+        ],
+        "target_id": "GS-01-EV-009",
+        "group": "Sự kiện",
+        "title": "Click Đăng nhập",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: bản mẫu dùng href=\"#\"/data-path giả lập; layout hiện tại không hiển thị liên kết đăng nhập. Môi trường chạy chưa được xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-09; current GuestSiteLayout"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-010",
+        "requirement_ids": [
+          "GS-01-YC-001"
+        ],
+        "target_id": "GS-01-EV-010",
+        "group": "Sự kiện",
+        "title": "Click Đăng ký",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: bản mẫu dùng href=\"#\"/data-path giả lập; layout hiện tại không hiển thị nút kêu gọi đăng ký. Môi trường chạy chưa được xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-10; current GuestSiteLayout"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-011",
+        "requirement_ids": [
+          "GS-01-YC-001"
+        ],
+        "target_id": "GS-01-EV-011",
+        "group": "Sự kiện",
+        "title": "Điều hướng chân trang",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: liên kết home/login/register trong prototype khác các liên kết `/courses` và `/courses/search` hiện tại; chỉ `RouterLink` hiện tại mới xác định nguồn điều hướng. Môi trường chạy chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-11; GuestSiteLayout"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-012",
+        "requirement_ids": [
+          "GS-01-YC-017"
+        ],
+        "target_id": "GS-01-EV-012",
+        "group": "Sự kiện",
+        "title": "Gửi tìm kiếm từ đầu trang",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: cắt khoảng trắng của q rồi chuyển tới `/courses/search?q=...`; truy vấn rỗng thì không điều hướng. Môi trường chạy chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "Sự kiện `GuestSiteLayout.submitSearch` trong mã nguồn hiện tại, không phải hợp đồng API mới"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-013",
+        "requirement_ids": [
+          "GS-01-YC-004"
+        ],
+        "target_id": "GS-01-EV-013",
+        "group": "Sự kiện",
+        "title": "Thử tải lại danh mục",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: `retryAll` gọi lại #05 rồi #06; giữ nguyên thứ tự sắp xếp đã chọn và đặt lại trang về 1. Môi trường chạy chưa xác minh.",
+        "api_ids": [
+          "API-05",
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01Page retryAll/loadInitialCatalog; current source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-014",
+        "requirement_ids": [
+          "GS-01-YC-014"
+        ],
+        "target_id": "GS-01-EV-014",
+        "group": "Sự kiện",
+        "title": "Thử lại khi danh mục gặp lỗi",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: mã nguồn hiện gọi #06 với `page=1` và thứ tự sắp xếp đã chọn; khác với phụ lục DD nói thử lại trang đang xem. Môi trường chạy chưa xác minh.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01Page retryCatalog; DD current-source addendum discrepancy"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-015",
+        "requirement_ids": [
+          "GS-01-YC-012"
+        ],
+        "target_id": "GS-01-EV-015",
+        "group": "Sự kiện",
+        "title": "Thử lại khi COUNT/LIST sai khác",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Mã nguồn hiện thử lại theo trang phân trang và thứ tự sắp xếp đã chọn trong phản hồi; khi không khớp thì xóa dữ liệu trong lúc tải. Chưa xác minh môi trường chạy.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01Page retryCatalog; current source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-016",
+        "requirement_ids": [
+          "GS-01-YC-010"
+        ],
+        "target_id": "GS-01-EV-016",
+        "group": "Sự kiện",
+        "title": "Thay thế yêu cầu đang hoạt động",
+        "precondition": "Môi trường browser test có mock #05/#06/Router; không được thực thi trong lần tạo tài liệu này.",
+        "data": "Fake category/course rows; không token, PII hoặc category filter.",
+        "steps": [
+          "Kích hoạt event theo trigger trong source_ref.",
+          "Ghi URL, request parameters, state và dữ liệu hiển thị.",
+          "Đối chiếu với expected và ghi kết quả thật sau khi test được duyệt."
+        ],
+        "expected": "Chờ xác nhận DD: Current implementation hủy đăng ký yêu cầu danh mục trước đó và tăng số thứ tự yêu cầu; stale responses are ignored. Runtime chưa xác minh.",
+        "api_ids": [
+          "API-05",
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01Page cancelActiveCatalogRequest; current source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-017",
+        "requirement_ids": [
+          "GS-01-YC-004"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Sự kiện",
+        "title": "Xử lý #05 lỗi vẫn phải quan sát riêng request #06",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "Mock #05 returns 500; #06 returns valid zero/zero page.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: mã nguồn hiện tại records category error và continues to #06; visual partial-load policy remains pending.",
+        "api_ids": [
+          "API-05",
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; GS01Page; API source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-018",
+        "requirement_ids": [
+          "GS-01-YC-018"
+        ],
+        "target_id": "GS-01-EV-004",
+        "group": "Sự kiện",
+        "title": "Submit hero search với query rỗng/space-only",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "Để trống hoặc chỉ nhập khoảng trắng; gửi biểu mẫu.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: hàm xử lý hiện tại cắt khoảng trắng đầu/cuối và không điều hướng nếu truy vấn rỗng.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-04; GS01Hero"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-019",
+        "requirement_ids": [
+          "GS-01-YC-011"
+        ],
+        "target_id": "GS-01-EV-006",
+        "group": "Sự kiện",
+        "title": "Ngăn page invalid, current hoặc khi mismatch",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "Thử page nhỏ hơn 1, vượt total_pages, trang hiện tại và kích hoạt trong khi đang mismatch.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: goToPage rejects invalid/current values và blocks all paging during mismatch.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-06; GS01Page"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-020",
+        "requirement_ids": [
+          "GS-01-YC-014"
+        ],
+        "target_id": "GS-01-EV-014",
+        "group": "Sự kiện",
+        "title": "Retry sau error #06 ở trang >1",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "Gây lỗi #06 sau yêu cầu trang 2 rồi kích hoạt thử lại.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: mã nguồn thử lại từ trang 1 với thứ tự sắp xếp đã chọn; điều này mâu thuẫn với DD về việc thử lại trang hiện đang xem.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01Page retryCatalog; DD current-source addendum discrepancy"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-021",
+        "requirement_ids": [
+          "GS-01-YC-012"
+        ],
+        "target_id": "GS-01-EV-015",
+        "group": "Sự kiện",
+        "title": "Retry sau COUNT/LIST mismatch ở trang >1",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "Trả về tập dữ liệu được ánh xạ hợp lệ nhưng số dòng không khớp ở trang 2, sau đó tải lại data.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: Source retries cùng trang và thứ tự sắp xếp và re-enables pagination chỉ sau khi matching response.",
+        "api_ids": [
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01Page retryCatalog; current source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-022",
+        "requirement_ids": [
+          "GS-01-YC-010"
+        ],
+        "target_id": "GS-01-EV-016",
+        "group": "Sự kiện",
+        "title": "Hủy request cũ khi sort/page làm phát sinh request mới",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "Giữ #06 ở trạng thái chờ và kích hoạt sắp xếp hoặc tải lại trang.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: đăng ký trước bị hủy và bộ kiểm tra số thứ tự bỏ qua phản hồi cũ; hành vi trên trình duyệt/mạng chưa xác minh.",
+        "api_ids": [
+          "API-05",
+          "API-06"
+        ],
+        "source_refs": [
+          "GS01Page cancelActiveCatalogRequest; current source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-023",
+        "requirement_ids": [
+          "GS-01-YC-013"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Sự kiện",
+        "title": "Phân biệt empty catalog và ngoài phạm vi response",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "So sánh #06 với items=[],total=0 và items=[],total>0,page>total_pages.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: mã nguồn ánh xạ trường hợp `0/0` thành trạng thái rỗng và phản hồi thứ hai thành trạng thái ngoài phạm vi; không gộp chúng thành cùng một trạng thái.",
+        "api_ids": [
+          "API-05",
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; GS01Page; API source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS01-TE-024",
+        "requirement_ids": [
+          "GS-01-YC-006"
+        ],
+        "target_id": "GS-01-EV-001",
+        "group": "Sự kiện",
+        "title": "Từ chối envelope sai định dạng hoặc projection danh mục không hợp lệ",
+        "precondition": "Chỉ dùng phản hồi mã nguồn giả lập; không chạy API trực tiếp hoặc kiểm thử trình duyệt.",
+        "data": "Dữ liệu kiểm thử giả lập bị sai định dạng/ở biên; không dùng dữ liệu thật.",
+        "steps": [
+          "Trả về success false, business code sai hoặc dữ liệu phân trang categories sai định dạng.",
+          "Quan sát hành vi trạng thái/request hiện tại.",
+          "Để trống các trường ghi nhận kết quả thực thi."
+        ],
+        "expected": "Chờ xác nhận DD: máy khách hiện hiển thị trạng thái lỗi của danh mục `category`; không coi phản hồi sai cấu trúc là danh sách rỗng.",
+        "api_ids": [
+          "API-05",
+          "API-06"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; GS01Page; API source"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  },
+  "source_hashes": [
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/00-overview.md",
+      "sha256": "7145a41915ea97a44bee68ab451bdb7e4ceb61ced03a649545fa6f439335ac17"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/01-ui-elements.md",
+      "sha256": "b202a4cfc236875954b3d3eb9d1df0d0fa2de1260deb98f7ba38a804d53934cf"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/02-events.md",
+      "sha256": "859f983d991da2e3761d241d4b66dc46eafa1a981ade4bc1e0088a4f78f1add2"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/03-data-flow.md",
+      "sha256": "82907542d52b95dafda7ad4b4428a687551e8fbaf7111313ff1b4beb10baf8f4"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/04-api-integration.md",
+      "sha256": "a3cf06c2ad4e7f4a74afaafc48a11883a8cedf73d6263ae111a3167e83084543"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/05-business-rules.md",
+      "sha256": "6d1eeb0eaf1a85610b224f2055a44c72f6d1cb531a168f967218ae3f87d2f860"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/06-navigation.md",
+      "sha256": "a34b80e2a08366da4a5f6d98d5bc6d462f49ffb3950f7c5e47f596ba71ccee4d"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/07-test-cases.md",
+      "sha256": "455241635af4a8fcba95a79c90cecbe82725840c1cc519d9b4208c2e30350a06"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/images/README.md",
+      "sha256": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/images/screen-clean.png",
+      "sha256": "3ad9b03ef8862cc09e8879c3009318b097a6d7217b86f9144201ef10bb6251c7"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/images/screen-numbered.png",
+      "sha256": "105ea5777856da023f67a87c49b8da65b905cc3bedfcd5f5e0cd9707ff40ad37"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-01-DanhSachKhoaHoc/code.html",
+      "sha256": "d354d54db1ff21f8df8dd71fbf57c4836e751a0b021d76461d0c855968038fe5"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/GS-01_PLAN.md",
+      "sha256": "b8aebf55bfce4d303683e3caa4c46cf3d0547b3744055cd98452759b233ed703"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/GS-01.md",
+      "sha256": "00c4073539f5cd0535003401a85fc64a526395e7566deaad447c06160df91326"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/GS-01_markers.json",
+      "sha256": "cdd82d02928c9154e7c7cd48d030380265bd01fea0feb78ca6b57bd0538a3325"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/GS-01_markers_overlay.svg",
+      "sha256": "ff47fcfcb4b2a36db41797d4f35287bf62d56d154f8be1ff29c20da59b906632"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/screen.png",
+      "sha256": "3ad9b03ef8862cc09e8879c3009318b097a6d7217b86f9144201ef10bb6251c7"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/screen_annotated.png",
+      "sha256": "105ea5777856da023f67a87c49b8da65b905cc3bedfcd5f5e0cd9707ff40ad37"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/code.html",
+      "sha256": "d354d54db1ff21f8df8dd71fbf57c4836e751a0b021d76461d0c855968038fe5"
+    },
+    {
+      "path": "apps/study-client/src/app/app.routes.ts",
+      "sha256": "b0569672d1722393a95314564b97883f578c4ca51ef6212d0f8afb73fca21fa4"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/guest.route.ts",
+      "sha256": "00a2182ee9148c3c88ab859c2581d7ba7f824918af0e1ef0369c6ff4a439e7c0"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/pages/gs01-page.ts",
+      "sha256": "ae2825af7a27f7300f3e4303951320e435a4dda80637cef109e6fb076aa293d1"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/pages/gs01-page.html",
+      "sha256": "2164afbd7924333214e35e1136bc25d04bfc5e71b3ecb88307ad001520bd4c3d"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/pages/gs01-page.css",
+      "sha256": "97e198a4367683c227bfc71487ba4ce3230f946442a2e3db2b0da285ac75e72b"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/pages/gs01-page.spec.ts",
+      "sha256": "b72af7db024f72341dc54628f26aa1231715c6e58b63b4814be1ebee36c6b7f8"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/data-access/gs01-catalog.service.ts",
+      "sha256": "49818afe779f3b84a34d5c2c0d155bef39f23f6df672f416d67699bf1a15cb94"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/models/gs01-catalog.models.ts",
+      "sha256": "b849e217824cd3bf24016e335fcb72b38c9674affc424a843b26fa104d224bd6"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/ui/gs01-hero.ts",
+      "sha256": "5ffecd85893f4d11041f62056a4032a1531b5b79b497c7d22efaa0e2782b11b8"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/ui/gs01-hero.html",
+      "sha256": "e45ad472d464df0b3504ca439be8edb7922930039035ad90bd244370cb56c142"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/ui/gs01-hero.css",
+      "sha256": "976a84373e2349d363b00830879ae1ed072702cf7e40b5705ecfc3e870f54a20"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/ui/gs01-course-card.ts",
+      "sha256": "0ec8e436504a47915b89f5467c4af9886ab63ba251dd2923fdc8e3e98f7bd77e"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/ui/gs01-course-card.html",
+      "sha256": "c6c5794ffff2f9cfc2e5a807df2edbf12e40ba8f56efd09be1bbaa94422f9632"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS01/ui/gs01-course-card.css",
+      "sha256": "8e5f41b79a2545c634f92998c7831508b3aa74988f50609aea4ddd939166f727"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.ts",
+      "sha256": "6b3fd0cd6c5c42d19778e7afd31439f1a90895e71e7f9633a3abb72c2b75f730"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html",
+      "sha256": "4484ed10cff9e3b37cd6f0de66617690fab38263353060e7d455b0f7522f4379"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.css",
+      "sha256": "58c7836da5c4d95ef0c31bc62d8bd853503cdcf82b6966656e700939c6ce2344"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/models/guest-course.models.ts",
+      "sha256": "53823664a6aa665f21f8890a0da071a73ae1692499ad880008487b8f1320c6ef"
+    },
+    {
+      "path": "apps/study-client/src/app/core/constant/api.constants.ts",
+      "sha256": "9594a140cda48618388cd22e0c3e6cd1d07467e7c610bfa3748fb370fc508170"
+    },
+    {
+      "path": "apps/study-client/src/app/core/http/study-api.service.ts",
+      "sha256": "df69f5c5c6ffd146cdacb2422f2fdde54f97e42c44415526375c0c94659d41fb"
+    },
+    {
+      "path": "apps/study-client/src/app/core/http/api-envelope.ts",
+      "sha256": "c2ff76ec6a1a2963b9b3eaa22c55d158001d6ae4df52383c298c52fd37857b63"
+    },
+    {
+      "path": "apps/study-server/app/api/v1.py",
+      "sha256": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_05_categories/models.py",
+      "sha256": "c14dfe434dd67eebfdd11da745b913331d1c0a9fe09f28f884b7cde6d660ba2d"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_05_categories/validate.py",
+      "sha256": "310944e3f0a1058064876e69e65c76afd7bb5586f52409548c2ddd38d529bc65"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_05_categories/query.py",
+      "sha256": "39df7ec94a4f87347408c76abcd9e323c194830ad32a300316dabfc10907dde1"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_05_categories/view.py",
+      "sha256": "141d73559bcb92b2b56315c6fa248693cf967025ed3b4b68bdf7de5e2c91708d"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_06_courses/models.py",
+      "sha256": "c6e5c88d5dcb661e6db756dc68af93877a0f8b48fa6b150db98dafdca4110132"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_06_courses/validate.py",
+      "sha256": "79743f132a65b1f9813efcbe7491a8491338f640025913be485102290e0f1432"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_06_courses/query.py",
+      "sha256": "def9cd532603afc84031cd2e555e590ef75749cd5bdd1ba5c00bd8a142121346"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_06_courses/view.py",
+      "sha256": "0736f88c179ac3e3fe13d487579d85e5914e342d36ccf96d74e72d543e82a91c"
+    },
+    {
+      "path": "apps/study-server/app/modules/shared/course_catalog/helpers.py",
+      "sha256": "a0001447ef12d6a654c1fb8ccd5c0517911b3de4e61ea762f629bc9fc37a2157"
+    },
+    {
+      "path": "apps/study-server/app/modules/shared/course_catalog/models.py",
+      "sha256": "5074b095c69c0e63bfa77a93e417ac7c776f1e8b6a7e307ae5022b8e7e147ca8"
+    },
+    {
+      "path": "apps/study-server/app/modules/shared/course_catalog/constants.py",
+      "sha256": "092446d26f167db418a3f258d44948a346d533145f5fca6b4fba0b0f525ed45f"
+    },
+    {
+      "path": "apps/study-server/app/utils/validate.py",
+      "sha256": "6b8e7bd78c13ee85711a478058819eb798533fd3ea89e47fe36e943eeca04ccd"
+    },
+    {
+      "path": "apps/study-server/app/core/responses.py",
+      "sha256": "0c2f073d188c4e7aa0b633121621ed1eb9fa4125e910cdf0589233a07adab1ee"
+    },
+    {
+      "path": "apps/study-server/tests/modules/guest/api_05_categories/test_categories.py",
+      "sha256": "d1ab37957a76e466ccdcc6ebdd8fdcee5fcfb6d872558d06955d1441d68eccef"
+    },
+    {
+      "path": "apps/study-server/tests/modules/guest/api_06_courses/test_courses.py",
+      "sha256": "0f30edc9eb63e95b701dc7aa37d9e0fe7e5d4061eac1f2640e00eb224a29a82e"
+    },
+    {
+      "path": "apps/study-server/docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio",
+      "sha256": "e371500b66dac5b39c96ae8c01ec5a0001af9f13d72ba32455a076b319041526"
+    },
+    {
+      "path": "infra/postgres/study-server/DB.sql",
+      "sha256": "8beedb93d0eae21a2cc4d9851c48382dc9dd68a9cfecdf213ceba9bbf279cba2"
+    },
+    {
+      "path": "docs/lists/list_api.md",
+      "sha256": "569e2a3c630d8f6af299125ec34db097ce34f4223af1bffd428c11af7b210600"
+    },
+    {
+      "path": ".agents/web-work/study/AGENTS.md",
+      "sha256": "c1a06701baf47a371c85ffc5dbd3ebc8fe51948b5085648c05e9010a37dc62ec"
+    },
+    {
+      "path": ".agents/web-work/study/INDEX.md",
+      "sha256": "d63725d7671727c68ba317bf19b7f434c3559591265500f36ee53fd8d551de1d"
+    },
+    {
+      "path": ".agents/web-study/design.md",
+      "sha256": "7f94a43b71ac8ed4bfa706a38639f6de9b31ca4d7c327cc133d60885327bf5a0"
+    }
+  ]
+}

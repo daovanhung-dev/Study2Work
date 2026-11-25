@@ -1,0 +1,3775 @@
+{
+  "metadata": {
+    "screen_id": "ME-18",
+    "screen_name": "Phân tích khóa học",
+    "module": "Study Web — Mentor",
+    "route": "/mentor/courses/:courseId/analytics",
+    "actor": "Mentor đã đăng nhập",
+    "version": "1.0 — UTC theo DD nguồn, chưa được phê duyệt phát hành",
+    "dd_version": "ME-18 — Bản nháp, đang chặn triển khai",
+    "dd_status": "Bản nháp — Đang chặn triển khai",
+    "runtime_status": "Route, service và trang Angular có trong mã nguồn; trình duyệt, môi trường đích và lược đồ thật chưa xác minh.",
+    "author": "Chưa được chỉ định",
+    "reviewer": "Chưa được chỉ định",
+    "approver": "Chưa được chỉ định",
+    "date": "2026-11-24",
+    "source_name": "ME-18 — Phân tích khóa học",
+    "baseline_authorization": "Người dùng xác nhận DD đang chặn vẫn là tài liệu chuẩn để lập UTC; câu hỏi mở không được xem là quyết định đã duyệt.",
+    "release_readiness": "Chưa đủ điều kiện phát hành: phản hồi danh mục khác mã nguồn; chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)), kỳ, quyền, lịch sử sự kiện, export và luồng liên màn hình còn điểm chặn.",
+    "discrepancy_note": "Tách DD/ảnh mẫu khỏi mã nguồn Angular/API. Danh mục khai báo ApiEnvelope<Page<Course>> còn cục bộ trả số liệu suy ra từ tiến độ hiện có; ảnh có chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)), khoảng thời gian, CSV và ETL không có trong API. DD cũ ghi Study Web chưa wire nhưng mã nguồn hiện có route/trang/service; môi trường chạy chưa xác minh.",
+    "verification_boundary": "Đã đối chiếu tài liệu/mã nguồn cục bộ; chưa chạy kiểm thử sản phẩm hoặc trình duyệt, chưa xác minh dữ liệu, lược đồ thật hay deployment.",
+    "source_hashes": [
+      {
+        "path": "apps/study-client/docs/list_screen.md",
+        "sha256": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md",
+        "sha256": "afcda8541205476a3145c178356d46c854cd6d82b6ca8745d7b64059a7b0b61d"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+        "sha256": "82ce9054c062c867d5fe50eb36eae65b31dfc662b1274f4be5b35f58a7d57453"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+        "sha256": "05a9bcd1e91e32baa35851b98139bba0dbfdaaf6de09339b4c14e493fa625893"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/03-data-flow.md",
+        "sha256": "99bdd889fba22aea022e482698e6ac2abe45f864204f24922c73c754b7c93737"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/04-api-integration.md",
+        "sha256": "be5bc509371f1cfa0e67547207205d37f8726e34b572a40542ee4973dd6874a3"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/05-business-rules.md",
+        "sha256": "0a630da4378231c1c79b9af61c9b42f56c8b4326da803dd7c8a0b851338de225"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/06-navigation.md",
+        "sha256": "f2884a0adf3b33a7e8a3f8631baa42bd76948de16d1eeaf364f386f6b6f4a445"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/07-test-cases.md",
+        "sha256": "c300ec261727c6210577d6621659606ed96d69ec5beda204b735bce6648aa887"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/code.html",
+        "sha256": "45bc8a7c267a2de2c73a1bedc9b170620334f29b4fe1f89a2e3cd7bd7d367564"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/images/screen-clean.png",
+        "sha256": "8141f4a9670d5a41a82016613928a6abbbfd82ad50bc84049645cbe2a565bb8f"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/images/screen-numbered.png",
+        "sha256": "808b3e54b19c6495589eecaa5d8ea623fb0950ffc4b3273e34c87ba3606dbc0e"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+        "sha256": "ed414ba998a785565e2fe3d2bb1f1a1cd9daf7e541fa4f8b5dae5590b5ed9045"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_PLAN.md",
+        "sha256": "0c212421d69fea48aed3c834aa5cc0ad983ad7b1ee20c72c4652e54b563b8bf9"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+        "sha256": "e0dc20422c8915de6731ce16351043042376b5df5a9968cb6c6d96fe4e639f2d"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.svg",
+        "sha256": "871ea3c1c4bc10d10227bcdb39472adb2a5785147d19e6a34fcc0b7c48fd6063"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/code.html",
+        "sha256": "45bc8a7c267a2de2c73a1bedc9b170620334f29b4fe1f89a2e3cd7bd7d367564"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/screen.png",
+        "sha256": "8141f4a9670d5a41a82016613928a6abbbfd82ad50bc84049645cbe2a565bb8f"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/screen_annotated.png",
+        "sha256": "808b3e54b19c6495589eecaa5d8ea623fb0950ffc4b3273e34c87ba3606dbc0e"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/mentor.route.ts",
+        "sha256": "e06357d47f5318efd79109ebd1b4aa4efd06898f19741cbbd0ebeb54b31a89e1"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+        "sha256": "b6bd5ab29d214b74576845ef643bf5d7cea7be9e277c5e4153443d49a15a4cc5"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+        "sha256": "e8e0ebac754b6267434ed87e7acd678ceac6350389737bd10621698e3b0d9cee"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.css",
+        "sha256": "2207ac733202483583a1517c0a092a578897de6a4d25a6c5c994266c60c5a58c"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts",
+        "sha256": "feb4b5fd079afe0e5c0389fb3a631e934359214a7ff840729a7b663f132e8ceb"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME18/models/README.md",
+        "sha256": "53bac8a021cd2b9a3d7c7df39ba0d25f0435c68e3c71d6df177aa6c6f31be3d3"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts",
+        "sha256": "2331a5aeed9174c3dcffe45f1358505be6eaea935bbfa441d894fdb20972fea2"
+      },
+      {
+        "path": "apps/study-client/src/app/core/constant/api.constants.ts",
+        "sha256": "9594a140cda48618388cd22e0c3e6cd1d07467e7c610bfa3748fb370fc508170"
+      },
+      {
+        "path": "apps/study-client/src/app/core/http/api-envelope.ts",
+        "sha256": "c2ff76ec6a1a2963b9b3eaa22c55d158001d6ae4df52383c298c52fd37857b63"
+      },
+      {
+        "path": "docs/lists/list_api.md",
+        "sha256": "569e2a3c630d8f6af299125ec34db097ce34f4223af1bffd428c11af7b210600"
+      },
+      {
+        "path": "apps/study-server/app/api/v1.py",
+        "sha256": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf"
+      },
+      {
+        "path": "apps/study-server/app/core/responses.py",
+        "sha256": "0c2f073d188c4e7aa0b633121621ed1eb9fa4125e910cdf0589233a07adab1ee"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py",
+        "sha256": "7c7915cbc091118ddfb8d76d6bc093a796e8aa23a2adf0ea7d74eab033c813b5"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py",
+        "sha256": "b6f151c71a472e6571eb81c351e51c470d7464c715c6757e15ed58ee96ed9d44"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py",
+        "sha256": "6653e61fac263508e884c2c116e4a339798d45478ec02e219cd6b4408644f0b2"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/validate.py",
+        "sha256": "59989113361600e19d5883c7ca9242b7663860464291ee37dca8618951f42af6"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/__init__.py",
+        "sha256": "e23401d3de38ef11115582abb1ec7f16bee23873451a0f56c81f61f6c390ba54"
+      },
+      {
+        "path": "apps/study-server/tests/modules/mentor/api_66_mentor_course_analytics/test_mentor_course_analytics.py",
+        "sha256": "0a77e0792f79cd1a39f553eeb6f45b862161dd5745d510c5da2be4e17557cb38"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/00_Cover.md",
+        "sha256": "b4e179e32783ff16f2d0ae1ac5e018497f5040c608b7298ecdbeaffa0808bb8a"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/01_Lich_su.md",
+        "sha256": "1a269bd73f7cf32b5183f4911718d78f69b7d5c62eb97bec543900d0b5124c9c"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/02_Overview.md",
+        "sha256": "212a440b40372b09299915c415cf8b29f9d4f22d2b893530851c3638cbe20366"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/03_Request.md",
+        "sha256": "f3f193c4d69401cf54e261ed3b23020b38f582b31ab80592d8e813000a10eb01"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md",
+        "sha256": "8345d87f11614b9f6dc5e923c3eb6ab2e119ac33b183e9bb5b7613d9b3b61bc3"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/05_Data_Mapping.md",
+        "sha256": "e9b23dd6f9feab43cf9554f5225ba02f602d6e6a915c3f31806988f7e6239b57"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/06_Error.md",
+        "sha256": "fae9b8c92e03aedd6de4d771bff5558591bb3944c58aadb9c819502a6aefb8d4"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/07_table.md",
+        "sha256": "af29fb9f20f07264f8850ecac279142d17c35c0b21c783b7407a9d2679d93ec9"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+        "sha256": "ef87095f8f3c60212a6e92095f8f670750036af794d16ce31e7ad6ce9222901a"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/VERIFICATION_REPORT.md",
+        "sha256": "39056460090734652b9f86aebe2303dce9b1aeedb6028fff083ec8dddf90d89f"
+      },
+      {
+        "path": "apps/study-server/docs/dd/66_mentor_course_analytics/PLAN_RESULT.md",
+        "sha256": "66d16d97df1f1fce36b292d2112185a6845631607cd7f7c43e0e619e0ebfd143"
+      },
+      {
+        "path": ".agents/project/INDEX.md",
+        "sha256": "27e089e480128abe7949eff11ea7b1ba49c5e7f604d384cf2e964c65c5452b08"
+      },
+      {
+        "path": ".agents/project/architecture.md",
+        "sha256": "4b383389f3f9edbe3ae119d6169ffdca18652b953df8ea07f78f97f303889836"
+      },
+      {
+        "path": ".agents/project/dependencies.md",
+        "sha256": "00ecc45a09b9e050f400ee0caa9502ee5c96f5a6a1b7e4f48539869c7cc68e4f"
+      },
+      {
+        "path": ".agents/project/contracts.md",
+        "sha256": "8fcb7b582f26ccccffa891bb3d5ded2d71ef0b854516cf6d144bf5be9f6dbf46"
+      },
+      {
+        "path": ".agents/project/source-status.md",
+        "sha256": "758f2caf322622a7e6ff9093160ecacbe89cb4b850ec74aa17308dba4798e0d5"
+      },
+      {
+        "path": ".agents/server-study/AGENTS.md",
+        "sha256": "991ab5548b25257376b44242129e30dc591105d152e659de85e39d435b83f498"
+      },
+      {
+        "path": ".agents/server-study/INDEX.md",
+        "sha256": "97fd2068a7b71547a18733d03ad1271396ca1b4d14ddff76950660fd93a3958d"
+      },
+      {
+        "path": ".agents/server-study/modules/README.md",
+        "sha256": "eb2bea0fb3638ba9ebf8a8ae3679bd589d7c2f7d864ac595cccf6a7c02112aa6"
+      },
+      {
+        "path": ".agents/server-study/apis/declared-routes.md",
+        "sha256": "98a1e6c418f06982bb5e9a690be4d4bf73de3d5766055e34392a4b340d200ab4"
+      },
+      {
+        "path": ".agents/server-study/tests.md",
+        "sha256": "e9a5c66a0ff127070041278368e8b0572dcb02f73cc5bf0d3a05ad04189032bb"
+      },
+      {
+        "path": ".agents/server-study/database.md",
+        "sha256": "241ffa6650395ecbefc8b23bf9c1fa51873db46c9c314fef015dddc008278e3e"
+      },
+      {
+        "path": "apps/study-client/docs/utc_screens/utc-spec-ME17.json",
+        "sha256": "53d5dff560368b0fe81e78162ed90bddc3c79f4311060e9c8205c4697ce5d770"
+      },
+      {
+        "path": "apps/study-client/docs/utc_screens/UTC_ME-14_SoanThongBaoMentor.xlsx",
+        "sha256": "88daa02f93ffbf464424812c0f8942cf77238f7fb489125e458a1ef362098769"
+      }
+    ]
+  },
+  "overall": {
+    "objective": "Cho Mentor xem dữ liệu hoạt động mà API #66 thực sự cung cấp sau khi phản hồi, ý nghĩa chỉ số và luồng được xác nhận.",
+    "inputs": "CourseId trên tuyến; phiên Bearer JWT với role MENTOR; phản hồi API #66 theo hợp đồng được duyệt.",
+    "outputs": "ID lỗi, đang tải, lỗi/thử lại hoặc số liệu suy ra từ tiến độ hiện có gồm số cặp học viên/bài học có mốc thời gian, số học viên phân biệt và mốc thời gian gần nhất; không phải lịch sử sự kiện.",
+    "main_flow": "Đọc courseId → kiểm tra ID → GET #66 → kiểm tra gói phản hồi/số liệu tổng hợp → hiển thị ba trường tổng hợp từ dữ liệu tiến độ hiện có cùng giới hạn; có thể tải lại hoặc về không gian làm việc.",
+    "preconditions": "Mentor đăng nhập; ID dương an toàn; chủ sở hữu trực tiếp/chính sách dành cho người được phân công, phản hồi và phân tích ý nghĩa còn chờ xác nhận.",
+    "states": [
+      "Mã khóa học không hợp lệ",
+      "Đang tải",
+      "Lỗi và có thể thử lại",
+      "Có số liệu suy ra từ tiến độ hiện có",
+      "Không có cặp dữ liệu phù hợp"
+    ],
+    "security": "Bearer JWT và role MENTOR; máy chủ mã nguồn hiện kiểm tra chủ sở hữu trực tiếp trước kết quả tổng hợp. Quyền, lược đồ thật và dữ liệu môi trường cần xác minh.",
+    "out_of_scope": "Không suy ra chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) completion/duration/discussion; không lọc thời gian, xuất CSV, gọi ETL, dựng lịch sử sự kiện hoặc gọi #65/#67 theo giả định.",
+    "summary": {
+      "requirements": 35,
+      "elements": 49,
+      "events": 9,
+      "apis": 1,
+      "blockers": 14,
+      "test_cases": {
+        "screen": 20,
+        "elements": 49,
+        "events": 9,
+        "total": 78
+      }
+    }
+  },
+  "apis": [
+    {
+      "id": "API-066",
+      "number": "66",
+      "method": "GET",
+      "path": "/api/v1/mentor/courses/{course_id}/analytics",
+      "request": "Đường dẫn bắt buộc course_id:int64; Bearer JWT; không có truy vấn hoặc nội dung gửi. Ứng dụng web hiện chỉ truyền ID nguyên dương an toàn.",
+      "response": "Danh mục: ApiEnvelope<Page<Course>>. Cục bộ mã nguồn: ApiEnvelope với tracked_lesson_accesses, students_with_activity, last_activity_at. Hai dạng chưa thống nhất.",
+      "errors": "Danh mục nêu 401/403/404/500. Cục bộ: lỗi auth/role 401 hoặc 403; ID sai/không có khóa học 404; truy vấn/projection lỗi 500.",
+      "auth": "Bearer JWT, role MENTOR; mã nguồn cục bộ yêu cầu Mentor sở hữu trực tiếp khóa học. Mentor được phân công chưa chốt.",
+      "design_status": "Bản nháp — Cần xác nhận; lược đồ phản hồi trong danh mục khác mã hiện hành, ý nghĩa chỉ số và quyền còn câu hỏi mở.",
+      "event_ids": [
+        "ME-18-EV-001",
+        "ME-18-EV-002",
+        "ME-18-EV-003",
+        "ME-18-EV-005"
+      ],
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/66_mentor_course_analytics/00_Cover.md; apps/study-server/docs/dd/66_mentor_course_analytics/03_Request.md; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ME-18-YC-001",
+      "description": "Mã nguồn hiện đăng ký tuyến /mentor/courses/:courseId/analytics và gắn API #66; chạy trên trình duyệt chưa được xác minh.",
+      "group": "Tuyến và trạng thái nguồn",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/docs/list_screen.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-002",
+      "description": "Ứng dụng web chỉ gọi API khi courseId là số nguyên dương an toàn; ID thiếu, sai định dạng hoặc vượt miền an toàn không được gửi.",
+      "group": "Tuyến và dữ liệu",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-003",
+      "description": "Yêu cầu hiện hành là GET /api/v1/mentor/courses/{course_id}/analytics; chỉ truyền course_id trên đường dẫn, không có truy vấn hoặc nội dung gửi.",
+      "group": "Tích hợp API",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts; docs/lists/list_api.md; apps/study-server/docs/dd/66_mentor_course_analytics/03_Request.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-004",
+      "description": "API #66 yêu cầu Bearer JWT với vai trò MENTOR trước khi truy cập cơ sở data.",
+      "group": "Quyền truy cập",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/docs/dd/66_mentor_course_analytics/02_Overview.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-005",
+      "description": "Máy chủ phân tích course_id theo kiểu số nguyên có dấu 64 bit; ID sai định dạng hoặc ngoài miền hiện trả 404 DESIGN_RESOURCE_NOT_FOUND.",
+      "group": "Quyền truy cập",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/validate.py; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/docs/dd/66_mentor_course_analytics/06_Error.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-006",
+      "description": "Mã máy chủ hiện chỉ cho Mentor sở hữu trực tiếp khóa học; khóa học không thuộc quyền trả 403 trước kết quả tổng hợp. Mentor được phân công chưa chốt.",
+      "group": "Quyền truy cập",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "Chưa có quyết định cho Mentor được phân công hoặc quan hệ ownership trên môi trường thật.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-007",
+      "description": "Danh mục khai báo ApiEnvelope<Page<Course>>, trong khi máy chủ và ứng dụng web cục bộ dùng đối tượng số liệu tổng hợp; hai dạng phản hồi chưa thống nhất.",
+      "group": "Sai khác hợp đồng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+      "notes": "Không coi phản hồi cục bộ là hợp đồng đã duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-008",
+      "description": "Phản hồi cục bộ hiện có tracked_lesson_accesses, students_with_activity và last_activity_at; cấu trúc đang chờ xác nhận.",
+      "group": "Sai khác hợp đồng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-009",
+      "description": "Tracked_lesson_accesses đếm cặp học viên/bài học phân biệt có last_accessed_at; không đếm số lần truy cập hoặc sự kiện học tập.",
+      "group": "Ý nghĩa số liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/docs/dd/66_mentor_course_analytics/02_Overview.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "Người phụ trách chưa xác nhận suy ra từ tiến độ hiện có có thể thay lịch sử sự kiện.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-010",
+      "description": "Students_with_activity đếm học viên phân biệt trong các cặp dữ liệu suy ra từ tiến độ hiện có; không phải tổng số ghi danh.",
+      "group": "Ý nghĩa số liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-011",
+      "description": "Last_activity_at là mốc thời gian lớn nhất trong tiến độ phù hợp; khi rỗng thì null.",
+      "group": "Ý nghĩa số liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-012",
+      "description": "Truy vấn cục bộ chỉ lấy bài học PUBLISHED, người dùng có vai trò STUDENT và mốc thời gian khác null; không kiểm tra ghi danh ACTIVE.",
+      "group": "Ý nghĩa số liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/docs/dd/66_mentor_course_analytics/05_Data_Mapping.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "Đây là hành vi mã nguồn, chưa phải quy tắc nghiệp vụ được duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-013",
+      "description": "Kết quả tổng hợp rỗng hiện trả 0, 0, null; chỉ nói không có dòng suy ra từ tiến độ hiện có phù hợp, không chứng minh không có học viên hoặc luồng dữ liệu chưa chạy.",
+      "group": "Ý nghĩa trạng thái rỗng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-014",
+      "description": "Ứng dụng web kiểm tra gói phản hồi, businessCode, số đếm không âm/an toàn, quan hệ giữa hai số đếm và mốc thời gian phân tích được.",
+      "group": "Kiểm tra phản hồi",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts; apps/study-client/src/app/core/http/api-envelope.ts",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-015",
+      "description": "Ứng dụng web yêu cầu kết quả tổng hợp bằng 0 thì số học viên bằng 0 và mốc thời gian null; nếu có kết quả thì số học viên dương và mốc thời gian khác null.",
+      "group": "Kiểm tra phản hồi",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-016",
+      "description": "Khi courseId thay đổi, ứng dụng web xóa dữ liệu cũ, hủy lượt đọc trước và chỉ dùng phản hồi khớp ID hiện hành.",
+      "group": "Vòng đời lượt đọc",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-017",
+      "description": "Mã giao diện có trạng thái đang tải, ID không hợp lệ, lỗi có thể thử lại và số liệu tổng hợp thành công.",
+      "group": "Trạng thái giao diện",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/docs/list_screen.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-018",
+      "description": "Angular chỉ hiển thị ba trường số liệu tổng hợp cục bộ và giải thích phạm vi; không dựng tỷ lệ hoàn thành, thời lượng trung bình hoặc tương tác thảo luận.",
+      "group": "Giới hạn nội dung",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-019",
+      "description": "Thông báo khi số liệu tổng hợp rỗng chỉ nêu không có cặp học viên/bài học kèm mốc thời gian; không gán trạng thái ETL hoặc đồng bộ.",
+      "group": "Ý nghĩa trạng thái rỗng",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-020",
+      "description": "Ảnh có bộ chọn thời gian đang tắt; Angular hiện không có bộ chọn và API không khai báo tham số thời gian.",
+      "group": "Khác biệt thiết kế và mã",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts; apps/study-server/docs/dd/66_mentor_course_analytics/03_Request.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-021",
+      "description": "Ảnh có nút CSV đang tắt; Angular/API hiện không cung cấp chức năng xuất.",
+      "group": "Khác biệt thiết kế và mã",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-022",
+      "description": "Nút Kiểm tra đồng bộ lại trong Angular tải lại API #66; HTML mẫu chỉ đổi nội dung nút bằng bộ hẹn giờ, không gửi lượt gọi.",
+      "group": "Khác biệt thiết kế và mã",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/code.html",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-023",
+      "description": "API #66 chỉ đọc, không ghi cơ sở dữ liệu và không gọi API #65 hoặc #67.",
+      "group": "Tác động dữ liệu",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/docs/dd/66_mentor_course_analytics/02_Overview.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-024",
+      "description": "Liên kết Angular Về không gian làm việc tạo tuyến /mentor/courses/:courseId; DD nói quay lại ME-16 còn mẫu giao diện dùng href=\"#\".",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/06-navigation.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-025",
+      "description": "Nhãn khóa học, học kỳ, tình trạng đồng bộ, ETL, WCAG và lược đồ trong ảnh là nội dung tĩnh, không có trường tương ứng trong #66.",
+      "group": "Giới hạn nội dung",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-026",
+      "description": "Ba chỉ số hiệu quả chính (KPI) trong ảnh không phải ba trường số liệu tổng hợp hiện hành; không ánh xạ dữ liệu suy ra từ tiến độ hiện có vào các chỉ số hiệu quả chính (KPI) đó.",
+      "group": "Sai khác thiết kế và dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-027",
+      "description": "AC-26 xếp #66 trước bước chọn học viên/#67; inventory tách ME-18 và ME-17. Thứ tự liên màn hình chưa chốt.",
+      "group": "Luồng liên màn hình",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md; apps/study-client/docs/list_screen.md; apps/study-server/docs/dd/66_mentor_course_analytics/02_Overview.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-028",
+      "description": "Danh mục liệt kê lỗi 401/403/404/500; không tự thêm mã lỗi khác.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/66_mentor_course_analytics/06_Error.md; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/app/core/responses.py",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-029",
+      "description": "Ứng dụng web chuyển lỗi lượt gọi sang thông báo và cho phép tải lại; xử lý phiên hết hạn/network chưa xác minh trên trình duyệt.",
+      "group": "Xử lý lỗi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-030",
+      "description": "DD/API #66 vẫn ở trạng thái Bản nháp — Cần xác nhận; câu hỏi về sổ ghi sự kiện, phản hồi, quyền, khoảng thời gian và mốc thời gian còn mở.",
+      "group": "Mức sẵn sàng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md; apps/study-server/docs/dd/66_mentor_course_analytics/00_Cover.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-031",
+      "description": "Mã nguồn có route, service và trang Angular dù DD cũ ghi Study Web chưa wire; trình duyệt/môi trường chạy vẫn chưa xác minh.",
+      "group": "Sai khác bằng chứng",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-032",
+      "description": "Kiểm thử API #66 dùng cơ sở dữ liệu giả; không chứng minh lược đồ thật hoặc triển khai môi trường.",
+      "group": "Môi trường và dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/tests/modules/mentor/api_66_mentor_course_analytics/test_mentor_course_analytics.py; apps/study-server/docs/dd/66_mentor_course_analytics/VERIFICATION_REPORT.md; .agents/server-study/database.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-033",
+      "description": "Phiên lập UTC này không chạy kiểm thử sản phẩm, trình duyệt, lược đồ thật hoặc deployment.",
+      "group": "Ranh giới kiểm chứng",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-server/tests/modules/mentor/api_66_mentor_course_analytics/test_mentor_course_analytics.py; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-034",
+      "description": "Nguồn đã đối chiếu không chỉ định người phụ trách, người rà soát hoặc người phê duyệt; không tự điền danh tính.",
+      "group": "Mức sẵn sàng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md; apps/study-server/docs/dd/66_mentor_course_analytics/00_Cover.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "notes": "",
+      "priority": "Cao"
+    },
+    {
+      "id": "ME-18-YC-035",
+      "description": "UTC tách yêu cầu trong DD/mẫu, hành vi mã nguồn hiện tại và quyết định chưa chốt; không gộp thành một hợp đồng.",
+      "group": "Nguyên tắc truy vết",
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md; apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+      "notes": "",
+      "priority": "Cao"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ME-18-EL-001",
+      "marker": "#1",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Thương hiệu Study2Work và nhãn hệ thống Mentor",
+      "type": "Liên kết thương hiệu",
+      "position": "Đầu trang, tọa độ (22, 15) trên ảnh 1600×1380",
+      "properties": "Ảnh là mẫu tĩnh; không chứng minh ứng dụng môi trường chạy có cùng cấu trúc.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #1; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-002",
+      "marker": "#2",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Điều hướng Tổng quan",
+      "type": "Liên kết điều hướng",
+      "position": "Đầu trang, tọa độ (290, 15) trên ảnh 1600×1380",
+      "properties": "Anchor dùng href=\"#\"; chưa có đích được xác nhận.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #2; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-003",
+      "marker": "#3",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Điều hướng Khóa học phụ trách",
+      "type": "Liên kết điều hướng",
+      "position": "Đầu trang, tọa độ (406, 15) trên ảnh 1600×1380",
+      "properties": "Trạng thái được tô sáng là hình mẫu, không xác nhận route.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #3; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-004",
+      "marker": "#4",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Điều hướng Chấm bài",
+      "type": "Liên kết điều hướng",
+      "position": "Đầu trang, tọa độ (625, 15) trên ảnh 1600×1380",
+      "properties": "Liên kết giữ chỗ; chưa có đích hoặc API.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #4; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-005",
+      "marker": "#5",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Điều hướng Hộp thư hỗ trợ",
+      "type": "Liên kết điều hướng",
+      "position": "Đầu trang, tọa độ (744, 15) trên ảnh 1600×1380",
+      "properties": "Liên kết giữ chỗ; chưa có đích hoặc API.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #5; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-006",
+      "marker": "#6",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Điều hướng Thông báo",
+      "type": "Liên kết điều hướng",
+      "position": "Đầu trang, tọa độ (911, 15) trên ảnh 1600×1380",
+      "properties": "Liên kết giữ chỗ; chưa có đích hoặc API.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #6; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-007",
+      "marker": "#7",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Chuông thông báo và dấu chưa đọc",
+      "type": "Liên kết thông báo",
+      "position": "Đầu trang, tọa độ (1248, 15) trên ảnh 1600×1380",
+      "properties": "Dấu chưa đọc không có nguồn dữ liệu được đối chiếu.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #7; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-008",
+      "marker": "#8",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Tên, vai trò và ảnh đại diện Mentor",
+      "type": "Thông tin hồ sơ",
+      "position": "Đầu trang, tọa độ (1328, 15) trên ảnh 1600×1380",
+      "properties": "Tên và vai trò trong ảnh không do #66 trả về.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #8; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-009",
+      "marker": "#9",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Liên kết về Khóa học phụ trách",
+      "type": "Liên kết đường dẫn",
+      "position": "Đường dẫn điều hướng, tọa độ (25, 130) trên ảnh 1600×1380",
+      "properties": "Liên kết giữ chỗ; chưa chứng minh có route.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #9; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-010",
+      "marker": "#10",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Liên kết tên và mã khóa học",
+      "type": "Liên kết đường dẫn",
+      "position": "Đường dẫn điều hướng, tọa độ (230, 130) trên ảnh 1600×1380",
+      "properties": "Tên và mã khóa học không có trong phản hồi #66.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #10; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-011",
+      "marker": "#11",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn đường dẫn trang hiện tại",
+      "type": "Nhãn trang hiện tại",
+      "position": "Đường dẫn điều hướng, tọa độ (608, 130) trên ảnh 1600×1380",
+      "properties": "Nhãn trang hiện tại là nội dung tĩnh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #11; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-012",
+      "marker": "#12",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn học kỳ",
+      "type": "Nhãn học kỳ",
+      "position": "Thông tin khóa học, tọa độ (25, 231) trên ảnh 1600×1380",
+      "properties": "Học kỳ không có trong phản hồi #66.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #12; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-013",
+      "marker": "#13",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn trạng thái chờ đồng bộ khóa học",
+      "type": "Nhãn trạng thái",
+      "position": "Thông tin khóa học, tọa độ (422, 231) trên ảnh 1600×1380",
+      "properties": "Trạng thái đồng bộ không có trường trong phản hồi #66.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #13; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-014",
+      "marker": "#14",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Tiêu đề Phân tích và thống kê hiệu quả khóa học",
+      "type": "Tiêu đề chính",
+      "position": "Tiêu đề trang, tọa độ (25, 276) trên ảnh 1600×1380",
+      "properties": "Angular có tiêu đề riêng; chưa xác nhận tiêu đề mẫu đã vào môi trường chạy.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #14; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-015",
+      "marker": "#15",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Mô tả mục đích phân tích",
+      "type": "Mô tả trang",
+      "position": "Tiêu đề trang, tọa độ (25, 328) trên ảnh 1600×1380",
+      "properties": "Khả năng duy trì học tập và hiệu suất không được chứng minh bằng số liệu tổng hợp #66.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #15; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-016",
+      "marker": "#16",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn khung thời gian phân tích",
+      "type": "Nhãn",
+      "position": "Điều khiển phân tích, tọa độ (969, 184) trên ảnh 1600×1380",
+      "properties": "API #66 không có trường thời gian.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #16; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-017",
+      "marker": "#17",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Bộ chọn thời gian đang tắt",
+      "type": "Bộ chọn đang tắt",
+      "position": "Điều khiển phân tích, tọa độ (969, 230) trên ảnh 1600×1380",
+      "properties": "Mẫu tắt bộ chọn; Angular không có điều khiển này; chưa có định nghĩa kỳ.",
+      "event_ids": [
+        "ME-18-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #17; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-018",
+      "marker": "#18",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn tác vụ báo cáo",
+      "type": "Nhãn",
+      "position": "Điều khiển báo cáo, tọa độ (969, 282) trên ảnh 1600×1380",
+      "properties": "Nhãn tĩnh trong ảnh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #18; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-019",
+      "marker": "#19",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nút xuất CSV đang tắt",
+      "type": "Nút xuất đang tắt",
+      "position": "Điều khiển báo cáo, tọa độ (969, 327) trên ảnh 1600×1380",
+      "properties": "Mẫu tắt nút; Angular/API không có export.",
+      "event_ids": [
+        "ME-18-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #19; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-020",
+      "marker": "#20",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Thẻ chỉ số tỷ lệ hoàn thành",
+      "type": "Thẻ chỉ số",
+      "position": "Chỉ số phân tích, tọa độ (47, 408) trên ảnh 1600×1380",
+      "properties": "Tỷ lệ hoàn thành không có trong phản hồi; không suy từ số cặp dữ liệu suy ra từ tiến độ hiện có.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #20; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-021",
+      "marker": "#21",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Thẻ chỉ số thời lượng trung bình",
+      "type": "Thẻ chỉ số",
+      "position": "Chỉ số phân tích, tọa độ (563, 408) trên ảnh 1600×1380",
+      "properties": "Thời lượng trung bình không có trong phản hồi.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #21; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-022",
+      "marker": "#22",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Thẻ chỉ số tương tác thảo luận",
+      "type": "Thẻ chỉ số",
+      "position": "Chỉ số phân tích, tọa độ (1082, 408) trên ảnh 1600×1380",
+      "properties": "Tương tác thảo luận không có trong phản hồi.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #22; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-023",
+      "marker": "#23",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Hình minh họa phân tích trống",
+      "type": "Hình minh họa",
+      "position": "Trạng thái phân tích trống, tọa độ (714, 672) trên ảnh 1600×1380",
+      "properties": "Minh họa tĩnh không chứng minh trạng thái API.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #23; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-024",
+      "marker": "#24",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn trạng thái phân tích chưa kích hoạt",
+      "type": "Nhãn trạng thái phân tích",
+      "position": "Trạng thái phân tích trống, tọa độ (602, 816) trên ảnh 1600×1380",
+      "properties": "API không có cờ ETL hoặc kích hoạt phân tích.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #24; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-025",
+      "marker": "#25",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Tiêu đề chưa có số liệu phân tích",
+      "type": "Tiêu đề trạng thái trống",
+      "position": "Trạng thái phân tích trống, tọa độ (488, 869) trên ảnh 1600×1380",
+      "properties": "Tiêu đề mẫu không thay thế trạng thái số liệu tổng hợp 0/0/null.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #25; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-026",
+      "marker": "#26",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Mô tả trạng thái phân tích trống",
+      "type": "Mô tả trạng thái trống",
+      "position": "Trạng thái phân tích trống, tọa độ (383, 923) trên ảnh 1600×1380",
+      "properties": "Không suy diễn luồng dữ liệu hoặc số học viên từ kết quả tổng hợp rỗng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #26; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-027",
+      "marker": "#27",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Liên kết quay lại tiến độ toàn khóa ME-16",
+      "type": "Liên kết quay lại",
+      "position": "Trạng thái phân tích trống, tọa độ (446, 1052) trên ảnh 1600×1380",
+      "properties": "Mẫu giao diện dùng href=\"#\"; Angular đi về không gian làm việc, không phải ME-16.",
+      "event_ids": [
+        "ME-18-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #27; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-028",
+      "marker": "#28",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nút kiểm tra đồng bộ lại",
+      "type": "Nút kiểm tra đồng bộ",
+      "position": "Trạng thái phân tích trống, tọa độ (863, 1052) trên ảnh 1600×1380",
+      "properties": "Angular gọi lại #66; HTML mẫu chỉ đổi chữ/icon bằng bộ hẹn giờ.",
+      "event_ids": [
+        "ME-18-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #28; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-029",
+      "marker": "#29",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn tuyên bố tuân thủ WCAG 2.1 AA",
+      "type": "Tuyên bố tuân thủ",
+      "position": "Trạng thái phân tích trống, tọa độ (529, 1158) trên ảnh 1600×1380",
+      "properties": "Tuyên bố tuân thủ chưa được xác minh bằng audit.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #29; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-030",
+      "marker": "#30",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Nhãn sẵn sàng phân tích theo lược đồ v2.4",
+      "type": "Thành phần giao diện",
+      "position": "Trạng thái phân tích trống, tọa độ (798, 1158) trên ảnh 1600×1380",
+      "properties": "Phiên bản và trạng thái lược đồ không có nguồn trong phản hồi.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #30; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-031",
+      "marker": "#31",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Biểu trưng Study2Work chân trang",
+      "type": "Biểu trưng",
+      "position": "Chân trang, tọa độ (22, 1319) trên ảnh 1600×1380",
+      "properties": "Biểu trưng trang trí.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #31; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-032",
+      "marker": "#32",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Bản quyền và tiêu chuẩn chân trang",
+      "type": "Nội dung chân trang",
+      "position": "Chân trang, tọa độ (80, 1302) trên ảnh 1600×1380",
+      "properties": "Văn bản tĩnh; không phải bằng chứng kiểm định tiêu chuẩn.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #32; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-033",
+      "marker": "#33",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Liên kết Quy chế Giảng viên",
+      "type": "Liên kết chân trang",
+      "position": "Chân trang, tọa độ (1060, 1308) trên ảnh 1600×1380",
+      "properties": "Liên kết giữ chỗ; chưa có đích được xác nhận.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #33; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-034",
+      "marker": "#34",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Liên kết Tiêu chuẩn đánh giá",
+      "type": "Liên kết chân trang",
+      "position": "Chân trang, tọa độ (1244, 1308) trên ảnh 1600×1380",
+      "properties": "Liên kết giữ chỗ; chưa có đích được xác nhận.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #34; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-035",
+      "marker": "#35",
+      "source_element_id": "Chưa cấp trong JSON mốc nguồn",
+      "name": "Liên kết Hỗ trợ kỹ thuật",
+      "type": "Liên kết chân trang",
+      "position": "Chân trang, tọa độ (1428, 1308) trên ảnh 1600×1380",
+      "properties": "Liên kết giữ chỗ; chưa có đích được xác nhận.",
+      "event_ids": [
+        "ME-18-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json #35; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md"
+    },
+    {
+      "id": "ME-18-EL-S01",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Tiêu đề trang Angular",
+      "type": "Tiêu đề và mô tả",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Trang hiện có tiêu đề phân tích khóa học và mô tả rõ #66 trả snapshot suy ra từ tiến độ hiện có; không hoàn toàn giống tiêu đề ảnh mẫu.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+    },
+    {
+      "id": "ME-18-EL-S02",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Trạng thái ID khóa học sai",
+      "type": "Trạng thái giao diện",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Hiện cảnh báo khi courseId thiếu hoặc không qua kiểm tra số nguyên dương an toàn; không gọi API.",
+      "event_ids": [
+        "ME-18-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts"
+    },
+    {
+      "id": "ME-18-EL-S03",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Nhãn mã khóa học",
+      "type": "Ngữ cảnh khóa học",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Thanh công cụ hiện khóa học # kèm ID từ tuyến; không hiện tên, mã môn hoặc học kỳ.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+    },
+    {
+      "id": "ME-18-EL-S04",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Liên kết về không gian làm việc khóa học",
+      "type": "Điều hướng",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Liên kết Angular tạo route /mentor/courses/:courseId; khác đích ME-16 trong thiết kế.",
+      "event_ids": [
+        "ME-18-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/06-navigation.md"
+    },
+    {
+      "id": "ME-18-EL-S05",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Nút tải lại dữ liệu",
+      "type": "Thao tác",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Nút tải lại #66; bị khóa khi đang tải. Mẫu giao diện cùng nhãn chỉ có bộ hẹn giờ.",
+      "event_ids": [
+        "ME-18-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/code.html"
+    },
+    {
+      "id": "ME-18-EL-S06",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Trạng thái đang tải",
+      "type": "Trạng thái giao diện",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Hiện thông báo đang tải với role=status, aria-live và aria-busy=true.",
+      "event_ids": [
+        "ME-18-EV-001",
+        "ME-18-EV-002",
+        "ME-18-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+    },
+    {
+      "id": "ME-18-EL-S07",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Trạng thái lỗi",
+      "type": "Trạng thái giao diện",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Hiện lỗi với role=alert; không hiển thị số liệu tổng hợp không hợp lệ.",
+      "event_ids": [
+        "ME-18-EV-001",
+        "ME-18-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+    },
+    {
+      "id": "ME-18-EL-S08",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Nút thử lại",
+      "type": "Thao tác",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Trong khối lỗi, nút gọi lại lượt đọc #66 cùng ID hiện tại.",
+      "event_ids": [
+        "ME-18-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+    },
+    {
+      "id": "ME-18-EL-S09",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Khu vực tóm tắt lượt truy cập",
+      "type": "Vùng dữ liệu",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Có nhãn Tóm tắt lượt truy cập bài học; chỉ hiện sau phản hồi hợp lệ.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+    },
+    {
+      "id": "ME-18-EL-S10",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Số cặp học viên/bài học có mốc thời gian",
+      "type": "Chỉ số dữ liệu",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Hiện tracked_lesson_accesses; là số cặp dữ liệu suy ra từ tiến độ hiện có phân biệt, không phải số sự kiện/lượt truy cập.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py"
+    },
+    {
+      "id": "ME-18-EL-S11",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Số học viên có hoạt động suy ra từ tiến độ hiện có",
+      "type": "Chỉ số dữ liệu",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Hiện students_with_activity; là học viên phân biệt có suy ra từ tiến độ hiện có, không phải số ghi danh.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py"
+    },
+    {
+      "id": "ME-18-EL-S12",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Mốc thời gian suy ra từ tiến độ hiện có mới nhất",
+      "type": "Chỉ số thời gian",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Hiện last_activity_at; null hiển thị Chưa có mốc thời gian.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py"
+    },
+    {
+      "id": "ME-18-EL-S13",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Thông báo kết quả tổng hợp rỗng",
+      "type": "Trạng thái dữ liệu",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Số liệu tổng hợp 0/0/null hiện thông báo không có cặp học viên/bài học kèm mốc thời gian; không khẳng định ETL chưa chạy.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py"
+    },
+    {
+      "id": "ME-18-EL-S14",
+      "marker": "Không có trên ảnh mẫu",
+      "source_element_id": "Chỉ có trong mã Angular hiện hành",
+      "name": "Giải thích giới hạn khi có suy ra từ tiến độ hiện có",
+      "type": "Ghi chú giới hạn",
+      "position": "Chỉ có trong trang Angular; không có mốc ảnh tương ứng.",
+      "properties": "Nêu API không trả lịch sử sự kiện, tỷ lệ hoàn thành, đánh giá, tỷ lệ bỏ học hoặc CSV.",
+      "event_ids": [
+        "ME-18-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ME-18-EV-001",
+      "source_event_id": "EV-01",
+      "name": "Mở màn hình và tải tóm tắt",
+      "trigger": "Mở tuyến với courseId hợp lệ.",
+      "processing": "Ứng dụng web xóa dữ liệu cũ, hiện đang tải và gọi GET #66 với course_id; sau đó kiểm tra gói phản hồi và ba trường cục bộ. Danh mục vẫn khai báo dạng trang nên phản hồi chưa được duyệt.",
+      "element_ids": [
+        "ME-18-EL-S01",
+        "ME-18-EL-S03",
+        "ME-18-EL-S06",
+        "ME-18-EL-S09",
+        "ME-18-EL-S10",
+        "ME-18-EL-S11",
+        "ME-18-EL-S12"
+      ],
+      "api_ids": [
+        "API-066"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md"
+    },
+    {
+      "id": "ME-18-EV-002",
+      "source_event_id": "EV-02",
+      "name": "Kiểm tra lại dữ liệu",
+      "trigger": "Nhấn Kiểm tra đồng bộ lại ở Angular.",
+      "processing": "Angular phát lượt đọc lại #66 và khóa nút khi đang tải. HTML mẫu cùng nhãn chỉ đổi nội dung bằng bộ hẹn giờ, không gửi lượt gọi hoặc kích hoạt đồng bộ máy chủ.",
+      "element_ids": [
+        "ME-18-EL-S05",
+        "ME-18-EL-S14"
+      ],
+      "api_ids": [
+        "API-066"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/code.html"
+    },
+    {
+      "id": "ME-18-EV-003",
+      "source_event_id": "EV-03",
+      "name": "Thử lại sau lỗi",
+      "trigger": "Từ trạng thái lỗi, nhấn Thử lại.",
+      "processing": "Angular gọi lại #66 bằng courseId hiện hành và hiện trạng thái đang tải. Không thêm truy vấn hoặc nội dung gửi.",
+      "element_ids": [
+        "ME-18-EL-S07",
+        "ME-18-EL-S08"
+      ],
+      "api_ids": [
+        "API-066"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+    },
+    {
+      "id": "ME-18-EV-004",
+      "source_event_id": "EV-04",
+      "name": "Chặn mã khóa học không hợp lệ",
+      "trigger": "Mở tuyến với ID thiếu, 0, âm, có chữ, số thập phân hoặc vượt số nguyên an toàn.",
+      "processing": "Ứng dụng web đặt trạng thái ID không hợp lệ và không gọi API. Bộ phân tích phía máy chủ dùng kiểu số nguyên có dấu 64 bit, là quy tắc riêng.",
+      "element_ids": [
+        "ME-18-EL-S02"
+      ],
+      "api_ids": [
+        "API-066"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/validate.py"
+    },
+    {
+      "id": "ME-18-EV-005",
+      "source_event_id": "EV-05",
+      "name": "Đổi mã khóa học khi lượt gọi đang chạy",
+      "trigger": "Đổi courseId trước khi phản hồi cũ hoàn tất.",
+      "processing": "Ứng dụng web xóa số liệu tổng hợp cũ, hủy luồng trước bằng switchMap và không áp dụng phản hồi sai ID.",
+      "element_ids": [
+        "ME-18-EL-S02",
+        "ME-18-EL-S06",
+        "ME-18-EL-S09"
+      ],
+      "api_ids": [
+        "API-066"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+    },
+    {
+      "id": "ME-18-EV-006",
+      "source_event_id": "EV-06",
+      "name": "Quay về không gian làm việc",
+      "trigger": "Nhấn liên kết Về không gian làm việc.",
+      "processing": "Angular đi tới không gian làm việc cùng courseId; DD dự kiến ME-16 còn mẫu giao diện dùng href=\"#\", do đó đích chuẩn vẫn cần xác nhận.",
+      "element_ids": [
+        "ME-18-EL-S04",
+        "ME-18-EL-027"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/06-navigation.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md"
+    },
+    {
+      "id": "ME-18-EV-007",
+      "source_event_id": "EV-07",
+      "name": "Thử chọn khoảng thời gian",
+      "trigger": "Thử dùng bộ chọn trong mẫu giao diện.",
+      "processing": "Bộ chọn mẫu giao diện bị tắt; Angular không hiện điều khiển. Không gọi API hoặc lọc cục bộ; API không có tham số thời gian.",
+      "element_ids": [
+        "ME-18-EL-017"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts; apps/study-server/docs/dd/66_mentor_course_analytics/03_Request.md"
+    },
+    {
+      "id": "ME-18-EV-008",
+      "source_event_id": "EV-08",
+      "name": "Thử xuất CSV",
+      "trigger": "Thử kích hoạt nút CSV trong mẫu giao diện.",
+      "processing": "Nút mẫu giao diện bị tắt; Angular/API không có chức năng xuất. Không tạo tệp hoặc giả lập tải xuống.",
+      "element_ids": [
+        "ME-18-EL-019"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "ME-18-EV-009",
+      "source_event_id": "EV-09",
+      "name": "Dùng liên kết giữ chỗ của mẫu",
+      "trigger": "Nhấn anchor href=\"#\" trong mẫu giao diện.",
+      "processing": "Liên kết chỉ chuyển phần neo URL; data-path không chứng minh có route. Không tự gán đích.",
+      "element_ids": [
+        "ME-18-EL-001",
+        "ME-18-EL-002",
+        "ME-18-EL-003",
+        "ME-18-EL-004",
+        "ME-18-EL-005",
+        "ME-18-EL-006",
+        "ME-18-EL-007",
+        "ME-18-EL-009",
+        "ME-18-EL-010",
+        "ME-18-EL-033",
+        "ME-18-EL-034",
+        "ME-18-EL-035"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/code.html; apps/study-client/src/app/features/mentor/mentor.route.ts"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B-01",
+      "description": "DD màn/API #66 đang bản nháp/đang chặn và câu hỏi mở chưa quyết định.",
+      "impact": "Không thể coi ca chờ xác nhận là đã đạt hoặc phát hành.",
+      "decision": "Người phụ trách sản phẩm/API chốt câu hỏi; tiếp tục dùng DD làm nguồn lập UTC theo chỉ dẫn người dùng.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md; apps/study-server/docs/dd/66_mentor_course_analytics/00_Cover.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-02",
+      "description": "Danh mục/AC khai báo Page<Course>, còn mã nguồn cục bộ trả đối tượng tổng hợp.",
+      "impact": "Ứng dụng web/máy chủ chưa có lược đồ hợp đồng chung đã duyệt.",
+      "decision": "Chốt lược đồ và cập nhật danh mục, DD, ứng dụng web/máy chủ.",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-03",
+      "description": "AC-26 yêu cầu sự kiện phân tích nhưng truy vấn hiện tại là trạng thái hiện tại suy ra từ tiến độ hiện có.",
+      "impact": "Không thể gọi số liệu hiện có là lịch sử sự kiện.",
+      "decision": "Chấp nhận suy ra từ tiến độ hiện có hoặc cung cấp sổ ghi sự kiện, taxonomy, mốc thời gian, khả năng duy trì học tập và dedup.",
+      "source_ref": "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md; apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-04",
+      "description": "Công thức chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) completion, duration và discussion chưa định nghĩa.",
+      "impact": "Không có expected value cho ba chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) trong ảnh.",
+      "decision": "Chốt công thức, mẫu số, period và cách xử lý thiếu data.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/05-business-rules.md; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-05",
+      "description": "Bộ chọn thời gian không có truy vấn hoặc biên kỳ.",
+      "impact": "Không thể kiểm thử lọc và múi giờ.",
+      "decision": "Chốt biên kỳ, múi giờ và hợp đồng lọc.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-server/docs/dd/66_mentor_course_analytics/03_Request.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-06",
+      "description": "CSV không có hợp đồng, lược đồ tệp, quyền, tác vụ hoặc tải xuống.",
+      "impact": "Không thể bật/kiểm thử xuất.",
+      "decision": "Định nghĩa phạm vi, format, quyền, phân phối và lỗi.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-07",
+      "description": "Không có API/cờ ETL, sync, mức sẵn sàng hoặc lược đồ version.",
+      "impact": "Nhãn trạng thái trong ảnh không được dữ liệu xác nhận.",
+      "decision": "Chốt nguồn hoặc bỏ nhãn khỏi thiết kế.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md; apps/study-server/docs/dd/66_mentor_course_analytics/04_Response.md; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-08",
+      "description": "Chủ sở hữu trực tiếp so với Mentor được phân công và lược đồ thật chưa xác nhận.",
+      "impact": "Chưa kết luận được quyền truy cập trên dữ liệu thật.",
+      "decision": "Chốt chính sách và xác minh lược đồ/ánh xạ môi trường.",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md; .agents/server-study/database.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-09",
+      "description": "Null mốc thời gian, múi giờ, freshness và khả năng duy trì học tập chưa chốt.",
+      "impact": "Chưa có quy tắc hiển thị thời gian chính thức.",
+      "decision": "Chốt null ý nghĩa, múi giờ, freshness và khả năng duy trì học tập.",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-10",
+      "description": "Truy vấn không kiểm tra ghi danh ACTIVE.",
+      "impact": "Số lượng có thể khác định nghĩa người học đang ghi danh.",
+      "decision": "Chốt có lọc ACTIVE hay không.",
+      "source_ref": "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py; apps/study-server/docs/dd/66_mentor_course_analytics/OPEN_QUESTIONS.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-11",
+      "description": "DD cũ nói chưa wire; mã nguồn có route nhưng môi trường chạy chưa xác minh.",
+      "impact": "Không thể tuyên bố chạy đúng môi trường.",
+      "decision": "Xác nhận ID carrier và kiểm thử trình duyệt/môi trường chạy sau.",
+      "source_ref": "apps/study-client/src/app/features/mentor/mentor.route.ts; apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-12",
+      "description": "Không gian làm việc Angular khác link ME-16; AC-26 khác thứ tự inventory.",
+      "impact": "Đích và thứ tự màn hình chưa chốt.",
+      "decision": "Thống nhất liên kết và thứ tự ME-16/17/18.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/06-navigation.md; apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html; apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-13",
+      "description": "API tests dùng DB giả; live lược đồ/deployment chưa có bằng chứng.",
+      "impact": "Test nguồn không chứng minh truy vấn trên dữ liệu thật.",
+      "decision": "Xác minh migration, lược đồ, quyền và deployment.",
+      "source_ref": "apps/study-server/tests/modules/mentor/api_66_mentor_course_analytics/test_mentor_course_analytics.py; apps/study-server/docs/dd/66_mentor_course_analytics/VERIFICATION_REPORT.md; .agents/server-study/database.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-14",
+      "description": "Người phụ trách/người rà soát/người phê duyệt chưa được nguồn chỉ định.",
+      "impact": "Chưa có bằng chứng phê duyệt.",
+      "decision": "Ghi nhận người phụ trách và người phê duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/00-overview.md; apps/study-server/docs/dd/66_mentor_course_analytics/00_Cover.md",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ME-18-TC-MH-001",
+        "requirement_ids": [
+          "ME-18-YC-001",
+          "ME-18-YC-002",
+          "ME-18-YC-003",
+          "ME-18-YC-004",
+          "ME-18-YC-016",
+          "ME-18-YC-017",
+          "ME-18-YC-031"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến với courseId hợp lệ",
+        "precondition": "Mentor đăng nhập; mở route với courseId=321.",
+        "data": "ID dương an toàn; không truy vấn/nội dung gửi.",
+        "steps": [
+          "Mở màn hình.",
+          "Theo dõi trạng thái và lượt gọi."
+        ],
+        "expected": "Mã nguồn hiện đặt trạng thái tải rồi gọi GET #66 với course_id=321; trình duyệt chưa được kiểm chứng.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-002",
+        "requirement_ids": [
+          "ME-18-YC-002",
+          "ME-18-YC-005",
+          "ME-18-YC-016",
+          "ME-18-YC-017"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Chặn courseId sai",
+        "precondition": "Thử ID rỗng, 0, âm, chữ, thập phân và vượt số nguyên an toàn.",
+        "data": "Mỗi giá trị là một trường hợp riêng.",
+        "steps": [
+          "Mở route sai.",
+          "Kiểm tra cảnh báo và lượt gọi."
+        ],
+        "expected": "Mã nguồn hiện báo ID không hợp lệ và không gọi #66; quy tắc ứng dụng web khác bộ phân tích int64 có dấu của máy chủ.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-003",
+        "requirement_ids": [
+          "ME-18-YC-004",
+          "ME-18-YC-006",
+          "ME-18-YC-007",
+          "ME-18-YC-008",
+          "ME-18-YC-030"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu phản hồi danh mục và mã nguồn",
+        "precondition": "So danh mục, API DD và model cục bộ.",
+        "data": "Danh mục Page<Course>; mã nguồn đối tượng tổng hợp.",
+        "steps": [
+          "Đọc từng lược đồ.",
+          "Ghi sai khác."
+        ],
+        "expected": "Báo cáo giữ sai khác; không coi phản hồi cục bộ là hợp đồng đã phê duyệt.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-004",
+        "requirement_ids": [
+          "ME-18-YC-009",
+          "ME-18-YC-010",
+          "ME-18-YC-011",
+          "ME-18-YC-012",
+          "ME-18-YC-018",
+          "ME-18-YC-019"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Hiện số liệu suy ra từ tiến độ hiện có có dữ liệu",
+        "precondition": "Giả lập phản hồi cục bộ hợp lệ với pair=4, học viên=2 và mốc thời gian hợp lệ.",
+        "data": "Số lượng và ngày giờ đúng miền.",
+        "steps": [
+          "Trả phản hồi.",
+          "Đối chiếu ba giá trị."
+        ],
+        "expected": "Hiện đúng ba trường tổng hợp từ dữ liệu tiến độ hiện có; không gọi là số sự kiện, tỷ lệ hoàn thành hoặc tổng ghi danh.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-005",
+        "requirement_ids": [
+          "ME-18-YC-012",
+          "ME-18-YC-013",
+          "ME-18-YC-015",
+          "ME-18-YC-019"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Hiện kết quả tổng hợp rỗng",
+        "precondition": "Giả lập phản hồi 0, 0, null.",
+        "data": "Không có pair suy ra từ tiến độ hiện có phù hợp.",
+        "steps": [
+          "Trả phản hồi.",
+          "Đọc nội dung."
+        ],
+        "expected": "Nêu không có cặp dữ liệu suy ra từ tiến độ hiện có kèm mốc thời gian; không suy ra ETL chưa chạy hoặc không có học viên.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-006",
+        "requirement_ids": [
+          "ME-18-YC-013",
+          "ME-18-YC-014",
+          "ME-18-YC-015",
+          "ME-18-YC-028"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Từ chối số lượng hoặc mốc thời gian sai",
+        "precondition": "Thử số lượng âm, không nguyên/an toàn, học viên lớn hơn pairs hoặc ngày sai.",
+        "data": "Mỗi lỗi độc lập.",
+        "steps": [
+          "Giả lập phản hồi sai.",
+          "Quan sát trang."
+        ],
+        "expected": "Hiện lỗi, không render dữ liệu sai hoặc một phần.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-007",
+        "requirement_ids": [
+          "ME-18-YC-014",
+          "ME-18-YC-015",
+          "ME-18-YC-028",
+          "ME-18-YC-029"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Từ chối gói phản hồi sai",
+        "precondition": "Giả lập field thiếu, success=false, businessCode khác hoặc dữ liệu không phải object.",
+        "data": "Các trường hợp riêng.",
+        "steps": [
+          "Trả từng phản hồi.",
+          "Quan sát trạng thái."
+        ],
+        "expected": "Không nhận là thành công; ghi rằng thông báo môi trường chạy chưa được kiểm chứng.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-008",
+        "requirement_ids": [
+          "ME-18-YC-004",
+          "ME-18-YC-006",
+          "ME-18-YC-017",
+          "ME-18-YC-028"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu lỗi xác thực và quyền",
+        "precondition": "API trả 401/403.",
+        "data": "Không token, sai role hoặc không thuộc người phụ trách theo mã nguồn.",
+        "steps": [
+          "Giả lập lỗi.",
+          "Đọc thông báo."
+        ],
+        "expected": "Không hiển thị số liệu; hiện lỗi và nút Thử lại. Chính sách ownership vẫn chờ quyết định.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-009",
+        "requirement_ids": [
+          "ME-18-YC-005",
+          "ME-18-YC-006",
+          "ME-18-YC-028"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu 404/500 an toàn",
+        "precondition": "API trả 404 hoặc lỗi truy vấn/projection 500.",
+        "data": "Không có SQL trong message gửi ứng dụng web.",
+        "steps": [
+          "Giả lập phản hồi.",
+          "Đọc lỗi."
+        ],
+        "expected": "Không dùng dữ liệu cũ như kết quả mới; máy chủ mã nguồn không đưa SQL/projection nội bộ vào message.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-010",
+        "requirement_ids": [
+          "ME-18-YC-016",
+          "ME-18-YC-017"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Đổi courseId khi lượt gọi cũ còn chạy",
+        "precondition": "Lượt gọi A chờ; tuyến đổi sang B; A trả sau.",
+        "data": "A=321, B=654.",
+        "steps": [
+          "Mở A rồi đổi sang B.",
+          "Trả A trễ.",
+          "Kiểm tra kết quả."
+        ],
+        "expected": "Dữ liệu cũ bị loại; chỉ kết quả khớp B được áp dụng.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-011",
+        "requirement_ids": [
+          "ME-18-YC-017",
+          "ME-18-YC-018",
+          "ME-18-YC-020",
+          "ME-18-YC-021",
+          "ME-18-YC-022",
+          "ME-18-YC-025",
+          "ME-18-YC-026"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "So ảnh mẫu với Angular hiện hành",
+        "precondition": "Đối chiếu ảnh và mẫu giao diện.",
+        "data": "Ảnh có KPI/khoảng thời gian/CSV/ETL; Angular có ba suy ra từ tiến độ hiện có metrics.",
+        "steps": [
+          "So từng nhóm.",
+          "Ghi nội dung chưa wired."
+        ],
+        "expected": "Khác biệt thành blocker; không biến nội dung ảnh thành hành vi có sẵn.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-012",
+        "requirement_ids": [
+          "ME-18-YC-018",
+          "ME-18-YC-020",
+          "ME-18-YC-021",
+          "ME-18-YC-022",
+          "ME-18-YC-025",
+          "ME-18-YC-026"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Không gán số liệu tổng hợp vào chỉ số hiệu quả chính (KPI) mẫu",
+        "precondition": "Có số liệu tổng hợp số lượng khác 0 nhưng không có chỉ số hiệu quả chính (KPI) fields.",
+        "data": "Không có completion/duration/discussion data.",
+        "steps": [
+          "Xem dữ liệu trả về và giao diện.",
+          "So chỉ số hiệu quả chính (KPI) mẫu."
+        ],
+        "expected": "Chỉ hiện trường được mã nguồn hỗ trợ; không tự tính hoặc gán chỉ số hiệu quả chính (KPI).",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-013",
+        "requirement_ids": [
+          "ME-18-YC-020",
+          "ME-18-YC-021",
+          "ME-18-YC-030"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Không lọc kỳ hoặc xuất tệp khi chưa có hợp đồng",
+        "precondition": "Kiểm tra UI, service và API.",
+        "data": "Không có period truy vấn, file lược đồ hoặc export điểm cuối API.",
+        "steps": [
+          "Đối chiếu mã nguồn.",
+          "Ghi khả năng hiện có."
+        ],
+        "expected": "Không gửi period/export giả định; giữ hai tính năng chờ quyết định.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-014",
+        "requirement_ids": [
+          "ME-18-YC-022",
+          "ME-18-YC-023",
+          "ME-18-YC-028"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt tải lại với đồng bộ ETL",
+        "precondition": "So Angular handler và inline handler HTML mẫu.",
+        "data": "Angular gọi lại #66; mẫu chỉ bộ hẹn giờ.",
+        "steps": [
+          "Đọc hai handler.",
+          "Ghi tác động mỗi handler."
+        ],
+        "expected": "Kết luận Angular tải lại GET; không kết luận có lệnh ETL hay ghi data.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-015",
+        "requirement_ids": [
+          "ME-18-YC-023",
+          "ME-18-YC-024",
+          "ME-18-YC-027"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu đích quay lại và trình tự AC-26",
+        "precondition": "So Angular, mẫu giao diện, inventory và sơ đồ.",
+        "data": "Angular về không gian làm việc; mẫu về ME-16 giữ chỗ.",
+        "steps": [
+          "Đối chiếu route.",
+          "Ghi sai khác."
+        ],
+        "expected": "Đích/order vẫn mở; không tự coi không gian làm việc là ME-16 hoặc đổi thứ tự API.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-016",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-026",
+          "ME-18-YC-030",
+          "ME-18-YC-034",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Không coi badge tĩnh là bằng chứng",
+        "precondition": "Kiểm tra WCAG, lược đồ, ETL, học kỳ và chỉ số hiệu quả chính (KPI) trong ảnh.",
+        "data": "Không có field hoặc audit report.",
+        "steps": [
+          "So ảnh với API/mã nguồn.",
+          "Ghi nhãn không được chứng minh."
+        ],
+        "expected": "Không đánh dấu các claim đã xác minh; cần người phụ trách chốt hoặc bỏ khỏi thiết kế.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-017",
+        "requirement_ids": [
+          "ME-18-YC-004",
+          "ME-18-YC-005",
+          "ME-18-YC-006",
+          "ME-18-YC-012",
+          "ME-18-YC-023",
+          "ME-18-YC-028"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu thứ tự kiểm tra quyền",
+        "precondition": "Giả lập thiếu token, role sai, khóa học vắng và người phụ trách mismatch.",
+        "data": "401/403/404 theo mã nguồn.",
+        "steps": [
+          "Đọc luồng hoặc kiểm thử trong môi trường sau này.",
+          "Ghi truy vấn nào được chạy."
+        ],
+        "expected": "Mã nguồn kiểm tra role, parse, người phụ trách rồi kết quả tổng hợp; trực tiếp-người phụ trách chính sách còn mở.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-018",
+        "requirement_ids": [
+          "ME-18-YC-009",
+          "ME-18-YC-010",
+          "ME-18-YC-011",
+          "ME-18-YC-012",
+          "ME-18-YC-013",
+          "ME-18-YC-023"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu cách tính suy ra từ tiến độ hiện có",
+        "precondition": "Xem SQL và dữ liệu học viên/bài học.",
+        "data": "PUBLISHED, STUDENT, mốc thời gian khác null; không lọc ACTIVE ghi danh.",
+        "steps": [
+          "So truy vấn và ánh xạ.",
+          "Ghi nghĩa từng số lượng."
+        ],
+        "expected": "Gọi đúng là suy ra từ tiến độ hiện có trạng thái hiện tại; không gọi lịch sử sự kiện hoặc ghi danh số lượng.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-019",
+        "requirement_ids": [
+          "ME-18-YC-027",
+          "ME-18-YC-030",
+          "ME-18-YC-031",
+          "ME-18-YC-032",
+          "ME-18-YC-033",
+          "ME-18-YC-034",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Rà soát mức sẵn sàng và giới hạn kiểm chứng",
+        "precondition": "DD/API chờ xác nhận; không có người phụ trách; chưa kiểm tra live.",
+        "data": "Không chạy kiểm thử sản phẩm trong lượt lập tài liệu.",
+        "steps": [
+          "Đối chiếu trạng thái và test evidence.",
+          "Để trạng thái ca Chưa chạy."
+        ],
+        "expected": "Ghi rõ bản nháp/đang chặn, người rà soát chưa chỉ định và fake DB không chứng minh môi trường thật.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-MH-020",
+        "requirement_ids": [
+          "ME-18-YC-003",
+          "ME-18-YC-007",
+          "ME-18-YC-008",
+          "ME-18-YC-014",
+          "ME-18-YC-023",
+          "ME-18-YC-028",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18",
+        "group": "Toàn màn hình",
+        "title": "Không gọi API ngoài phạm vi",
+        "precondition": "Đọc route và service màn hình.",
+        "data": "API #66 là API của ME-18.",
+        "steps": [
+          "Đối chiếu các lời gọi mã nguồn.",
+          "Ghi API liên quan."
+        ],
+        "expected": "Màn chỉ gọi #66 theo mã nguồn; không tự gọi #65/#67 hoặc điểm cuối API khác.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18.md",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ME-18-TC-TP-001",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 1: Thương hiệu Study2Work và nhãn hệ thống Mentor",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #1 tại (22, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #1; bản mẫu là tĩnh. Ảnh là mẫu tĩnh; không chứng minh ứng dụng môi trường chạy có cùng cấu trúc. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-002",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 2: Điều hướng Tổng quan",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #2 tại (290, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #2; bản mẫu là tĩnh. Anchor dùng href=\"#\"; chưa có đích được xác nhận. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-003",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 3: Điều hướng Khóa học phụ trách",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #3 tại (406, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #3; bản mẫu là tĩnh. Trạng thái được tô sáng là hình mẫu, không xác nhận route. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-004",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 4: Điều hướng Chấm bài",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #4 tại (625, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #4; bản mẫu là tĩnh. Liên kết giữ chỗ; chưa có đích hoặc API. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-005",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 5: Điều hướng Hộp thư hỗ trợ",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #5 tại (744, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #5; bản mẫu là tĩnh. Liên kết giữ chỗ; chưa có đích hoặc API. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-006",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 6: Điều hướng Thông báo",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #6 tại (911, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #6; bản mẫu là tĩnh. Liên kết giữ chỗ; chưa có đích hoặc API. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-007",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 7: Chuông thông báo và dấu chưa đọc",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #7 tại (1248, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #7; bản mẫu là tĩnh. Dấu chưa đọc không có nguồn dữ liệu được đối chiếu. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-008",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 8: Tên, vai trò và ảnh đại diện Mentor",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #8 tại (1328, 15); nhóm Đầu trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #8; bản mẫu là tĩnh. Tên và vai trò trong ảnh không do #66 trả về. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-009",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 9: Liên kết về Khóa học phụ trách",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #9 tại (25, 130); nhóm Đường dẫn điều hướng",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #9; bản mẫu là tĩnh. Liên kết giữ chỗ; chưa chứng minh có route. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-010",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 10: Liên kết tên và mã khóa học",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #10 tại (230, 130); nhóm Đường dẫn điều hướng",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #10; bản mẫu là tĩnh. Tên và mã khóa học không có trong phản hồi #66. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-011",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 11: Nhãn đường dẫn trang hiện tại",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #11 tại (608, 130); nhóm Đường dẫn điều hướng",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #11; bản mẫu là tĩnh. Nhãn trang hiện tại là nội dung tĩnh. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-012",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 12: Nhãn học kỳ",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #12 tại (25, 231); nhóm Thông tin khóa học",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #12; bản mẫu là tĩnh. Học kỳ không có trong phản hồi #66. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-013",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 13: Nhãn trạng thái chờ đồng bộ khóa học",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #13 tại (422, 231); nhóm Thông tin khóa học",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #13; bản mẫu là tĩnh. Trạng thái đồng bộ không có trường trong phản hồi #66. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-014",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 14: Tiêu đề Phân tích và thống kê hiệu quả khóa học",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #14 tại (25, 276); nhóm Tiêu đề trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #14; bản mẫu là tĩnh. Angular có tiêu đề riêng; chưa xác nhận tiêu đề mẫu đã vào môi trường chạy. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-015",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 15: Mô tả mục đích phân tích",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #15 tại (25, 328); nhóm Tiêu đề trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #15; bản mẫu là tĩnh. Khả năng duy trì học tập và hiệu suất không được chứng minh bằng số liệu tổng hợp #66. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-016",
+        "requirement_ids": [
+          "ME-18-YC-020",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 16: Nhãn khung thời gian phân tích",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #16 tại (969, 184); nhóm Điều khiển phân tích",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #16; bản mẫu là tĩnh. API #66 không có trường thời gian. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-017",
+        "requirement_ids": [
+          "ME-18-YC-020",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 17: Bộ chọn thời gian đang tắt",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #17 tại (969, 230); nhóm Điều khiển phân tích",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #17; bản mẫu là tĩnh. Mẫu tắt bộ chọn; Angular không có điều khiển này; chưa có định nghĩa kỳ. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-018",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 18: Nhãn tác vụ báo cáo",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #18 tại (969, 282); nhóm Điều khiển báo cáo",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #18; bản mẫu là tĩnh. Nhãn tĩnh trong ảnh. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-019",
+        "requirement_ids": [
+          "ME-18-YC-021",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 19: Nút xuất CSV đang tắt",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #19 tại (969, 327); nhóm Điều khiển báo cáo",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #19; bản mẫu là tĩnh. Mẫu tắt nút; Angular/API không có export. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-020",
+        "requirement_ids": [
+          "ME-18-YC-018",
+          "ME-18-YC-026",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 20: Thẻ chỉ số tỷ lệ hoàn thành",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #20 tại (47, 408); nhóm Chỉ số phân tích",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #20; bản mẫu là tĩnh. Tỷ lệ hoàn thành không có trong phản hồi; không suy từ số cặp dữ liệu suy ra từ tiến độ hiện có. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-021",
+        "requirement_ids": [
+          "ME-18-YC-018",
+          "ME-18-YC-026",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 21: Thẻ chỉ số thời lượng trung bình",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #21 tại (563, 408); nhóm Chỉ số phân tích",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #21; bản mẫu là tĩnh. Thời lượng trung bình không có trong phản hồi. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-022",
+        "requirement_ids": [
+          "ME-18-YC-018",
+          "ME-18-YC-026",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 22: Thẻ chỉ số tương tác thảo luận",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #22 tại (1082, 408); nhóm Chỉ số phân tích",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #22; bản mẫu là tĩnh. Tương tác thảo luận không có trong phản hồi. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-023",
+        "requirement_ids": [
+          "ME-18-YC-013",
+          "ME-18-YC-019",
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 23: Hình minh họa phân tích trống",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #23 tại (714, 672); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #23; bản mẫu là tĩnh. Minh họa tĩnh không chứng minh trạng thái API. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-024",
+        "requirement_ids": [
+          "ME-18-YC-013",
+          "ME-18-YC-019",
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 24: Nhãn trạng thái phân tích chưa kích hoạt",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #24 tại (602, 816); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #24; bản mẫu là tĩnh. API không có cờ ETL hoặc kích hoạt phân tích. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-025",
+        "requirement_ids": [
+          "ME-18-YC-013",
+          "ME-18-YC-019",
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 25: Tiêu đề chưa có số liệu phân tích",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #25 tại (488, 869); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #25; bản mẫu là tĩnh. Tiêu đề mẫu không thay thế trạng thái số liệu tổng hợp 0/0/null. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-026",
+        "requirement_ids": [
+          "ME-18-YC-013",
+          "ME-18-YC-019",
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 26: Mô tả trạng thái phân tích trống",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #26 tại (383, 923); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #26; bản mẫu là tĩnh. Không suy diễn luồng dữ liệu hoặc số học viên từ kết quả tổng hợp rỗng. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-027",
+        "requirement_ids": [
+          "ME-18-YC-022",
+          "ME-18-YC-024",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 27: Liên kết quay lại tiến độ toàn khóa ME-16",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #27 tại (446, 1052); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #27; bản mẫu là tĩnh. Mẫu giao diện dùng href=\"#\"; Angular đi về không gian làm việc, không phải ME-16. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-028",
+        "requirement_ids": [
+          "ME-18-YC-022",
+          "ME-18-YC-024",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 28: Nút kiểm tra đồng bộ lại",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #28 tại (863, 1052); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #28; bản mẫu là tĩnh. Angular gọi lại #66; HTML mẫu chỉ đổi chữ/icon bằng bộ hẹn giờ. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-029",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-030",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 29: Nhãn tuyên bố tuân thủ WCAG 2.1 AA",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #29 tại (529, 1158); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #29; bản mẫu là tĩnh. Tuyên bố tuân thủ chưa được xác minh bằng audit. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-030",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-030",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 30: Nhãn sẵn sàng phân tích theo lược đồ v2.4",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #30 tại (798, 1158); nhóm Trạng thái phân tích trống",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #30; bản mẫu là tĩnh. Phiên bản và trạng thái lược đồ không có nguồn trong phản hồi. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-031",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 31: Biểu trưng Study2Work chân trang",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #31 tại (22, 1319); nhóm Chân trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #31; bản mẫu là tĩnh. Biểu trưng trang trí. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-032",
+        "requirement_ids": [
+          "ME-18-YC-025",
+          "ME-18-YC-030",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 32: Bản quyền và tiêu chuẩn chân trang",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #32 tại (80, 1302); nhóm Chân trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #32; bản mẫu là tĩnh. Văn bản tĩnh; không phải bằng chứng kiểm định tiêu chuẩn. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-033",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 33: Liên kết Quy chế Giảng viên",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #33 tại (1060, 1308); nhóm Chân trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #33; bản mẫu là tĩnh. Liên kết giữ chỗ; chưa có đích được xác nhận. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-034",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-034",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 34: Liên kết Tiêu chuẩn đánh giá",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #34 tại (1244, 1308); nhóm Chân trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #34; bản mẫu là tĩnh. Liên kết giữ chỗ; chưa có đích được xác nhận. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-035",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-035",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc ảnh 35: Liên kết Hỗ trợ kỹ thuật",
+        "precondition": "Có ảnh mẫu, DD và mã nguồn; chưa chạy trên trình duyệt.",
+        "data": "Mốc #35 tại (1428, 1308); nhóm Chân trang",
+        "steps": [
+          "Mở ảnh sạch và ảnh đánh dấu.",
+          "Đối chiếu mốc với DD.",
+          "So thành phần tương ứng trong mã nguồn và ghi sai khác."
+        ],
+        "expected": "Đối chiếu vị trí/nhãn mốc #35; bản mẫu là tĩnh. Liên kết giữ chỗ; chưa có đích được xác nhận. Không dùng ảnh làm bằng chứng môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/ME-18_markers.json",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/01-ui-elements.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-036",
+        "requirement_ids": [
+          "ME-18-YC-001",
+          "ME-18-YC-014",
+          "ME-18-YC-031"
+        ],
+        "target_id": "ME-18-EL-S01",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Tiêu đề trang Angular",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Trang hiện có tiêu đề phân tích khóa học và mô tả rõ #66 trả snapshot suy ra từ tiến độ hiện có; không hoàn toàn giống tiêu đề ảnh mẫu.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: trang hiện có tiêu đề phân tích khóa học và mô tả rõ #66 trả snapshot suy ra từ tiến độ hiện có; không hoàn toàn giống tiêu đề ảnh mẫu. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-037",
+        "requirement_ids": [
+          "ME-18-YC-002",
+          "ME-18-YC-005",
+          "ME-18-YC-016",
+          "ME-18-YC-017"
+        ],
+        "target_id": "ME-18-EL-S02",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Trạng thái ID khóa học sai",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Hiện cảnh báo khi courseId thiếu hoặc không qua kiểm tra số nguyên dương an toàn; không gọi API.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Hiện cảnh báo khi courseId thiếu hoặc không qua kiểm tra số nguyên dương an toàn; không gọi API. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/shared/models/mentor-api.models.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-038",
+        "requirement_ids": [
+          "ME-18-YC-018",
+          "ME-18-YC-025",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EL-S03",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Nhãn mã khóa học",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Thanh công cụ hiện khóa học # kèm ID từ tuyến; không hiện tên, mã môn hoặc học kỳ.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Thanh công cụ hiện khóa học # kèm ID từ tuyến; không hiện tên, mã môn hoặc học kỳ. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-039",
+        "requirement_ids": [
+          "ME-18-YC-024",
+          "ME-18-YC-027"
+        ],
+        "target_id": "ME-18-EL-S04",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Liên kết về không gian làm việc khóa học",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Liên kết Angular tạo route /mentor/courses/:courseId; khác đích ME-16 trong thiết kế.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Liên kết Angular tạo route /mentor/courses/:courseId; khác đích ME-16 trong thiết kế. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/mentor.route.ts",
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-040",
+        "requirement_ids": [
+          "ME-18-YC-022",
+          "ME-18-YC-023"
+        ],
+        "target_id": "ME-18-EL-S05",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Nút tải lại dữ liệu",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Nút tải lại #66; bị khóa khi đang tải. Mẫu giao diện cùng nhãn chỉ có bộ hẹn giờ.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Nút tải lại #66; bị khóa khi đang tải. Mẫu giao diện cùng nhãn chỉ có bộ hẹn giờ. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/docs/screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-041",
+        "requirement_ids": [
+          "ME-18-YC-017"
+        ],
+        "target_id": "ME-18-EL-S06",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Trạng thái đang tải",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Hiện thông báo đang tải với role=status, aria-live và aria-busy=true.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Hiện thông báo đang tải với role=status, aria-live và aria-busy=true. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-042",
+        "requirement_ids": [
+          "ME-18-YC-014",
+          "ME-18-YC-028",
+          "ME-18-YC-029"
+        ],
+        "target_id": "ME-18-EL-S07",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Trạng thái lỗi",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Hiện lỗi với role=alert; không hiển thị số liệu tổng hợp không hợp lệ.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Hiện lỗi với role=alert; không hiển thị số liệu tổng hợp không hợp lệ. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-043",
+        "requirement_ids": [
+          "ME-18-YC-017",
+          "ME-18-YC-029"
+        ],
+        "target_id": "ME-18-EL-S08",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Nút thử lại",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Trong khối lỗi, nút gọi lại lượt đọc #66 cùng ID hiện tại.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Trong khối lỗi, nút gọi lại lượt đọc #66 cùng ID hiện tại. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-044",
+        "requirement_ids": [
+          "ME-18-YC-008",
+          "ME-18-YC-014",
+          "ME-18-YC-018"
+        ],
+        "target_id": "ME-18-EL-S09",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Khu vực tóm tắt lượt truy cập",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Có nhãn Tóm tắt lượt truy cập bài học; chỉ hiện sau phản hồi hợp lệ.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Có nhãn Tóm tắt lượt truy cập bài học; chỉ hiện sau phản hồi hợp lệ. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-045",
+        "requirement_ids": [
+          "ME-18-YC-008",
+          "ME-18-YC-009",
+          "ME-18-YC-018"
+        ],
+        "target_id": "ME-18-EL-S10",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Số cặp học viên/bài học có mốc thời gian",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Hiện tracked_lesson_accesses; là số cặp dữ liệu suy ra từ tiến độ hiện có phân biệt, không phải số sự kiện/lượt truy cập.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Hiện tracked_lesson_accesses; là số cặp dữ liệu suy ra từ tiến độ hiện có phân biệt, không phải số sự kiện/lượt truy cập. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-046",
+        "requirement_ids": [
+          "ME-18-YC-008",
+          "ME-18-YC-010",
+          "ME-18-YC-018"
+        ],
+        "target_id": "ME-18-EL-S11",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Số học viên có hoạt động suy ra từ tiến độ hiện có",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Hiện students_with_activity; là học viên phân biệt có suy ra từ tiến độ hiện có, không phải số ghi danh.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Hiện students_with_activity; là học viên phân biệt có suy ra từ tiến độ hiện có, không phải số ghi danh. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-047",
+        "requirement_ids": [
+          "ME-18-YC-008",
+          "ME-18-YC-011",
+          "ME-18-YC-014",
+          "ME-18-YC-018"
+        ],
+        "target_id": "ME-18-EL-S12",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: mốc thời gian suy ra từ tiến độ hiện có mới nhất",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Hiện last_activity_at; null hiển thị Chưa có mốc thời gian.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Hiện last_activity_at; null hiển thị Chưa có mốc thời gian. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-048",
+        "requirement_ids": [
+          "ME-18-YC-012",
+          "ME-18-YC-013",
+          "ME-18-YC-019"
+        ],
+        "target_id": "ME-18-EL-S13",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Thông báo kết quả tổng hợp rỗng",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Số liệu tổng hợp 0/0/null hiện thông báo không có cặp học viên/bài học kèm mốc thời gian; không khẳng định ETL chưa chạy.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: số liệu tổng hợp 0/0/null hiện thông báo không có cặp học viên/bài học kèm mốc thời gian; không khẳng định ETL chưa chạy. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-TP-049",
+        "requirement_ids": [
+          "ME-18-YC-009",
+          "ME-18-YC-018",
+          "ME-18-YC-019"
+        ],
+        "target_id": "ME-18-EL-S14",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần Angular: Giải thích giới hạn khi có suy ra từ tiến độ hiện có",
+        "precondition": "Có mã nguồn hiện hành; giao diện/môi trường chạy chưa chạy.",
+        "data": "Nêu API không trả lịch sử sự kiện, tỷ lệ hoàn thành, đánh giá, tỷ lệ bỏ học hoặc CSV.",
+        "steps": [
+          "Đối chiếu mẫu giao diện và logic.",
+          "Nếu môi trường được duyệt, xác minh giao diện.",
+          "Lưu bằng chứng; hiện để ca Chưa chạy."
+        ],
+        "expected": "Theo mã nguồn hiện tại: Nêu API không trả lịch sử sự kiện, tỷ lệ hoàn thành, đánh giá, tỷ lệ bỏ học hoặc CSV. Ghi riêng quyết định cần người phụ trách xác nhận.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ME-18-TC-SK-001",
+        "requirement_ids": [
+          "ME-18-YC-002",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở màn hình và tải tóm tắt",
+        "precondition": "Mở tuyến với courseId hợp lệ.",
+        "data": "Ứng dụng web xóa dữ liệu cũ, hiện đang tải và gọi GET #66 với course_id; sau đó kiểm tra gói phản hồi và ba trường cục bộ. Danh mục vẫn khai báo dạng trang nên phản hồi chưa được duyệt.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Ứng dụng web xóa dữ liệu cũ, hiện đang tải và gọi GET #66 với course_id; sau đó kiểm tra gói phản hồi và ba trường cục bộ. Danh mục vẫn khai báo dạng trang nên phản hồi chưa được duyệt. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-002",
+        "requirement_ids": [
+          "ME-18-YC-003",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-002",
+        "group": "Sự kiện",
+        "title": "Kiểm tra lại dữ liệu",
+        "precondition": "Nhấn Kiểm tra đồng bộ lại ở Angular.",
+        "data": "Angular phát lượt đọc lại #66 và khóa nút khi đang tải. HTML mẫu cùng nhãn chỉ đổi nội dung bằng bộ hẹn giờ, không gửi lượt gọi hoặc kích hoạt đồng bộ máy chủ.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Angular phát lượt đọc lại #66 và khóa nút khi đang tải. HTML mẫu cùng nhãn chỉ đổi nội dung bằng bộ hẹn giờ, không gửi lượt gọi hoặc kích hoạt đồng bộ máy chủ. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-003",
+        "requirement_ids": [
+          "ME-18-YC-004",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-003",
+        "group": "Sự kiện",
+        "title": "Thử lại sau lỗi",
+        "precondition": "Từ trạng thái lỗi, nhấn Thử lại.",
+        "data": "Angular gọi lại #66 bằng courseId hiện hành và hiện trạng thái đang tải. Không thêm truy vấn hoặc nội dung gửi.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Angular gọi lại #66 bằng courseId hiện hành và hiện trạng thái đang tải. Không thêm truy vấn hoặc nội dung gửi. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-004",
+        "requirement_ids": [
+          "ME-18-YC-005",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-004",
+        "group": "Sự kiện",
+        "title": "Chặn mã khóa học không hợp lệ",
+        "precondition": "Mở tuyến với ID thiếu, 0, âm, có chữ, số thập phân hoặc vượt số nguyên an toàn.",
+        "data": "Ứng dụng web đặt trạng thái ID không hợp lệ và không gọi API. Bộ phân tích máy chủ int64 có dấu là quy tắc riêng.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Ứng dụng web đặt trạng thái ID không hợp lệ và không gọi API. Bộ phân tích máy chủ int64 có dấu là quy tắc riêng. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-005",
+        "requirement_ids": [
+          "ME-18-YC-006",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-005",
+        "group": "Sự kiện",
+        "title": "Đổi mã khóa học khi lượt gọi đang chạy",
+        "precondition": "Đổi courseId trước khi phản hồi cũ hoàn tất.",
+        "data": "Ứng dụng web xóa số liệu tổng hợp cũ, hủy luồng trước bằng switchMap và không áp dụng phản hồi sai ID.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Ứng dụng web xóa số liệu tổng hợp cũ, hủy luồng trước bằng switchMap và không áp dụng phản hồi sai ID. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [
+          "API-066"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-006",
+        "requirement_ids": [
+          "ME-18-YC-007",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-006",
+        "group": "Sự kiện",
+        "title": "Quay về không gian làm việc",
+        "precondition": "Nhấn liên kết Về không gian làm việc.",
+        "data": "Angular đi tới không gian làm việc cùng courseId; DD dự kiến ME-16 còn mẫu giao diện dùng href=\"#\", do đó đích chuẩn vẫn cần xác nhận.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Angular đi tới không gian làm việc cùng courseId; DD dự kiến ME-16 còn mẫu giao diện dùng href=\"#\", do đó đích chuẩn vẫn cần xác nhận. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-007",
+        "requirement_ids": [
+          "ME-18-YC-008",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-007",
+        "group": "Sự kiện",
+        "title": "Thử chọn khoảng thời gian",
+        "precondition": "Thử dùng bộ chọn trong mẫu giao diện.",
+        "data": "Bộ chọn mẫu giao diện bị tắt; Angular không hiện điều khiển. Không gọi API hoặc lọc cục bộ; API không có tham số thời gian.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Bộ chọn mẫu giao diện bị tắt; Angular không hiện điều khiển. Không gọi API hoặc lọc cục bộ; API không có tham số thời gian. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-008",
+        "requirement_ids": [
+          "ME-18-YC-009",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-008",
+        "group": "Sự kiện",
+        "title": "Thử xuất CSV",
+        "precondition": "Thử kích hoạt nút CSV trong mẫu giao diện.",
+        "data": "Nút mẫu giao diện bị tắt; Angular/API không có chức năng xuất. Không tạo tệp hoặc giả lập tải xuống.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Nút mẫu giao diện bị tắt; Angular/API không có chức năng xuất. Không tạo tệp hoặc giả lập tải xuống. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME-18-TC-SK-009",
+        "requirement_ids": [
+          "ME-18-YC-010",
+          "ME-18-YC-035"
+        ],
+        "target_id": "ME-18-EV-009",
+        "group": "Sự kiện",
+        "title": "Dùng liên kết giữ chỗ của mẫu",
+        "precondition": "Nhấn anchor href=\"#\" trong mẫu giao diện.",
+        "data": "Liên kết chỉ chuyển phần neo URL; data-path không chứng minh có route. Không tự gán đích.",
+        "steps": [
+          "Thực hiện thao tác hoặc tạo phản hồi giả phù hợp.",
+          "Theo dõi lượt gọi, trạng thái và nội dung.",
+          "Lưu bằng chứng sau khi chạy ở môi trường được duyệt."
+        ],
+        "expected": "Liên kết chỉ chuyển phần neo URL; data-path không chứng minh có route. Không tự gán đích. Trạng thái thực thi mặc định vẫn là Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ME-18-AnalyticsKhoaHoc/02-events.md",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.ts",
+          "apps/study-client/src/app/features/mentor/ME18/pages/me18-page.html",
+          "apps/study-client/src/app/features/mentor/ME18/data-access/me18-analytics.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

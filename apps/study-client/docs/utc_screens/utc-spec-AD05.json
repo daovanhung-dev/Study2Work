@@ -1,0 +1,2439 @@
+{
+  "metadata": {
+    "screen_id": "AD-05",
+    "screen_name": "Khóa/mở khóa/xóa tài khoản",
+    "module": "Quản trị",
+    "route": "/admin/users/:userId/actions",
+    "actor": "Quản trị viên đã xác thực và có quyền quản lý người dùng theo AC-31; cách ánh xạ quyền ADMIN/tenant và biện pháp bảo vệ cần xác nhận.",
+    "version": "0.1 — KẾ HOẠCH UTC",
+    "dd_version": "0.2 / 2026-11-20",
+    "dd_status": "BỊ CHẶN — cần duyệt chính sách trạng thái, xóa, quyền, phiên đăng nhập và audit.",
+    "runtime_status": "CHƯA XÁC MINH — chưa xác minh runtime đã xác thực, môi trường triển khai, schema hoặc môi trường kiểm thử.",
+    "author": "AI lập kế hoạch kiểm thử; cần rà soát.",
+    "reviewer": "Chưa phân công",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-23",
+    "source_name": "AD-05, các mục DD 00–07; điểm đánh dấu/kế hoạch Stitch; ảnh nguyên bản và ảnh đánh số; tuyến/trang/API Angular hiện tại",
+    "approval_note": "Dùng DD AD-05 hiện có trong repository làm nguồn chuẩn; DD ghi BỊ CHẶN và gói này chưa có hồ sơ owner/reviewer phê duyệt. Giữ trạng thái kế hoạch theo quy tắc của kỹ năng UTC."
+  },
+  "overall": {
+    "objective": "Tạo UTC có truy vết cho hành vi hiện tại và luồng AD-05 dự kiến; tách biệt mã nguồn hiện tại với các quyết định còn mở về trạng thái, xóa và quyền.",
+    "inputs": "Tuyến /admin/users/:userId/actions; user_id dạng signed-int64; Bearer JWT/Admin theo danh mục API; UserProfile từ GET #69. Không dùng USR-*, email hoặc phone làm mã trên tuyến.",
+    "outputs": "Trang hiện tại có trạng thái đang tải/đã tải/lỗi và gọi GET #69; chỉ xem xét #71/#72 sau khi được duyệt. Không kết luận xóa cứng, audit, thu hồi toàn bộ phiên hoặc mức độ sẵn sàng runtime.",
+    "main_flow": "Kiểm tra userId thô → gọi GET #69 → ánh xạ hồ sơ/trạng thái → chỉ đọc. Các tab/thao tác/đích quay lại vẫn bị chặn hoặc chưa được nối cho tới khi duyệt chính sách/hợp đồng.",
+    "states": [
+      "Chưa chọn người dùng",
+      "Đang tải",
+      "Sẵn sàng — chỉ đọc",
+      "Đã chọn chế độ (dự kiến)",
+      "Đang gửi (dự kiến)",
+      "Chưa xác thực",
+      "Không đủ quyền",
+      "Không tìm thấy",
+      "Lỗi kiểm tra dữ liệu",
+      "Thành công (dự kiến)",
+      "Lỗi"
+    ],
+    "preconditions": "Bộ dữ liệu người dùng giả lập, token kiểm thử, quyền/biện pháp bảo vệ AC-31 đã duyệt, quyết định API/trạng thái/xóa/audit/phiên có chữ ký, schema/runtime đã xác minh trước khi nghiệm thu.",
+    "security": "Không đưa PII/token vào URL hoặc log; nhãn RBAC/chỉ đọc/gate/audit/compliance là nội dung tĩnh; không tự động thử lại thao tác ghi; không kiểm thử bằng tài khoản thật.",
+    "out_of_scope": "Không tự duyệt body/status của #71, vòng đời/lưu giữ của #72, quyền/tenant/MFA, PII, lý do/audit, ảnh hưởng tới phiên, quy tắc tải lại #68, schema/triển khai/runtime hoặc tuyên bố shell chưa được hỗ trợ."
+  },
+  "apis": [
+    {
+      "id": "AD-05-API-001",
+      "method": "GET",
+      "path": "/api/v1/admin/users/{user_id}",
+      "request": "Bearer JWT của quản trị viên; user_id dạng signed-int64 trên đường dẫn; không có tham số truy vấn/thân yêu cầu.",
+      "response": "200 DESIGN_RESOURCE_RETRIEVED; ApiEnvelope<UserProfile>.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 500 DESIGN_INTERNAL_ERROR; lỗi mạng/envelope không hợp lệ được ánh xạ theo trạng thái của màn hình.",
+      "auth": "Danh mục quy định Bearer JWT/Admin; mã nguồn cục bộ có guard ADMIN dùng chung; chưa duyệt cách ánh xạ sang AC-31, tenant/phạm vi và biện pháp bảo vệ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-01/API matrix; 04-api-integration.md §2",
+      "event_ids": [
+        "AD-05-EV-001",
+        "AD-05-EV-007"
+      ]
+    },
+    {
+      "id": "AD-05-API-002",
+      "method": "PATCH",
+      "path": "/api/v1/admin/users/{user_id}/status",
+      "request": "Bearer JWT/Admin; user_id dạng signed-int64 trong đường dẫn. Catalog/AC không nêu body. {status: ACTIVE|SUSPENDED} là cấu trúc được suy ra từ mã nguồn cục bộ, chưa có trường reason.",
+      "response": "200 DESIGN_RESOURCE_UPDATED; ApiEnvelope<UserProfile>.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR; lỗi mạng/kết quả chưa rõ xử lý theo chính sách đối soát đang chờ duyệt.",
+      "auth": "Danh mục quy định Bearer JWT/Admin; mã nguồn cục bộ có guard ADMIN dùng chung; chưa duyệt ánh xạ quyền hoặc thứ tự kiểm tra body/xác thực.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-03/API matrix; 04-api-integration.md §2",
+      "event_ids": [
+        "AD-05-EV-003",
+        "AD-05-EV-007"
+      ]
+    },
+    {
+      "id": "AD-05-API-003",
+      "method": "DELETE",
+      "path": "/api/v1/admin/users/{user_id}",
+      "request": "JWT Bearer/quyền Admin; user_id kiểu signed-int64 nằm trên đường dẫn; không có query/body. Trường lý do không thuộc hợp đồng này.",
+      "response": "200 DESIGN_RESOURCE_DELETED; ApiEnvelope<DeleteResult>. Mã nguồn cục bộ đề xuất trả id/status=deleted/deleted_at dưới dạng bí danh.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR; lỗi mạng/kết quả chưa rõ xử lý theo chính sách đối soát đang chờ duyệt.",
+      "auth": "Danh mục quy định Bearer JWT/Admin; mã nguồn cục bộ có guard ADMIN dùng chung; chưa duyệt quyền và chính sách xóa.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-04/API matrix; 04-api-integration.md §2",
+      "event_ids": [
+        "AD-05-EV-004",
+        "AD-05-EV-007"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "AD-05-YC-001",
+      "description": "Tuyến nhận user_id số nguyên có dấu 64-bit từ route/handoff AD-02 hoặc AD-03; không dùng USR-*, email hoặc phone làm path.",
+      "group": "Điều hướng",
+      "source_ref": "06-navigation.md §1–§3; 02-events.md §EV-01",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Chuỗi tuyến được kiểm tra theo signed-int64; handoff/return context vẫn cần xác nhận. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-002",
+      "description": "ID thiếu, sai định dạng hoặc vượt signed-int64 phải không tạo yêu cầu #69; trang hiện tại hiển thị lỗi cục bộ.",
+      "group": "Kiểm tra hợp lệ",
+      "source_ref": "00-overview.md §4; 02-events.md §EV-01",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Hành vi của mã nguồn hiện tại; route error destination/policy vẫn cần xác nhận. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-003",
+      "description": "Tải profile bằng GET #69 với Bearer JWT/Admin và user_id:int64 trên path, không body/query; chỉ envelope/status hợp lệ mới là success.",
+      "group": "API",
+      "source_ref": "02-events.md §EV-01; 04-api-integration.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "API contract và mapping ADMIN sang AC-31 còn cần owner xác nhận. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-004",
+      "description": "Tách trạng thái loading, loaded/chỉ đọc và error cho phản hồi #69; không hiển thị profile giả khi lỗi.",
+      "group": "Trạng thái",
+      "source_ref": "02-events.md §EV-01; 00-overview.md §4",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Các mã lỗi có nguồn; route auth destination/runtime chưa xác minh. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-005",
+      "description": "Ánh xạ user ID và status từ UserProfile #69 mà không suy diễn enum/alias, quyền hoặc profile field chưa được duyệt.",
+      "group": "Dữ liệu",
+      "source_ref": "01-ui-elements.md §3 #16–#18; 02-events.md §EV-01",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Chính sách hiển thị trạng thái/PII và nguồn quyết định quyền vẫn còn bỏ ngỏ. Mã YC nội bộ dùng để truy vết DD, không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-006",
+      "description": "Màn hình giữ chỉ đọc; action controls không được gọi #71/#72 khi DD contract/policy chưa được duyệt.",
+      "group": "Hành động",
+      "source_ref": "00-overview.md §1; 02-events.md §EV-02–EV-04",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Trang hiện tại và các điều khiển trong bản mẫu đều bị vô hiệu hóa; chưa triển khai thao tác làm thay đổi dữ liệu. Mã YC nội bộ dùng để truy vết DD, không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-007",
+      "description": "Lock/unlock tab chỉ là draft action; đổi tab không tạo network request hoặc cache mutation.",
+      "group": "Sự kiện",
+      "source_ref": "01-ui-elements.md §3 #21–#23; 02-events.md §EV-02",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Prototype tab listener chưa có; action selection semantics cần xác nhận. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-008",
+      "description": "PATCH #71 body/status transition chưa có catalog/AC contract; local {status: ACTIVE|SUSPENDED} chỉ là DERIVED candidate, không dùng acceptance trước duyệt.",
+      "group": "API",
+      "source_ref": "02-events.md §EV-03; 04-api-integration.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "API owner phải duyệt body, transition và status allowlist. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-009",
+      "description": "Không khẳng định khóa kết thúc mọi session: local suspend revokes eligible refresh rows; access JWT có thể còn hiệu lực; activate không khôi phục token đã revoke.",
+      "group": "Session/security",
+      "source_ref": "02-events.md §EV-03; 05-business-rules.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Policy owner cần duyệt mô tả tác động session trước khi bật action. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-010",
+      "description": "DELETE #72 semantics/retention cần duyệt; mã nguồn cục bộ chỉ ghi marker DELETED, không hard delete/anonymize, dependency check, audit hay token revoke.",
+      "group": "Lifecycle",
+      "source_ref": "02-events.md §EV-04; 04-api-integration.md §2; 05-business-rules.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Không dùng nhãn “vĩnh viễn” như contract đã duyệt. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-011",
+      "description": "Kết quả delete và trạng thái profile/list sau xóa chỉ được trình bày theo response và visibility policy đã duyệt; local #68/#69 vẫn có thể hiển thị DELETED.",
+      "group": "API/lifecycle",
+      "source_ref": "02-events.md §EV-04; 06-navigation.md §3–§4",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Refresh, visibility và route đích sau #72 còn mở. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-012",
+      "description": "Reason/audit chỉ được thu thập khi API/persistence/audit contract, validation và retention được duyệt; không tự gắn reason vào #71/#72.",
+      "group": "Audit/PII",
+      "source_ref": "01-ui-elements.md §3 #24–#26/#32; 02-events.md §EV-06; 04-api-integration.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Lý do bị vô hiệu hóa trong bản mẫu; API hiện tại không nhận lý do. Mã YC nội bộ chỉ để truy vết DD, không tạo quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-013",
+      "description": "Admin permission/safeguards phải đến từ auth/permission contract; không dùng badge RBAC/chỉ đọc hay copy tĩnh làm bằng chứng.",
+      "group": "Phân quyền",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-01/02/03/04/06",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "ADMIN claim mapping, tenant/scope, MFA, self/last-Admin remain open. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-014",
+      "description": "Back/return tới AD-02 hoặc AD-03 theo route contract và chỉ giữ context được duyệt; link không tự gọi mutation/API.",
+      "group": "Điều hướng",
+      "source_ref": "01-ui-elements.md §3 #9/#29; 02-events.md §EV-05; 06-navigation.md §1–§4",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Bản mẫu có liên kết đến danh sách; ứng dụng có liên kết đến danh sách và trang chi tiết. Ngữ cảnh người dùng được chọn chưa được xác định. Mã YC nội bộ dùng để truy vết DD, không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-015",
+      "description": "Khẳng định tĩnh về tình trạng hệ thống, RBAC, chốt truy cập, kiểm toán, tuân thủ, thông báo và hỗ trợ không phải trạng thái khi chạy nếu chưa có nguồn/hợp đồng.",
+      "group": "Shell/claim",
+      "source_ref": "01-ui-elements.md §3 #2–#7/#10/#15/#31–#34; 02-events.md §EV-06",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Các badge/footer claims chưa được API hay runtime xác minh. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    },
+    {
+      "id": "AD-05-YC-016",
+      "description": "Không retry mutation mù; trạng thái network timeout/response mơ hồ cần reconciliation policy; runtime/schema/test environment chưa xác minh.",
+      "group": "Độ tin cậy/môi trường chạy",
+      "source_ref": "02-events.md §EV-03/04/07; 04-api-integration.md §2; 00-overview.md §status",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Retry/idempotency/error ordering/schema/deployment/owner review remain open. Mã YC nội bộ để truy vết DD; không phải quyết định nghiệp vụ mới."
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-05-EL-001",
+      "marker": "#1",
+      "name": "Thương hiệu cổng quản trị Study2Work / LMS",
+      "type": "Thương hiệu Study2Work / LMS / cổng quản trị",
+      "position": "Khối thương hiệu Study2Work / LMS / Cổng quản trị ở bên trái đầu trang.",
+      "properties": "Logo/text tĩnh; không thuộc #69/#71/#72. Visible; static. Click destination không có handler; shell navigation thuộc EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #1; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-002",
+      "marker": "#2",
+      "name": "Nhóm điều hướng chính của trang quản trị",
+      "type": "Nhóm điều hướng chính của trang quản trị",
+      "position": "Nhóm điều hướng chính của trang quản trị; các liên kết ở giữa đầu trang.",
+      "properties": "Năm label tĩnh; HTML anchors dùng `href=\"#\"`; route destinations chưa có source. Visible; link action chưa wired; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #2; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-003",
+      "marker": "#3",
+      "name": "Huy hiệu trạng thái “SYSTEM NORMAL”",
+      "type": "Huy hiệu “SYSTEM NORMAL”",
+      "position": "Huy hiệu “SYSTEM NORMAL”; chỉ báo tình trạng hệ thống ở đầu trang.",
+      "properties": "Static assertion; không có health endpoint/data trong flow AD-05. Visible nhưng không verified; không dùng làm trạng thái API/runtime; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #3; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-004",
+      "marker": "#4",
+      "name": "Nút thông báo",
+      "type": "Nút biểu tượng thông báo",
+      "position": "Biểu tượng/nút thông báo; bên phải đầu trang.",
+      "properties": "Không có unread count, nguồn dữ liệu hoặc handler. Visible; click effect chưa được xác định; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #4; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-005",
+      "marker": "#5",
+      "name": "Danh tính và ảnh đại diện quản trị viên",
+      "type": "Quản trị viên name/role/avatar",
+      "position": "Quản trị viên name/role/avatar; identity block đầu trang phải.",
+      "properties": "Được gán cố định. #69 trả về người dùng mục tiêu, không phải danh tính Admin hiện tại. Đang hiển thị; nguồn hồ sơ Admin nằm ngoài luồng này; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #5; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-006",
+      "marker": "#6",
+      "name": "Đường dẫn điều hướng toàn cục",
+      "type": "Đường dẫn điều hướng toàn cục",
+      "position": "Đường dẫn điều hướng toàn cục ở đầu vùng nội dung.",
+      "properties": "Label tĩnh, chưa có route-state binding. Visible; destinations/click behavior chưa wired; EV-05/EV-06.",
+      "event_ids": [
+        "AD-05-EV-005",
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #6; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-007",
+      "marker": "#7",
+      "name": "RBAC cam kết huy hiệu",
+      "type": "Huy hiệu “Chuẩn xác thực RBAC”",
+      "position": "Huy hiệu “Chuẩn xác thực RBAC”; cần đặt trong đường dẫn điều hướng.",
+      "properties": "Claim tĩnh, không phải output của #69/#71/#72 hoặc permission evaluation result. Visible nhưng không verified; không dùng làm authorization gate; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #7; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-008",
+      "marker": "#8",
+      "name": "Đường dẫn điều hướng: quản lý người dùng / danh sách tài khoản / thao tác",
+      "type": "Đường dẫn điều hướng thao tác trong danh sách tài khoản",
+      "position": "Đường dẫn điều hướng từ danh sách tài khoản ở phía trên bên trái.",
+      "properties": "Nhãn tĩnh; không truyền numeric ID hay trạng thái tuyến trong HTML. Visible; navigation theo route cần duyệt; EV-05.",
+      "event_ids": [
+        "AD-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #8; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-009",
+      "marker": "#9",
+      "name": "Liên kết quay lại AD-02",
+      "type": "“Quay lại danh sách người dùng (AD-02)” liên kết",
+      "position": "“Quay lại danh sách người dùng (AD-02)” liên kết; trên phải của breadcrumb.",
+      "properties": "Trong HTML bản mẫu có href=\"/admin/users\"; trang ứng dụng có liên kết bộ định tuyến về /admin/users nhưng không giữ truy vấn/trạng thái người dùng đang chọn. Liên kết ứng dụng hiện có; chưa định nghĩa cách giữ lựa chọn; EV-05.",
+      "event_ids": [
+        "AD-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #9; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-010",
+      "marker": "#10",
+      "name": "API #69/#71/#72 tham chiếu strip",
+      "type": "API #69/#71/#72 tham chiếu strip",
+      "position": "API #69/#71/#72 reference strip; dưới breadcrumb.",
+      "properties": "Tên API tĩnh; không phải proof các API được gọi/wired. Visible; không có event/request state; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #10; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-011",
+      "marker": "#11",
+      "name": "Tiêu đề trang",
+      "type": "Tiêu đề trang “Kiểm soát trạng thái và quyền truy cập tài khoản”",
+      "position": "Tiêu đề trang “Kiểm soát trạng thái và quyền truy cập tài khoản”; hero heading.",
+      "properties": "Nội dung tĩnh. Có hiển thị; không có trường dữ liệu từ API; chỉ phục vụ trình bày.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #11; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-012",
+      "marker": "#12",
+      "name": "Biểu tượng khiên bảo mật hero biểu tượng",
+      "type": "Biểu tượng khiên bảo mật hero biểu tượng",
+      "position": "Security shield hero icon; trái title.",
+      "properties": "Decorative icon, không biểu diễn policy evaluation hoặc permission result. Visible; không có event.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #12; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-013",
+      "marker": "#13",
+      "name": "Phụ đề trang",
+      "type": "Phụ đề mô tả session/revoke/delete impact",
+      "position": "Phụ đề mô tả session/revoke/delete impact; dưới title.",
+      "properties": "Nội dung tĩnh. #71/#72 cục bộ không hỗ trợ tuyên bố “Dừng toàn bộ phiên”: thao tác tạm ngưng thu hồi các phiên làm mới đủ điều kiện; JWT truy cập có thể vẫn còn hạn; thao tác xóa không thu hồi các phiên làm mới. Đang hiển thị; cần chỉnh khi chính sách được duyệt; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #13; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-014",
+      "marker": "#14",
+      "name": "Tiêu đề bảng ngữ cảnh thực thi",
+      "type": "Tiêu đề bảng ngữ cảnh thực thi",
+      "position": "Tiêu đề bảng ngữ cảnh thực thi; đầu panel xanh.",
+      "properties": "Tiêu đề tĩnh. Có hiển thị; không có sự kiện.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #14; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-015",
+      "marker": "#15",
+      "name": "Huy hiệu quy trình chỉ đọc",
+      "type": "Huy hiệu “Giao thức Read-Only”",
+      "position": "Huy hiệu “Giao thức Read-Only” ở góc phải bảng.",
+      "properties": "Trạng thái tĩnh; không có nguồn cấu hình/chốt phía máy chủ. Đang hiển thị; không bảo đảm có kiểm soát thao tác thay đổi dữ liệu; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #15; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-016",
+      "marker": "#16",
+      "name": "Tài khoản mục tiêu ID thẻ",
+      "type": "Tài khoản mục tiêu ID thẻ",
+      "position": "Thẻ ID tài khoản mục tiêu; cột trái trong bảng.",
+      "properties": "Bản mẫu cho biết chưa chọn người dùng; ID được rút gọn. Khi được kết nối, nguồn dự kiến là UserProfile.id hoặc route userId dạng int64; kiểm tra ID theo API. Hiển thị/trạng thái: chưa chọn/đang tải/sẵn sàng. Sự kiện/ràng buộc: EV-01. Không dùng giá trị gán cố định làm yêu cầu.",
+      "event_ids": [
+        "AD-05-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #16; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-017",
+      "marker": "#17",
+      "name": "Thẻ trạng thái tài khoản hiện tại",
+      "type": "Thẻ trạng thái tài khoản hiện tại",
+      "position": "Thẻ trạng thái tài khoản hiện tại; cột giữa bảng.",
+      "properties": "Bản mẫu ghi “Không xác định”; ánh xạ UserProfile.status:string từ #69 chỉ sau khi duyệt chính sách hiển thị PII/trạng thái. Chưa có ánh xạ enum được duyệt. Hiển thị/trạng thái: đang tải/sẵn sàng/lỗi; EV-01. Không tự suy diễn bí danh active/locked/pending.",
+      "event_ids": [
+        "AD-05-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #17; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-018",
+      "marker": "#18",
+      "name": "Quyền can thiệp thẻ",
+      "type": "Intervention-quyền thẻ",
+      "position": "Thẻ quyền can thiệp; cột phải bảng.",
+      "properties": "Mockup “Bị khóa bởi chính sách”. Không có permission-decision API/field trong #69/#71/#72. Visible; permission pending/allowed/denied chỉ sau auth/permission contract; EV-01/EV-06. Không suy ra từ badge #7.",
+      "event_ids": [
+        "AD-05-EV-001",
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #18; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-019",
+      "marker": "#19",
+      "name": "Predicted impact callout",
+      "type": "Predicted-impact callout",
+      "position": "Lời nhắc về tác động dự kiến; nằm dưới ba thẻ tài khoản.",
+      "properties": "Static impact copy; phải phản ánh đúng approved session/delete policy trước khi bật action. Visible; không phải API result; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #19; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-020",
+      "marker": "#20",
+      "name": "Nhãn phương thức thao tác",
+      "type": "Nhãn phương thức thao tác",
+      "position": "Nhãn phương thức thao tác; phía trên các thẻ.",
+      "properties": "Nhãn tĩnh. Có hiển thị; không có sự kiện.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #20; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-021",
+      "marker": "#21",
+      "name": "Thẻ khóa tài khoản",
+      "type": "Thẻ khóa tài khoản",
+      "position": "Thẻ Khóa tài khoản; vị trí bên trái.",
+      "properties": "`role=\"tab\"`, selected mặc định trong HTML. Candidate action có thể tương ứng #71 `{status:\"SUSPENDED\"}` chỉ sau khi body/state policy được duyệt. Đang hiển thị, chỉ được chọn trong mã HTML tĩnh; click chỉ đổi draft action sau khi ready; EV-02.",
+      "event_ids": [
+        "AD-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #21; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-022",
+      "marker": "#22",
+      "name": "Unlock-tài khoản thẻ",
+      "type": "Unlock-tài khoản thẻ",
+      "position": "Unlock-account tab; tab giữa.",
+      "properties": "role=\"tab\", chưa được chọn. Chỉ xem xét thao tác #71 với {status:\"ACTIVE\"} sau khi được duyệt. Trạng thái ACTIVE cục bộ không khôi phục các token làm mới đã bị thu hồi. Đang hiển thị; chưa có hàm xử lý trong bản mẫu; EV-02.",
+      "event_ids": [
+        "AD-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #22; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-023",
+      "marker": "#23",
+      "name": "Xóa vĩnh viễn thẻ",
+      "type": "Xóa vĩnh viễn thẻ",
+      "position": "Permanent-delete tab; tab phải.",
+      "properties": "role=\"tab\", chưa được chọn; nhãn “Xóa tài khoản vĩnh viễn” không khớp với dấu trạng thái xóa mềm cục bộ #72, vốn không xóa cứng hoặc ẩn danh hóa. Đang hiển thị; thao tác bị vô hiệu hóa cho đến khi chính sách xóa/vòng đời được duyệt; EV-02.",
+      "event_ids": [
+        "AD-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #23; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-024",
+      "marker": "#24",
+      "name": "Nhãn lý do của quản trị viên và chỉ báo bắt buộc cho kiểm toán",
+      "type": "Nhãn lý do quản trị viên + chỉ báo bắt buộc cho kiểm toán",
+      "position": "Nhãn lý do của quản trị viên và chỉ báo nhật ký bắt buộc; đầu biểu mẫu.",
+      "properties": "Required marker là static; không có body field/audit persistence contract ở #71/#72. Visible; trạng thái bắt buộc chưa được phê duyệt; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #24; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-025",
+      "marker": "#25",
+      "name": "Ô văn bản lý do kiểm toán đang vô hiệu hóa",
+      "type": "Lý do kiểm toán vùng nhập văn bản",
+      "position": "Ô nhập nhiều dòng lý do kiểm toán; vùng nhập lớn.",
+      "properties": "Textarea bị vô hiệu hóa; mã nguồn chưa có căn cứ cho `type`, `required`, độ dài tối đa hay giá trị mặc định. Candidate cục bộ của #71 chỉ nhận `status`; #72 không nhận body. Bản mẫu khóa ô nhập, không có sự kiện nhập. Giữ khóa cho đến khi duyệt trường dữ liệu, API kiểm toán và quy tắc kiểm tra; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #25; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-026",
+      "marker": "#26",
+      "name": "Bị vô hiệu hóa/inactive huy hiệu",
+      "type": "“Vô hiệu hóa” badge",
+      "position": "“Vô hiệu hóa” badge; trong góc dưới phải textarea.",
+      "properties": "Nhãn tĩnh; không có liên hệ với API quyền hoặc phiên hiện tại. Đang hiển thị; chỉ phản ánh trạng thái trong bản mẫu; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #26; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-027",
+      "marker": "#27",
+      "name": "Chính sách hệ thống cảnh báo biểu tượng",
+      "type": "Chính sách hệ thống cảnh báo biểu tượng",
+      "position": "System-policy warning icon; trái warning panel.",
+      "properties": "Biểu tượng khiên trang trí; không có API chính sách cung cấp data. Có hiển thị; không có sự kiện.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #27; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-028",
+      "marker": "#28",
+      "name": "Tiêu đề và nội dung cảnh báo chính sách",
+      "type": "Cảnh báo chính sách tiêu đề/body",
+      "position": "Tiêu đề/nội dung cảnh báo chính sách; bảng cảnh báo bên dưới ô nhập.",
+      "properties": "Các tuyên bố về chính sách toàn vẹn dữ liệu, bảo vệ ghi danh/kết quả và tạm khóa là nội dung tĩnh. Mã nguồn cục bộ của #72 không áp đặt các phụ thuộc này. Thành phần đang hiển thị; owner cần cung cấp nguồn/chính sách cho nội dung; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #28; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-029",
+      "marker": "#29",
+      "name": "Thao tác quay lại an toàn",
+      "type": "“Quay lại an toàn” action",
+      "position": "“Quay lại an toàn” action; dưới panel trái.",
+      "properties": "Liên kết trong bản mẫu trỏ về /admin/users; trang ứng dụng có liên kết router tới danh sách người dùng nhưng không giữ trạng thái người dùng đang chọn. Liên kết ứng dụng hiện có; quy tắc quay lại/giữ lựa chọn cần được duyệt; EV-05. Không có thao tác ghi.",
+      "event_ids": [
+        "AD-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #29; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-030",
+      "marker": "#30",
+      "name": "Nút xác nhận thao tác",
+      "type": "“Xác nhận thực hiện” button",
+      "position": "“Xác nhận thực hiện” button; dưới panel phải.",
+      "properties": "Thành phần bị vô hiệu hóa trong bản mẫu và trang ứng dụng; không có bộ xử lý/gửi yêu cầu thay đổi. Chỉ bật sau khi duyệt lựa chọn, trạng thái người dùng/phiên, quyền và chính sách; EV-03/EV-04.",
+      "event_ids": [
+        "AD-05-EV-003",
+        "AD-05-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #30; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-031",
+      "marker": "#31",
+      "name": "Tuyên bố chân trang về bộ xử lý API và cổng kiểm soát đã thực thi",
+      "type": "Tuyên bố chân trang về bộ xử lý API/“Enforced Gate: Active”",
+      "position": "API handlers / “Enforced Gate: Active” chân trang tuyên bố; right side of thẻ chân trang.",
+      "properties": "Các nhãn tĩnh, không phải dữ liệu đo lường API hoặc trạng thái cổng kiểm soát đã được thực thi. Trang ứng dụng chỉ gọi API #69; không có bên gọi #71/#72. Đang hiển thị nhưng chưa được xác minh; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #31; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-032",
+      "marker": "#32",
+      "name": "Tuyên bố chân trang về mã kiểm toán và tuân thủ ISO",
+      "type": "Tuyên bố chân trang về mã kiểm toán `AD-05`/tuân thủ ISO/IEC 27001",
+      "position": "Audit code `AD-05` / ISO/IEC 27001 tuân thủ chân trang tuyên bố; left thẻ chân trang.",
+      "properties": "Khẳng định kiểm toán/tuân thủ dạng tĩnh; luồng màn hình này không có bản ghi kiểm toán, kiểm toán viên, bằng chứng kiểm soát hoặc API tuân thủ hỗ trợ. Đang hiển thị nhưng chưa được xác minh; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #32; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-033",
+      "marker": "#33",
+      "name": "Văn bản chân trang bên phải về hệ thống",
+      "type": "Văn bản chân trang bên phải về hệ thống",
+      "position": "Văn bản chân trang bên trái về hệ thống.",
+      "properties": "Văn bản tĩnh và năm. Có hiển thị; không có hành động hoặc nguồn data.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #33; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-05-EL-034",
+      "marker": "#34",
+      "name": "Liên kết chân trang về quyền riêng tư/RBAC/hỗ trợ",
+      "type": "Liên kết chân trang về quyền riêng tư/RBAC/hỗ trợ",
+      "position": "Quyền riêng tư/RBAC/support liên kết chân trang; page bottom right.",
+      "properties": "Các liên kết có href=\"#\"; đích đến/nội dung chưa được định nghĩa trong mã nguồn hiện tại. Có hiển thị; chưa xác minh được điều hướng; EV-06.",
+      "event_ids": [
+        "AD-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #34; images/screen-numbered.png"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-05-EV-001",
+      "name": "Mở màn hình và tải tài khoản",
+      "trigger": "Truy cập tuyến/bàn giao; tải dữ liệu",
+      "processing": "Kiểm tra raw userId signed-int64; áp dụng auth; GET #69 không query/body; chỉ map profile khi HTTP 200, business code và UserProfile hợp lệ; phân loại loading/loaded/error; tuyến hiện tại skips GET for invalid/missing ID.",
+      "element_ids": [
+        "AD-05-EL-016",
+        "AD-05-EL-017",
+        "AD-05-EL-018",
+        "AD-05-EL-006",
+        "AD-05-EL-008"
+      ],
+      "api_ids": [
+        "AD-05-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "00-overview.md §4; 02-events.md §EV-01"
+    },
+    {
+      "id": "AD-05-EV-002",
+      "name": "Chọn lock/unlock/delete tab",
+      "trigger": "Nhấp #21/#22/#23",
+      "processing": "Chỉ cập nhật bản nháp cục bộ sau khi đích và chính sách được duyệt; đổi thẻ không làm thay đổi dữ liệu hay cập nhật bộ nhớ đệm. Ánh xạ trạng thái/thao tác ứng viên vẫn là DERIVED; các thẻ trong bản mẫu hiện không có bộ xử lý sự kiện.",
+      "element_ids": [
+        "AD-05-EL-021",
+        "AD-05-EL-022",
+        "AD-05-EL-023",
+        "AD-05-EL-025",
+        "AD-05-EL-030"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #21–#23; 02-events.md §EV-02"
+    },
+    {
+      "id": "AD-05-EV-003",
+      "name": "Xác nhận khóa hoặc mở khóa trạng thái",
+      "trigger": "Gửi/Click #30 trong khi lock/unlock chọned",
+      "processing": "Giữ nút xác nhận bị vô hiệu hóa cho đến khi duyệt body/status, quyền/biện pháp bảo vệ và chính sách audit/phiên; không cập nhật lạc quan. Chỉ dùng PATCH #71 sau khi được duyệt; phải mô tả đúng ảnh hưởng tạm khóa/kích hoạt và sự không rõ ràng khi lỗi.",
+      "element_ids": [
+        "AD-05-EL-016",
+        "AD-05-EL-017",
+        "AD-05-EL-021",
+        "AD-05-EL-022",
+        "AD-05-EL-024",
+        "AD-05-EL-025",
+        "AD-05-EL-030"
+      ],
+      "api_ids": [
+        "AD-05-API-002",
+        "AD-05-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-03; 04-api-integration.md §2"
+    },
+    {
+      "id": "AD-05-EV-004",
+      "name": "Xác nhận xóa tài khoản",
+      "trigger": "Gửi/Nhấp #30 khi đã chọn xóa",
+      "processing": "Giữ thao tác ở trạng thái vô hiệu hóa cho đến khi chính sách vòng đời/lưu giữ/khả năng hiển thị/phụ thuộc/token/phiên/quyền/kiểm toán được phê duyệt. Chỉ dùng DELETE #72 không có body sau khi được phê duyệt; không cam kết xóa vĩnh viễn hoặc tự động thử lại. Điều hướng/làm mới sau thành công vẫn đang chờ quyết định.",
+      "element_ids": [
+        "AD-05-EL-016",
+        "AD-05-EL-017",
+        "AD-05-EL-023",
+        "AD-05-EL-024",
+        "AD-05-EL-025",
+        "AD-05-EL-030"
+      ],
+      "api_ids": [
+        "AD-05-API-003",
+        "AD-05-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-04; 04-api-integration.md §2"
+    },
+    {
+      "id": "AD-05-EV-005",
+      "name": "Quay lại AD-02 / AD-03",
+      "trigger": "Nhấp #9/#29",
+      "processing": "Chỉ điều hướng đến đích đã được phê duyệt; chỉ giữ ID số/ngữ cảnh theo hợp đồng tuyến. Không gọi API/thay đổi dữ liệu như tác dụng phụ của liên kết. Bản mẫu hiện tại và liên kết trong ứng dụng khác nhau về đích đến/ngữ cảnh.",
+      "element_ids": [
+        "AD-05-EL-006",
+        "AD-05-EL-008",
+        "AD-05-EL-009",
+        "AD-05-EL-029"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #9/#29; 02-events.md §EV-05; 06-navigation.md §1–§4"
+    },
+    {
+      "id": "AD-05-EV-006",
+      "name": "Các điều khiển lý do, chính sách, khung giao diện và chân trang",
+      "trigger": "Ô nhập/Click/Render",
+      "processing": "Giữ các điều khiển chưa được hỗ trợ ở trạng thái vô hiệu hóa hoặc không tương tác. Các tuyên bố tĩnh không phải dữ liệu về quyền/tình trạng hệ thống/kiểm toán/tuân thủ. Không gửi lý do đến các API không nhận trường này.",
+      "element_ids": [
+        "AD-05-EL-002",
+        "AD-05-EL-003",
+        "AD-05-EL-004",
+        "AD-05-EL-005",
+        "AD-05-EL-006",
+        "AD-05-EL-007",
+        "AD-05-EL-010",
+        "AD-05-EL-013",
+        "AD-05-EL-015",
+        "AD-05-EL-024",
+        "AD-05-EL-025",
+        "AD-05-EL-026",
+        "AD-05-EL-027",
+        "AD-05-EL-028",
+        "AD-05-EL-031",
+        "AD-05-EL-032",
+        "AD-05-EL-034"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §3 #2–#7/#13/#15/#24–#28/#31–#34; 02-events.md §EV-06"
+    },
+    {
+      "id": "AD-05-EV-007",
+      "name": "API yêu cầu/response matrix",
+      "trigger": "Rà soát hợp đồng yêu cầu/phản hồi API",
+      "processing": "Tách hợp đồng đọc #69 khỏi các thao tác thay đổi dự kiến #71/#72; kiểm tra status, businessCode, envelope và cấu trúc phản hồi. Không tự thêm query/body/reason/trace/tính lũy đẳng/thử lại; việc tải lại #68/#69 đang chờ chính sách định tuyến AC-31.",
+      "element_ids": [
+        "AD-05-EL-016",
+        "AD-05-EL-017",
+        "AD-05-EL-018",
+        "AD-05-EL-021",
+        "AD-05-EL-022",
+        "AD-05-EL-023",
+        "AD-05-EL-025",
+        "AD-05-EL-030"
+      ],
+      "api_ids": [
+        "AD-05-API-001",
+        "AD-05-API-002",
+        "AD-05-API-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §API request/response matrix; 04-api-integration.md §2"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD05-BL-001",
+      "description": "Ánh xạ quyền AC-31, quyền/quy mô/tenant/MFA của Admin, cùng biện pháp ngăn tự khóa và khóa Admin cuối cùng chưa được phê duyệt.",
+      "impact": "Chưa thể nghiệm thu việc phân quyền tác nhân và các điều kiện trước khi thay đổi data.",
+      "decision": "Chủ sở hữu/bộ phận bảo mật phê duyệt ranh giới quyền và biện pháp bảo vệ.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-01–EV-04; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-002",
+      "description": "#71 trong catalog/AC không nêu body hoặc danh sách status cho phép; {status: ACTIVE|SUSPENDED} cục bộ chỉ được suy ra.",
+      "impact": "Yêu cầu khóa/mở khóa và các chuyển trạng thái được phép chưa thể dùng làm tiêu chí nghiệm thu.",
+      "decision": "Chủ sở hữu API/sản phẩm phê duyệt thân yêu cầu, các giá trị trạng thái và quy tắc chuyển trạng thái.",
+      "source_ref": "00-overview.md §API; 02-events.md §EV-03; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-003",
+      "description": "Các trường hồ sơ/PII được hiển thị, enum vai trò/trạng thái, vòng đời và chính sách hiện tại về khả năng hiển thị bản ghi DELETED chưa được phê duyệt.",
+      "impact": "Chưa thể chốt các trường hồ sơ được hiển thị, ánh xạ trạng thái hoặc trạng thái kỳ vọng sau khi xóa.",
+      "decision": "Chủ sở hữu phê duyệt quy tắc PII, tập giá trị enum, vòng đời và cách hiển thị.",
+      "source_ref": "01-ui-elements.md §3 #16–#18/#23; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-004",
+      "description": "Ảnh hưởng của #71 đến phiên và ngữ nghĩa xóa của #72, thời hạn lưu giữ/ẩn danh, phụ thuộc, ảnh hưởng đến token và khôi phục vẫn chưa được quyết định.",
+      "impact": "Không thể bật các nút hoặc khẳng định kết quả khóa/xóa.",
+      "decision": "Chủ sở hữu sản phẩm/API/bảo mật phê duyệt chính sách phiên và vòng đời xóa dữ liệu.",
+      "source_ref": "02-events.md §EV-03/04; 04-api-integration.md §2; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-005",
+      "description": "Lý do kiểm toán chưa có hợp đồng lưu trữ/API; các tuyên bố tĩnh về kiểm toán, cổng kiểm soát, RBAC và ISO không có nguồn hỗ trợ.",
+      "impact": "Không thể xác nhận yêu cầu về lý do hoặc xem huy hiệu/tuyên bố là biện pháp bảo mật đang hoạt động.",
+      "decision": "Bộ phận bảo mật/thiết kế cung cấp hợp đồng và bằng chứng có thể kiểm toán hoặc gỡ bỏ các tuyên bố.",
+      "source_ref": "01-ui-elements.md §3 #7/#15/#24–#32; 02-events.md §EV-06",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-006",
+      "description": "Liên kết quay lại danh sách trong bản mẫu và các link ứng dụng hiện tại không xác định luồng bàn giao AD-02/AD-03, giữ người dùng đang chọn, tải lại hoặc đích sau mutation.",
+      "impact": "Chưa xác định tiêu chí nghiệm thu điều hướng và duy trì mục đã chọn.",
+      "decision": "Chủ sở hữu sản phẩm/tuyến phê duyệt điểm vào, quay lại, ngữ cảnh và điều hướng sau thao tác.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-05; 06-navigation.md §1–§4",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-007",
+      "description": "Chưa xác minh schema/triển khai/môi trường chạy đã xác thực và môi trường kiểm thử mục tiêu.",
+      "impact": "Không thể khẳng định gói này chạy được trong môi trường mục tiêu.",
+      "decision": "Chủ sở hữu CSDL/API xác minh lược đồ, triển khai và môi trường dùng người dùng giả lập/token kiểm thử.",
+      "source_ref": "00-overview.md §status; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-008",
+      "description": "Hợp đồng chưa quy định đầy đủ thứ tự lỗi khi thay đổi dữ liệu, thử lại/tính lặp an toàn, đối soát timeout và hành vi làm mới qua API #68/#69.",
+      "impact": "Chưa thể chốt tiêu chí nghiệm thu cho kết quả không rõ ràng hoặc gửi trùng.",
+      "decision": "API/bảo mật/sản phẩm phê duyệt chính sách xử lý lỗi, đối soát và làm mới.",
+      "source_ref": "02-events.md §EV-03/04/API matrix; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-05-TC-MH-001",
+        "requirement_ids": [
+          "AD-05-YC-001",
+          "AD-05-YC-002"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Tuyến/bàn giao dạng số",
+        "precondition": "Synthetic AD-02/AD-03 fixture.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Mở /admin/users/123/actions rồi kiểm tra URL/yêu cầu API.",
+        "expected": "user_id giữ nguyên giá trị số trên đường dẫn; không thay bằng USR-*, email hay số điện thoại. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §Expected behavior",
+          "02-events.md §EV-01",
+          "06-navigation.md §1"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-002",
+        "requirement_ids": [
+          "AD-05-YC-001",
+          "AD-05-YC-002"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "ID tuyến thiếu hoặc không hợp lệ",
+        "precondition": "Bộ kiểm tra tuyến; không dùng tài khoản thật.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Mở tuyến với giá trị thiếu, `USR-001`, không phải số và vượt giới hạn signed-int64; kiểm tra hoạt động mạng.",
+        "expected": "Mã nguồn hiện tại kiểm tra ID nguyên dạng trên tuyến và bỏ qua #69 nếu ID bị thiếu, sai định dạng hoặc nằm ngoài phạm vi; khi đó hệ thống hiển thị lỗi cục bộ. Cần xác nhận máy chủ và đích hiển thị lỗi sau khi được duyệt. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §4",
+          "02-events.md §EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-003",
+        "requirement_ids": [
+          "AD-05-YC-001",
+          "AD-05-YC-002"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Cận trên signed-int64",
+        "precondition": "Chỉ dùng giá trị đường dẫn giả lập.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Mở màn bằng 9223372036854775807, sau đó bằng 9223372036854775808; quan sát kết quả kiểm tra và đường dẫn request.",
+        "expected": "Giá trị signed-int64 lớn nhất vượt qua bước kiểm tra số; giá trị tiếp theo bị từ chối trước khi gọi #69. Verify với synthetic route fixture chỉ. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-004",
+        "requirement_ids": [
+          "AD-05-YC-003",
+          "AD-05-YC-004",
+          "AD-05-YC-005"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Phản hồi hồ sơ #69 hợp lệ",
+        "precondition": "Token kiểm thử và hồ sơ UserProfile giả lập; chưa xác minh môi trường chạy mục tiêu.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Mở bằng mã ID dạng số hợp lệ; quan sát trạng thái đang tải, request GET #69, HTTP/businessCode/envelope rồi trạng thái trang.",
+        "expected": "Chỉ 200 DESIGN_RESOURCE_RETRIEVED với valid UserProfile tương ứng với loaded/chỉ đọc; không xem hồ sơ tĩnh hoặc huy hiệu quyền hạn là phản hồi API. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-005",
+        "requirement_ids": [
+          "AD-05-YC-003",
+          "AD-05-YC-004"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "#69 auth/permission/not-found lỗis",
+        "precondition": "Chỉ dùng phản hồi giả lập.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Lần lượt trả về 401, 403 và 404; kiểm tra trạng thái và điều khiển xác nhận.",
+        "expected": "Ánh xạ từng phản hồi sang trạng thái xác thực/từ chối/không tìm thấy tương ứng; không hiển thị hồ sơ giả hoặc bật nút Xác nhận. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-006",
+        "requirement_ids": [
+          "AD-05-YC-003",
+          "AD-05-YC-004"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "#69 server/network/envelope lỗis",
+        "precondition": "Chỉ dùng phản hồi giả lập.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Lần lượt trả về 500, lỗi mạng và businessCode/envelope không hợp lệ.",
+        "expected": "Giữ trạng thái lỗi, không hiển thị hồ sơ giả và không bật điều khiển thay đổi dữ liệu; chỉ hiển thị nội dung lỗi an toàn theo chính sách chung. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-007",
+        "requirement_ids": [
+          "AD-05-YC-005",
+          "AD-05-YC-013",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Tách biệt nguồn trạng thái/quyền",
+        "precondition": "Hồ sơ giả lập có trạng thái đã biết; không có PII.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Đối chiếu các trường hồ sơ API với thẻ trạng thái và quyền/huy hiệu.",
+        "expected": "Trạng thái hồ sơ chỉ lấy từ ánh xạ #69 đã được phê duyệt; static RBAC/chỉ đọc/health copy không phải là permission decision hoặc kết quả trong môi trường chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #7/#16–#18",
+          "02-events.md §EV-01/06"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-008",
+        "requirement_ids": [
+          "AD-05-YC-006",
+          "AD-05-YC-007",
+          "AD-05-YC-008"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Trạng thái thao tác chỉ đọc",
+        "precondition": "Đã tải dữ liệu người dùng giả lập; dùng bản dựng mã nguồn hoặc dữ liệu bản mẫu.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Inspect lock/unlock/delete thẻs, reason và xác nhận; observe outgoing yêu cầus.",
+        "expected": "Các điều khiển của ứng dụng hiện vẫn bị vô hiệu hóa và chưa có nơi gọi #71/#72; chỉ chuyển thẻ hoặc hiển thị không làm thay đổi dữ liệu. Nghiệm thu vẫn đang chờ. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-002",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "00-overview.md §4",
+          "02-events.md §EV-02–EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-009",
+        "requirement_ids": [
+          "AD-05-YC-008",
+          "AD-05-YC-009",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "#71 — khóa hợp đồng khóa/mở khóa",
+        "precondition": "Không thay đổi dữ liệu tài khoản thật; chỉ dùng phương thức truyền tải giả lập.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Kiểm tra thao tác trạng thái dự kiến và body trong danh mục API; không gửi yêu cầu đến máy chủ thật.",
+        "expected": "Chưa quy định nội dung yêu cầu trong danh mục/AC; local {status} mapping is DERIVED. Không khẳng định payload đã được chấp nhận hoặc phiên bị ảnh hưởng trước khi có phê duyệt. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-002"
+        ],
+        "source_refs": [
+          "02-events.md §EV-03",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-010",
+        "requirement_ids": [
+          "AD-05-YC-009",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Suspend/activate session effects",
+        "precondition": "Chỉ dùng bộ dữ liệu API giả lập hoặc rà soát mã nguồn.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Rà soát hành vi #71 trong mã nguồn cục bộ đối với việc làm mới hàng dữ liệu, access JWT và kích hoạt; đối chiếu với nội dung ảnh hưởng đang hiển thị (nếu có).",
+        "expected": "Không khẳng định mọi phiên đều kết thúc: các dòng refresh token đủ điều kiện có thể bị thu hồi, JWT truy cập có thể vẫn còn hiệu lực, và kích hoạt lại không khôi phục token đã bị thu hồi. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-002"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #13/#19/#22",
+          "02-events.md §EV-03",
+          "05-business-rules.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-011",
+        "requirement_ids": [
+          "AD-05-YC-010",
+          "AD-05-YC-011",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Vòng đời xóa và khả năng hiển thị",
+        "precondition": "Chỉ dùng bộ dữ liệu API giả lập/rà soát mã nguồn; không xóa dữ liệu thật.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Đối chiếu nhãn “xóa vĩnh viễn” với ý nghĩa marker #72 cục bộ và khả năng hiển thị #68/#69.",
+        "expected": "Không khẳng định xóa vật lý hay ẩn danh hóa; mã nguồn cục bộ gán trạng thái `DELETED`, vẫn giữ dữ liệu phụ thuộc, hồ sơ và token, đồng thời bản ghi vẫn có thể được #68/#69 trả về. Chờ xác nhận DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-003",
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #23/#28",
+          "02-events.md §EV-04",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-012",
+        "requirement_ids": [
+          "AD-05-YC-012",
+          "AD-05-YC-013",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Lý do/kiểm toán và cam kết tĩnh",
+        "precondition": "Không dùng lý do thật hoặc PII.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Inspect reason vùng nhập văn bản, audit indicator, RBAC/gate/ISO tuyên bố và API payload definitions.",
+        "expected": "Trường lý do vẫn bị vô hiệu hóa và chưa có hợp đồng; trường này không được gửi qua #71/#72. Nội dung kiểm toán/tuân thủ tĩnh không phải bằng chứng về lưu trữ hoặc cơ chế kiểm soát. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-002",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #7/#24–#32",
+          "02-events.md §EV-06"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-013",
+        "requirement_ids": [
+          "AD-05-YC-014",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Điều hướng quay lại và liên kết khung giao diện",
+        "precondition": "Tuyến người dùng được chọn giả lập; không dùng tài khoản thật.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Nhấn các liên kết quay lại/danh sách/chi tiết; kiểm tra đích đến, ID số được giữ lại và các lệnh gọi mạng.",
+        "expected": "Chỉ ghi nhận các liên kết có trong mã nguồn; hành vi lựa chọn/ngữ cảnh vẫn chưa được chốt và chỉ riêng liên kết không được kích hoạt thay đổi dữ liệu hoặc gọi API. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #9/#29/#34",
+          "02-events.md §EV-05",
+          "06-navigation.md §1–§4"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-014",
+        "requirement_ids": [
+          "AD-05-YC-006",
+          "AD-05-YC-008",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Timeout khi thay đổi dữ liệu và chính sách thử lại",
+        "precondition": "Phương thức truyền tải giả lập có timeout/kết quả chưa rõ.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Trong bộ giả lập kiểm thử, không trả phản hồi sau request thay đổi; kiểm tra việc thử lại và thông báo trạng thái.",
+        "expected": "Không tự động thử lại hoặc báo thành công; hiển thị kết quả chưa xác định và chờ chính sách đối soát được phê duyệt. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-002",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "02-events.md §EV-03/04",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-015",
+        "requirement_ids": [
+          "AD-05-YC-003",
+          "AD-05-YC-004",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Sẵn sàng môi trường chạy/lược đồ/kiểm thử",
+        "precondition": "Không dùng thông tin xác thực production; chỉ dùng môi trường giả lập.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Ghi lại môi trường, bản dựng schema/API và dữ liệu xác thực trước khi chạy nghiệm thu.",
+        "expected": "Môi trường chạy, triển khai và schema chưa được xác minh. Chưa thực thi các ca này cho đến khi owner cung cấp môi trường kiểm thử và xác nhận. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-001",
+          "AD-05-API-002",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "00-overview.md §status",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-MH-016",
+        "requirement_ids": [
+          "AD-05-YC-014",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05",
+        "group": "Toàn màn hình",
+        "title": "Làm mới và đích đến sau thao tác",
+        "precondition": "Chỉ giả lập thành công; không thay đổi dữ liệu thật.",
+        "data": "Chỉ dùng fixture giả lập; không dùng PII tài khoản thật hoặc thực hiện thay đổi thật.",
+        "steps": "Rà soát việc làm mới theo AC-31 qua #68/#69 và đích đến sau hành động thành công.",
+        "expected": "Làm mới và điều hướng còn phụ thuộc chính sách AC-31 được duyệt; không suy ra hợp đồng làm mới #68 hay che/điều hướng khỏi hàng DELETED. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-001",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "00-overview.md §1/§Expected behavior",
+          "02-events.md §EV-03/04",
+          "06-navigation.md §3–§4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-05-TC-TP-001",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #1: Study2Work/LMS/Cổng quản trị brand",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#1=Study2Work / LMS / cổng quản trị thương hiệu; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #1 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #1 tương ứng với “Study2Work / LMS / Admin Portal brand”. Mô tả trong DD: Logo/text tĩnh; không thuộc #69/#71/#72. Visible; static. Click destination không có handler; shell navigation thuộc EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #1; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-002",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #2: Nhóm điều hướng chính của trang quản trị",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#2=quản trị chính nhóm điều hướng; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #2 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #2 tương ứng với “Primary Admin navigation group”. Mô tả trong DD: Năm label tĩnh; HTML anchors dùng `href=\"#\"`; route destinations chưa có source. Visible; link action chưa wired; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #2; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-003",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #3: huy hiệu trạng thái “SYSTEM NORMAL”",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#3=huy hiệu trạng thái “SYSTEM NORMAL”; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #3 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #3 tương ứng với “huy hiệu trạng thái “SYSTEM NORMAL””. Mô tả trong DD: Static assertion; không có health endpoint/data trong flow AD-05. Visible nhưng không verified; không dùng làm trạng thái API/runtime; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #3; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-004",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #4: Notifications button",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#4=nút thông báo; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #4 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #4 tương ứng với “Notifications button”. Mô tả trong DD: Không có unread count, nguồn dữ liệu hoặc handler. Visible; click effect chưa được xác định; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #4; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-005",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #5: Danh tính và ảnh đại diện quản trị viên",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#5=danh tính quản trị viên và ảnh đại diện; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #5 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #5 tương ứng với “Admin identity and avatar”. Mô tả trong DD: nội dung được gán cố định. #69 trả về người dùng mục tiêu, không phải danh tính Admin hiện tại. Đang hiển thị; nguồn hồ sơ Admin nằm ngoài luồng này; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #5; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-006",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #6: đường dẫn điều hướng toàn cục",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#6=Global đường dẫn điều hướng trail; synthetic fixture, no PII. Related events: AD-05-EV-005, AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #6 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #6 tương ứng với “Global breadcrumb trail”. Mô tả trong DD: Label tĩnh, chưa có route-state binding. Visible; destinations/click behavior chưa wired; EV-05/EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #6; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-007",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #7: RBAC assurance badge",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#7=RBAC cam kết huy hiệu; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #7 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #7 tương ứng với “RBAC assurance badge”. Mô tả trong DD: Claim tĩnh, không phải output của #69/#71/#72 hoặc permission evaluation result. Visible nhưng không verified; không dùng làm authorization gate; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #7; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-008",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #8: User management/list/action breadcrumb",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#8=quản lý người dùng/list/action đường dẫn điều hướng; synthetic fixture, no PII. Related events: AD-05-EV-005.",
+        "steps": [
+          "Đối chiếu marker #8 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #8 tương ứng với “User management/list/action breadcrumb”. Mô tả trong DD: nhãn tĩnh; không truyền numeric ID hay trạng thái tuyến trong HTML. Visible; navigation theo route cần duyệt; EV-05. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #8; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-009",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #9: Back to AD-02 liên kết",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#9=liên kết quay lại AD-02; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-005.",
+        "steps": [
+          "Đối chiếu marker #9 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #9 tương ứng với “Back to AD-02 link”. Mô tả trong DD: HTML bản mẫu có href=\"/admin/users\"; trang ứng dụng có liên kết bộ định tuyến về /admin/users nhưng không giữ truy vấn/trạng thái người dùng đang chọn. Liên kết ứng dụng hiện có; chưa định nghĩa cách giữ lựa chọn; EV-05. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #9; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-010",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #10: API #69/#71/#72 reference strip",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#10=API #69/#71/#72 tham chiếu strip; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #10 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #10 tương ứng với “API #69/#71/#72 reference strip”. Mô tả trong DD: Tên API tĩnh; không phải proof các API được gọi/wired. Visible; không có event/request state; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #10; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-011",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #11: tiêu đề trang",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#11=Page title; synthetic fixture, no PII. Related events: Không gắn event trong DD element row..",
+        "steps": [
+          "Đối chiếu marker #11 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #11 tương ứng với “Page title”. Mô tả trong DD: Static copy. Visible; không có API source field; presentation chỉ. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #11; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-012",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #12: Security shield hero icon",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#12=Security shield hero icon; synthetic fixture, no PII. Related events: Không gắn event trong DD element row..",
+        "steps": [
+          "Đối chiếu marker #12 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #12 tương ứng với “Security shield hero icon”. Mô tả trong DD: Decorative icon, không biểu diễn policy evaluation hoặc permission result. Visible; không có event. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #12; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-013",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #13: Page phụ đề",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#13=Page tiêu đề phụ đề; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #13 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #13 tương ứng với “Page subtitle”. Mô tả trong DD: nội dung tĩnh. #71/#72 cục bộ không hỗ trợ tuyên bố “Dừng toàn bộ phiên”: thao tác tạm ngưng thu hồi các phiên làm mới đủ điều kiện; JWT truy cập có thể vẫn còn hạn; thao tác xóa không thu hồi các phiên làm mới. Đang hiển thị; cần chỉnh khi chính sách được duyệt; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #13; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-014",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #14: Tiêu đề bảng ngữ cảnh thực thi",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#14=Execution-context panel heading; synthetic fixture, no PII. Related events: Không gắn event trong DD element row..",
+        "steps": [
+          "Đối chiếu marker #14 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #14 tương ứng với “Execution-context panel heading”. Mô tả trong DD: Static title. Visible; không có event. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #14; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-015",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #15: chỉ đọc protocol badge",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#15=chỉ đọc protocol huy hiệu; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #15 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #15 tương ứng với “Read-Only protocol badge”. Mô tả trong DD: trạng thái tĩnh; không có nguồn cấu hình/chốt phía máy chủ. Đang hiển thị; không bảo đảm có kiểm soát thao tác thay đổi dữ liệu; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #15; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-016",
+        "requirement_ids": [
+          "AD-05-YC-001",
+          "AD-05-YC-002",
+          "AD-05-YC-003",
+          "AD-05-YC-005"
+        ],
+        "target_id": "AD-05-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #16: Target account ID card",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#16=tài khoản mục tiêu ID thẻ; synthetic fixture, no PII. Related events: AD-05-EV-001.",
+        "steps": [
+          "Đối chiếu marker #16 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #16 tương ứng với “Target account ID card”. Mô tả trong DD: bản mẫu cho biết chưa chọn người dùng; ID được rút gọn. Khi được kết nối, nguồn dự kiến là UserProfile.id hoặc route userId dạng int64; kiểm tra ID theo API. Hiển thị/trạng thái: chưa chọn/đang tải/sẵn sàng. Sự kiện/ràng buộc: EV-01. Không dùng giá trị gán cố định làm yêu cầu. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #16; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-017",
+        "requirement_ids": [
+          "AD-05-YC-003",
+          "AD-05-YC-004",
+          "AD-05-YC-005"
+        ],
+        "target_id": "AD-05-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #17: Current account status card",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#17=tài khoản hiện tại trạng thái thẻ; synthetic fixture, no PII. Related events: AD-05-EV-001.",
+        "steps": [
+          "Đối chiếu marker #17 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #17 tương ứng với “Current account status card”. Mô tả trong DD: bản mẫu ghi “Không xác định”; ánh xạ UserProfile.status:string từ #69 chỉ sau khi duyệt chính sách hiển thị PII/trạng thái. Chưa có ánh xạ enum được duyệt. Đang tải/sẵn sàng/lỗi; EV-01. Không tự suy diễn bí danh active/locked/pending. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #17; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-018",
+        "requirement_ids": [
+          "AD-05-YC-005",
+          "AD-05-YC-013"
+        ],
+        "target_id": "AD-05-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #18: Intervention permission card",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#18=thẻ quyền can thiệp; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-001, AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #18 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #18 tương ứng với “Intervention permission card”. Mô tả trong DD: Mockup “Bị khóa bởi chính sách”. Không có permission-decision API/field trong #69/#71/#72. Visible; permission pending/allowed/denied chỉ sau auth/permission contract; EV-01/EV-06. Không suy ra từ badge #7. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #18; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-019",
+        "requirement_ids": [
+          "AD-05-YC-009",
+          "AD-05-YC-010"
+        ],
+        "target_id": "AD-05-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #19: Predicted impact callout",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#19 là lời nhắc về tác động dự đoán; dùng dữ liệu giả lập, không có PII. Sự kiện liên quan: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #19 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #19 tương ứng với “Predicted impact callout”. Mô tả trong DD: Static impact copy; phải phản ánh đúng approved session/delete policy trước khi bật action. Visible; không phải API result; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #19; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-020",
+        "requirement_ids": [
+          "AD-05-YC-006",
+          "AD-05-YC-007"
+        ],
+        "target_id": "AD-05-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #20: Action method label",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#20=Action method label; synthetic fixture, no PII. Related events: Không gắn event trong DD element row..",
+        "steps": [
+          "Đối chiếu marker #20 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #20 tương ứng với “Action method label”. Mô tả trong DD: nhãn tĩnh. Visible; không có event. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #20; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-021",
+        "requirement_ids": [
+          "AD-05-YC-007",
+          "AD-05-YC-008",
+          "AD-05-YC-009",
+          "AD-05-YC-010"
+        ],
+        "target_id": "AD-05-EL-021",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #21: Lock-account tab",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#21=Lock-tài khoản thẻ; synthetic fixture, no PII. Related events: AD-05-EV-002.",
+        "steps": [
+          "Đối chiếu marker #21 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #21 tương ứng với “Lock-account tab”. Mô tả trong DD: `role=\"tab\"`, selected mặc định trong HTML. Candidate action có thể tương ứng #71 `{status:\"SUSPENDED\"}` chỉ sau khi body/state policy được duyệt. Đang hiển thị, chỉ được chọn trong mã HTML tĩnh; click chỉ đổi draft action sau khi ready; EV-02. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #21; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-022",
+        "requirement_ids": [
+          "AD-05-YC-007",
+          "AD-05-YC-008",
+          "AD-05-YC-009",
+          "AD-05-YC-010"
+        ],
+        "target_id": "AD-05-EL-022",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #22: Unlock-account tab",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#22=Unlock-tài khoản thẻ; synthetic fixture, no PII. Related events: AD-05-EV-002.",
+        "steps": [
+          "Đối chiếu marker #22 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #22 tương ứng với “Unlock-account tab”. Mô tả trong DD: role=\"tab\", chưa được chọn. Chỉ xem xét thao tác #71 với {status:\"ACTIVE\"} sau khi được duyệt. Trạng thái ACTIVE cục bộ không khôi phục các token làm mới đã bị thu hồi. Phần tử đang hiển thị; chưa có hàm xử lý trong bản mẫu; EV-02. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #22; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-023",
+        "requirement_ids": [
+          "AD-05-YC-007",
+          "AD-05-YC-008",
+          "AD-05-YC-009",
+          "AD-05-YC-010"
+        ],
+        "target_id": "AD-05-EL-023",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #23: Permanent-delete tab",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#23=xóa vĩnh viễn thẻ; synthetic fixture, no PII. Related events: AD-05-EV-002.",
+        "steps": [
+          "Đối chiếu marker #23 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #23 tương ứng với “Permanent-delete tab”. Mô tả trong DD: role=\"tab\", chưa được chọn; nhãn “Xóa tài khoản vĩnh viễn” không khớp với dấu trạng thái xóa mềm cục bộ #72, vốn không xóa cứng hoặc ẩn danh hóa. Phần tử đang hiển thị; thao tác bị vô hiệu hóa cho đến khi chính sách xóa/vòng đời được duyệt; EV-02. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #23; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-024",
+        "requirement_ids": [
+          "AD-05-YC-012"
+        ],
+        "target_id": "AD-05-EL-024",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #24: quản trị viên reason label và required audit indicator",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#24=nhãn lý do quản trị viên và dấu chỉ bắt buộc kiểm toán; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #24 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #24 tương ứng với “Admin reason label and required audit indicator”. Mô tả trong DD: Required marker là static; không có body field/audit persistence contract ở #71/#72. Visible; trạng thái bắt buộc chưa được phê duyệt; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #24; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-025",
+        "requirement_ids": [
+          "AD-05-YC-012"
+        ],
+        "target_id": "AD-05-EL-025",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #25: Disabled audit-reason textarea",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#25=trường nhập lý do kiểm toán bị vô hiệu hóa; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #25 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #25 tương ứng với “Disabled audit-reason textarea”. Mô tả trong DD: textarea bị vô hiệu hóa; mã nguồn chưa có căn cứ cho `type`, `required`, độ dài tối đa hay giá trị mặc định. Candidate cục bộ của #71 chỉ nhận `status`; #72 không nhận body. Bản mẫu khóa ô nhập, không có sự kiện nhập. Giữ khóa cho đến khi duyệt trường dữ liệu, API kiểm toán và quy tắc kiểm tra; EV-06. Đối chiếu bản mẫu với mã nguồn ứng dụng hiện tại; thành phần tĩnh không chứng minh hành vi khi chạy. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #25; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-026",
+        "requirement_ids": [
+          "AD-05-YC-012"
+        ],
+        "target_id": "AD-05-EL-026",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #26: Disabled/inactive badge",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#26=bị vô hiệu hóa/inactive huy hiệu; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #26 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #26 tương ứng với “Disabled/inactive badge”. Mô tả trong DD: nhãn tĩnh; không có quan hệ với API quyền hoặc phiên hiện tại. Đang hiển thị; chỉ phản ánh trạng thái trong bản mẫu; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #26; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-027",
+        "requirement_ids": [
+          "AD-05-YC-010",
+          "AD-05-YC-013"
+        ],
+        "target_id": "AD-05-EL-027",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #27: System-policy warning icon",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#27=System-policy warning icon; synthetic fixture, no PII. Related events: Không gắn event trong DD element row..",
+        "steps": [
+          "Đối chiếu marker #27 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #27 tương ứng với “System-policy warning icon”. Mô tả trong DD: Decorative shield icon; không có policy API source. Visible; không có event. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #27; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-028",
+        "requirement_ids": [
+          "AD-05-YC-010",
+          "AD-05-YC-013"
+        ],
+        "target_id": "AD-05-EL-028",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #28: Policy warning title và body",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#28=cảnh báo về tiêu đề và nội dung theo chính sách; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #28 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #28: tiêu đề và nội dung cảnh báo chính sách. DD nói nội dung tĩnh về chính sách toàn vẹn dữ liệu, bảo vệ ghi danh/kết quả và tạm khóa; #72 không thực thi các điều kiện này. Thành phần đang hiển thị nhưng nội dung cần owner/chính sách xác nhận; EV-06. Đối chiếu prototype với mã nguồn Angular; mẫu tĩnh không chứng minh runtime. Chờ DD trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #28; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-029",
+        "requirement_ids": [
+          "AD-05-YC-014"
+        ],
+        "target_id": "AD-05-EL-029",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #29: Return-safe action",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#29=thao tác an toàn khi quay lại; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-005.",
+        "steps": [
+          "Đối chiếu marker #29 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #29: thao tác quay lại an toàn. Prototype trỏ tới `/admin/users`; trang ứng dụng có RouterLink tới danh sách người dùng nhưng không giữ lựa chọn người dùng. Liên kết có thật, còn chính sách quay lại/giữ lựa chọn chưa được duyệt; EV-05. Không thay đổi dữ liệu. Đối chiếu prototype và Angular; mẫu tĩnh không chứng minh runtime. Chờ DD.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #29; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-030",
+        "requirement_ids": [
+          "AD-05-YC-006",
+          "AD-05-YC-008",
+          "AD-05-YC-010",
+          "AD-05-YC-013"
+        ],
+        "target_id": "AD-05-EL-030",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #30: Confirm action button",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#30=xác nhận thao tác nút; synthetic fixture, no PII. Related events: AD-05-EV-003, AD-05-EV-004.",
+        "steps": [
+          "Đối chiếu marker #30 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #30 tương ứng với “Confirm action button”. Mô tả trong DD: nút bị vô hiệu hóa trong bản mẫu và trang ứng dụng; không có bộ xử lý/yêu cầu thay đổi dữ liệu. Chỉ bật sau khi duyệt lựa chọn, người dùng/trạng thái phiên, quyền và bước kiểm tra chính sách; EV-03/EV-04. Đối chiếu bản mẫu với mã nguồn ứng dụng hiện tại; thành phần tĩnh không chứng minh hành vi khi chạy. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #30; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-031",
+        "requirement_ids": [
+          "AD-05-YC-012",
+          "AD-05-YC-013",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-031",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #31: API handlers và Enforced Gate chân trang claim",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#31=tuyên bố ở chân trang về API handlers và Enforced Gate; dữ liệu giả lập, không có dữ liệu cá nhân thật (PII). Sự kiện liên quan: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #31 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #31 tương ứng với “API handlers and Enforced Gate footer claim”. Mô tả trong DD: nội dung chân trang chỉ là nhãn tĩnh; đây không phải dữ liệu giám sát API hay bằng chứng về trạng thái thực tế của cơ chế chặn. Trang ứng dụng chỉ gọi #69; không có hàm gọi #71/#72. Phần tử đang hiển thị nhưng chưa được xác minh; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Nội dung tĩnh không chứng minh hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #31; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-032",
+        "requirement_ids": [
+          "AD-05-YC-012",
+          "AD-05-YC-013",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-032",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #32: Audit code và ISO compliance chân trang claim",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#32=Khẳng định ở chân trang về mã kiểm toán và tuân thủ ISO; dữ liệu giả lập, không có PII. Sự kiện liên quan: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #32 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Điểm đánh dấu #32 tương ứng với “Audit code and ISO compliance footer claim”. Mô tả trong DD là tuyên bố tĩnh về kiểm toán/tuân thủ; luồng màn hình này không có bản ghi kiểm toán, kiểm toán viên, điều khiển bằng chứng hay API tuân thủ. Phần tử đang hiển thị nhưng chưa được xác minh; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại. Thành phần tĩnh không phải bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #32; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-033",
+        "requirement_ids": [
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-033",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #33: Copyright/system chân trang text",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#33=Copyright/system footer text; synthetic fixture, no PII. Related events: Không gắn event trong DD element row..",
+        "steps": [
+          "Đối chiếu marker #33 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #33 tương ứng với “Copyright/system footer text”. Mô tả trong DD: Static text và year. Visible; không có action/nguồn dữ liệu. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #33; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-TP-034",
+        "requirement_ids": [
+          "AD-05-YC-014",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EL-034",
+        "group": "Thành phần",
+        "title": "Kiểm tra marker #34: Privacy/RBAC/support chân trang các liên kết",
+        "precondition": "Có ảnh đã đánh số và UI source; ảnh chỉ định vị marker, không xác nhận runtime.",
+        "data": "#34=quyền riêng tư/RBAC/support liên kết chân trang; synthetic fixture, no PII. Related events: AD-05-EV-006.",
+        "steps": [
+          "Đối chiếu marker #34 với ảnh đã đánh số và DD row.",
+          "Kiểm tra mô tả, nguồn dữ liệu, trạng thái và event IDs ở UTC.",
+          "Nếu runtime được xác minh, đối chiếu app state riêng; không suy từ prototype."
+        ],
+        "expected": "Marker #34 tương ứng với “Privacy/RBAC/support footer links”. Mô tả trong DD: Anchor placeholders `#`; destination/content chưa được xác định in mã nguồn hiện tại. Visible; không có verified navigation; EV-06. Đối chiếu danh mục trong bản mẫu với mã nguồn ứng dụng hiện tại; Thành phần tĩnh không phải là bằng chứng về hành vi khi chạy. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #34; images/screen-numbered.png",
+          "00-overview.md §4"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-05-TC-SK-001",
+        "requirement_ids": [
+          "AD-05-YC-001",
+          "AD-05-YC-002",
+          "AD-05-YC-003",
+          "AD-05-YC-004",
+          "AD-05-YC-005"
+        ],
+        "target_id": "AD-05-EV-001",
+        "group": "Sự kiện",
+        "title": "ID số hợp lệ: GET #69 thành công",
+        "precondition": "ID giả lập 123 và envelope UserProfile hợp lệ.",
+        "data": "Chỉ dùng dữ liệu giả lập: ID giả lập 123 và envelope UserProfile hợp lệ.",
+        "steps": "Mở tuyến; kiểm tra xác thực ID thô, GET #69 và trạng thái đang tải → đã tải.",
+        "expected": "Chỉ valid 200 DESIGN_RESOURCE_RETRIEVED + UserProfile becomes loaded/chỉ đọc; profile is không được tạo giả. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §4; 02-events.md §EV-01",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-002",
+        "requirement_ids": [
+          "AD-05-YC-001",
+          "AD-05-YC-002",
+          "AD-05-YC-004"
+        ],
+        "target_id": "AD-05-EV-001",
+        "group": "Sự kiện",
+        "title": "ID tuyến không hợp lệ sẽ bỏ qua GET",
+        "precondition": "Bộ phân tích tuyến của AD05Page từ mã nguồn; chỉ dùng giá trị giả lập.",
+        "data": "Chỉ dùng dữ liệu giả lập: giá trị tuyến bị thiếu/sai định dạng/USR-*/vượt phạm vi signed-int64.",
+        "steps": "Mở từng dữ liệu tuyến giả lập; kiểm tra lỗi cục bộ và nhật ký yêu cầu.",
+        "expected": "Mã nguồn hiện tại bỏ qua #69 và hiển thị lỗi cục bộ khi ID không hợp lệ hoặc bị thiếu; máy chủ và đích điều hướng vẫn cần được xác nhận. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §4; 02-events.md §EV-01",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-003",
+        "requirement_ids": [
+          "AD-05-YC-003",
+          "AD-05-YC-004",
+          "AD-05-YC-005"
+        ],
+        "target_id": "AD-05-EV-001",
+        "group": "Sự kiện",
+        "title": "Lỗi phản hồi GET #69",
+        "precondition": "Các phản hồi giả lập 401/403/404/500, lỗi mạng và phong bì không hợp lệ.",
+        "data": "Synthetic fixture chỉ; Synthetic 401/403/404/500/network/invalid-envelope phản hồis.",
+        "steps": "Lần lượt trả về từng phản hồi rồi kiểm tra trạng thái và các nút thao tác.",
+        "expected": "Map to auth/forbidden/not-found/error; không có fake profile và Confirm vẫn bị vô hiệu hóa. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §4; 02-events.md §EV-01",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-004",
+        "requirement_ids": [
+          "AD-05-YC-006",
+          "AD-05-YC-007",
+          "AD-05-YC-008"
+        ],
+        "target_id": "AD-05-EV-002",
+        "group": "Sự kiện",
+        "title": "Chọn thẻ không làm thay đổi dữ liệu",
+        "precondition": "GET #69 thành công; có mã nguồn Angular hiện tại/bộ kiểm thử.",
+        "data": "Chỉ dùng dữ liệu giả lập; đã tải hồ sơ giả lập; thao tác tab trong bản mẫu/ứng dụng.",
+        "steps": "Chọn từng thẻ hoặc kiểm tra các điều khiển hiện đang vô hiệu hóa; theo dõi nhật ký yêu cầu.",
+        "expected": "Tab selection chỉ là local draft if implemented; không có #71/#72 call hoặc cache write. Bản mẫu hiện tại không có click listener. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-002",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #21–#23; 02-events.md §EV-02",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-005",
+        "requirement_ids": [
+          "AD-05-YC-006",
+          "AD-05-YC-008",
+          "AD-05-YC-013",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05-EV-003",
+        "group": "Sự kiện",
+        "title": "Xác nhận trạng thái vẫn bị khóa",
+        "precondition": "Cần duyệt hợp đồng ghi trước khi kiểm thử.",
+        "data": "Chỉ dùng dữ liệu giả lập; không thay đổi dữ liệu thật; chỉ chạy trong môi trường giả lập.",
+        "steps": "Kiểm tra trạng thái bật của nút Confirm và luồng gọi trong mã máy khách trước khi gửi bất kỳ yêu cầu nào.",
+        "expected": "Nút Xác nhận của ứng dụng và bản mẫu hiện bị vô hiệu hóa; máy khách không có nơi gọi #71. Giữ thao tác bị khóa cho đến khi duyệt nội dung, quyền và chính sách. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-002"
+        ],
+        "source_refs": [
+          "02-events.md §EV-03; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-006",
+        "requirement_ids": [
+          "AD-05-YC-008",
+          "AD-05-YC-009",
+          "AD-05-YC-013",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05-EV-003",
+        "group": "Sự kiện",
+        "title": "Phản hồi PATCH ứng viên và ánh xạ phiên",
+        "precondition": "Tuyến/trang AD05 từ mã nguồn; còn blocker về body/chính sách.",
+        "data": "Chỉ dùng dữ liệu giả lập; chỉ dùng phản hồi giả lập; body yêu cầu #71 chưa được phê duyệt.",
+        "steps": "Rà soát body còn thiếu trong danh mục và ảnh hưởng của cấu trúc body dự kiến; chỉ kiểm thử bằng mock sau khi được duyệt.",
+        "expected": "Không chấp nhận payload và không khẳng định phiên đã kết thúc; hiệu ứng mã nguồn cục bộ còn giới hạn, hợp đồng hiện tại chưa giải quyết. Chờ xác nhận DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-002",
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-03; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-007",
+        "requirement_ids": [
+          "AD-05-YC-008",
+          "AD-05-YC-009",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05-EV-003",
+        "group": "Sự kiện",
+        "title": "Không tự động thử lại PATCH khi kết quả chưa rõ",
+        "precondition": "Chỉ thực hiện sau khi catalog/AC/API owner duyệt body.",
+        "data": "Chỉ dùng dữ liệu giả lập; giả lập timeout/phản hồi không rõ kết quả; không dùng tài khoản thật.",
+        "steps": "Giả lập timeout một lần rồi kiểm tra số lần thử lại và trạng thái giao diện.",
+        "expected": "Kết quả chưa rõ không được báo là thành công và không tự động thử lại; quy trình đối soát đang chờ phê duyệt. Chờ xác nhận DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-002"
+        ],
+        "source_refs": [
+          "02-events.md §EV-03; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-008",
+        "requirement_ids": [
+          "AD-05-YC-006",
+          "AD-05-YC-010",
+          "AD-05-YC-013",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05-EV-004",
+        "group": "Sự kiện",
+        "title": "Xác nhận xóa vẫn bị khóa",
+        "precondition": "Chỉ thực hiện sau khi duyệt hợp đồng/body/schema lỗi.",
+        "data": "Chỉ dùng dữ liệu giả lập; không xóa dữ liệu thật; chỉ giả lập hoặc rà soát mã nguồn.",
+        "steps": "Kiểm tra thẻ xóa đang chọn, trạng thái vô hiệu hóa của nút Confirm và luồng gọi.",
+        "expected": "Hiện chưa có nơi gọi #72 từ máy khách; giữ trạng thái vô hiệu hóa cho đến khi quy tắc vòng đời, quyền, kiểm toán và phiên được phê duyệt. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "02-events.md §EV-04; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-009",
+        "requirement_ids": [
+          "AD-05-YC-010",
+          "AD-05-YC-011",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05-EV-004",
+        "group": "Sự kiện",
+        "title": "Phản hồi DELETE không đồng nghĩa xóa vĩnh viễn",
+        "precondition": "Chỉ thực hiện sau khi luồng lưu được duyệt/triển khai.",
+        "data": "Chỉ dùng dữ liệu giả lập; giả lập #72 thành công; không thay đổi dữ liệu thật.",
+        "steps": "Đối chiếu status/deleted_at trong phản hồi với hành vi mã nguồn cục bộ và khả năng hiển thị qua #68/#69.",
+        "expected": "Thành công có thể chỉ là dấu DELETED; không suy luận đã xóa hẳn/ẩn danh hóa hay hàng bị ẩn khỏi danh sách. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-003",
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-04; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-010",
+        "requirement_ids": [
+          "AD-05-YC-014"
+        ],
+        "target_id": "AD-05-EV-005",
+        "group": "Sự kiện",
+        "title": "Liên kết quay lại không thay đổi dữ liệu và chỉ giữ ngữ cảnh đã được phê duyệt",
+        "precondition": "Có fixture ID dạng số; chính sách xác nhận thay đổi khi rời trang còn bỏ ngỏ.",
+        "data": "Chỉ dùng dữ liệu giả lập: tuyến có ID số giả lập.",
+        "steps": "Nhấn liên kết quay lại danh sách/chi tiết rồi kiểm tra tuyến và nhật ký yêu cầu.",
+        "expected": "Navigate dùng có căn cứ từ mã nguồn destination; không có thao tác thay đổi dữ liệu side effect; selected-user preservation vẫn chưa được giải quyết. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #9/#29; 02-events.md §EV-05; 06-navigation.md §1–§4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-011",
+        "requirement_ids": [
+          "AD-05-YC-012",
+          "AD-05-YC-013",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Trường lý do và tuyên bố đảm bảo chưa được hỗ trợ",
+        "precondition": "Không có ticket hỗ trợ, đích tài liệu hoặc API gate.",
+        "data": "Chỉ dùng dữ liệu giả lập; không có nội dung lý do/thông tin cá nhân (PII).",
+        "steps": "Thử nhập vào trường đang vô hiệu hóa; kiểm tra hợp đồng API và nguồn của nhãn/huy hiệu/chân trang tĩnh.",
+        "expected": "Không gửi lý do; các khẳng định audit/RBAC/tuân thủ tĩnh chưa được xác minh và không có hợp đồng lưu trữ hay thao tác liên kết. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-002",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #2–#7/#13/#15/#24–#28/#31–#34; 02-events.md §EV-06",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-012",
+        "requirement_ids": [
+          "AD-05-YC-013",
+          "AD-05-YC-015"
+        ],
+        "target_id": "AD-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Thao tác trên khung giao diện không có nguồn hỗ trợ sẽ không hoạt động",
+        "precondition": "Không có nguồn health/audit/sync/SSO/compliance trong #69/#70.",
+        "data": "Chỉ dùng dữ liệu giả lập; không có API hoặc bộ dữ liệu giả lập về tình trạng hệ thống/thông báo/hỗ trợ.",
+        "steps": "Kiểm tra đích khi bấm và liên kết dữ liệu cho thông báo, health, RBAC, gate, compliance và liên kết chân trang.",
+        "expected": "Không có lời gọi giả hay khẳng định trạng thái trực tiếp; giữ điều khiển không hoạt động cho đến khi duyệt nguồn/hợp đồng. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #2–#7/#13/#15/#24–#28/#31–#34; 02-events.md §EV-06",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-05-TC-SK-013",
+        "requirement_ids": [
+          "AD-05-YC-003",
+          "AD-05-YC-008",
+          "AD-05-YC-010",
+          "AD-05-YC-011",
+          "AD-05-YC-016"
+        ],
+        "target_id": "AD-05-EV-007",
+        "group": "Sự kiện",
+        "title": "Ma trận yêu cầu/phản hồi API bám theo hợp đồng nguồn",
+        "precondition": "Dữ liệu hợp đồng giả lập; không thay đổi dữ liệu thật.",
+        "data": "Chỉ dùng dữ liệu giả lập: dữ liệu hợp đồng giả lập; không thay đổi dữ liệu thật.",
+        "steps": "Xác minh GET #69 dùng đúng đường dẫn và không có body; kiểm tra thiếu sót body của #71; xác nhận #72 không có body/query; kiểm tra envelope lỗi.",
+        "expected": "Không thêm lý do/truy vấn/trace/idempotency/thuật toán thử lại; không suy ra thao tác làm mới #68. Chỉ chấp nhận phản hồi/mã nghiệp vụ/hình dạng dữ liệu có trong hợp đồng. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [
+          "AD-05-API-001",
+          "AD-05-API-002",
+          "AD-05-API-003"
+        ],
+        "source_refs": [
+          "02-events.md §API request/response matrix; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

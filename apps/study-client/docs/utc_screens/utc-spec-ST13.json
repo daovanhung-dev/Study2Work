@@ -1,0 +1,3484 @@
+{
+  "metadata": {
+    "screen_id": "ST-13",
+    "screen_name": "Giới thiệu bài kiểm tra",
+    "module": "Học viên — thông tin quiz và xác nhận bắt đầu",
+    "route": "/student/quizzes/:quizId",
+    "actor": "Học viên có Student Bearer service. Mã hiện có route/page; API #28/#29 tự xác thực Student. Runtime chưa xác minh.",
+    "version": "UTC v1.0",
+    "dd_version": "DD v0.2",
+    "dd_status": "BLOCKED",
+    "runtime_status": "Hiện có mã nguồn tuyến/trang/dịch vụ của Study Client và router/module/truy vấn/mô hình/kiểm thử API #28/#29. Trang gọi #28 khi mở hoặc đổi quizId và gọi #29 sau thao tác Bắt đầu. Backend hiện không kiểm tra ghi danh hoặc trạng thái bài kiểm tra mở/đã phát hành. Chưa xác minh trên trình duyệt, API đang chạy hoặc cơ sở dữ liệu thực.",
+    "author": "Chưa xác định trong DD",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/03-data-flow.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/07-test-cases.md",
+    "release_readiness": "UTC v1.0 được lập theo yêu cầu dùng DD trong kho làm chuẩn; người dùng nêu DD đã được duyệt. Tài liệu nguồn vẫn hiển thị BLOCKED/Draft và giữ các câu hỏi mở về quyền, API #29, schema và giao diện; không tự suy diễn các quyết định cụ thể. Toàn bộ ca Chờ xác nhận/Chưa chạy.",
+    "baseline_authorization": "Người dùng xác nhận dùng DD trong repo làm nguồn chuẩn dù có trạng thái BLOCKED và cho biết các DD đã được duyệt. Các quyết định chưa có nội dung cụ thể trong repo không được tự tạo; ưu tiên mã nguồn hiện tại khi mô tả hành vi đã có.",
+    "discrepancy_note": "PNG tĩnh có 30 điểm đánh dấu và dữ liệu mẫu; HTML đi kèm là phương án dự phòng khác. Angular hiện có GET #28, phần tóm tắt, thử lại, POST #29 tường minh và bàn giao. Các trích đoạn DD/API lịch sử nói thiếu tuyến #28/#29, nhưng nhánh mã nguồn hiện tại có tuyến/module/kiểm thử. API #28 không kiểm tra ghi danh/trạng thái; #29 không kiểm tra ghi danh/trạng thái mở, chỉ chặn lần thử IN_PROGRESS. DD vẫn mâu thuẫn về người phụ trách/thứ tự #29 và kiểu BIGINT so với UUID; chưa kiểm thử hoặc xác minh khi chạy."
+  },
+  "overall": {
+    "objective": "Hiển thị thông tin quiz có trong #28, cho phép người học xác nhận bắt đầu và chuyển sang ST-14 bằng attemptId do #29 trả về khi hợp đồng owner được thống nhất.",
+    "inputs": "QuizId từ tuyến /student/quizzes/:quizId; Student Bearer service; response #28. POST #29 chỉ có quiz_id trên path, không body/query.",
+    "outputs": "Trang hiện tại hiển thị title, duration_minutes hoặc fallback, passing_score dạng chuỗi và số câu; có loading/error/retry, nút Start, lỗi tạo attempt và link tiếp tục sau khi attempt tạo thành công.",
+    "main_flow": "StudentLayout portal → kiểm tra quizId → GET #28 → kiểm envelope/Quiz/ID/question/choice → hiện summary → người dùng nhấn Start → POST #29 → kiểm attempt IN_PROGRESS và ID → chuyển ST-14; nếu chuyển trang thất bại, hiện link tiếp tục. Owner/order của #29 vẫn là discrepancy trong DD.",
+    "preconditions": "Đã đăng ký tuyến /student/quizzes/:quizId; quizId là số dương an toàn; dịch vụ Bearer của Student có thể gửi yêu cầu. Quyền tham gia, trạng thái bài kiểm tra đang mở, quyền sở hữu API, cơ sở dữ liệu thực và môi trường chạy chưa được xác minh.",
+    "states": [
+      "Đang tải quiz",
+      "Lỗi tải hoặc payload không hợp lệ; có thể tải lại",
+      "Quiz summary",
+      "Đang tạo lượt làm",
+      "Lỗi tạo lượt làm",
+      "Attempt đã tạo và đang chuyển trang",
+      "Link tiếp tục attempt khi điều hướng lỗi",
+      "Mockup có lịch sử/giới hạn/proctoring mẫu",
+      "Runtime chưa xác minh"
+    ],
+    "security": "Mã nguồn #28/#29 hiện xác thực vai trò Student. #28 không kiểm tra ghi danh/trạng thái bài kiểm tra; #29 kiểm tra bài kiểm tra tồn tại và lượt làm IN_PROGRESS nhưng không kiểm tra ghi danh/trạng thái đang mở/đã phát hành. #28 không trả is_correct. Không tin ID, số lượt hoặc khẳng định bảo mật từ bản mẫu.",
+    "out_of_scope": "Không bao gồm làm bài tại ST-14, lưu câu trả lời qua #30, tự lưu/thời gian thực, giám sát thi, đếm ngược, tự nộp, lịch sử/xem lại lượt làm, kết quả/chứng chỉ, đích ôn bài/diễn đàn, xác nhận quyền tham gia, lược đồ đang chạy hoặc kiểm tra trình duyệt/API/cơ sở dữ liệu."
+  },
+  "apis": [
+    {
+      "id": "#28",
+      "method": "GET",
+      "path": "/api/v1/quizzes/{quiz_id}",
+      "event_ids": [
+        "ST-13-EV-001",
+        "ST-13-EV-002"
+      ],
+      "request": "Quiz_id:int64! Trên path; Student Bearer; không query/body theo catalog. Client hiện gửi pathParams quiz_id qua StudentApiService.",
+      "response": "Catalog: ApiEnvelope<Quiz>. Source hiện trả id, course_id, title, duration_minutes?, passing_score dạng chuỗi, questions[] (id/text/type/choices[]) và choice chỉ id/choice_text; không trả is_correct.",
+      "errors": "Danh mục: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR. Mã nguồn: ID không hợp lệ/bị thiếu và bài kiểm tra không tồn tại trả 404; lỗi DB/ánh xạ trả 500; xác thực vai trò Student. Chưa xác minh môi trường chạy.",
+      "auth": "Danh mục yêu cầu Bearer JWT và Student. Mã nguồn hiện xác thực vai trò Student nhưng sau đó bỏ userId; không kiểm tra ghi danh hoặc trạng thái bài kiểm tra/khóa học.",
+      "design_status": "API DD Draft/Needs Confirmation, Q-28-01..06 còn mở; cover ghi NOT_FOUND nhưng route/module/test source hiện có. Test source được đọc, không chạy.",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_28_quizzes_detail/{models.py,validate.py,query.py,view.py}; apps/study-server/tests/modules/student/api_28_quizzes_detail/test_quizzes_detail.py; apps/study-server/docs/dd/28_quizzes_detail/{00_Cover.md,OPEN_QUESTIONS.md}"
+    },
+    {
+      "id": "#29",
+      "method": "POST",
+      "path": "/api/v1/quizzes/{quiz_id}/attempts",
+      "event_ids": [
+        "ST-13-EV-003"
+      ],
+      "request": "Quiz_id:int64! nằm trên đường dẫn; dùng Bearer của Student; danh mục không khai báo truy vấn/nội dung thân yêu cầu. Máy chủ lấy user_id từ ngữ cảnh xác thực.",
+      "response": "Catalog: ApiEnvelope<QuizAttempt>, HTTP 201 DESIGN_RESOURCE_CREATED. Source hiện insert attempt IN_PROGRESS, started_at từ UTC clock, commit rồi trả id, quiz_id, status, started_at, submitted_at, score, answers=[].",
+      "errors": "Catalog: 401/403/404/422/409/500. Source: path sai → 422; quiz thiếu → 404; đã có attempt IN_PROGRESS → 409; lỗi DB/map → 500. Runtime chưa xác minh.",
+      "auth": "Danh mục yêu cầu Bearer JWT và vai trò Student; mã nguồn hiện xác thực vai trò Student. Không kiểm tra ghi danh hoặc trạng thái đã phát hành/đang mở của bài kiểm tra; truy vấn chỉ kiểm tra bài kiểm tra tồn tại và lượt làm hiện tại.",
+      "design_status": "API DD Draft/Needs Confirmation, Q-29-01..05 còn mở; cover lịch sử ghi NOT_FOUND nhưng source route/module/test hiện có. Test source được đọc, không chạy.",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/{models.py,validate.py,query.py,view.py}; apps/study-server/tests/modules/student/api_29_quizzes_attempts/test_quizzes_attempts.py; apps/study-server/docs/dd/29_quizzes_attempts/{00_Cover.md,OPEN_QUESTIONS.md}"
+    },
+    {
+      "id": "#30",
+      "method": "PUT",
+      "path": "/api/v1/attempts/{attempt_id}/answers",
+      "event_ids": [
+        "ST-13-EV-006"
+      ],
+      "request": "Catalog khai path attempt_id:int64! Và body question_id:int64!, answer(s):string!. Không phải request của ST-13.",
+      "response": "Không áp dụng cho ST-13; ảnh nhắc “Auto-save API #30” nhưng page hiện không gọi API này. Chi tiết response thuộc contract/API #30 và flow ST-14.",
+      "errors": "Không áp dụng cho ST-13; catalog khai 401/403/404/422/500 cho API #30.",
+      "auth": "Catalog khai Bearer JWT, role Student. Không ghi nhận lời gọi #30 từ ST-13.",
+      "design_status": "API ranh giới được nhắc trong copy ảnh; không phải API được route metadata ST-13 khai báo hay lời gọi hiện tại.",
+      "source_ref": "docs/lists/list_api.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.html"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-13-YC-001",
+      "description": "Mở trang giới thiệu bài kiểm tra theo tuyến /student/quizzes/:quizId trong StudentLayout; ghi rõ mã nguồn hiện có nhưng chưa xác minh trên trình duyệt.",
+      "group": "Tuyến và bố cục",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Tuyến hiện gắn ST13Page, shell=portal và metadata apiIds [28,29].",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-002",
+      "description": "Chỉ gửi yêu cầu với quizId dương, an toàn và nằm trong signed int64; mã thiếu/sai đi vào trạng thái lỗi hiện có.",
+      "group": "Mã bài kiểm tra",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": "Client hiện dùng toSafeStudyId; #28 ánh xạ path sai sang 404, #29 ánh xạ sang 422. Quy tắc owner/API vẫn còn mở.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28",
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-003",
+      "description": "Khi vào tuyến hoặc quizId đổi hợp lệ, gọi GET #28 bằng StudentApiService, chỉ truyền quiz_id trên đường dẫn, không tự thêm body/query.",
+      "group": "Tải dữ liệu bài kiểm tra",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-01; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Mã hiện theo dõi paramMap và gọi #28; API server source hiện có dù API DD cover cũ ghi NOT_FOUND.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-004",
+      "description": "Khi quizId đổi, kết quả GET cũ không được thay dữ liệu của bài kiểm tra mới.",
+      "group": "Đổi mã bài kiểm tra",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+      "notes": "Mã hiện dùng distinctUntilChanged và switchMap; request cũ rời luồng giao diện.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-005",
+      "description": "Chỉ nhận #28 khi success=true, businessCode=DESIGN_RESOURCE_RETRIEVED và payload Quiz có ID trùng tuyến.",
+      "group": "Kiểm tra phản hồi #28",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-server/app/modules/student/api_28_quizzes_detail/models.py",
+      "notes": "Client hiện kiểm tra phong bì, mã nghiệp vụ, cấu trúc và ID khớp.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-006",
+      "description": "Kiểm tra duration_minutes theo kiểu số nguyên dương hoặc null/không có; kiểm passing_score dạng chuỗi; không tự diễn giải thang điểm hoặc làm tròn.",
+      "group": "Kiểu dữ liệu và điểm đạt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/03-data-flow.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts; apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md",
+      "notes": "API #28 source hiện format passing_score thành chuỗi thập phân; quyết định unit/range được chốt riêng trong amendment, các field khác còn mở.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-007",
+      "description": "Chỉ nhận question có ID hợp lệ, text dạng chuỗi, type=MULTIPLE_CHOICE và choices hợp lệ gồm ID cùng choice_text.",
+      "group": "Dữ liệu câu hỏi và lựa chọn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/03-data-flow.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-server/app/modules/student/api_28_quizzes_detail/models.py",
+      "notes": "Client hiện kiểm tra kiểu trên; API DD chưa hoàn tất type/enum/order semantics.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-008",
+      "description": "Không trả hoặc hiển thị is_correct/đáp án đúng trong payload dành cho học viên.",
+      "group": "Ẩn đáp án đúng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md; apps/study-server/app/modules/student/api_28_quizzes_detail/query.py; apps/study-server/app/modules/student/api_28_quizzes_detail/models.py",
+      "notes": "Query hiện không chọn is_correct và response model chỉ trả id/choice_text; không suy ra quyền xem đáp án từ nút “Xem lại”.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-009",
+      "description": "Hiển thị tiêu đề quiz, thời lượng, passing_score và số câu đúng theo field nguồn; không dựng tên người dạy, ảnh bìa hoặc số liệu ngoài payload.",
+      "group": "Tóm tắt bài kiểm tra",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-server/app/modules/student/api_28_quizzes_detail/view.py",
+      "notes": "Template hiện có title, duration, passing_score, questions.length; không có field instructor, cover, attempt history trong response.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-010",
+      "description": "Khi GET đang tải, thể hiện loading riêng; khi GET lỗi hoặc payload sai, hiển thị alert và nút tải lại.",
+      "group": "Trạng thái tải và lỗi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/03-data-flow.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+      "notes": "Mã hiện có role=status, role=alert và retryQuiz().",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-011",
+      "description": "Nút tải lại chỉ gọi lại GET #28 cho quizId hiện tại; không tạo attempt khi tải hoặc retry data.",
+      "group": "Tải lại metadata",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+      "notes": "RetryQuiz phát sự kiện GET; POST chỉ xảy ra trong start() sau click.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-012",
+      "description": "Không gán trạng thái available/closed, số lượt còn lại hoặc quyền làm bài chỉ từ phản hồi 200 hay dữ liệu mẫu trong ảnh.",
+      "group": "Điều kiện đủ quyền làm bài",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-server/app/modules/student/api_28_quizzes_detail/query.py; apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md",
+      "notes": "Mã nguồn API #28 xác thực Student nhưng không kiểm tra ghi danh hoặc quiz.status; điều kiện tham gia và trạng thái mở vẫn là câu hỏi bỏ ngỏ.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28"
+      ]
+    },
+    {
+      "id": "ST-13-YC-013",
+      "description": "Chỉ gửi POST #29 khi người dùng bấm Bắt đầu; không tạo attempt tự động khi tải trang.",
+      "group": "Xác nhận bắt đầu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-02; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+      "notes": "Mã hiện gọi start() trên nút; GET #28 không tự gọi POST. DD còn mâu thuẫn về screen owner của #29.",
+      "priority": "Cao",
+      "api_ids": [
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-014",
+      "description": "POST #29 chỉ gửi quiz_id trên path với Student Bearer; không gửi attempt number, user_id, body hay query do màn hình tự tạo.",
+      "group": "Request tạo attempt",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts; apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+      "notes": "Catalog không khai body/query; user ID được lấy từ auth server-side.",
+      "priority": "Cao",
+      "api_ids": [
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-015",
+      "description": "Trong lúc tạo attempt, khóa thao tác bắt đầu; sau khi đã tạo attempt cho quiz hiện tại, không gửi lần tạo thứ hai từ cùng trạng thái trang.",
+      "group": "Chống bấm lặp trong giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+      "notes": "UI chặn khi starting hoặc khi đã có attempt cho quiz; server source tìm active attempt và trả 409, nhưng không có idempotency guarantee.",
+      "priority": "Cao",
+      "api_ids": [
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-016",
+      "description": "Chỉ chấp nhận phản hồi #29 có success=true, DESIGN_RESOURCE_CREATED, QuizAttempt IN_PROGRESS, quiz_id khớp, ID an toàn, started_at dạng chuỗi và answers là mảng.",
+      "group": "Kiểm tra attempt vừa tạo",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-server/app/modules/student/api_29_quizzes_attempts/models.py",
+      "notes": "Mã hiện kiểm tra các trường này trước khi điều hướng.",
+      "priority": "Cao",
+      "api_ids": [
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-017",
+      "description": "Chỉ điều hướng tới ST-14 sau khi nhận attemptId hợp lệ; dùng đúng quizId và attemptId từ route/response.",
+      "group": "Bàn giao ST-14",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Mã hiện điều hướng tới /student/quizzes/:quizId/attempts/:attemptId; ST-14 khai route có attemptId.",
+      "priority": "Cao",
+      "api_ids": [
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-018",
+      "description": "Nếu tạo attempt thành công nhưng điều hướng lỗi/không thành công, giữ liên kết Tiếp tục lượt làm tới đúng attempt đã tạo.",
+      "group": "Phục hồi sau điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+      "notes": "Mã hiện giữ createdAttemptQuizId/createdAttemptId và hiện liên kết tiếp tục; chưa xác minh runtime.",
+      "priority": "Cao",
+      "api_ids": [
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-019",
+      "description": "Không tự gửi lại POST #29 sau timeout/kết quả không rõ; server hiện trả 409 nếu tìm thấy attempt IN_PROGRESS nhưng response không trả ID để resume.",
+      "group": "Lỗi không rõ kết quả và resume",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py; apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md",
+      "notes": "Client hiện báo lỗi và mở lại nút Start; API không có idempotency hoặc contract phục hồi. Không giả định bấm lại sau timeout/kết quả không rõ là an toàn.",
+      "priority": "Cao",
+      "api_ids": [
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-020",
+      "description": "Không coi #29 hiện tại là kiểm tra đủ điều kiện: source kiểm Student, tồn tại quiz và attempt IN_PROGRESS nhưng không kiểm ghi danh hoặc trạng thái mở/công bố.",
+      "group": "Ủy quyền và trạng thái quiz",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py; apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md",
+      "notes": "Điều kiện quyền và quiz-open còn mở; API #28 cũng không kiểm ghi danh/status.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28",
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-021",
+      "description": "Không hiển thị lịch sử attempt, số lượt, trạng thái attempt trước hoặc nút xem lại khi không có nguồn dữ liệu/route đã duyệt.",
+      "group": "Lịch sử bài làm",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-server/app/modules/student/api_29_quizzes_attempts/models.py",
+      "notes": "Mã nguồn hiện tại chỉ nhận attempt vừa tạo; không tải history. Nút #27 là trên mockup và API #32 không được xác nhận tại ST-13.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-022",
+      "description": "CTA ôn lại bài giảng chỉ được điều hướng khi có lesson/course context và destination được chốt; không tự gán ST-11.",
+      "group": "Ôn lại bài giảng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-03; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md; apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+      "notes": "Trang hiện tại không có CTA ôn bài và route/API #28 không cung cấp lessonId. Không có API được gọi.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-023",
+      "description": "Không suy ra proctoring, phát hiện đổi tab, auto-save/realtime webhook, phục hồi mất mạng hoặc auto-submit từ nội dung trên ảnh.",
+      "group": "Bảo mật phòng thi và tự lưu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; docs/lists/list_api.md",
+      "notes": "Copy “Auto-save API #30” trong mockup là tĩnh; page source không có timer/listener/API #30.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-024",
+      "description": "Không tự tính điểm, số câu đạt, thứ hạng, chứng chỉ hoặc xác nhận tiêu chuẩn ISO từ thông tin quiz hiện có.",
+      "group": "Điểm số và chứng nhận",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md; apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md",
+      "notes": "Passing_score hiện là chuỗi; công thức/count/sample/result/certificate claims không thuộc dữ liệu trang hiện tại.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-025",
+      "description": "Tìm kiếm, notification, tài khoản, hỗ trợ và liên kết footer trong ảnh không được coi là điều khiển hoạt động của ST-13 khi route/hành vi chưa xác minh.",
+      "group": "Điều hướng ngoài màn hình",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-05; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Ảnh và HTML companion có link khác nhau; shell=portal; destination runtime chưa xác minh.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#28",
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-026",
+      "description": "Tách ảnh quiz overview, HTML fallback và page Angular hiện tại thành ba bằng chứng khác nhau.",
+      "group": "Sai khác thiết kế và hiện trạng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+      "notes": "PNG có 30 markers và nhiều claim mẫu; HTML chỉ là fallback; Angular hiện có summary/load/start flow.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-027",
+      "description": "Giữ riêng source API #28/#29 hiện có với các đoạn DD lịch sử nói route/module/test không tồn tại; mã nguồn hiện tại là bằng chứng hành vi code.",
+      "group": "Lệch tài liệu và source API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_28_quizzes_detail/view.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+      "notes": "API server route/module/test source hiện có, trái với các excerpt lịch sử; API DD cover vẫn Draft và có mô tả lỗi thời.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28",
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-028",
+      "description": "Ghi rõ API #28 hiện dùng Student role nhưng không kiểm ghi danh, status quiz/course; API #29 không kiểm ghi danh hoặc status quiz/open.",
+      "group": "Lỗ hổng eligibility hiện tại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/student/api_28_quizzes_detail/validate.py; apps/study-server/app/modules/student/api_28_quizzes_detail/query.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py",
+      "notes": "Không kết luận có entitlement thực thi từ role guard; môi trường chạy chưa xác minh.",
+      "priority": "Cao",
+      "api_ids": [
+        "#28",
+        "#29"
+      ]
+    },
+    {
+      "id": "ST-13-YC-029",
+      "description": "Không gộp schema BIGINT Quiz/QuizAttempt với V1-PILOT UUID Assessment/AssessmentAttempt hoặc coi candidate DDL là live schema.",
+      "group": "Mô hình dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md; apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md; apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md",
+      "notes": "Không có mapping hoặc live schema evidence.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-030",
+      "description": "Giữ open questions API #28/#29 về eligibility, question/choice, field mapping, order, duration/score, conflict, limit, expiry, resume, identity, response và path.",
+      "group": "Câu hỏi hợp đồng API",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md; apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md",
+      "notes": "API DD vẫn Draft/Needs Confirmation; người dùng yêu cầu dùng DD chuẩn nhưng không cung cấp các quyết định cụ thể trong nguồn.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-031",
+      "description": "Ghi rõ rằng các tệp mã nguồn kiểm thử và tên hàm kiểm thử đã được rà soát tĩnh nhưng chưa chạy; chưa kiểm tra trình duyệt, API khi chạy hoặc cơ sở dữ liệu thực.",
+      "group": "Giới hạn xác minh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/07-test-cases.md; apps/study-server/docs/dd/28_quizzes_detail/00_Cover.md; apps/study-server/docs/dd/29_quizzes_attempts/00_Cover.md",
+      "notes": "File test source có trong checkout; chỉ được rà soát tên/phạm vi liên quan, không ghi test pass hoặc runtime đã verified.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-032",
+      "description": "Giữ nguyên trạng thái DD BLOCKED và các blocker; UTC v1.0 không tự đóng quyết định chưa được ghi rõ.",
+      "group": "Trạng thái tài liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md; apps/study-server/docs/dd/28_quizzes_detail/00_Cover.md; apps/study-server/docs/dd/29_quizzes_attempts/00_Cover.md",
+      "notes": "Người dùng xác nhận DD được duyệt và là nguồn chuẩn dù file ghi BLOCKED; phần chưa có quyết định vẫn để mở.",
+      "priority": "Trung bình",
+      "api_ids": []
+    },
+    {
+      "id": "ST-13-YC-033",
+      "description": "Giữ 30 marker của ảnh đã đánh số theo đúng thứ tự và bổ sung riêng các thành phần chỉ có trong source Angular.",
+      "group": "Truy vết marker",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+      "notes": "Ảnh tĩnh không đại diện các trạng thái hiện có trong page.",
+      "priority": "Trung bình",
+      "api_ids": []
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-13-EL-001",
+      "marker": "ST13-EL-01",
+      "name": "Thương hiệu Study2Work và đầu trang",
+      "type": "Thương hiệu / vùng shell",
+      "position": "Đầu trang, trái",
+      "properties": "Prototype có logo và tên Study2Work. Header của màn hình hiện tại thuộc shell ngoài; không suy ra route từ ảnh.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-002",
+      "marker": "ST13-EL-02",
+      "name": "Ô tìm kiếm toàn cục",
+      "type": "Ô tìm kiếm",
+      "position": "Đầu trang, giữa",
+      "properties": "Placeholder tìm khóa học/kỹ năng/bài thi; query, debounce và API chưa định nghĩa trong ST-13.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-003",
+      "marker": "ST13-EL-03",
+      "name": "Thanh điều hướng chính",
+      "type": "Nhóm liên kết",
+      "position": "Đầu trang, giữa",
+      "properties": "Các link Trang chủ, Khóa học, Khóa học của tôi, Lộ trình học, Diễn đàn là nội dung ảnh; mobile menu chưa được mô tả.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-004",
+      "marker": "ST13-EL-04",
+      "name": "Chuông thông báo và tài khoản",
+      "type": "Nhóm tài khoản",
+      "position": "Đầu trang, phải",
+      "properties": "Badge, tên Nguyen Hanh, role và avatar là dữ liệu tĩnh; không có mapping session/notification.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-005",
+      "marker": "ST13-EL-05",
+      "name": "Breadcrumb Khóa học của tôi → khóa học → chương → quiz",
+      "type": "Đường dẫn điều hướng",
+      "position": "Trên nội dung chính",
+      "properties": "Tên và cấp breadcrumb mẫu không mang courseId/lessonId được xác nhận; không khẳng định click hoạt động.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-006",
+      "marker": "ST13-EL-06",
+      "name": "Các nhãn QUIZ, bắt buộc qua môn, hệ số GPA, Enterprise",
+      "type": "Nhãn trạng thái/loại",
+      "position": "Trên tiêu đề",
+      "properties": "Nội dung mẫu; các field tương ứng không có trong Quiz response đang dùng. Không lấy nhãn làm quyền Start.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-007",
+      "marker": "ST13-EL-07",
+      "name": "Tiêu đề bài kiểm tra trong ảnh",
+      "type": "Tiêu đề",
+      "position": "Đầu nội dung, trái",
+      "properties": "PNG có title mẫu; Angular hiện lấy Quiz.title từ #28 và không dùng chuỗi trong ảnh.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-008",
+      "marker": "ST13-EL-08",
+      "name": "Thẻ giảng viên",
+      "type": "Thông tin giảng viên",
+      "position": "Dưới tiêu đề",
+      "properties": "Tên/chức danh/avatar trong PNG là dữ liệu mẫu; current Quiz DTO không có instructor field.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-009",
+      "marker": "ST13-EL-09",
+      "name": "Ảnh bìa xem trước",
+      "type": "Ảnh minh họa",
+      "position": "Đầu nội dung, phải",
+      "properties": "Ảnh/caption tĩnh; current Quiz DTO không có cover_url; không xác minh quyền hay alt text.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-010",
+      "marker": "ST13-EL-10",
+      "name": "Trạng thái sẵn sàng và số lần làm",
+      "type": "Badge trạng thái/lượt",
+      "position": "Thanh bên phải",
+      "properties": "“Lần 2/3” là sample; current #28/#29 không trả số attempt còn lại hoặc trạng thái available/closed.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-011",
+      "marker": "ST13-EL-11",
+      "name": "Thẻ mục tiêu qua môn và tiến độ",
+      "type": "Thẻ điểm đạt",
+      "position": "Thanh bên phải",
+      "properties": "16/20 và 80% là visual sample; không được tính từ response hiện tại.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-012",
+      "marker": "ST13-EL-12",
+      "name": "Metric số câu hỏi trong PNG",
+      "type": "Số liệu",
+      "position": "Hàng thống kê",
+      "properties": "“20 câu” là sample. Angular hiện đếm questions.length từ phản hồi hợp lệ.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-013",
+      "marker": "ST13-EL-13",
+      "name": "Metric thời lượng trong PNG",
+      "type": "Số liệu thời lượng",
+      "position": "Hàng thống kê",
+      "properties": "“30 phút/đếm ngược” là sample; Angular hiện hiển thị duration_minutes hoặc “Chưa có thông tin”, không có countdown.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-014",
+      "marker": "ST13-EL-14",
+      "name": "Metric điểm đạt trong PNG",
+      "type": "Số liệu điểm đạt",
+      "position": "Hàng thống kê",
+      "properties": "“80%” là sample; Angular hiện in chuỗi passing_score, không tự tính phần trăm câu đạt.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-015",
+      "marker": "ST13-EL-15",
+      "name": "Metric số lượt khả dụng",
+      "type": "Số lượt",
+      "position": "Hàng thống kê",
+      "properties": "“2/3” là sample; không có API response hiện tại cho attempt limit/history.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-016",
+      "marker": "ST13-EL-16",
+      "name": "Nút Bắt đầu làm bài ngay (Attempt 2)",
+      "type": "Nút tạo attempt",
+      "position": "Thanh bên phải",
+      "properties": "PNG thêm “Attempt 2”; source Angular có nút Bắt đầu làm bài và gọi #29 chỉ khi click. Owner #29 còn conflict trong DD.",
+      "event_ids": [
+        "ST-13-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-017",
+      "marker": "ST13-EL-17",
+      "name": "CTA ôn lại bài giảng",
+      "type": "Liên kết điều hướng",
+      "position": "Dưới nút Start",
+      "properties": "PNG có CTA nhưng mẫu hiện tại không có; thiếu lessonId/destination đã duyệt.",
+      "event_ids": [
+        "ST-13-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-018",
+      "marker": "ST13-EL-18",
+      "name": "Ghi chú chứng nhận EdTech ISO và kết quả hợp lệ",
+      "type": "Tuyên bố chứng nhận",
+      "position": "Thanh bên phải",
+      "properties": "Claim tĩnh; không có API hay hồ sơ phê duyệt chứng nhận trong nguồn đã rà soát.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-019",
+      "marker": "ST13-EL-19",
+      "name": "Thẻ hỗ trợ học thuật và liên kết Mentor/Diễn đàn",
+      "type": "Thẻ hỗ trợ",
+      "position": "Thanh bên phải, dưới",
+      "properties": "Copy mẫu; không có course context hoặc destination được chốt.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-020",
+      "marker": "ST13-EL-20",
+      "name": "Tiêu đề Quy định và Hướng dẫn làm bài",
+      "type": "Tiêu đề phần",
+      "position": "Bên dưới thống kê",
+      "properties": "Tiêu đề tĩnh; không chứng minh các quy định bên dưới là chính sách đã duyệt.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-021",
+      "marker": "ST13-EL-21",
+      "name": "Thông báo proctoring, chặn tab, Auto-save API #30 và realtime webhook",
+      "type": "Tuyên bố bảo mật / lưu tự động",
+      "position": "Trong phần quy định",
+      "properties": "Ảnh là visual copy; ST-13 không gọi #30, không có timer/listener/webhook hoặc recovery logic.",
+      "event_ids": [
+        "ST-13-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-022",
+      "marker": "ST13-EL-22",
+      "name": "Thẻ quy tắc chấm điểm",
+      "type": "Thẻ quy định",
+      "position": "Lưới quy tắc, trái",
+      "properties": "Quy tắc “mỗi câu 1 điểm” và không trừ điểm là mẫu; không tính điểm tại ST-13.",
+      "event_ids": [
+        "ST-13-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-023",
+      "marker": "ST13-EL-23",
+      "name": "Thẻ tự động nộp bài",
+      "type": "Thẻ quy định",
+      "position": "Lưới quy tắc, giữa",
+      "properties": "Countdown và auto-submit là copy tĩnh; không có attempt timer hoặc submit handler tại ST-13.",
+      "event_ids": [
+        "ST-13-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-024",
+      "marker": "ST13-EL-24",
+      "name": "Thẻ cấp chứng chỉ",
+      "type": "Thẻ quy định",
+      "position": "Lưới quy tắc, phải",
+      "properties": "Transcript, ISO và gửi nhà tuyển dụng là claim không có nguồn hiện hành.",
+      "event_ids": [
+        "ST-13-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-025",
+      "marker": "ST13-EL-25",
+      "name": "Tiêu đề và số lượng lịch sử attempt",
+      "type": "Tiêu đề lịch sử",
+      "position": "Dưới phần quy định",
+      "properties": "PNG ghi lịch sử/lượt mẫu; trang hiện tại không tải attempt history.",
+      "event_ids": [
+        "ST-13-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-026",
+      "marker": "ST13-EL-26",
+      "name": "Dòng tóm tắt attempt cũ",
+      "type": "Dòng dữ liệu attempt",
+      "position": "Trong lịch sử",
+      "properties": "Điểm, ngày, thời gian, lần làm là dữ liệu mẫu; không có DTO/history API trong ST-13.",
+      "event_ids": [
+        "ST-13-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-027",
+      "marker": "ST13-EL-27",
+      "name": "Nút Xem lại bài làm trước",
+      "type": "Nút xem attempt",
+      "position": "Cuối dòng lịch sử",
+      "properties": "Mockup có nút; trang hiện tại không có và ST-13 không xác nhận gọi API #32.",
+      "event_ids": [
+        "ST-13-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-028",
+      "marker": "ST13-EL-28",
+      "name": "Thương hiệu, mô tả và badge ở chân trang",
+      "type": "Thương hiệu/chân trang",
+      "position": "Cuối trang, trái",
+      "properties": "Ảnh có claim ISO/GD&ĐT; page template chỉ chứa main; shell portal sở hữu phần bao quanh.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-029",
+      "marker": "ST13-EL-29",
+      "name": "Các cột điều hướng ở chân trang",
+      "type": "Nhóm liên kết chân trang",
+      "position": "Cuối trang, giữa",
+      "properties": "Link labels trong ảnh chưa có route/data contract; footer runtime thuộc shell.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-030",
+      "marker": "ST13-EL-30",
+      "name": "Bản quyền và tagline chân trang",
+      "type": "Văn bản chân trang",
+      "position": "Cuối trang",
+      "properties": "Năm 2025 và tagline là nội dung tĩnh; không phải nguồn cấu hình hiện tại.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+    },
+    {
+      "id": "ST-13-EL-031",
+      "marker": "",
+      "name": "Breadcrumb Khóa học của tôi và Bài kiểm tra",
+      "type": "Đường dẫn trong trang",
+      "position": "Phía trên tiêu đề",
+      "properties": "Angular hiện link Khóa học của tôi tới /student/courses và hiển thị nhãn Bài kiểm tra; không có các breadcrumb khóa/chương của ảnh.",
+      "event_ids": [
+        "ST-13-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-032",
+      "marker": "",
+      "name": "Tiêu đề quiz động",
+      "type": "Tiêu đề",
+      "position": "Đầu nội dung",
+      "properties": "H1 lấy quiz.title khi tải thành công; trước/sau tải dùng “Bài kiểm tra”.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-033",
+      "marker": "",
+      "name": "Thẻ thông tin quiz",
+      "type": "Thẻ nội dung",
+      "position": "Cột nội dung",
+      "properties": "Hiện title, duration, passing_score, số câu và CTA; khác bố cục ảnh overview.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-034",
+      "marker": "",
+      "name": "Thời lượng hoặc thông báo chưa có thông tin",
+      "type": "Giá trị quiz",
+      "position": "Trong thẻ thông tin",
+      "properties": "Hiện duration_minutes + “phút” khi có truthy value; nếu null/không có thì “Chưa có thông tin”. Không đếm ngược.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-035",
+      "marker": "",
+      "name": "Điểm đạt dạng chuỗi nguồn",
+      "type": "Giá trị quiz",
+      "position": "Trong thẻ thông tin",
+      "properties": "Hiện trực tiếp passing_score; không gắn ký hiệu %, không tính điểm câu hỏi.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-036",
+      "marker": "",
+      "name": "Số câu hỏi trong tiêu đề và thẻ",
+      "type": "Nhãn đếm",
+      "position": "Tiêu đề và thẻ thông tin",
+      "properties": "Lấy questions.length khi quiz hợp lệ; placeholder “—” trước khi có data.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-037",
+      "marker": "",
+      "name": "Trạng thái đang tải quiz",
+      "type": "Thông báo trạng thái",
+      "position": "Dưới tiêu đề",
+      "properties": "Hiện “Đang tải thông tin bài kiểm tra…” với role=status.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-038",
+      "marker": "",
+      "name": "Lỗi tải quiz hoặc payload",
+      "type": "Thông báo lỗi",
+      "position": "Dưới tiêu đề",
+      "properties": "Lỗi được hiển thị trong role=alert; lỗi service được map qua studentApiErrorMessage.",
+      "event_ids": [
+        "ST-13-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-039",
+      "marker": "",
+      "name": "Nút tải lại bài kiểm tra",
+      "type": "Nút thao tác",
+      "position": "Trong vùng lỗi GET",
+      "properties": "Gọi retryQuiz để nạp lại #28 cho quizId hiện tại.",
+      "event_ids": [
+        "ST-13-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-040",
+      "marker": "",
+      "name": "Nút bắt đầu làm bài và trạng thái đang tạo",
+      "type": "Nút thao tác",
+      "position": "Cuối thẻ thông tin",
+      "properties": "Disabled khi starting hoặc đã có attempt cho quiz; chữ đổi thành “Đang tạo lượt làm…” trong lúc POST.",
+      "event_ids": [
+        "ST-13-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-041",
+      "marker": "",
+      "name": "Lỗi tạo hoặc xác nhận attempt",
+      "type": "Thông báo lỗi",
+      "position": "Trong trang bài kiểm tra",
+      "properties": "StartError hiển thị role=alert; hiện không có nút retry riêng.",
+      "event_ids": [
+        "ST-13-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-042",
+      "marker": "",
+      "name": "Thông báo tạo attempt và liên kết tiếp tục",
+      "type": "Thông báo và liên kết",
+      "position": "Sau khi POST thành công khi cần phục hồi",
+      "properties": "Hiện sau khi có attemptId hợp lệ; link giữ quizId/attemptId để đi tới ST-14 nếu navigation trước thất bại.",
+      "event_ids": [
+        "ST-13-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    },
+    {
+      "id": "ST-13-EL-043",
+      "marker": "",
+      "name": "Ghi chú trước khi bắt đầu",
+      "type": "Nội dung hướng dẫn",
+      "position": "Thẻ bên cạnh",
+      "properties": "Copy khuyên kiểm thời lượng/số câu và nói câu trả lời được lưu khi chọn đáp án; đây là static copy, ST-13 không gọi API #30.",
+      "event_ids": [
+        "ST-13-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST13/pages/st13-page.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.ts; apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-13-EV-001",
+      "name": "Mở tuyến và tải quiz",
+      "trigger": "Mở /student/quizzes/:quizId, tải lại hoặc thay đổi quizId.",
+      "element_ids": [
+        "ST-13-EL-005",
+        "ST-13-EL-007",
+        "ST-13-EL-010",
+        "ST-13-EL-012",
+        "ST-13-EL-013",
+        "ST-13-EL-014",
+        "ST-13-EL-015",
+        "ST-13-EL-031",
+        "ST-13-EL-032",
+        "ST-13-EL-033",
+        "ST-13-EL-034",
+        "ST-13-EL-035",
+        "ST-13-EL-036",
+        "ST-13-EL-037",
+        "ST-13-EL-038"
+      ],
+      "api_ids": [
+        "#28"
+      ],
+      "processing": "Máy khách chuẩn hóa `quizId`; `switchMap` hủy luồng trước khi ID đổi; GET #28 dùng `StudentApiService`. Máy khách kiểm tra success/mã/payload/ID/trường/question/choice. Hiện có trạng thái đang tải, lỗi và thử lại. Mã nguồn API #28 chỉ kiểm tra Student và sự tồn tại của quiz; không kiểm tra ghi danh hoặc trạng thái quiz. Môi trường chạy chưa xác minh.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+        "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+        "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+        "apps/study-server/app/modules/student/api_28_quizzes_detail/models.py",
+        "apps/study-server/app/modules/student/api_28_quizzes_detail/validate.py",
+        "apps/study-server/app/modules/student/api_28_quizzes_detail/query.py",
+        "apps/study-server/app/modules/student/api_28_quizzes_detail/view.py"
+      ]
+    },
+    {
+      "id": "ST-13-EV-002",
+      "name": "Tải lại thông tin quiz",
+      "trigger": "Nhấn Tải lại bài kiểm tra trong lỗi GET.",
+      "element_ids": [
+        "ST-13-EL-038",
+        "ST-13-EL-039"
+      ],
+      "api_ids": [
+        "#28"
+      ],
+      "processing": "RetryQuiz phát sự kiện làm lại cùng GET #28 cho quizId hiện tại; không gọi POST #29 từ thao tác này. Ca chưa chạy.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+        "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+        "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+      ]
+    },
+    {
+      "id": "ST-13-EV-003",
+      "name": "Xác nhận bắt đầu và chuyển sang ST-14",
+      "trigger": "Nhấn Bắt đầu làm bài sau khi metadata quiz hợp lệ.",
+      "element_ids": [
+        "ST-13-EL-016",
+        "ST-13-EL-040",
+        "ST-13-EL-041",
+        "ST-13-EL-042"
+      ],
+      "api_ids": [
+        "#29"
+      ],
+      "processing": "Source hiện gửi POST #29 sau click; kiểm phản hồi DESIGN_RESOURCE_CREATED/IN_PROGRESS/quiz_id/ID/started_at/answers; chuyển theo ID trả về. Khi navigation thất bại giữ link tiếp tục. DD vẫn mâu thuẫn về owner/order #29 giữa ST-13, F05, ST-14; không coi wiring hiện tại là quyết định owner.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md",
+        "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+        "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+        "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+        "apps/study-client/src/app/features/student/student.route.ts"
+      ]
+    },
+    {
+      "id": "ST-13-EV-004",
+      "name": "Chọn CTA ôn bài hoặc xem attempt cũ trong ảnh",
+      "trigger": "Nhấn CTA ôn bài hoặc Xem lại bài làm trong mockup.",
+      "element_ids": [
+        "ST-13-EL-017",
+        "ST-13-EL-025",
+        "ST-13-EL-026",
+        "ST-13-EL-027"
+      ],
+      "api_ids": [],
+      "processing": "Các control này không có trong Angular template hiện tại. Không điều hướng tới ST-11/ST-16 hoặc gọi API #32 khi thiếu context/destination đã duyệt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md",
+        "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen.png",
+        "apps/study-client/src/app/features/student/ST13/pages/st13-page.html"
+      ]
+    },
+    {
+      "id": "ST-13-EV-005",
+      "name": "Điều hướng đầu trang, breadcrumb, hỗ trợ và chân trang trong ảnh",
+      "trigger": "Chọn liên kết, ô tìm kiếm, notification hoặc profile trong mockup.",
+      "element_ids": [
+        "ST-13-EL-001",
+        "ST-13-EL-002",
+        "ST-13-EL-003",
+        "ST-13-EL-004",
+        "ST-13-EL-005",
+        "ST-13-EL-019",
+        "ST-13-EL-028",
+        "ST-13-EL-029"
+      ],
+      "api_ids": [],
+      "processing": "Mockup và HTML fallback có link graph khác nhau; component chỉ quản lý phần main còn shell=portal. Không tự dựng route/search/notification behavior.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md",
+        "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html",
+        "apps/study-client/src/app/features/student/student.route.ts"
+      ]
+    },
+    {
+      "id": "ST-13-EV-006",
+      "name": "Không suy ra tính năng từ copy tĩnh",
+      "trigger": "Quan sát/nhấn các claim proctoring, tự lưu, auto-submit, chấm điểm, chứng chỉ hoặc badge trong ảnh.",
+      "element_ids": [
+        "ST-13-EL-018",
+        "ST-13-EL-020",
+        "ST-13-EL-021",
+        "ST-13-EL-022",
+        "ST-13-EL-023",
+        "ST-13-EL-024",
+        "ST-13-EL-030",
+        "ST-13-EL-043"
+      ],
+      "api_ids": [
+        "#30"
+      ],
+      "processing": "Đây không phải sự kiện ứng dụng hiện có. Page ST-13 không gọi #30 và không có timer, visibility listener, webhook, auto-submit, scoring hay certificate action; chỉ ghi nhận copy prototype.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": [
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+        "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+        "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+        "docs/lists/list_api.md"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST13-B01",
+      "description": "PNG overview hiển thị quiz đầy đủ, còn HTML companion chỉ là fallback thông tin chưa sẵn sàng; Angular hiện tại lại có summary/load/start UI.",
+      "impact": "Ba nguồn mô tả trạng thái/bố cục khác nhau; không thể xem là một UI đã chạy.",
+      "decision": "Owner thiết kế duyệt loaded/error/empty/current layout và đồng bộ prototype/DD.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen.png; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html; apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B02",
+      "description": "Các đoạn lịch sử DD và API cover ghi route/API #28/#29 NOT_FOUND/UNWIRED; checkout hiện có route/page/service và backend route/module/test.",
+      "impact": "Trạng thái DD cũ không phản ánh mã nguồn hiện tại; runtime vẫn chưa được xác minh.",
+      "decision": "Cập nhật DD theo mã nguồn hiện tại và xác minh runtime riêng trước khi đổi trạng thái implementation.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md; apps/study-client/src/app/features/student/student.route.ts; apps/study-server/app/api/v1.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B03",
+      "description": "Mã nguồn API #28 kiểm tra Student và việc bài kiểm tra tồn tại nhưng không kiểm tra ghi danh khóa học hoặc trạng thái mở/đã phát hành của bài kiểm tra/khóa học.",
+      "impact": "200 có thể làm lộ quiz ngoài entitlement; UI chưa có trạng thái eligibility có contract.",
+      "decision": "Product/API owner chốt entitlement, publish/open predicate và access error mapping.",
+      "source_ref": "apps/study-server/app/modules/student/api_28_quizzes_detail/view.py; apps/study-server/app/modules/student/api_28_quizzes_detail/query.py; apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B04",
+      "description": "API #29 source tạo attempt khi quiz tồn tại, không kiểm ghi danh hoặc open/published state.",
+      "impact": "Có thể tạo attempt ngoài điều kiện AC-16 nếu không có guard khác; guard chưa được xác minh.",
+      "decision": "Chốt nơi và điều kiện kiểm eligibility trước khi tạo attempt.",
+      "source_ref": "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py; apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B05",
+      "description": "Owner/order của POST #29 không thống nhất: ST-13 row nói sau click Start; F05/ST-14 đưa call-site/order khác và ST-14 path cần attemptId.",
+      "impact": "Không biết màn hình nào duy nhất được phép POST; có nguy cơ gọi lặp hoặc handoff thiếu ID.",
+      "decision": "Owner xác nhận một call-site, thứ tự GET/POST và route/entry tương ứng.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B06",
+      "description": "Question type/choice shape/order, duration optional/null, passing_score mapping, answer visibility và Quiz/QuizChoice schema còn câu hỏi mở.",
+      "impact": "Không thể chốt đầy đủ contract display; không diễn giải mẫu thành rule.",
+      "decision": "API/schema owner cập nhật contract canonical và quyết định thứ tự/serialization.",
+      "source_ref": "apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md; docs/lists/list_api.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B07",
+      "description": "API #29 409 khi đã có attempt IN_PROGRESS nhưng source không trả ID attempt cũ; không có idempotency/resume contract.",
+      "impact": "Kết quả POST mơ hồ hoặc request lặp không có luồng khôi phục an toàn đã duyệt.",
+      "decision": "Chốt duplicate/concurrency/idempotency/resume và error mapping.",
+      "source_ref": "apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py; apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B08",
+      "description": "PNG có lượt làm/lịch sử, thời lượng đếm ngược, giảng viên, cover, proctoring, autosave, auto-submit, scoring và chứng chỉ không có mapping hợp đồng.",
+      "impact": "Không được triển khai hoặc ghi nhận các claim này là behavior đã có.",
+      "decision": "Product cung cấp nguồn dữ liệu/policy và phê duyệt từng tính năng/copy.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B09",
+      "description": "CTA ôn bài, xem attempt, support, search, account, breadcrumb đầy đủ và footer có destination/context thiếu.",
+      "impact": "Không thể xác định route hoặc API cho các affordance trong ảnh.",
+      "decision": "Route owner duyệt đích và context hoặc bỏ các liên kết.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md; apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B10",
+      "description": "Candidate DB `BIGINT quizzes/quiz_attempts` khác V1-PILOT UUID `assessments/assessment_attempts`; live schema không xác minh.",
+      "impact": "Không thể suy ra mapping ID, persistence, constraints, transaction hoặc concurrency từ candidate schema.",
+      "decision": "Chốt baseline DB và đối chiếu live schema trước triển khai.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md; apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md; apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B11",
+      "description": "Test source #28/#29 có trong checkout; chưa chạy. Trình duyệt/môi trường chạy/database live cũng chưa kiểm tra.",
+      "impact": "Source assertions không chứng minh test pass hoặc runtime behavior.",
+      "decision": "Chạy verification phù hợp sau khi contract/môi trường được cho phép.",
+      "source_ref": "apps/study-server/tests/modules/student/api_28_quizzes_detail/test_quizzes_detail.py; apps/study-server/tests/modules/student/api_29_quizzes_attempts/test_quizzes_attempts.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST13-B12",
+      "description": "DD screen và API #28/#29 vẫn mang nhãn BLOCKED/Draft với open questions dù người dùng yêu cầu dùng DD làm nguồn chuẩn và nói DD đã duyệt.",
+      "impact": "Quyết định cụ thể chưa được ghi vào repo; không thể tự đóng các blocker chi tiết.",
+      "decision": "Cập nhật trạng thái/question trong DD theo quyết định đã duyệt của owner, nếu có.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md; apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md; apps/study-server/docs/dd/28_quizzes_detail/00_Cover.md; apps/study-server/docs/dd/29_quizzes_attempts/00_Cover.md",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST13-TM-001",
+        "requirement_ids": [
+          "ST-13-YC-001"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Mở trang giới thiệu bài kiểm tra theo tuyến /student/quizzes/:quizId trong StudentLayout; ghi rõ mã nguồn hiện có nhưng chưa xác minh trên trình duyệt.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Tuyến hiện gắn ST13Page, shell=portal và metadata apiIds [28,29].",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-002",
+        "requirement_ids": [
+          "ST-13-YC-002"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ gửi yêu cầu với quizId dương, an toàn và nằm trong signed int64; mã thiếu/sai đi vào trạng thái lỗi hiện có.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Client hiện dùng toSafeStudyId; #28 ánh xạ path sai sang 404, #29 ánh xạ sang 422. Quy tắc owner/API vẫn còn mở.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28",
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-003",
+        "requirement_ids": [
+          "ST-13-YC-003"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi vào tuyến hoặc quizId đổi hợp lệ, gọi GET #28 bằng StudentApiService, chỉ truyền quiz_id trên đường dẫn, không tự thêm body/query.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã hiện theo dõi paramMap và gọi #28; API server source hiện có dù API DD cover cũ ghi NOT_FOUND.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-01",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-004",
+        "requirement_ids": [
+          "ST-13-YC-004"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi quizId đổi, kết quả GET cũ không được thay dữ liệu của bài kiểm tra mới.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã hiện dùng distinctUntilChanged và switchMap; request cũ rời luồng giao diện.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-005",
+        "requirement_ids": [
+          "ST-13-YC-005"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ nhận #28 khi success=true, businessCode=DESIGN_RESOURCE_RETRIEVED và payload Quiz có ID trùng tuyến.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Client hiện kiểm tra phong bì, mã nghiệp vụ, cấu trúc và ID khớp.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-006",
+        "requirement_ids": [
+          "ST-13-YC-006"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Kiểm tra duration_minutes theo kiểu số nguyên dương hoặc null/không có; kiểm passing_score dạng chuỗi; không tự diễn giải thang điểm hoặc làm tròn.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "API #28 source hiện format passing_score thành chuỗi thập phân; quyết định unit/range được chốt riêng trong amendment, các field khác còn mở.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-007",
+        "requirement_ids": [
+          "ST-13-YC-007"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ nhận question có ID hợp lệ, text dạng chuỗi, type=MULTIPLE_CHOICE và choices hợp lệ gồm ID cùng choice_text.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Client hiện kiểm tra kiểu trên; API DD chưa hoàn tất type/enum/order semantics.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-008",
+        "requirement_ids": [
+          "ST-13-YC-008"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không trả hoặc hiển thị is_correct/đáp án đúng trong payload dành cho học viên.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Query hiện không chọn is_correct và response model chỉ trả id/choice_text; không suy ra quyền xem đáp án từ nút “Xem lại”.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/query.py",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-009",
+        "requirement_ids": [
+          "ST-13-YC-009"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Hiển thị tiêu đề quiz, thời lượng, passing_score và số câu đúng theo field nguồn; không dựng tên người dạy, ảnh bìa hoặc số liệu ngoài payload.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Template hiện có title, duration, passing_score, questions.length; không có field instructor, cover, attempt history trong response.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-010",
+        "requirement_ids": [
+          "ST-13-YC-010"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Khi GET đang tải, thể hiện loading riêng; khi GET lỗi hoặc payload sai, hiển thị alert và nút tải lại.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã hiện có role=status, role=alert và retryQuiz().",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-011",
+        "requirement_ids": [
+          "ST-13-YC-011"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nút tải lại chỉ gọi lại GET #28 cho quizId hiện tại; không tạo attempt khi tải hoặc retry data.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "retryQuiz phát sự kiện GET; POST chỉ xảy ra trong start() sau click.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-012",
+        "requirement_ids": [
+          "ST-13-YC-012"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không gán trạng thái available/closed, số lượt còn lại hoặc quyền làm bài chỉ từ phản hồi 200 hay dữ liệu mẫu trong ảnh.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã nguồn API #28 xác thực Student nhưng không kiểm tra ghi danh hoặc quiz.status; điều kiện đủ tư cách và trạng thái mở vẫn là câu hỏi chưa được giải quyết.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/query.py",
+          "apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-013",
+        "requirement_ids": [
+          "ST-13-YC-013"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ gửi POST #29 khi người dùng bấm Bắt đầu; không tạo attempt tự động khi tải trang.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã hiện gọi start() trên nút; GET #28 không tự gọi POST. DD còn mâu thuẫn về screen owner của #29.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-02",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-014",
+        "requirement_ids": [
+          "ST-13-YC-014"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "POST #29 chỉ gửi quiz_id trên path với Student Bearer; không gửi attempt number, user_id, body hay query do màn hình tự tạo.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Catalog không khai body/query; user ID được lấy từ auth server-side.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-015",
+        "requirement_ids": [
+          "ST-13-YC-015"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Trong lúc tạo attempt, khóa thao tác bắt đầu; sau khi đã tạo attempt cho quiz hiện tại, không gửi lần tạo thứ hai từ cùng trạng thái trang.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "UI chặn khi starting hoặc khi đã có attempt cho quiz; server source tìm active attempt và trả 409, nhưng không có idempotency guarantee.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-016",
+        "requirement_ids": [
+          "ST-13-YC-016"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ chấp nhận phản hồi #29 có success=true, DESIGN_RESOURCE_CREATED, QuizAttempt IN_PROGRESS, quiz_id khớp, ID an toàn, started_at dạng chuỗi và answers là mảng.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã hiện kiểm tra các trường này trước khi điều hướng.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-017",
+        "requirement_ids": [
+          "ST-13-YC-017"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chỉ điều hướng tới ST-14 sau khi nhận attemptId hợp lệ; dùng đúng quizId và attemptId từ route/response.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã hiện điều hướng tới /student/quizzes/:quizId/attempts/:attemptId; ST-14 khai route có attemptId.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-018",
+        "requirement_ids": [
+          "ST-13-YC-018"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Nếu tạo attempt thành công nhưng điều hướng lỗi/không thành công, giữ liên kết Tiếp tục lượt làm tới đúng attempt đã tạo.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Mã hiện giữ createdAttemptQuizId/createdAttemptId và hiện liên kết tiếp tục; chưa xác minh runtime.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-019",
+        "requirement_ids": [
+          "ST-13-YC-019"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không tự gửi lại POST #29 sau timeout/kết quả không rõ; server hiện trả 409 nếu tìm thấy attempt IN_PROGRESS nhưng response không trả ID để resume.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Client hiện báo lỗi và mở lại nút Start; API không có idempotency hoặc contract phục hồi. Không giả định bấm lại sau timeout/kết quả không rõ là an toàn.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+          "apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-020",
+        "requirement_ids": [
+          "ST-13-YC-020"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không coi #29 hiện tại là kiểm tra đủ điều kiện: source kiểm Student, tồn tại quiz và attempt IN_PROGRESS nhưng không kiểm ghi danh hoặc trạng thái mở/công bố.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Điều kiện quyền và quiz-open còn mở; API #28 cũng không kiểm enrollment/status.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28",
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py",
+          "apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-021",
+        "requirement_ids": [
+          "ST-13-YC-021"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không hiển thị lịch sử attempt, số lượt, trạng thái attempt trước hoặc nút xem lại khi không có nguồn dữ liệu/route đã duyệt.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Current source chỉ nhận attempt vừa tạo; không tải history. Nút #27 là trên mockup và API #32 không được xác nhận tại ST-13.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-022",
+        "requirement_ids": [
+          "ST-13-YC-022"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "CTA ôn lại bài giảng chỉ được điều hướng khi có lesson/course context và destination được chốt; không tự gán ST-11.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Current page không có CTA ôn bài và route/API #28 không cung cấp lessonId. Không có API được gọi.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-03",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-023",
+        "requirement_ids": [
+          "ST-13-YC-023"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không suy ra proctoring, phát hiện đổi tab, auto-save/realtime webhook, phục hồi mất mạng hoặc auto-submit từ nội dung trên ảnh.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Copy “Auto-save API #30” trong mockup là tĩnh; page source không có timer/listener/API #30.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-024",
+        "requirement_ids": [
+          "ST-13-YC-024"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không tự tính điểm, số câu đạt, thứ hạng, chứng chỉ hoặc xác nhận tiêu chuẩn ISO từ thông tin quiz hiện có.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "passing_score hiện là chuỗi; công thức/count/sample/result/certificate claims không thuộc dữ liệu trang hiện tại.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md",
+          "apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-025",
+        "requirement_ids": [
+          "ST-13-YC-025"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tìm kiếm, notification, tài khoản, hỗ trợ và liên kết chân trang trong ảnh không được coi là điều khiển hoạt động của ST-13 khi route/hành vi chưa xác minh.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Ảnh và HTML companion có link khác nhau; shell=portal; destination runtime chưa xác minh.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28",
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md — ST13-EV-05",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-026",
+        "requirement_ids": [
+          "ST-13-YC-026"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tách ảnh quiz overview, HTML fallback và page Angular hiện tại thành ba bằng chứng khác nhau.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "PNG có 30 markers và nhiều claim mẫu; HTML chỉ là fallback; Angular hiện có summary/load/start flow.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-027",
+        "requirement_ids": [
+          "ST-13-YC-027"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ riêng source API #28/#29 hiện có với các đoạn DD lịch sử nói route/module/test không tồn tại; mã nguồn hiện tại là bằng chứng hành vi code.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "API server route/module/test source hiện có, trái với các excerpt lịch sử; API DD cover vẫn Draft và có mô tả lỗi thời.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28",
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md",
+          "apps/study-server/app/api/v1.py",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/view.py",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-028",
+        "requirement_ids": [
+          "ST-13-YC-028"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Ghi rõ API #28 hiện dùng Student role nhưng không kiểm ghi danh, status quiz/course; API #29 không kiểm ghi danh hoặc status quiz/open.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Không kết luận có entitlement thực thi từ role guard; môi trường chạy chưa xác minh.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28",
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/validate.py",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/query.py",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-029",
+        "requirement_ids": [
+          "ST-13-YC-029"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không gộp schema BIGINT Quiz/QuizAttempt với V1-PILOT UUID Assessment/AssessmentAttempt hoặc coi candidate DDL là live schema.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Không có mapping hoặc live schema evidence.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md",
+          "apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md",
+          "apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-030",
+        "requirement_ids": [
+          "ST-13-YC-030"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ open questions API #28/#29 về eligibility, question/choice, field mapping, order, duration/score, conflict, limit, expiry, resume, identity, response và path.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "API DD vẫn Draft/Needs Confirmation; người dùng yêu cầu dùng DD chuẩn nhưng không cung cấp các quyết định cụ thể trong nguồn.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-server/docs/dd/28_quizzes_detail/OPEN_QUESTIONS.md",
+          "apps/study-server/docs/dd/29_quizzes_attempts/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-031",
+        "requirement_ids": [
+          "ST-13-YC-031"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Ghi rõ các tệp mã nguồn kiểm thử và tên hàm kiểm thử đã được rà soát tĩnh nhưng chưa chạy; chưa kiểm tra trình duyệt, API khi chạy hoặc cơ sở dữ liệu thực.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "File test source có trong checkout; chỉ được rà soát tên/phạm vi liên quan, không ghi test pass hoặc runtime đã verified.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/07-test-cases.md",
+          "apps/study-server/docs/dd/28_quizzes_detail/00_Cover.md",
+          "apps/study-server/docs/dd/29_quizzes_attempts/00_Cover.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-032",
+        "requirement_ids": [
+          "ST-13-YC-032"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ nguyên trạng thái DD BLOCKED và các blocker; UTC v1.0 không tự đóng quyết định chưa được ghi rõ.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Người dùng xác nhận DD được duyệt và là nguồn chuẩn dù file ghi BLOCKED; phần chưa có quyết định vẫn để mở.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/05-business-rules.md",
+          "apps/study-server/docs/dd/28_quizzes_detail/00_Cover.md",
+          "apps/study-server/docs/dd/29_quizzes_attempts/00_Cover.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TM-033",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ 30 marker của ảnh đã đánh số theo đúng thứ tự và bổ sung riêng các thành phần chỉ có trong source Angular.",
+        "precondition": "Nguồn DD và mã hiện tại đã được đối chiếu tĩnh; chỉ thực thi khi hợp đồng, quyền truy cập và môi trường được xác nhận.",
+        "data": "Ảnh tĩnh không đại diện các trạng thái hiện có trong page.",
+        "steps": [
+          "Mở hoặc đối chiếu đúng nhánh trạng thái theo yêu cầu.",
+          "Ghi riêng hành vi mã nguồn, kỳ vọng theo DD và điểm chưa chốt.",
+          "Không ghi kết quả đạt nếu chưa thực thi trên môi trường phù hợp."
+        ],
+        "expected": "Đối chiếu theo nguồn; các điểm chưa chốt vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST13-TP-001",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-001",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thương hiệu Study2Work và đầu trang",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Prototype có logo và tên Study2Work. Header của màn hình hiện tại thuộc shell ngoài; không suy ra route từ ảnh.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-002",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-002",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Ô tìm kiếm toàn cục",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Placeholder tìm khóa học/kỹ năng/bài thi; query, debounce và API chưa định nghĩa trong ST-13.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-003",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-003",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thanh điều hướng chính",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Các link Trang chủ, Khóa học, Khóa học của tôi, Lộ trình học, Diễn đàn là nội dung ảnh; mobile menu chưa được mô tả.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-004",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-004",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Chuông thông báo và tài khoản",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Badge, tên Nguyen Hanh, role và avatar là dữ liệu tĩnh; không có mapping session/notification.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-005",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-005",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Breadcrumb Khóa học của tôi → khóa học → chương → quiz",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Tên và cấp breadcrumb mẫu không mang courseId/lessonId được xác nhận; không khẳng định click hoạt động.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-006",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-006",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Các nhãn QUIZ, bắt buộc qua môn, hệ số GPA, Enterprise",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Nội dung mẫu; các field tương ứng không có trong Quiz response đang dùng. Không lấy nhãn làm quyền Start.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-007",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-007",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề bài kiểm tra trong ảnh",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "PNG có title mẫu; Angular hiện lấy Quiz.title từ #28 và không dùng chuỗi trong ảnh.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-008",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-008",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ giảng viên",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Tên/chức danh/avatar trong PNG là dữ liệu mẫu; current Quiz DTO không có instructor field.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-009",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-009",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Ảnh bìa xem trước",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Ảnh/caption tĩnh; current Quiz DTO không có cover_url; không xác minh quyền hay alt text.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-010",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-010",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Trạng thái sẵn sàng và số lần làm",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "“Lần 2/3” là sample; current #28/#29 không trả số attempt còn lại hoặc trạng thái available/closed.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-011",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-011",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ mục tiêu qua môn và tiến độ",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "16/20 và 80% là visual sample; không được tính từ response hiện tại.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-012",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-012",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Metric số câu hỏi trong PNG",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "“20 câu” là sample. Angular hiện đếm questions.length từ phản hồi hợp lệ.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-013",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-013",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Metric thời lượng trong PNG",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "“30 phút/đếm ngược” là sample; Angular hiện hiển thị duration_minutes hoặc “Chưa có thông tin”, không có countdown.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-014",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-014",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Metric điểm đạt trong PNG",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "“80%” là sample; Angular hiện in chuỗi passing_score, không tự tính phần trăm câu đạt.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-015",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-015",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Metric số lượt khả dụng",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "“2/3” là sample; không có API response hiện tại cho attempt limit/history.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-016",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-016",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút Bắt đầu làm bài ngay (Attempt 2)",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "PNG thêm “Attempt 2”; source Angular có nút Bắt đầu làm bài và gọi #29 chỉ khi click. Owner #29 còn conflict trong DD.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-017",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-017",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: CTA ôn lại bài giảng",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "PNG có CTA nhưng current template không có; thiếu lessonId/destination đã duyệt.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-018",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-018",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Ghi chú chứng nhận EdTech ISO và kết quả hợp lệ",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Claim tĩnh; không có API hay hồ sơ phê duyệt chứng nhận trong nguồn đã rà soát.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-019",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-019",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ hỗ trợ học thuật và liên kết Mentor/Diễn đàn",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Copy mẫu; không có course context hoặc destination được chốt.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-020",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-020",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề Quy định và Hướng dẫn làm bài",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Tiêu đề tĩnh; không chứng minh các quy định bên dưới là chính sách đã duyệt.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-021",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-021",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thông báo proctoring, chặn tab, Auto-save API #30 và realtime webhook",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Ảnh là visual copy; ST-13 không gọi #30, không có timer/listener/webhook hoặc recovery logic.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-022",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-022",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ quy tắc chấm điểm",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Quy tắc “mỗi câu 1 điểm” và không trừ điểm là mẫu; không tính điểm tại ST-13.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-023",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-023",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ tự động nộp bài",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Countdown và auto-submit là copy tĩnh; không có attempt timer hoặc submit handler tại ST-13.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-024",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-024",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ cấp chứng chỉ",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Transcript, ISO và gửi nhà tuyển dụng là claim không có nguồn hiện hành.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-025",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-025",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề và số lượng lịch sử attempt",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "PNG ghi lịch sử/lượt mẫu; current page không tải attempt history.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-026",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-026",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Dòng tóm tắt attempt cũ",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Điểm, ngày, thời gian, lần làm là dữ liệu mẫu; không có DTO/history API trong ST-13.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-027",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-027",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút Xem lại bài làm trước",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Mockup có nút; current page không có và ST-13 không xác nhận gọi API #32.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-028",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-028",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thương hiệu, mô tả và badge ở chân trang",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Ảnh có claim ISO/GD&ĐT; page template chỉ chứa main; shell portal sở hữu phần bao quanh.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-029",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-029",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Các cột điều hướng ở chân trang",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Link labels trong ảnh chưa có route/data contract; footer runtime thuộc shell.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-030",
+        "requirement_ids": [
+          "ST-13-YC-033"
+        ],
+        "target_id": "ST-13-EL-030",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Bản quyền và tagline chân trang",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Năm 2025 và tagline là nội dung tĩnh; không phải nguồn cấu hình hiện tại.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-031",
+        "requirement_ids": [
+          "ST-13-YC-001"
+        ],
+        "target_id": "ST-13-EL-031",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Breadcrumb Khóa học của tôi và Bài kiểm tra",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Angular hiện link Khóa học của tôi tới /student/courses và hiển thị nhãn Bài kiểm tra; không có các breadcrumb khóa/chương của ảnh.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-032",
+        "requirement_ids": [
+          "ST-13-YC-005",
+          "ST-13-YC-009"
+        ],
+        "target_id": "ST-13-EL-032",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Tiêu đề quiz động",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "H1 lấy quiz.title khi tải thành công; trước/sau tải dùng “Bài kiểm tra”.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-033",
+        "requirement_ids": [
+          "ST-13-YC-009"
+        ],
+        "target_id": "ST-13-EL-033",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thẻ thông tin quiz",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Hiện title, duration, passing_score, số câu và CTA; khác bố cục ảnh overview.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-034",
+        "requirement_ids": [
+          "ST-13-YC-006",
+          "ST-13-YC-009"
+        ],
+        "target_id": "ST-13-EL-034",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thời lượng hoặc thông báo chưa có thông tin",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Hiện duration_minutes + “phút” khi có truthy value; nếu null/không có thì “Chưa có thông tin”. Không đếm ngược.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-035",
+        "requirement_ids": [
+          "ST-13-YC-006",
+          "ST-13-YC-009"
+        ],
+        "target_id": "ST-13-EL-035",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Điểm đạt dạng chuỗi nguồn",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Hiện trực tiếp passing_score; không gắn ký hiệu %, không tính điểm câu hỏi.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-036",
+        "requirement_ids": [
+          "ST-13-YC-009"
+        ],
+        "target_id": "ST-13-EL-036",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Số câu hỏi trong tiêu đề và thẻ",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Lấy questions.length khi quiz hợp lệ; placeholder “—” trước khi có data.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-037",
+        "requirement_ids": [
+          "ST-13-YC-010"
+        ],
+        "target_id": "ST-13-EL-037",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Trạng thái đang tải quiz",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Hiện “Đang tải thông tin bài kiểm tra…” với role=status.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-038",
+        "requirement_ids": [
+          "ST-13-YC-010"
+        ],
+        "target_id": "ST-13-EL-038",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Lỗi tải quiz hoặc payload",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Lỗi được hiển thị trong role=alert; lỗi service được map qua studentApiErrorMessage.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-039",
+        "requirement_ids": [
+          "ST-13-YC-011"
+        ],
+        "target_id": "ST-13-EL-039",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút tải lại bài kiểm tra",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Gọi retryQuiz để nạp lại #28 cho quizId hiện tại.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-040",
+        "requirement_ids": [
+          "ST-13-YC-013",
+          "ST-13-YC-015"
+        ],
+        "target_id": "ST-13-EL-040",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Nút bắt đầu làm bài và trạng thái đang tạo",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Disabled khi starting hoặc đã có attempt cho quiz; chữ đổi thành “Đang tạo lượt làm…” trong lúc POST.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-041",
+        "requirement_ids": [
+          "ST-13-YC-016",
+          "ST-13-YC-019"
+        ],
+        "target_id": "ST-13-EL-041",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Lỗi tạo hoặc xác nhận attempt",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "startError hiển thị role=alert; hiện không có nút retry riêng.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-042",
+        "requirement_ids": [
+          "ST-13-YC-017",
+          "ST-13-YC-018"
+        ],
+        "target_id": "ST-13-EL-042",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Thông báo tạo attempt và liên kết tiếp tục",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Hiện sau khi có attemptId hợp lệ; link giữ quizId/attemptId để đi tới ST-14 nếu navigation trước thất bại.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-TP-043",
+        "requirement_ids": [
+          "ST-13-YC-023"
+        ],
+        "target_id": "ST-13-EL-043",
+        "group": "Thành phần màn hình",
+        "title": "Đối chiếu thành phần: Ghi chú trước khi bắt đầu",
+        "precondition": "Mở đúng nguồn DD, ảnh hoặc mã nguồn được dẫn; ca runtime chưa chạy.",
+        "data": "Copy khuyên kiểm thời lượng/số câu và nói câu trả lời được lưu khi chọn đáp án; đây là static copy, ST-13 không gọi API #30.",
+        "steps": [
+          "Định vị thành phần theo marker hoặc template.",
+          "Đối chiếu nhãn, dữ liệu, điều kiện hiển thị và điều hướng với nguồn.",
+          "Ghi chênh lệch giữa mockup và Angular hiện tại."
+        ],
+        "expected": "Đối chiếu theo nguồn; điểm chưa khóa vẫn Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST13-SK-001",
+        "requirement_ids": [
+          "ST-13-YC-003",
+          "ST-13-YC-005"
+        ],
+        "target_id": "ST-13-EV-001",
+        "group": "Sự kiện màn hình",
+        "title": "Mở tuyến và tải quiz",
+        "precondition": "Có thể đối chiếu tĩnh; ca chạy chỉ được thực hiện sau khi owner và môi trường áp dụng được xác nhận.",
+        "data": "Phía máy khách chuẩn hóa quizId; switchMap hủy luồng trước khi mã thay đổi; GET #28 dùng StudentApiService. Phía máy khách kiểm tra thành công/mã/payload/ID/trường/câu hỏi/lựa chọn. Hiện có trạng thái đang tải, lỗi và thử lại. Mã nguồn API #28 chỉ kiểm tra Student và việc bài kiểm tra tồn tại; không kiểm tra ghi danh hoặc trạng thái bài kiểm tra. Chưa xác minh môi trường chạy.",
+        "steps": [
+          "Đối chiếu trigger/đầu vào và caller theo nguồn.",
+          "Theo dõi API, trạng thái và destination thuộc đúng phạm vi.",
+          "Không gán behavior của prototype hoặc màn hình khác cho ST-13."
+        ],
+        "expected": "Ghi đúng mã nguồn hiện tại và giữ điểm chưa quyết định ở trạng thái Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/models.py",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/validate.py",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/query.py",
+          "apps/study-server/app/modules/student/api_28_quizzes_detail/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-SK-002",
+        "requirement_ids": [
+          "ST-13-YC-011"
+        ],
+        "target_id": "ST-13-EV-002",
+        "group": "Sự kiện màn hình",
+        "title": "Tải lại thông tin quiz",
+        "precondition": "Có thể đối chiếu tĩnh; ca chạy chỉ được thực hiện sau khi owner và môi trường áp dụng được xác nhận.",
+        "data": "retryQuiz phát sự kiện làm lại cùng GET #28 cho quizId hiện tại; không gọi POST #29 từ thao tác này. Ca chưa chạy.",
+        "steps": [
+          "Đối chiếu trigger/đầu vào và caller theo nguồn.",
+          "Theo dõi API, trạng thái và destination thuộc đúng phạm vi.",
+          "Không gán behavior của prototype hoặc màn hình khác cho ST-13."
+        ],
+        "expected": "Ghi đúng mã nguồn hiện tại và giữ điểm chưa quyết định ở trạng thái Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#28"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-SK-003",
+        "requirement_ids": [
+          "ST-13-YC-013",
+          "ST-13-YC-017",
+          "ST-13-YC-018"
+        ],
+        "target_id": "ST-13-EV-003",
+        "group": "Sự kiện màn hình",
+        "title": "Xác nhận bắt đầu và chuyển sang ST-14",
+        "precondition": "Có thể đối chiếu tĩnh; ca chạy chỉ được thực hiện sau khi owner và môi trường áp dụng được xác nhận.",
+        "data": "Source hiện gửi POST #29 sau click; kiểm phản hồi DESIGN_RESOURCE_CREATED/IN_PROGRESS/quiz_id/ID/started_at/answers; chuyển theo ID trả về. Khi navigation thất bại giữ link tiếp tục. DD vẫn mâu thuẫn về owner/order #29 giữa ST-13, F05, ST-14; không coi wiring hiện tại là quyết định owner.",
+        "steps": [
+          "Đối chiếu trigger/đầu vào và caller theo nguồn.",
+          "Theo dõi API, trạng thái và destination thuộc đúng phạm vi.",
+          "Không gán behavior của prototype hoặc màn hình khác cho ST-13."
+        ],
+        "expected": "Ghi đúng mã nguồn hiện tại và giữ điểm chưa quyết định ở trạng thái Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#29"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/04-api-integration.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.ts",
+          "apps/study-client/src/app/features/student/ST13/data-access/st13-quiz.service.ts",
+          "apps/study-server/app/modules/student/api_29_quizzes_attempts/view.py",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-SK-004",
+        "requirement_ids": [
+          "ST-13-YC-021",
+          "ST-13-YC-022"
+        ],
+        "target_id": "ST-13-EV-004",
+        "group": "Sự kiện màn hình",
+        "title": "Chọn CTA ôn bài hoặc xem attempt cũ trong ảnh",
+        "precondition": "Có thể đối chiếu tĩnh; ca chạy chỉ được thực hiện sau khi owner và môi trường áp dụng được xác nhận.",
+        "data": "Các control này không có trong Angular template hiện tại. Không điều hướng tới ST-11/ST-16 hoặc gọi API #32 khi thiếu context/destination đã duyệt.",
+        "steps": [
+          "Đối chiếu trigger/đầu vào và caller theo nguồn.",
+          "Theo dõi API, trạng thái và destination thuộc đúng phạm vi.",
+          "Không gán behavior của prototype hoặc màn hình khác cho ST-13."
+        ],
+        "expected": "Ghi đúng mã nguồn hiện tại và giữ điểm chưa quyết định ở trạng thái Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen.png",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-SK-005",
+        "requirement_ids": [
+          "ST-13-YC-025"
+        ],
+        "target_id": "ST-13-EV-005",
+        "group": "Sự kiện màn hình",
+        "title": "Điều hướng đầu trang, breadcrumb, hỗ trợ và chân trang trong ảnh",
+        "precondition": "Có thể đối chiếu tĩnh; ca chạy chỉ được thực hiện sau khi owner và môi trường áp dụng được xác nhận.",
+        "data": "Mockup và HTML fallback có link graph khác nhau; component chỉ quản lý phần main còn shell=portal. Không tự dựng route/search/notification behavior.",
+        "steps": [
+          "Đối chiếu trigger/đầu vào và caller theo nguồn.",
+          "Theo dõi API, trạng thái và destination thuộc đúng phạm vi.",
+          "Không gán behavior của prototype hoặc màn hình khác cho ST-13."
+        ],
+        "expected": "Ghi đúng mã nguồn hiện tại và giữ điểm chưa quyết định ở trạng thái Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/06-navigation.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST13-SK-006",
+        "requirement_ids": [
+          "ST-13-YC-023",
+          "ST-13-YC-024"
+        ],
+        "target_id": "ST-13-EV-006",
+        "group": "Sự kiện màn hình",
+        "title": "Không suy ra tính năng từ copy tĩnh",
+        "precondition": "Có thể đối chiếu tĩnh; ca chạy chỉ được thực hiện sau khi owner và môi trường áp dụng được xác nhận.",
+        "data": "Đây không phải sự kiện ứng dụng hiện có. Page ST-13 không gọi #30 và không có timer, visibility listener, webhook, auto-submit, scoring hay certificate action; chỉ ghi nhận copy prototype.",
+        "steps": [
+          "Đối chiếu trigger/đầu vào và caller theo nguồn.",
+          "Theo dõi API, trạng thái và destination thuộc đúng phạm vi.",
+          "Không gán behavior của prototype hoặc màn hình khác cho ST-13."
+        ],
+        "expected": "Ghi đúng mã nguồn hiện tại và giữ điểm chưa quyết định ở trạng thái Chờ xác nhận. Ca này chưa chạy.",
+        "api_ids": [
+          "#30"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-13-GioiThieuBaiKiemTra/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST13/pages/st13-page.html",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

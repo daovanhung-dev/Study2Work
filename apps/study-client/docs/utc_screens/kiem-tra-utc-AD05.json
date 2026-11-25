@@ -1,0 +1,151 @@
+{
+  "screen_id": "AD-05",
+  "screen_name": "Khóa/mở khóa/xóa tài khoản",
+  "status": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+  "officially_approved": false,
+  "executable_for_acceptance": false,
+  "canonical_dd": {
+    "version": "0.2 / 2026-11-20",
+    "status": "BLOCKED — status, deletion, permission, session and audit policies need approval",
+    "source_name": "AD-05 DD sections 00–07; screen-stitch markers/plan; clean and numbered images; current AD05 Angular route/page/API source"
+  },
+  "coverage": {
+    "requirements": 16,
+    "requirements_traced": 16,
+    "elements": 34,
+    "events": 7,
+    "apis": 3,
+    "cases": 63,
+    "case_groups": {
+      "screen": 16,
+      "elements": 34,
+      "events": 13
+    }
+  },
+  "validation": {
+    "hop_le_ve_cau_truc": true,
+    "du_dieu_kien_phe_duyet": false,
+    "thong_tin": [
+      "16 yêu cầu, 34 thành phần, 7 sự kiện, 3 API",
+      "16 ca toàn màn hình, 34 ca thành phần, 13 ca sự kiện",
+      "Tổng ca: 63; yêu cầu được truy vết: 16/16"
+    ],
+    "loi": [],
+    "canh_bao": [
+      "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+    ]
+  },
+  "blockers": [
+    {
+      "id": "AD05-BL-001",
+      "description": "AC-31 permission mapping, Admin/tenant/scope/MFA, self-lock and last-Admin safeguards are not approved.",
+      "impact": "Actor authorization and mutation preconditions cannot be accepted.",
+      "decision": "Owner/security approves permission boundary and safeguards.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-01–EV-04; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-002",
+      "description": "#71 catalog/AC omits the request body/status allowlist; local {status: ACTIVE|SUSPENDED} is DERIVED.",
+      "impact": "Lock/unlock request and allowed transitions cannot be acceptance criteria.",
+      "decision": "API/Product owner approves body, status vocabulary and transition rules.",
+      "source_ref": "00-overview.md §API; 02-events.md §EV-03; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-003",
+      "description": "PII/profile display, role/status enum, lifecycle and current DELETED visibility policy are not signed off.",
+      "impact": "Cannot finalize rendered profile fields, status mapping or post-delete expected state.",
+      "decision": "Owner approves PII, enum and lifecycle/display rules.",
+      "source_ref": "01-ui-elements.md §3 #16–#18/#23; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-004",
+      "description": "#71 session effects and #72 deletion semantics, retention/anonymization, dependencies, token effects and recovery are open.",
+      "impact": "Cannot enable controls or claim lock/delete outcomes.",
+      "decision": "Product/API/security owner approves session and deletion lifecycle policy.",
+      "source_ref": "02-events.md §EV-03/04; 04-api-integration.md §2; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-005",
+      "description": "Audit reason has no persistence/API contract; static audit, gate, RBAC and ISO claims lack supporting source.",
+      "impact": "Cannot validate reason requirements or treat badges/claims as live security controls.",
+      "decision": "Security/design supplies auditable contracts and evidence or removes claims.",
+      "source_ref": "01-ui-elements.md §3 #7/#15/#24–#32; 02-events.md §EV-06",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-006",
+      "description": "Prototype list return and current app links do not establish AD-02/AD-03 handoff, selected-user retention, refresh or post-mutation destination.",
+      "impact": "Navigation acceptance and selection continuity remain undefined.",
+      "decision": "Product/router owner approves entry, return, context and post-action navigation.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-05; 06-navigation.md §1–§4",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-007",
+      "description": "Schema/deployment/authenticated runtime and target test environment are not verified.",
+      "impact": "No claim can be made that package behavior is runnable in the target environment.",
+      "decision": "DB/API owner verifies schema, deployment and a synthetic-user/test-token environment.",
+      "source_ref": "00-overview.md §status; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD05-BL-008",
+      "description": "Mutation error ordering, retry/idempotency, timeout reconciliation and API #68/#69 refresh behavior lack complete contract.",
+      "impact": "Cannot finalize uncertain-outcome or duplicate-submit acceptance.",
+      "decision": "API/security/product approves error, reconciliation and refresh policy.",
+      "source_ref": "02-events.md §EV-03/04/API matrix; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "source_discrepancies": [
+    "Current Angular page validates signed-int64 route userId and calls GET #69; it has no #71/#72 caller and action/reason controls are disabled.",
+    "Prototype includes static gate/RBAC/audit/ISO/session claims and a permanent-delete label; DD states these are not runtime/API evidence and local #72 is a DELETED marker.",
+    "Prototype back links target /admin/users; app links to detail/list without approved selected-user retention or post-action destination.",
+    "Runtime/deployment, live schema and test environment are not verified."
+  ],
+  "workbook": {
+    "path": "UTC_AD-05_KhoaMoKhoaXoaTaiKhoan.xlsx",
+    "validation": {
+      "tep": "apps/study-client/docs/utc_screens/UTC_AD-05_KhoaMoKhoaXoaTaiKhoan.xlsx",
+      "trang_tinh": [
+        "01. Bìa",
+        "02. Tổng quan",
+        "03. Thành phần",
+        "04. Sự kiện"
+      ],
+      "so_cong_thuc": 622,
+      "loi": [],
+      "hop_le": true,
+      "execution_audit": {
+        "case_count": 63,
+        "not_run": 63,
+        "filled_execution_cells": 0,
+        "row_check_formulas": 63,
+        "execution_fields_blank": true
+      },
+      "visual_review": {
+        "status": "NOT_RENDERED",
+        "reason": "No LibreOffice/soffice or artifact_tool runtime is available in this environment."
+      }
+    },
+    "metadata_cells": {
+      "D7": "AD-05",
+      "D8": "Khóa/mở khóa/xóa tài khoản",
+      "D9": "Admin",
+      "D10": "/admin/users/:userId/actions",
+      "D11": "0.1 — KẾ HOẠCH UTC",
+      "D12": "0.2 / 2026-11-20",
+      "D13": "BLOCKED — status, deletion, permission, session and audit policies need approval",
+      "D14": "NOT VERIFIED — authenticated runtime/deployment/schema/test environment not verified",
+      "D15": "AI lập kế hoạch kiểm thử; cần review",
+      "D16": "Chưa phân công",
+      "D17": "Chưa phê duyệt",
+      "D18": "2026-11-23"
+    }
+  },
+  "interpretation": "UTC plan only. All case execution status is Chưa chạy; actual result/evidence/bug/tester/date cells are blank. Do not use for acceptance execution until DD blockers are resolved and reviewed."
+}

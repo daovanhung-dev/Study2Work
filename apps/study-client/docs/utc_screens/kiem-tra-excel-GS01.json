@@ -1,0 +1,58 @@
+{
+  "screen_id": "GS-01",
+  "xlsx": "UTC_GS-01_DanhSachKhoaHoc.xlsx",
+  "zip_integrity": true,
+  "worksheets": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "summary_counts": {
+    "requirements": "27",
+    "stitch_markers": "16",
+    "elements": "47",
+    "events": "16",
+    "apis": "2",
+    "open_blockers": "8"
+  },
+  "case_counts": {
+    "requirements": 27,
+    "elements": 47,
+    "events": 16,
+    "screen_cases": 27,
+    "element_cases": 47,
+    "event_cases": 24
+  },
+  "formulas": 294,
+  "expected_formula_count": 294,
+  "all_cases_unrun_and_blank_execution_fields": true,
+  "dropdown_ranges": [
+    [
+      "02. Tổng quan",
+      "O76:O102"
+    ],
+    [
+      "03. Thành phần",
+      "O56:O102"
+    ],
+    [
+      "04. Sự kiện",
+      "O24:O47"
+    ]
+  ],
+  "requirement_ids_match_spec": true,
+  "element_ids_match_spec": true,
+  "event_ids_match_spec": true,
+  "case_id_counts_match_spec": {
+    "screen": 27,
+    "element": 47,
+    "event": 24
+  },
+  "source_hashes_matched": 62,
+  "source_hashes_total": 62,
+  "json_structurally_valid": true,
+  "approval_ready": false,
+  "stale_AD25_template_text_present": false,
+  "execution_or_visual_preview_run": false
+}

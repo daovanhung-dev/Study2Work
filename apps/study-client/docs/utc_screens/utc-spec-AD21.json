@@ -1,0 +1,3589 @@
+{
+  "metadata": {
+    "screen_id": "AD-21",
+    "screen_name": "Kiểm soát và giám sát trạng thái thông báo",
+    "module": "Quản trị (Admin)",
+    "route": "/admin/notifications/:notificationId",
+    "actor": "Admin theo AC-36 cần quyền quản lý thông báo; danh mục ghi Admin và trình xử lý cục bộ dùng role ADMIN. Chưa xác nhận quyền chi tiết/phạm vi đơn vị thuê.",
+    "version": "0.1 — BẢN KẾ HOẠCH UTC",
+    "dd_version": "DD AD-21 v0.2 (2026-11-20); trạng thái DD BỊ CHẶN; DD API #94/#95/#96 và #18 còn ở bản nháp/có điều kiện mở.",
+    "dd_status": "DD chuẩn còn BỊ CHẶN về model/grain, vòng đời, quyền, body/chính sách mutation, projection gửi và ánh xạ SH-07. Theo hướng dẫn người dùng, dùng DD làm nguồn chuẩn; blocker chưa được xem là đã đóng.",
+    "runtime_status": "Đã đối chiếu 47 marker/ảnh Stitch, ranh giới Angular route/page/#96, catalog #18/#94/#95/#96 và mã nguồn server cục bộ. Chưa xác minh trình duyệt, API đã triển khai, DB đang chạy, migration, delivery provider hoặc runtime SH-07.",
+    "author": "Lập kế hoạch UTC; cần người rà soát.",
+    "reviewer": "Chưa được xác định",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-24",
+    "source_name": "DD AD-21 mục 00–07; inventory row 79; AC-36; catalog #18/#94/#95/#96; macro-review AC-36; 47 marker, ảnh/HTML Stitch; Angular AD21 route/page/service/boundary/spec; Study Server #18/#94/#95/#96.",
+    "approval_note": "Đây là bộ ca dự kiến theo DD chuẩn đang BỊ CHẶN. Ca chưa chạy/chưa được duyệt phát hành; câu hỏi về API detail/vòng đời/quyền/mutation/cầu nối Operation vẫn còn mở."
+  },
+  "overall": {
+    "objective": "Lập ca truy vết toàn màn AD-21, giữ riêng ảnh Stitch, contract trực tiếp, mã Angular hiện tại và local server fallback; không biến quyết định còn mở thành hành vi đã duyệt.",
+    "inputs": "NotificationId dạng route text; GET #96 trả projection Notification gồm id, title, content, channels, status, created_at nếu resource có delivery rows. Không có recipient, lịch gửi, số liệu theo kênh hoặc Operation ID.",
+    "outputs": "Trang đọc projection #96; status giữ nguyên token QUEUED/FAILED/SENT. Các nút sửa, hủy và SH-07 đang disabled; current UI không gọi #94/#95/#18.",
+    "main_flow": "Mở /admin/notifications/:notificationId → Angular kiểm tra ID nguyên bản dương signed-int64 → GET #96 với Bearer → kiểm tra envelope/businessCode/data.id/Notification fields → hiển thị trường được trả về hoặc trạng thái lỗi. Không poll, không mutation, không tự chuyển sang SH-07.",
+    "states": [
+      "Route thiếu hoặc sai notificationId",
+      "Đang tải trạng thái",
+      "Đã nạp Notification projection",
+      "Lỗi xác thực",
+      "Không đủ quyền",
+      "Không tìm thấy status resource",
+      "Lỗi server hoặc kết nối",
+      "Response envelope hoặc ID không hợp lệ",
+      "ID trong phản hồi ngoài miền số nguyên JavaScript an toàn",
+      "Thao tác update bị khóa",
+      "Thao tác delete/cancel bị khóa",
+      "Handoff SH-07 chưa khả dụng",
+      "Mockup Stitch tĩnh",
+      "QUEUED/FAILED/SENT là local fallback chưa được phê duyệt làm lifecycle"
+    ],
+    "preconditions": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không dùng nội dung/recipient thật, không xem test plan lịch sử là kết quả lượt này.",
+    "security": "Không dùng nhãn Admin/RBAC tĩnh làm bằng chứng về quyền. Cần phân biệt vai trò Admin trong danh mục với quyền theo AC-36; không suy ra phạm vi đơn vị thuê, người nhận, nhà cung cấp hoặc chủ sở hữu thao tác từ bản mẫu.",
+    "out_of_scope": "Không thêm GET detail, trường recipient/count/schedule/per-channel, enum/lifecycle mapping, edit/cancel behavior, provider stop, Operation correlation/poller, retry/cache/polling cadence hoặc live schema claim."
+  },
+  "requirements": [
+    {
+      "id": "AD-21-YC-001",
+      "description": "Quyền quản lý thông báo: AC-36 yêu cầu quyền notification-management; danh mục ghi Admin, còn API cục bộ dùng vai trò ADMIN dùng chung. Chưa có ánh xạ quyền/phạm vi đơn vị thuê.",
+      "group": "Quyền truy cập",
+      "source_ref": "AC-36; inventory row 79; AC-36 macro-review; API #94–#96 auth source",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Không coi role ADMIN là quyền chi tiết đã duyệt."
+    },
+    {
+      "id": "AD-21-YC-002",
+      "description": "Route AD-21: Angular Admin router đăng ký notifications/:notificationId → AD21Page; browser/deployment chưa xác minh.",
+      "group": "Điều hướng",
+      "source_ref": "inventory row 79; admin.routes.ts; admin.routes.spec.ts; AD21 page.ts",
+      "priority": "Cao",
+      "design_status": "Source-wired; runtime chưa xác minh",
+      "notes": "Không khẳng định route đã triển khai."
+    },
+    {
+      "id": "AD-21-YC-003",
+      "description": "Kiểm tra notificationId: Page kiểm tra full raw text: chỉ chữ số ASCII, dương, tối đa signed-int64; thiếu/sai ID dừng trước GET. Chấp nhận raw text hợp lệ không làm mất độ chính xác trên đường dẫn.",
+      "group": "Định danh",
+      "source_ref": "AD21 page.ts; admin-screen-state.ts; API #96 validate.py; DD EV-01",
+      "priority": "Cao",
+      "design_status": "Source-wired; chưa xác minh trên browser",
+      "notes": "Không tự tạo ID hoặc dùng operation_id thay notification_id."
+    },
+    {
+      "id": "AD-21-YC-004",
+      "description": "GET #96 là read mã nguồn hiện tại: Catalog khai báo GET status path-only, không query/body; chỉ API #96 caller trong AD-21 được wired.",
+      "group": "Đọc trạng thái",
+      "source_ref": "catalog #96; AD21 api.service.ts; API constants; API #96 route/view",
+      "priority": "Cao",
+      "design_status": "Local source-wired; API DD Draft",
+      "notes": "Không thêm GET detail riêng."
+    },
+    {
+      "id": "AD-21-YC-005",
+      "description": "Bearer và ranh giới vai trò: máy khách lấy token Admin và gắn Bearer; máy chủ cục bộ kiểm tra ADMIN. Chưa có bằng chứng về quyền/phạm vi chi tiết theo AC-36.",
+      "group": "Bảo vệ request",
+      "source_ref": "AdminApiService; API #96 view.py; macro-review; AC-36",
+      "priority": "Cao",
+      "design_status": "Source hiện hành; policy chưa chốt",
+      "notes": "Không dùng tên/ảnh Admin tĩnh làm xác thực."
+    },
+    {
+      "id": "AD-21-YC-006",
+      "description": "HTTP 200 và envelope #96: Direct catalog success 200 DESIGN_RESOURCE_RETRIEVED với ApiEnvelope<Notification>; ranh giới phía máy khách đòi success, businessCode, message, meta, traceId.",
+      "group": "Hợp đồng đọc",
+      "source_ref": "catalog #96; AD21 notification models/boundary; API #96 models/view.py",
+      "priority": "Cao",
+      "design_status": "Catalog/source đối chiếu; API DD Draft",
+      "notes": "Không nhận body sai envelope như dữ liệu hợp lệ."
+    },
+    {
+      "id": "AD-21-YC-007",
+      "description": "Dữ liệu notification và định danh phản hồi: máy khách đối chiếu `data.id` với ID tuyến bằng BigInt, rồi kiểm tra title/content/channels/trạng thái/created_at; nếu không khớp thì yêu cầu bị lỗi.",
+      "group": "Kiểm tra response",
+      "source_ref": "AD21 models; API #96 models/view.py; page.spec.ts",
+      "priority": "Cao",
+      "design_status": "Source-wired; chưa chạy test lượt UTC",
+      "notes": "Không hiển thị dữ liệu của ID khác."
+    },
+    {
+      "id": "AD-21-YC-008",
+      "description": "Giới hạn độ chính xác ID: Route/API cho phép int64, nhưng client wire model dùng number và từ chối ID response ngoài Number.isSafeInteger; đây là giới hạn hiện tại.",
+      "group": "Định danh hiển thị",
+      "source_ref": "AD21 models; admin-api.models.ts; admin-screen-renderers.ts; page.spec.ts",
+      "priority": "Cao",
+      "design_status": "Discrepancy source-backed",
+      "notes": "Không khẳng định client hỗ trợ mọi signed-int64 response."
+    },
+    {
+      "id": "AD-21-YC-009",
+      "description": "Các trường được render: Mã, title, content, channels, aggregate status, created_at được map; status giữ token gốc.",
+      "group": "Chiếu dữ liệu",
+      "source_ref": "admin-screen-renderers.ts; ad21-page.html; AD21 UI/model",
+      "priority": "Cao",
+      "design_status": "Source hiện hành; browser chưa xác minh",
+      "notes": "Không tự đổi status sang draft/delivered."
+    },
+    {
+      "id": "AD-21-YC-010",
+      "description": "Không có recipient/progress: #96 projection không trả recipient, schedule, counts hoặc per-channel status; UI hiện ghi rõ unavailable.",
+      "group": "Giới hạn chiếu dữ liệu",
+      "source_ref": "API #96 query/models; AD21 page.html; DD API integration",
+      "priority": "Cao",
+      "design_status": "Được giới hạn rõ trong source",
+      "notes": "Không điền giả recipient hoặc số 0/0 của mockup."
+    },
+    {
+      "id": "AD-21-YC-011",
+      "description": "Enum status và lifecycle: Inventory expected draft/scheduled/sending/delivered/failed khác local aggregate QUEUED/FAILED/SENT; không có mapping được duyệt.",
+      "group": "Trạng thái nghiệp vụ",
+      "source_ref": "inventory row 79; API #96 query.py; API #92–#96 macro-review; AD21 DD",
+      "priority": "Cao",
+      "design_status": "Chưa xác nhận",
+      "notes": "Không ánh xạ SENT=delivered hoặc QUEUED=draft/scheduled."
+    },
+    {
+      "id": "AD-21-YC-012",
+      "description": "#94 sửa thông báo: Catalog PUT path-only, không khai báo body; local handler yêu cầu strict {title,content}, max title 200 và chỉ all-QUEUED; AD-21 UI không gọi #94.",
+      "group": "Sửa nội dung",
+      "source_ref": "catalog #94; API #94 validate/models/query/view; AD21 page.html",
+      "priority": "Cao",
+      "design_status": "Contract Draft; body/eligibility DERIVED",
+      "notes": "Không gọi hoặc chấp nhận fallback local như rule đã duyệt."
+    },
+    {
+      "id": "AD-21-YC-013",
+      "description": "#95 xóa/hủy: danh mục DELETE trả DeleteResult; AC-36 nêu xóa/đánh dấu hủy theo chính sách. Trình xử lý cục bộ xóa cứng hàng QUEUED nhưng không dừng nhà cung cấp; giao diện bị vô hiệu hóa.",
+      "group": "Hủy/xóa",
+      "source_ref": "catalog #95; API #95 query/view/models; candidate DB.sql; AC-36",
+      "priority": "Cao",
+      "design_status": "Contract Draft; lifecycle/retention mở",
+      "notes": "Không gọi DELETE hoặc ghi nhận provider đã dừng."
+    },
+    {
+      "id": "AD-21-YC-014",
+      "description": "Bàn giao SH-07/API #18: #96 không trả `operation_id`; AD-21 hiện không có máy khách gọi API hoặc tiến trình dò trạng thái. Danh mục trực tiếp #18 và bộ kiểm tra máy chủ dùng UUID; tài liệu AD-21/SH-07 cũ vẫn ghi int64.",
+      "group": "Theo dõi tác vụ",
+      "source_ref": "catalog #18/#96; API #18 validate/query/view; SH-07 DD; AD21 page/template",
+      "priority": "Cao",
+      "design_status": "Discrepancy tài liệu; handoff chưa wired",
+      "notes": "Không lấy ID từ notificationId hoặc mở SH-07 tự phát."
+    },
+    {
+      "id": "AD-21-YC-015",
+      "description": "Không tự thử lại/thăm dò: mã nguồn không có nút thử lại/làm mới, bộ hẹn giờ, thăm dò hoặc SSE trên AD-21; chính sách thử lại/chu kỳ chưa được chốt.",
+      "group": "Tải lại",
+      "source_ref": "AD21 page.ts/html; DD 02-events/03-data-flow; SH-07 blockers",
+      "priority": "Trung bình",
+      "design_status": "Chưa có contract",
+      "notes": "Không tự gọi lại #96 theo thời gian hoặc lỗi."
+    },
+    {
+      "id": "AD-21-YC-016",
+      "description": "Lỗi theo đúng mã nguồn #96: danh mục chỉ liệt kê 401/403/404/500. Máy khách dùng chung kết thúc phiên cục bộ khi nhận 401; giao diện có màn hình lỗi, không có nút thử lại.",
+      "group": "Lỗi đọc",
+      "source_ref": "catalog #96; AdminApiService; admin-screen-state.ts; ad21-page.html",
+      "priority": "Cao",
+      "design_status": "Source mapping; deployment chưa xác minh",
+      "notes": "Không thêm 422 vào catalog hoặc biến 500/network thành 404."
+    },
+    {
+      "id": "AD-21-YC-017",
+      "description": "Prototype không phải runtime: Stitch có System Normal/RBAC, 0/0, SMTP và tiến trình đầu cuối tĩnh; Angular đọc aggregate #96 và không hiển thị các claim đó.",
+      "group": "Đối chiếu thiết kế",
+      "source_ref": "AD-21_PLAN.md; AD-21.md; markers JSON; Stitch code.html; Angular template",
+      "priority": "Cao",
+      "design_status": "Static artifact tách khỏi current source",
+      "notes": "Không coi copy/health/progress là dữ liệu server."
+    },
+    {
+      "id": "AD-21-YC-018",
+      "description": "Quay lại danh sách: Angular RouterLink trỏ đến /admin/notifications; không giữ truy vấn/bộ lọc/trang/vị trí cuộn. Bản mẫu dùng href #.",
+      "group": "Điều hướng ngược",
+      "source_ref": "ad21-page.html; DD EV-04/06-navigation; AD19 route",
+      "priority": "Trung bình",
+      "design_status": "Current route wired; context preservation chưa chốt",
+      "notes": "Không tự thêm return state."
+    },
+    {
+      "id": "AD-21-YC-019",
+      "description": "Candidate DB không phải live: Git DDL có notifications/delivery BIGINT, operation_id UUID và status/channel checks; không chứng minh schema đang chạy.",
+      "group": "Lưu trữ",
+      "source_ref": "infra/postgres/study-server/DB.sql; macro-review; API #94–#96 source",
+      "priority": "Cao",
+      "design_status": "Candidate/source only",
+      "notes": "Không kết luận migration đã triển khai."
+    },
+    {
+      "id": "AD-21-YC-020",
+      "description": "Trạng thái approval và kiểm chứng: DD BLOCKED, API DD Draft; owner/reviewer/approver không được xác định; browser, deployed API, live DB và provider chưa xác minh.",
+      "group": "Điều kiện nghiệm thu",
+      "source_ref": "AD-21 00/07; API macro-review; inventory row 79",
+      "priority": "Cao",
+      "design_status": "Chưa đủ điều kiện phát hành",
+      "notes": "Không gọi đây là test pass hoặc UTC release-approved."
+    },
+    {
+      "id": "AD-21-YC-021",
+      "description": "Quay về danh sách thông báo: Angular RouterLink đưa về /admin/notifications nhưng không giữ filter/page/scroll; prototype href #.",
+      "group": "Điều hướng ngược",
+      "source_ref": "AD21 page.html; admin.routes.ts; DD EV-04/06-navigation.md",
+      "priority": "Trung bình",
+      "design_status": "Source hiện hành; giữ context chưa xác nhận",
+      "notes": "Không tự tạo return state hoặc query params."
+    },
+    {
+      "id": "AD-21-YC-022",
+      "description": "Responsive và focus: Scoped CSS có focus-visible và breakpoint 1023px/767px; chỉ chứng minh có quy tắc style trong source.",
+      "group": "Hiển thị",
+      "source_ref": "AD21 page.css",
+      "priority": "Trung bình",
+      "design_status": "Source-only; browser chưa xác minh",
+      "notes": "Không tuyên bố bố cục/khả năng truy cập đã được runtime kiểm chứng."
+    }
+  ],
+  "apis": [
+    {
+      "id": "AD-21-API-001",
+      "method": "GET",
+      "path": "/api/v1/operations/{operation_id}",
+      "request": "Dòng catalog trực tiếp #18 hiện khai báo Bearer JWT, owner của operation và operation_id:uuid trên path; không có query/body.",
+      "response": "Catalog: 200 DESIGN_OPERATION_RETRIEVED, ApiEnvelope<Operation>. Handler Study cục bộ kiểm tra UUID và trả projection dispatch thông báo gắn với sender_id; đây không phải kho operations tổng quát.",
+      "errors": "Các lỗi catalog #18: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 500 DESIGN_INTERNAL_ERROR.",
+      "auth": "Bearer JWT; danh mục nêu các role Student/Mentor/Admin và chủ sở hữu thao tác. Tuyến cục bộ cho STUDENT|MENTOR|ADMIN và chỉ truy vấn thao tác thông báo thuộc người gửi.",
+      "design_status": "AD-21 không gọi API này. Catalog/server trực tiếp dùng UUID; một số đoạn DD AD-21 và SH-07 lại ghi catalog dùng int64, nên giữ nguyên khác biệt. DD #18 và chính sách producer/result/vòng đời tổng quát còn bỏ ngỏ.",
+      "source_ref": "docs/lists/list_api.md #18; API #18 validate/query/view/models; Study router; AD-21 and SH-07 DD",
+      "event_ids": [
+        "AD-21-EV-007"
+      ]
+    },
+    {
+      "id": "AD-21-API-002",
+      "method": "PUT",
+      "path": "/api/v1/admin/notifications/{notification_id}",
+      "request": "Danh mục trực tiếp: Bearer JWT/Admin; notification_id:int64 trên đường dẫn; chưa quy định body/query. Phương án dự phòng cục bộ yêu cầu JSON nghiêm ngặt {title,content}; title tối đa 200 ký tự và cả hai trường đều không được để trống.",
+      "response": "Catalog: HTTP 200 DESIGN_RESOURCE_UPDATED, ApiEnvelope<Notification>. Phương án cục bộ chỉ cập nhật title/content khi có ít nhất một delivery đã khóa và mọi status đều QUEUED.",
+      "errors": "Các lỗi catalog #94: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR.",
+      "auth": "Bearer JWT; danh mục ghi vai trò Admin, tuyến cục bộ dùng vai trò ADMIN chung. Ánh xạ quyền/tenant theo AC-36 chưa được giải quyết.",
+      "design_status": "Route API cục bộ có tồn tại, nhưng UI AD-21 giữ cập nhật ở trạng thái vô hiệu hóa và không có caller #94. Body/chính sách chỉ cho QUEUED được suy ra; API DD ở bản nháp.",
+      "source_ref": "docs/lists/list_api.md #94; API #94 validate/models/query/view; AC-36 macro-review",
+      "event_ids": [
+        "AD-21-EV-005"
+      ]
+    },
+    {
+      "id": "AD-21-API-003",
+      "method": "DELETE",
+      "path": "/api/v1/admin/notifications/{notification_id}",
+      "request": "Danh mục trực tiếp: Bearer JWT của quản trị viên; notification_id:int64 trên đường dẫn; không có thân yêu cầu/tham số truy vấn.",
+      "response": "Catalog: HTTP 200 DESIGN_RESOURCE_DELETED, ApiEnvelope<DeleteResult>. Phương án cục bộ trả id/status=deleted/deleted_at sau khi xóa cứng một dòng ứng viên.",
+      "errors": "Các lỗi catalog #95: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR.",
+      "auth": "Bearer JWT; danh mục ghi vai trò Admin, tuyến cục bộ dùng vai trò ADMIN chung. Quyền/phạm vi chi tiết chưa được giải quyết.",
+      "design_status": "Route cục bộ tồn tại nhưng UI AD-21 giữ hủy ở trạng thái vô hiệu hóa và không có caller #95. Chưa giải quyết xóa hay hủy, xóa mềm, lưu giữ và phối hợp worker/provider; API DD ở bản nháp.",
+      "source_ref": "docs/lists/list_api.md #95; API #95 validate/models/query/view; AC-36 macro-review; candidate DB.sql",
+      "event_ids": [
+        "AD-21-EV-006"
+      ]
+    },
+    {
+      "id": "AD-21-API-004",
+      "method": "GET",
+      "path": "/api/v1/admin/notifications/{notification_id}/status",
+      "request": "Danh mục trực tiếp: Bearer JWT của quản trị viên; notification_id:int64 trên đường dẫn; không có tham số truy vấn/thân yêu cầu.",
+      "response": "Catalog: HTTP 200 DESIGN_RESOURCE_RETRIEVED, ApiEnvelope<Notification>. GET cục bộ trả id,title,content,channels,status,created_at với độ ưu tiên aggregate QUEUED > FAILED > SENT; không có trường recipient/count/per-channel/schedule/Operation.",
+      "errors": "Các lỗi catalog #96: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 500 DESIGN_INTERNAL_ERROR. ID cục bộ sai định dạng và không có dòng status đều trả 404.",
+      "auth": "Bearer JWT; danh mục ghi vai trò Admin, bộ bảo vệ tuyến cục bộ dùng ADMIN chung. Khóa quyền AC-36 và phạm vi tenant/phạm vi tài nguyên chưa được giải quyết.",
+      "design_status": "Chỉ có bên gọi API được nối trong AD-21. Chưa xác minh trình duyệt/triển khai/DB trực tiếp; model phản hồi/vòng đời vẫn ở trạng thái Draft.",
+      "source_ref": "docs/lists/list_api.md #96; AD21ApiService/boundary; API #96 validate/query/models/view",
+      "event_ids": [
+        "AD-21-EV-001"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-21-EL-001",
+      "marker": "#1",
+      "name": "Thương hiệu Study2Work LMS và cổng quản trị",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(252,35) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Chữ và biểu tượng cố định trong Stitch; không chứng minh danh tính, phiên đăng nhập hoặc tenant.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #1; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-002",
+      "marker": "#2",
+      "name": "Liên kết Tổng quan",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(306,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Liên kết trong HTML mẫu dùng href #; không có đích định tuyến.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #2; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-003",
+      "marker": "#3",
+      "name": "Liên kết Người dùng",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(427,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Liên kết trong HTML mẫu dùng href #; không có đích định tuyến.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #3; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-004",
+      "marker": "#4",
+      "name": "Liên kết Khóa học và Nội dung",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(610,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Liên kết trong HTML mẫu dùng href #; không có đích định tuyến.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #4; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-005",
+      "marker": "#5",
+      "name": "Liên kết Kiểm duyệt",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(781,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Liên kết trong HTML mẫu dùng href #; không có đích định tuyến.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #5; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-006",
+      "marker": "#6",
+      "name": "Liên kết Báo cáo",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(887,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Liên kết trong HTML mẫu dùng href #; không có đích định tuyến.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #6; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-007",
+      "marker": "#7",
+      "name": "Nhãn “System Normal” tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1113,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nhãn hệ thống tĩnh; không gọi health API.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #7; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-008",
+      "marker": "#8",
+      "name": "Nút chuông thông báo",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1161,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nút có nhãn Notifications nhưng không có handler, số đếm hoặc trang đích.",
+      "event_ids": [
+        "AD-21-EV-003"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #8; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-009",
+      "marker": "#9",
+      "name": "Danh tính/vai trò quản trị viên (tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1400,60) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Tên và vai trò ghi cứng; không lấy từ session/token.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #9; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-010",
+      "marker": "#10",
+      "name": "Đường dẫn vị trí toàn cục",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(19,86) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Breadcrumb là văn bản, không có điều hướng.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #10; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-011",
+      "marker": "#11",
+      "name": "Nhãn tuyên bố RBAC tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1401,86) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Tuyên bố RBAC tĩnh; không chứng minh quyền đã được kiểm tra.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #11; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-012",
+      "marker": "#12",
+      "name": "Đường dẫn vị trí thông báo",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(20,149) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Breadcrumb cục bộ tĩnh; không có route.",
+      "event_ids": [
+        "AD-21-EV-002"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #12; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-013",
+      "marker": "#13",
+      "name": "Liên kết quay về danh sách AD-19",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1402,164) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Trong prototype href #; Angular hiện có RouterLink về /admin/notifications, không giữ filter/page.",
+      "event_ids": [
+        "AD-21-EV-004"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #13; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-014",
+      "marker": "#14",
+      "name": "Nhãn mã màn hình và đường dẫn mẫu",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(608,181) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nhãn thiết kế tĩnh; route Angular hiện đã đăng ký riêng.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #14; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-015",
+      "marker": "#15",
+      "name": "Tiêu đề trang",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(858,237) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Tiêu đề tĩnh của prototype; Angular dùng tiêu đề trong định nghĩa màn hình.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #15; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-016",
+      "marker": "#16",
+      "name": "Mô tả trang",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(799,281) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Mô tả thiết kế nói giám sát thời gian thực; không có polling hoặc cập nhật trực tiếp.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #16; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-017",
+      "marker": "#17",
+      "name": "Nhãn môi trường phân quyền quản trị viên",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1402,271) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nhãn quyền tĩnh; không phải permission key hoặc kết quả backend.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #17; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-018",
+      "marker": "#18",
+      "name": "Tiêu đề bảng định danh kỹ thuật",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(485,355) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Tiêu đề/biểu tượng tĩnh; không cung cấp API detail riêng.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #18; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-019",
+      "marker": "#19",
+      "name": "Nhãn cổng bảo vệ tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1375,365) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nhãn bảo vệ tĩnh; không có dữ liệu trạng thái guard.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #19; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-020",
+      "marker": "#20",
+      "name": "Thẻ mã thông báo",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(472,520) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Placeholder không có giá trị ID; API #96 chỉ đọc trạng thái và route Angular tự kiểm tra ID.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #20; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-021",
+      "marker": "#21",
+      "name": "Thẻ mã tác vụ bất đồng bộ",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(914,520) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Prototype ghi Chưa liên kết; API #96 không trả Operation ID.",
+      "event_ids": [
+        "AD-21-EV-007"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #21; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-022",
+      "marker": "#22",
+      "name": "Thẻ trạng thái phát hành",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1354,520) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nhãn Chờ xác thực tĩnh; không phải enum response #96.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #22; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-023",
+      "marker": "#23",
+      "name": "Thông báo thiếu chi tiết và khóa thao tác",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1370,710) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nội dung giải thích của prototype; Angular hiện có #96 read projection nhưng không có detail recipient.",
+      "event_ids": [
+        "AD-21-EV-001",
+        "AD-21-EV-005"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #23; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-024",
+      "marker": "#24",
+      "name": "Tiêu đề bảng nội dung bản tin",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(795,822) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Tiêu đề bảng tĩnh; Angular có bảng nội dung chỉ đọc.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #24; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-025",
+      "marker": "#25",
+      "name": "Nhãn chế độ xem tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(642,804) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nhãn chế độ xem tĩnh; các thao tác Angular hiện cũng bị khóa.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #25; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-026",
+      "marker": "#26",
+      "name": "Nhãn và vùng tiêu đề thông báo",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(778,920) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Placeholder HTML là div, không phải input; Angular hiện Hiển thị tiêu đề động từ #96.",
+      "event_ids": [
+        "AD-21-EV-001",
+        "AD-21-EV-005"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #26; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-027",
+      "marker": "#27",
+      "name": "Nhãn và vùng kênh thông báo",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(807,976) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Prototype không bind dữ liệu; Angular hiện render channels từ #96.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #27; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-028",
+      "marker": "#28",
+      "name": "Nhãn kênh In-App",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(640,1004) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "In-App là nhãn thiết kế; chưa có bằng chứng nó tương đương enum PUSH.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #28; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-029",
+      "marker": "#29",
+      "name": "Nhãn kênh Email",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(800,1004) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Email là nhãn thiết kế; Angular có thể hiển thị EMAIL từ API nhưng không chứng minh provider.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #29; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-030",
+      "marker": "#30",
+      "name": "Nhãn và vùng nội dung chi tiết",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(778,1088) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Placeholder là div, không phải textarea; Angular hiện render content dạng text.",
+      "event_ids": [
+        "AD-21-EV-001",
+        "AD-21-EV-005"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #30; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-031",
+      "marker": "#31",
+      "name": "Ghi chú khóa nội dung tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(778,1218) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Copy khóa tĩnh; không tạo security policy/runtime lock.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #31; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-032",
+      "marker": "#32",
+      "name": "Nhãn và vùng người nhận",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(778,1315) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Prototype không có recipient value; API #96 cũng không trả người nhận.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #32; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-033",
+      "marker": "#33",
+      "name": "Nút cập nhật bản nháp đang khóa",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(538,1394) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nút native disabled; Angular vẫn giữ nút cập nhật disabled và không gọi #94.",
+      "event_ids": [
+        "AD-21-EV-005"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #33; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-034",
+      "marker": "#34",
+      "name": "Tiêu đề tiến trình phân phối kênh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1372,813) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Tiêu đề/copy nói tiến trình đầu cuối; #96 chỉ trả trạng thái aggregate.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #34; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-035",
+      "marker": "#35",
+      "name": "Thẻ trạng thái kênh In-App",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1356,871) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Trạng thái kênh In-App tĩnh; API #96 không trả trạng thái riêng theo kênh.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #35; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-036",
+      "marker": "#36",
+      "name": "Thanh tiến độ và số đếm In-App tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(872,958) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Số 0/0 và thanh tiến độ tĩnh; không có counter từ #96.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #36; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-037",
+      "marker": "#37",
+      "name": "Thẻ trạng thái kênh Email",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1355,1017) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Copy SMTP là claim thiết kế; không chứng minh dịch vụ gửi.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #37; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-038",
+      "marker": "#38",
+      "name": "Thanh hàng đợi Email tĩnh",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(872,1112) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Thanh và trạng thái hàng đợi tĩnh; không có telemetry từng kênh từ #96.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #38; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-039",
+      "marker": "#39",
+      "name": "Nút hủy phát hành đang khóa",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1368,1183) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nút disabled; không có confirmation/handler; #95 local xóa hàng chờ nhưng không dừng provider.",
+      "event_ids": [
+        "AD-21-EV-006"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #39; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-040",
+      "marker": "#40",
+      "name": "Ghi chú an toàn hủy phát hành",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1367,1230) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Ghi chú tĩnh không chứng minh tác vụ gửi có thể dừng.",
+      "event_ids": [
+        "AD-21-EV-006"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #40; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-041",
+      "marker": "#41",
+      "name": "Tiêu đề cổng theo dõi SH-07",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1367,1323) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Tiêu đề panel tĩnh; Angular không gọi client SH-07 từ AD-21.",
+      "event_ids": [
+        "AD-21-EV-007"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #41; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-042",
+      "marker": "#42",
+      "name": "Mô tả điều kiện chuyển sang SH-07",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1370,1417) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Mô tả hứa theo dõi nếu có Operation ID; cần contract producer/owner/lifecycle.",
+      "event_ids": [
+        "AD-21-EV-007"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #42; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-043",
+      "marker": "#43",
+      "name": "Nút SH-07 đang khóa",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1370,1457) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nút native disabled; #96 không trả Operation ID và không có handoff/poller.",
+      "event_ids": [
+        "AD-21-EV-007"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #43; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-044",
+      "marker": "#44",
+      "name": "Bản quyền và tên hệ thống ở chân trang",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(407,1570) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Nội dung chân trang tĩnh; không phải trạng thái hệ thống.",
+      "event_ids": [],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #44; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-045",
+      "marker": "#45",
+      "name": "Liên kết chính sách riêng tư",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(785,1570) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Anchor href #; không có trang chính sách được xác nhận.",
+      "event_ids": [
+        "AD-21-EV-008"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #45; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-046",
+      "marker": "#46",
+      "name": "Liên kết tiêu chuẩn RBAC",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(987,1570) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Anchor href #; không có trang chuẩn RBAC được xác nhận.",
+      "event_ids": [
+        "AD-21-EV-008"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #46; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-047",
+      "marker": "#47",
+      "name": "Liên kết hỗ trợ kỹ thuật",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1218,1570) pixel nguồn trong ảnh 1425×1600, gốc trên trái",
+      "properties": "Anchor href #; không có đích hỗ trợ được xác nhận.",
+      "event_ids": [
+        "AD-21-EV-008"
+      ],
+      "design_status": "Bằng chứng ảnh/HTML tĩnh; không xác nhận Angular runtime hoặc môi trường triển khai.",
+      "source_ref": "AD-21 01-ui-elements.md marker #47; AD-21_markers.json; screen.png; screen_annotated.png"
+    },
+    {
+      "id": "AD-21-EL-048",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Guard route AD-21 và tham số notificationId",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Route router khai báo /admin/notifications/:notificationId; page đọc raw text, nhận chữ số dương trong signed-int64 rồi mới gọi API.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "admin.routes.ts; AD21 page.ts; admin-screen-state.ts; API #96 validate.py"
+    },
+    {
+      "id": "AD-21-EL-049",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Trạng thái route ID thiếu/sai",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Missing hoặc invalid param trả lỗi cục bộ state và bỏ qua GET; không tự dùng ID mặc định.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "admin-screen-state.ts; AD21 page.ts; DD EV-01"
+    },
+    {
+      "id": "AD-21-EL-050",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Trạng thái loading",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "AdminRouteState bắt đầu loading trong lúc GET #96 đang chờ.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "admin-screen-state.ts; ad21-page.html; ad21-page.spec.ts"
+    },
+    {
+      "id": "AD-21-EL-051",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Trạng thái loaded #96",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Template chỉ render projection đã được boundary kiểm tra; hiện title/content/channels/status/created_at và thông báo dữ liệu thiếu.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 page.html; models/boundary; admin-screen-renderers.ts"
+    },
+    {
+      "id": "AD-21-EL-052",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Trạng thái error và shared mapper",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "401 kết thúc phiên cục bộ; 403/404 có thông báo riêng; lỗi khác vào trạng thái lỗi chung; không có retry button.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AdminApiService; admin-screen-state.ts; AD21 page.html"
+    },
+    {
+      "id": "AD-21-EL-053",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Kiểm tra envelope và response identity",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Boundary yêu cầu success/businessCode/message/meta/traceId, Notification shape và data.id đúng route ID bằng BigInt.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 notification.models.ts; ad21-api.service.ts; API #96 models.py"
+    },
+    {
+      "id": "AD-21-EL-054",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Giới hạn safe integer cho ID trong phản hồi",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Route hỗ trợ path int64 dạng text, nhưng wire model là number và từ chối id không phải Number.isSafeInteger; đây là mã nguồn hiện tại limitation.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 models; admin-api.models.ts; ad21-page.spec.ts"
+    },
+    {
+      "id": "AD-21-EL-055",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Nhãn API #96 và dữ liệu trả về",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Angular template ghi API #96, map status giữ raw token; không có mapping sang delivered/draft.",
+      "event_ids": [
+        "AD-21-EV-001"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 page.html; admin-screen-renderers.ts; UI definition"
+    },
+    {
+      "id": "AD-21-EL-056",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Liên kết Angular quay về danh sách",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "RouterLink /admin/notifications hoạt động trong template source; không giữ query/filter/page/scroll.",
+      "event_ids": [
+        "AD-21-EV-004"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 page.html; admin.routes.ts; DD 06-navigation.md"
+    },
+    {
+      "id": "AD-21-EL-057",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Thao tác cập nhật bị khóa",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Nút Cập nhật bản nháp có disabled; source không gọi PUT #94.",
+      "event_ids": [
+        "AD-21-EV-005"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 page.html; ad21-page.spec.ts; API #94 catalog"
+    },
+    {
+      "id": "AD-21-EL-058",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "Hủy/xóa bị khóa",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Nút Hủy bỏ phát hành có disabled; source không gọi DELETE #95.",
+      "event_ids": [
+        "AD-21-EV-006"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 page.html; ad21-page.spec.ts; API #95 catalog"
+    },
+    {
+      "id": "AD-21-EL-059",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "SH-07 handoff không được wired",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Nút disabled; AD-21 không inject/call API #18; không có polling hoặc operation ID binding.",
+      "event_ids": [
+        "AD-21-EV-007"
+      ],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 page.html/ts/service; API #18 catalog/source; SH-07 DD"
+    },
+    {
+      "id": "AD-21-EL-060",
+      "marker": "Chỉ có trong mã Angular; không có marker Stitch",
+      "name": "CSS responsive và focus",
+      "type": "Trạng thái/điều khiển chỉ có trong mã nguồn Angular",
+      "position": "Không có tọa độ điểm đánh dấu; đối chiếu tuyến, bản mẫu, logic hoặc CSS.",
+      "properties": "Scoped CSS có focus-visible và reflow ở max-width 1023px/767px; chỉ là style bằng chứng từ mã nguồn.",
+      "event_ids": [],
+      "design_status": "Có bằng chứng mã nguồn; chưa xác minh trên browser/deployment.",
+      "source_ref": "AD21 page.css"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-21-EV-001",
+      "name": "Tải trang và đọc trạng thái #96",
+      "trigger": "Mở route /admin/notifications/:notificationId.",
+      "processing": "Angular hiện kiểm tra ID signed-int64 dương thô trước GET; ID hợp lệ gọi #96 với Bearer, kiểm tra envelope thành công/businessCode/định danh/trường data rồi hiển thị đang tải/đã tải/lỗi. Stitch vẫn là nội dung tĩnh; không tự thử lại/polling.",
+      "element_ids": [
+        "AD-21-EL-014",
+        "AD-21-EL-020",
+        "AD-21-EL-022",
+        "AD-21-EL-023",
+        "AD-21-EL-026",
+        "AD-21-EL-027",
+        "AD-21-EL-029",
+        "AD-21-EL-030",
+        "AD-21-EL-032",
+        "AD-21-EL-034",
+        "AD-21-EL-035",
+        "AD-21-EL-036",
+        "AD-21-EL-037",
+        "AD-21-EL-038"
+      ],
+      "api_ids": [
+        "AD-21-API-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-01; current Angular template/source; inventory/API catalog as applicable"
+    },
+    {
+      "id": "AD-21-EV-002",
+      "name": "Dùng shell navigation và breadcrumb",
+      "trigger": "Chọn nav/breadcrumb trong Stitch.",
+      "processing": "Anchor điều hướng prototype dùng href # và breadcrumb span. Trang hiện tại chỉ có breadcrumb/điều hướng cục bộ; ở đây không có bằng chứng API hoặc route shell toàn cục.",
+      "element_ids": [
+        "AD-21-EL-002",
+        "AD-21-EL-003",
+        "AD-21-EL-004",
+        "AD-21-EL-005",
+        "AD-21-EL-006",
+        "AD-21-EL-010",
+        "AD-21-EL-011",
+        "AD-21-EL-012"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-02; current Angular template/source; inventory/API catalog as applicable"
+    },
+    {
+      "id": "AD-21-EV-003",
+      "name": "Mở chuông Notifications",
+      "trigger": "Bấm nút Notifications trong tài liệu.",
+      "processing": "Nút prototype không có click handler/menu/API; unread dot tĩnh. Không gán hành vi từ tên nút.",
+      "element_ids": [
+        "AD-21-EL-008"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-03; current Angular template/source; inventory/API catalog as applicable"
+    },
+    {
+      "id": "AD-21-EV-004",
+      "name": "Quay lại AD-19",
+      "trigger": "Chọn đường quay về danh sách.",
+      "processing": "Stitch anchor href #; Angular uses RouterLink /admin/notifications. Không giữ filter/page/scroll state và không gọi API riêng.",
+      "element_ids": [
+        "AD-21-EL-013"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-04; current Angular template/source; inventory/API catalog as applicable"
+    },
+    {
+      "id": "AD-21-EV-005",
+      "name": "Cập nhật bản nháp qua #94",
+      "trigger": "Thử nút cập nhật trên Stitch/Angular template.",
+      "processing": "Các nút Stitch và Angular vẫn vô hiệu hóa; không phát sinh biểu mẫu/body/yêu cầu. Thiếu body trực tiếp của #94; hành vi cục bộ chỉ nhận {title,content}/QUEUED là phương án SUY RA.",
+      "element_ids": [
+        "AD-21-EL-023",
+        "AD-21-EL-026",
+        "AD-21-EL-030",
+        "AD-21-EL-033"
+      ],
+      "api_ids": [
+        "AD-21-API-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-05; current Angular template/source; inventory/API catalog as applicable"
+    },
+    {
+      "id": "AD-21-EV-006",
+      "name": "Hủy/xóa thông báo qua #95",
+      "trigger": "Thử nút hủy phát hành.",
+      "processing": "Nút Stitch/Angular vẫn bị vô hiệu hóa; không có xác nhận hoặc request DELETE. #95 cục bộ xóa vật lý nhưng không dừng provider; chính sách còn bỏ ngỏ.",
+      "element_ids": [
+        "AD-21-EL-039",
+        "AD-21-EL-040"
+      ],
+      "api_ids": [
+        "AD-21-API-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-06; current Angular template/source; inventory/API catalog as applicable"
+    },
+    {
+      "id": "AD-21-EV-007",
+      "name": "Mở theo dõi SH-07 qua #18",
+      "trigger": "Thử nút SH-07 khi #96 không trả Operation ID.",
+      "processing": "Nút bị vô hiệu hóa; AD-21 không có client #18, bàn giao hoặc poller. Catalog trực tiếp và route cục bộ dùng UUID trong khi đoạn DD cũ ghi int64; không tự tạo ID.",
+      "element_ids": [
+        "AD-21-EL-021",
+        "AD-21-EL-041",
+        "AD-21-EL-042",
+        "AD-21-EL-043"
+      ],
+      "api_ids": [
+        "AD-21-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-07; current Angular template/source; inventory/API catalog as applicable"
+    },
+    {
+      "id": "AD-21-EV-008",
+      "name": "Mở liên kết chân trang",
+      "trigger": "Chọn các liên kết privacy/RBAC/support trong prototype.",
+      "processing": "Cả ba liên kết đều dùng href #; không có tuyến, URL ngoài, hộp thoại hoặc hợp đồng API được cung cấp.",
+      "element_ids": [
+        "AD-21-EL-045",
+        "AD-21-EL-046",
+        "AD-21-EL-047"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "AD-21 02-events.md EV-08; current Angular template/source; inventory/API catalog as applicable"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD-21-BL-001",
+      "description": "DD/API còn Draft và người duyệt chưa rõ: DD AD-21 đang BLOCKED; API #94/#95/#96 cùng #18 còn câu hỏi/approval chưa ghi owner, reviewer, approver.",
+      "impact": "Không thể coi UTC này đã phát hành hoặc các ca đã được phê duyệt.",
+      "decision": "Owner/Product/API ghi bản DD/API, phạm vi quyết định và approver.",
+      "source_ref": "AD-21 00/05/07; catalog #18/#94–#96; API macro-review",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-002",
+      "description": "Quyền và phạm vi đơn vị thuê: AC-36 yêu cầu quyền quản lý thông báo; máy chủ cục bộ dùng vai trò ADMIN. Chưa có bằng chứng về khóa quyền hoặc phạm vi toàn cục/theo đơn vị thuê.",
+      "impact": "Admin UI role không xác nhận mọi người có quyền quản lý mọi notification.",
+      "decision": "Security/Product/API chốt permission mapping, owner scope và kiểm tra backend.",
+      "source_ref": "AC-36 diagram; macro-review; API #94–#96 view.py",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-003",
+      "description": "Lifecycle/status mapping: Inventory expected draft/scheduled/sending/delivered/failed không map với local QUEUED/FAILED/SENT aggregate.",
+      "impact": "Không thể suy delivery success, draft hoặc scheduled từ local status.",
+      "decision": "Product/API duyệt enum, transitions, precedence và cách hiển thị.",
+      "source_ref": "inventory row79; API #96 query.py; macro-review",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-004",
+      "description": "Notification detail/projection: #96 không trả recipient, schedule, operation_id, counts hoặc per-channel status; không có GET detail riêng.",
+      "impact": "Một phần thiết kế không thể được điền từ response hiện tại.",
+      "decision": "API owner duyệt Notification grain và projection/detail contract hoặc loại bỏ field.",
+      "source_ref": "catalog #96; API #96 models/query; DD AD-21 00/03",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-005",
+      "description": "#94 chỉ khai báo đường dẫn trong danh mục; phương án dự phòng cục bộ yêu cầu đúng các trường {title,content}, tối đa 200 ký tự và chỉ ở trạng thái QUEUED; ứng dụng không có biểu mẫu hoặc bên gọi.",
+      "impact": "Không thể xác định field, validation hay eligible statuses để edit.",
+      "decision": "API/Product chốt request body, state gate, race và response contract.",
+      "source_ref": "catalog #94; local #94 validate/view/query; macro-review",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-006",
+      "description": "#95 về hủy/xóa/lưu giữ: danh mục trả `DeleteResult`; AC-36 cho phép xóa hoặc đánh dấu đã hủy; mã nguồn cục bộ xóa vật lý hàng đang chờ nhưng không dừng nhà cung cấp hay tiến trình nền.",
+      "impact": "Physical deletion có thể không hủy dispatch và ảnh hưởng retention/audit.",
+      "decision": "Owner chốt cancel-vs-delete, soft/hard delete, retention, race, repeat và worker coordination.",
+      "source_ref": "catalog #95; local #95 query/view; candidate DDL; macro-review",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-007",
+      "description": "Channel và delivery telemetry: Prototype gọi In-App/Email, SMTP và progress 0/0; source/API chỉ có aggregate PUSH/EMAIL status, không provider metrics.",
+      "impact": "Nhãn/kênh không chứng minh một message đã đến thiết bị hoặc hộp thư.",
+      "decision": "Product/BE duyệt mapping, provider lifecycle và per-channel response khi cần.",
+      "source_ref": "markers #28–38; catalog #96; API #96 source",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-008",
+      "description": "Operation ID và SH-07 handoff: API #96 không trả Operation ID và AD-21 không có caller/poller. Direct catalog #18/server handler dùng UUID; AD-21/SH-07 docs còn nói int64.",
+      "impact": "Không có ID/producer mapping đã được trang này xác nhận để mở SH-07.",
+      "decision": "Cập nhật contract DD/catalog nhất quán; chốt producer, ID, owner, result/lifecycle rồi wired caller.",
+      "source_ref": "catalog #18/#96; API #18 source; AD-21/SH-07 DD; #93 producer",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-009",
+      "description": "Schema source không chứng minh live: Checked-in DB.sql là candidate legacy BIGINT notifications/delivery với operation_id UUID; migration/deployed schema chưa kiểm tra.",
+      "impact": "Không thể xác nhận local query/mutation đúng với DB đang chạy.",
+      "decision": "DB/API owner xác nhận schema và migration trong môi trường được duyệt.",
+      "source_ref": "infra/postgres/study-server/DB.sql; macro-review; API #94–#96 source",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-21-BL-010",
+      "description": "Chưa xác minh môi trường chạy, thử lại và nhà cung cấp: chưa kiểm tra trình duyệt/luồng xác thực, API triển khai, cơ sở dữ liệu thực, hành vi thăm dò/thử lại/lỗi hoặc nhà cung cấp; kiểm thử mã nguồn trong DD là lịch sử.",
+      "impact": "Không có bằng chứng nghiệm thu runtime hoặc delivery.",
+      "decision": "Chọn môi trường/test data và xác minh khi có ủy quyền; duyệt retry/poll policy.",
+      "source_ref": "DD 00/07; inventory row79; API verification docs",
+      "status": "Đang mở — chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-21-TC-MH-001",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Mở route với notificationId hợp lệ",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-003",
+          "AD-21-YC-004",
+          "AD-21-YC-005"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "ID tổng hợp 901 và token giả trong harness được duyệt.",
+        "steps": [
+          "Mở /admin/notifications/901.",
+          "Ghi nhận loading rồi GET #96.",
+          "Đối chiếu response fixture hợp lệ."
+        ],
+        "expected": "Router source-wired; valid ID đi tới #96 với Bearer; loaded UI chỉ có thể xác minh qua harness/browser khi chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "admin.routes.ts; AD21 page.ts; API #96 catalog"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-002",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "ID thiếu dừng trước API",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-003",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Param notificationId vắng mặt.",
+        "steps": [
+          "Mở trạng thái tuyến không có param.",
+          "Quan sát trạng thái lỗi.",
+          "Xác nhận không có GET #96."
+        ],
+        "expected": "Shared route-state source hiển thị lỗi thiếu ID và không gọi loader. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-screen-state.ts; AD21 page.ts; DD EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-003",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "ID sai định dạng dừng trước API",
+        "requirement_ids": [
+          "AD-21-YC-003",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Các fixture riêng: chữ, số âm, dấu cộng, chuỗi rỗng.",
+        "steps": [
+          "Thử lần lượt từng route text không phải chữ số ASCII dương.",
+          "Quan sát local route error.",
+          "Xác nhận mỗi trường hợp không gọi #96."
+        ],
+        "expected": "Validator từ chối input sai trước HTTP; không tạo ID mặc định. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.ts; admin-screen-state.ts; API #96 validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-004",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "ID bằng 0 hoặc toàn số 0",
+        "requirement_ids": [
+          "AD-21-YC-003",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "notificationId=0 và 0000.",
+        "steps": [
+          "Mở route với từng giá trị.",
+          "Đối chiếu local validation.",
+          "Kiểm tra không có request."
+        ],
+        "expected": "Giá trị bằng 0 bị từ chối; không gọi #96. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.ts; API #96 validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-005",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "ID có số 0 đầu nhưng giá trị dương",
+        "requirement_ids": [
+          "AD-21-YC-003",
+          "AD-21-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "notificationId=000901.",
+        "steps": [
+          "Mở route với chuỗi có số 0 đầu.",
+          "Đối chiếu ID raw gửi tới path.",
+          "Đối chiếu boundary data.id sau BigInt."
+        ],
+        "expected": "Angular giữ raw text trong GET; ID trong phản hồi số 901 được so sánh theo giá trị BigInt. Runtime chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "AD21 page.ts; ad21-api.service.ts; notification.models.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-006",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Giới hạn 19 chữ số và signed-int64",
+        "requirement_ids": [
+          "AD-21-YC-003",
+          "AD-21-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "So sánh 9223372036854775807 với 9223372036854775808.",
+        "steps": [
+          "Dùng max signed-int64 dương làm route ID.",
+          "Dùng giá trị vượt max ở lượt khác.",
+          "Ghi riêng validation trước API và response precision."
+        ],
+        "expected": "Max route ID qua raw guard; vượt max dừng trước GET. Nếu response max không biểu diễn safe-integer, ranh giới phía máy khách vẫn từ chối. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "AD21 page.ts; API #96 validate.py; notification.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-007",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "GET #96 dùng đúng path và không thêm query/body",
+        "requirement_ids": [
+          "AD-21-YC-004",
+          "AD-21-YC-005"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "ID hợp lệ 901; session giả.",
+        "steps": [
+          "Mở trang trong harness.",
+          "Đối chiếu method/path/query/body.",
+          "Không gọi endpoint detail giả định."
+        ],
+        "expected": "Caller là GET /api/v1/admin/notifications/{notification_id}/status; không query/body; Admin transport gắn Bearer. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "AD21 api.service.ts; API constants; AdminApiService; catalog #96"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-008",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Trạng thái đang tải trong lúc chờ #96",
+        "requirement_ids": [
+          "AD-21-YC-004",
+          "AD-21-YC-006"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Response fixture trì hoãn.",
+        "steps": [
+          "Giữ request #96 pending.",
+          "Quan sát role=status/live message.",
+          "Sau đó trả fixture hợp lệ."
+        ],
+        "expected": "Template hiển thị trạng thái đang tải; đây là hành vi theo mã nguồn, chưa browser-test. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "admin-screen-state.ts; ad21-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-009",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Chỉ nhận envelope success/code đúng",
+        "requirement_ids": [
+          "AD-21-YC-006",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Envelope success=false, businessCode sai, thiếu meta/traceId hoặc message sai kiểu.",
+        "steps": [
+          "Đưa từng envelope sai vào boundary.",
+          "Quan sát trạng thái lỗi.",
+          "Xác nhận dữ liệu không được render."
+        ],
+        "expected": "Boundary đòi success=true, DESIGN_RESOURCE_RETRIEVED và envelope metadata/string fields hợp lệ. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "ad21-notification.models.ts; API #96 models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-010",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu data.id với route ID",
+        "requirement_ids": [
+          "AD-21-YC-006",
+          "AD-21-YC-007"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Route 901; response id=902 hoặc id sai kiểu.",
+        "steps": [
+          "Trả envelope hợp lệ nhưng ID khác route.",
+          "Quan sát xử lý lỗi.",
+          "Xác nhận title/status của ID khác không lộ ra."
+        ],
+        "expected": "Boundary so sánh bằng BigInt và chỉ nhận chính xác resource requested. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "ad21-api.service.ts; ad21-notification.models.ts; page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-011",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Từ chối Notification field sai",
+        "requirement_ids": [
+          "AD-21-YC-006",
+          "AD-21-YC-008",
+          "AD-21-YC-010"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "channels rỗng/trùng/enum sai; status ngoài tập; ngày sai; title/content sai kiểu.",
+        "steps": [
+          "Thử lần lượt Notification fixture không hợp lệ.",
+          "Quan sát trạng thái lỗi.",
+          "Không diễn giải giá trị unsupported thành status nghiệp vụ."
+        ],
+        "expected": "Boundary yêu cầu title/content string, kênh EMAIL/PUSH không rỗng/không trùng, status QUEUED/FAILED/SENT và ngày parse được. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "ad21-notification.models.ts; admin-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-012",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "ID trong phản hồi vượt Number safe integer",
+        "requirement_ids": [
+          "AD-21-YC-007",
+          "AD-21-YC-008"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Route 9007199254740992; response id number không safe.",
+        "steps": [
+          "Trả response fixture có data.id ngoài safe integer.",
+          "Đối chiếu boundary.",
+          "Quan sát trạng thái lỗi và không hiển thị ID đã mất chính xác."
+        ],
+        "expected": "Máy khách hiện tại từ chối ID số không an toàn dù tuyến chấp nhận chuỗi số nguyên có dấu 64 bit; ghi nhận sai khác và không hiển thị ID. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "ad21-notification.models.ts; admin-api.models.ts; page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-013",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Render đúng trường hiện có",
+        "requirement_ids": [
+          "AD-21-YC-008",
+          "AD-21-YC-009",
+          "AD-21-YC-010",
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Fixture title/content Unicode tổng hợp, channels EMAIL/PUSH, created_at hợp lệ.",
+        "steps": [
+          "Đưa response hợp lệ vào page.",
+          "Đối chiếu title, content, channels, raw status, ID và ngày.",
+          "So sánh identity/content panels."
+        ],
+        "expected": "Template hiển thị đúng projection; ngày format theo renderer; không thêm recipient/count/schedule. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "admin-screen-renderers.ts; ad21-page.html; ad21-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-014",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Không đổi nghĩa aggregate status",
+        "requirement_ids": [
+          "AD-21-YC-010",
+          "AD-21-YC-011",
+          "AD-21-YC-016"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Fixture QUEUED, FAILED, SENT riêng; không giả lập per-channel state.",
+        "steps": [
+          "Trả từng status token hợp lệ.",
+          "Đối chiếu raw label và data-status.",
+          "Không map SENT→delivered hoặc QUEUED→draft."
+        ],
+        "expected": "UI giữ nguyên raw token; precedence là local query fallback và chưa phải lifecycle được duyệt. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "API #96 query.py; ad21-page.html; inventory row79"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-015",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Không suy In-App/Email delivery từ channels",
+        "requirement_ids": [
+          "AD-21-YC-011",
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Response channels PUSH hoặc EMAIL.",
+        "steps": [
+          "Quan sát kênh trong Angular hiện tại page.",
+          "So sánh static In-App/SMTP/counters của Stitch.",
+          "Không gắn số đếm theo kênh."
+        ],
+        "expected": "Angular hiển thị token kênh từ response; prototype In-App/SMTP/0-0 không phải dữ liệu API. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "AD21 page.html; markers #28–38; API #96 query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-016",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị rõ dữ liệu không có trong #96",
+        "requirement_ids": [
+          "AD-21-YC-009",
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Response Notification hợp lệ không có recipient/schedule/count/operation.",
+        "steps": [
+          "Kiểm tra vùng recipient, operation và progress.",
+          "Đối chiếu thông điệp giới hạn API.",
+          "Không điền fixture giả vào UI."
+        ],
+        "expected": "Recipient unavailable, Operation ID chưa liên kết, per-channel counts/schedule không được tạo. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "AD21 page.html; API #96 models/query; DD 03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-017",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Xử lý riêng lỗi 401/403/404",
+        "requirement_ids": [
+          "AD-21-YC-005",
+          "AD-21-YC-017",
+          "AD-21-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Lần lượt status 401, 403, 404 từ GET #96.",
+        "steps": [
+          "Trả từng lỗi HTTP.",
+          "Đối chiếu mapper và copy error.",
+          "Xác nhận 401 kết thúc phiên cục bộ, 404 không bị gộp vào 500."
+        ],
+        "expected": "Shared client kết thúc session ở 401; mapper giữ thông điệp riêng cho 403/404. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "AdminApiService; admin-screen-state.ts; ad21-page.html; catalog #96"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-018",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Không biến lỗi server/kết nối thành not-found",
+        "requirement_ids": [
+          "AD-21-YC-017",
+          "AD-21-YC-018",
+          "AD-21-YC-019"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Status 500 và status 0 trong harness.",
+        "steps": [
+          "Trả lần lượt lỗi 500 và lỗi mạng.",
+          "Quan sát trạng thái lỗi.",
+          "Kiểm tra không tự retry hoặc chuyển thành 404."
+        ],
+        "expected": "Lỗi server/mạng vào thông báo lỗi chung; AD-21 không có retry button hay auto reload. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "admin-screen-state.ts; ad21-page.html; DD EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-019",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Không thêm 422 vào contract #96",
+        "requirement_ids": [
+          "AD-21-YC-017",
+          "AD-21-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Status 422 fixture dù direct catalog #96 không liệt kê 422.",
+        "steps": [
+          "Đối chiếu catalog error set.",
+          "Ghi nhận shared mapper xử lý lỗi HTTP chung nếu nhận.",
+          "Không đưa 422 thành expected API #96 contract."
+        ],
+        "expected": "Catalog chỉ có 401/403/404/500; không bổ sung API behavior từ shared generic mapper. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "catalog #96; admin-screen-state.ts; API #96 view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-020",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Không retry/poll #96 tự động",
+        "requirement_ids": [
+          "AD-21-YC-019"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Một GET thành công, sau đó giữ trang mở.",
+        "steps": [
+          "Đếm request khi mở trang.",
+          "Giữ trang trong thời gian quan sát có kiểm soát.",
+          "Không nhấn refresh browser hoặc tạo timer giả."
+        ],
+        "expected": "Source không có auto polling, nút làm mới hay retry control; tần suất chưa được xác định. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "AD21 page.ts/html; DD 02-events/03-data-flow"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-021",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Nút update giữ disabled, không gọi #94",
+        "requirement_ids": [
+          "AD-21-YC-013",
+          "AD-21-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Trang loaded với fixture hợp lệ.",
+        "steps": [
+          "Kiểm tra trạng thái nút Cập nhật bản nháp.",
+          "Thử click bằng UI harness.",
+          "Kiểm tra không có PUT request."
+        ],
+        "expected": "Nút vẫn disabled; AD-21 không có form/body và không gọi #94. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-002"
+        ],
+        "source_refs": [
+          "ad21-page.html; page.spec.ts; catalog #94"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-022",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Nút cancel giữ disabled, không gọi #95",
+        "requirement_ids": [
+          "AD-21-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Trang loaded với fixture hợp lệ.",
+        "steps": [
+          "Kiểm tra nút Hủy bỏ phát hành.",
+          "Thử click bằng UI harness.",
+          "Kiểm tra không có DELETE request."
+        ],
+        "expected": "Nút disabled; không có xác nhận, request hoặc claim provider đã dừng. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-003"
+        ],
+        "source_refs": [
+          "ad21-page.html; page.spec.ts; catalog #95"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-023",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "SH-07 giữ khóa khi #96 không có Operation ID",
+        "requirement_ids": [
+          "AD-21-YC-015"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Fixture #96 không khai báo operation_id; API #18 không được caller AD-21 gọi.",
+        "steps": [
+          "Đối chiếu nút SH-07 và note.",
+          "Kiểm tra không có route transition hoặc GET #18.",
+          "Không thay notificationId thành operation ID."
+        ],
+        "expected": "Nút disabled, không handoff/poller; producer, type, owner và lifecycle chưa đủ contract. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-001",
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "ad21-page.html; AD21ApiService; API #18/#96 catalog; SH-07 DD"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-024",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Quay lại danh sách không giữ filter/page",
+        "requirement_ids": [
+          "AD-21-YC-021"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Mở route detail từ query/context giả.",
+        "steps": [
+          "Chọn RouterLink danh sách.",
+          "Đối chiếu đích /admin/notifications.",
+          "Kiểm tra query/filter/scroll không tự gắn thêm."
+        ],
+        "expected": "Mã nguồn quay về tuyến danh sách nhưng không giữ lại ngữ cảnh; href # trong bản mẫu khác với mã nguồn hiện tại. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad21-page.html; admin.routes.ts; DD EV-04/06-navigation"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-025",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt screenshot tĩnh với Angular",
+        "requirement_ids": [
+          "AD-21-YC-020",
+          "AD-21-YC-012",
+          "AD-21-YC-016"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch và template Angular.",
+        "steps": [
+          "So sánh 47 marker, các nội dung khẳng định tĩnh và template current.",
+          "Ghi các item unavailable.",
+          "Không kiểm chứng hành vi từ screenshot."
+        ],
+        "expected": "System Normal/RBAC/SMTP/0-0/real-time chỉ là prototype; Angular hiển thị #96 projection chỉ đọc. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-21_PLAN.md; marker JSON; Stitch code.html; AD21 page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-MH-026",
+        "target_id": "AD-21",
+        "group": "Toàn màn hình",
+        "title": "Ghi nhận CSS responsive/focus chỉ từ source",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-022"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Scoped stylesheet có media queries 1023px/767px và focus-visible.",
+        "steps": [
+          "Đối chiếu quy tắc focus và breakpoint trong CSS.",
+          "Không kết luận layout đạt trên browser.",
+          "Để visual runtime chờ xác minh."
+        ],
+        "expected": "Stylesheet có focus-visible và reflow rules; render thực tế chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad21-page.css"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-21-TC-TP-001",
+        "target_id": "AD-21-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #1: Thương hiệu Study2Work LMS và cổng quản trị",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #1 tại (252,35) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #1 (Thương hiệu Study2Work LMS và Admin Portal) nằm tại (252,35) pixel nguồn. Chữ và biểu tượng cố định trong Stitch; không chứng minh danh tính, phiên đăng nhập hoặc tenant. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #1; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-002",
+        "target_id": "AD-21-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #2: Liên kết Tổng quan",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #2 tại (306,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #2 (Liên kết Tổng quan) nằm tại (306,60) pixel nguồn. Liên kết trong HTML mẫu dùng href #; không có đích định tuyến. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #2; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-003",
+        "target_id": "AD-21-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #3: Liên kết Người dùng",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #3 tại (427,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #3 (Liên kết Người dùng) nằm tại (427,60) pixel nguồn. Liên kết trong HTML mẫu dùng href #; không có đích định tuyến. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #3; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-004",
+        "target_id": "AD-21-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #4: Liên kết Khóa học và Nội dung",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #4 tại (610,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #4 (Liên kết Khóa học và Nội dung) nằm tại (610,60) pixel nguồn. Liên kết trong HTML mẫu dùng href #; không có đích định tuyến. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #4; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-005",
+        "target_id": "AD-21-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #5: Liên kết Kiểm duyệt",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #5 tại (781,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #5 (Liên kết Kiểm duyệt) nằm tại (781,60) pixel nguồn. Liên kết trong HTML mẫu dùng href #; không có đích định tuyến. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #5; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-006",
+        "target_id": "AD-21-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #6: Liên kết Báo cáo",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #6 tại (887,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #6 (Liên kết Báo cáo) nằm tại (887,60) pixel nguồn. Liên kết trong HTML mẫu dùng href #; không có đích định tuyến. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #6; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-007",
+        "target_id": "AD-21-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #7: Nhãn System Normal tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #7 tại (1113,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #7 (Nhãn System Normal tĩnh) nằm tại (1113,60) pixel nguồn. Nhãn hệ thống tĩnh; không gọi health API. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #7; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-008",
+        "target_id": "AD-21-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #8: Nút chuông thông báo",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #8 tại (1161,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #8 (Nút chuông thông báo) nằm tại (1161,60) pixel nguồn. Nút có nhãn Notifications nhưng không có handler, số đếm hoặc trang đích. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #8; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-009",
+        "target_id": "AD-21-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #9: Danh tính và vai trò quản trị viên tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-001",
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #9 tại (1400,60) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #9 (Danh tính và vai trò Admin tĩnh) nằm tại (1400,60) pixel nguồn. Tên và vai trò ghi cứng; không lấy từ session/token. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #9; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-010",
+        "target_id": "AD-21-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #10: Đường dẫn vị trí toàn cục",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #10 tại (19,86) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #10 (Đường dẫn vị trí toàn cục) nằm tại (19,86) pixel nguồn. Breadcrumb là văn bản, không có điều hướng. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #10; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-011",
+        "target_id": "AD-21-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #11: Nhãn tuyên bố RBAC tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-001",
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #11 tại (1401,86) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #11 (Nhãn tuyên bố RBAC tĩnh) nằm tại (1401,86) pixel nguồn. Tuyên bố RBAC tĩnh; không chứng minh quyền đã được kiểm tra. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #11; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-012",
+        "target_id": "AD-21-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #12: Đường dẫn vị trí thông báo",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #12 tại (20,149) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #12 (Đường dẫn vị trí thông báo) nằm tại (20,149) pixel nguồn. Breadcrumb cục bộ tĩnh; không có route. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #12; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-013",
+        "target_id": "AD-21-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #13: Liên kết quay về danh sách AD-19",
+        "requirement_ids": [
+          "AD-21-YC-021"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #13 tại (1402,164) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #13 (Liên kết quay về danh sách AD-19) nằm tại (1402,164) pixel nguồn. Trong prototype href #; Angular hiện có RouterLink về /admin/notifications, không giữ filter/page. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #13; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-014",
+        "target_id": "AD-21-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #14: Nhãn mã màn hình và đường dẫn mẫu",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-003"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #14 tại (608,181) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #14 (Nhãn mã màn hình và đường dẫn mẫu) nằm tại (608,181) pixel nguồn. Nhãn thiết kế tĩnh; route Angular hiện đã đăng ký riêng. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #14; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-015",
+        "target_id": "AD-21-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #15: Tiêu đề trang",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #15 tại (858,237) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #15 (Tiêu đề trang) nằm tại (858,237) pixel nguồn. Tiêu đề tĩnh của prototype; Angular dùng tiêu đề trong định nghĩa màn hình. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #15; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-016",
+        "target_id": "AD-21-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #16: Mô tả trang",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #16 tại (799,281) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #16 (Mô tả trang) nằm tại (799,281) pixel nguồn. Mô tả thiết kế nói giám sát thời gian thực; không có polling hoặc cập nhật trực tiếp. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #16; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-017",
+        "target_id": "AD-21-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #17: Nhãn môi trường phân quyền quản trị viên",
+        "requirement_ids": [
+          "AD-21-YC-001"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #17 tại (1402,271) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #17 (Nhãn môi trường phân quyền Admin) nằm tại (1402,271) pixel nguồn. Nhãn quyền tĩnh; không phải permission key hoặc kết quả backend. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #17; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-018",
+        "target_id": "AD-21-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #18: Tiêu đề bảng định danh kỹ thuật",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #18 tại (485,355) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #18 (Tiêu đề bảng định danh kỹ thuật) nằm tại (485,355) pixel nguồn. Tiêu đề/biểu tượng tĩnh; không cung cấp API detail riêng. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #18; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-019",
+        "target_id": "AD-21-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #19: Nhãn cổng bảo vệ tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #19 tại (1375,365) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #19 (Nhãn cổng bảo vệ tĩnh) nằm tại (1375,365) pixel nguồn. Nhãn bảo vệ tĩnh; không có dữ liệu trạng thái guard. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #19; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-020",
+        "target_id": "AD-21-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #20: Thẻ mã thông báo",
+        "requirement_ids": [
+          "AD-21-YC-003",
+          "AD-21-YC-004",
+          "AD-21-YC-006"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #20 tại (472,520) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #20 (Thẻ mã thông báo) nằm tại (472,520) pixel nguồn. Placeholder không có giá trị ID; API #96 chỉ đọc trạng thái và route Angular tự kiểm tra ID. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #20; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-021",
+        "target_id": "AD-21-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #21: Thẻ mã tác vụ bất đồng bộ",
+        "requirement_ids": [
+          "AD-21-YC-015"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #21 tại (914,520) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #21 (Thẻ mã tác vụ bất đồng bộ) nằm tại (914,520) pixel nguồn. Prototype ghi Chưa liên kết; API #96 không trả Operation ID. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #21; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-022",
+        "target_id": "AD-21-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #22: Thẻ trạng thái phát hành",
+        "requirement_ids": [
+          "AD-21-YC-008",
+          "AD-21-YC-010",
+          "AD-21-YC-016"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #22 tại (1354,520) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #22 (Thẻ trạng thái phát hành) nằm tại (1354,520) pixel nguồn. Nhãn Chờ xác thực tĩnh; không phải enum response #96. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #22; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-023",
+        "target_id": "AD-21-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #23: Thông báo thiếu chi tiết và khóa thao tác",
+        "requirement_ids": [
+          "AD-21-YC-012",
+          "AD-21-YC-013",
+          "AD-21-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #23 tại (1370,710) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #23 (Thông báo thiếu chi tiết và khóa thao tác) nằm tại (1370,710) pixel nguồn. Nội dung giải thích của prototype; Angular hiện có #96 read projection nhưng không có detail recipient. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #23; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-024",
+        "target_id": "AD-21-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #24: Tiêu đề bảng nội dung bản tin",
+        "requirement_ids": [
+          "AD-21-YC-008"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #24 tại (795,822) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #24 (Tiêu đề bảng nội dung bản tin) nằm tại (795,822) pixel nguồn. Tiêu đề bảng tĩnh; Angular có bảng nội dung chỉ đọc. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #24; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-025",
+        "target_id": "AD-21-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #25: Nhãn chế độ xem tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #25 tại (642,804) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #25 (Nhãn chế độ xem tĩnh) nằm tại (642,804) pixel nguồn. Nhãn chế độ xem tĩnh; các thao tác Angular hiện cũng bị khóa. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #25; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-026",
+        "target_id": "AD-21-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #26: Nhãn và vùng tiêu đề thông báo",
+        "requirement_ids": [
+          "AD-21-YC-008",
+          "AD-21-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #26 tại (778,920) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #26 (Nhãn và vùng tiêu đề thông báo) nằm tại (778,920) pixel nguồn. Placeholder HTML là div, không phải input; Angular hiện Hiển thị tiêu đề động từ #96. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #26; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-027",
+        "target_id": "AD-21-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #27: Nhãn và vùng kênh thông báo",
+        "requirement_ids": [
+          "AD-21-YC-008",
+          "AD-21-YC-010"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #27 tại (807,976) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #27 (Nhãn và vùng kênh thông báo) nằm tại (807,976) pixel nguồn. Prototype không bind dữ liệu; Angular hiện render channels từ #96. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #27; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-028",
+        "target_id": "AD-21-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #28: Nhãn kênh In-App",
+        "requirement_ids": [
+          "AD-21-YC-011",
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #28 tại (640,1004) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Điểm đánh dấu #28 (nhãn kênh In-App) nằm tại tọa độ (640,1004) trên ảnh nguồn. In-App là nhãn trong thiết kế; chưa có bằng chứng cho thấy nhãn này tương ứng với enum PUSH. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #28; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-029",
+        "target_id": "AD-21-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #29: Nhãn kênh Email",
+        "requirement_ids": [
+          "AD-21-YC-011"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #29 tại (800,1004) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #29 (Nhãn kênh Email) nằm tại (800,1004) pixel nguồn. Email là nhãn thiết kế; Angular có thể hiển thị EMAIL từ API nhưng không chứng minh provider. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #29; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-030",
+        "target_id": "AD-21-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #30: Nhãn và vùng nội dung chi tiết",
+        "requirement_ids": [
+          "AD-21-YC-008",
+          "AD-21-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #30 tại (778,1088) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #30 (Nhãn và vùng nội dung chi tiết) nằm tại (778,1088) pixel nguồn. Placeholder là div, không phải textarea; Angular hiện render content dạng text. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #30; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-031",
+        "target_id": "AD-21-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #31: Ghi chú khóa nội dung tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #31 tại (778,1218) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #31 (Ghi chú khóa nội dung tĩnh) nằm tại (778,1218) pixel nguồn. Copy khóa tĩnh; không tạo security policy/runtime lock. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #31; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-032",
+        "target_id": "AD-21-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #32: Nhãn và vùng người nhận",
+        "requirement_ids": [
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #32 tại (778,1315) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #32 (Nhãn và vùng người nhận) nằm tại (778,1315) pixel nguồn. Prototype không có recipient value; API #96 cũng không trả người nhận. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #32; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-033",
+        "target_id": "AD-21-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #33: Nút cập nhật bản nháp đang khóa",
+        "requirement_ids": [
+          "AD-21-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #33 tại (538,1394) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #33 (Nút cập nhật bản nháp đang khóa) nằm tại (538,1394) pixel nguồn. Nút native disabled; Angular vẫn giữ nút cập nhật disabled và không gọi #94. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #33; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-034",
+        "target_id": "AD-21-EL-034",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #34: Tiêu đề tiến trình phân phối kênh",
+        "requirement_ids": [
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #34 tại (1372,813) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #34 (Tiêu đề tiến trình phân phối kênh) nằm tại (1372,813) pixel nguồn. Tiêu đề/copy nói tiến trình đầu cuối; #96 chỉ trả trạng thái aggregate. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #34; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-035",
+        "target_id": "AD-21-EL-035",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #35: Thẻ trạng thái kênh In-App",
+        "requirement_ids": [
+          "AD-21-YC-011",
+          "AD-21-YC-012",
+          "AD-21-YC-016"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #35 tại (1356,871) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Điểm đánh dấu #35 (thẻ trạng thái kênh In-App) nằm tại tọa độ (1356,871) trên ảnh nguồn. Trạng thái kênh In-App là nội dung tĩnh; API #96 không trả về trạng thái riêng cho từng kênh. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #35; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-036",
+        "target_id": "AD-21-EL-036",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #36: Thanh tiến độ và số đếm In-App tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-010",
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #36 tại (872,958) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #36 (Thanh tiến độ và số đếm In-App tĩnh) nằm tại (872,958) pixel nguồn. Số 0/0 và thanh tiến độ tĩnh; không có counter từ #96. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #36; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-037",
+        "target_id": "AD-21-EL-037",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #37: Thẻ trạng thái kênh Email",
+        "requirement_ids": [
+          "AD-21-YC-011",
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #37 tại (1355,1017) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #37 (Thẻ trạng thái kênh Email) nằm tại (1355,1017) pixel nguồn. Copy SMTP là claim thiết kế; không chứng minh dịch vụ gửi. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #37; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-038",
+        "target_id": "AD-21-EL-038",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #38: Thanh hàng đợi Email tĩnh",
+        "requirement_ids": [
+          "AD-21-YC-010",
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #38 tại (872,1112) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #38 (Thanh hàng đợi Email tĩnh) nằm tại (872,1112) pixel nguồn. Thanh và trạng thái hàng đợi tĩnh; không có telemetry từng kênh từ #96. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #38; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-039",
+        "target_id": "AD-21-EL-039",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #39: Nút hủy phát hành đang khóa",
+        "requirement_ids": [
+          "AD-21-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #39 tại (1368,1183) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #39 (Nút hủy phát hành đang khóa) nằm tại (1368,1183) pixel nguồn. Nút disabled; không có confirmation/handler; #95 local xóa hàng chờ nhưng không dừng provider. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #39; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-040",
+        "target_id": "AD-21-EL-040",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #40: Ghi chú an toàn hủy phát hành",
+        "requirement_ids": [
+          "AD-21-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #40 tại (1367,1230) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #40 (Ghi chú an toàn hủy phát hành) nằm tại (1367,1230) pixel nguồn. Ghi chú tĩnh không chứng minh tác vụ gửi có thể dừng. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #40; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-041",
+        "target_id": "AD-21-EL-041",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #41: Tiêu đề cổng theo dõi SH-07",
+        "requirement_ids": [
+          "AD-21-YC-015"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #41 tại (1367,1323) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #41 (Tiêu đề cổng theo dõi SH-07) nằm tại (1367,1323) pixel nguồn. Tiêu đề panel tĩnh; Angular không gọi client SH-07 từ AD-21. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #41; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-042",
+        "target_id": "AD-21-EL-042",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #42: Mô tả điều kiện chuyển sang SH-07",
+        "requirement_ids": [
+          "AD-21-YC-015"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #42 tại (1370,1417) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #42 (Mô tả điều kiện chuyển sang SH-07) nằm tại (1370,1417) pixel nguồn. Mô tả hứa theo dõi nếu có Operation ID; cần contract producer/owner/lifecycle. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #42; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-043",
+        "target_id": "AD-21-EL-043",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #43: Nút SH-07 đang khóa",
+        "requirement_ids": [
+          "AD-21-YC-015"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #43 tại (1370,1457) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #43 (Nút SH-07 đang khóa) nằm tại (1370,1457) pixel nguồn. Nút native disabled; #96 không trả Operation ID và không có handoff/poller. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #43; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-044",
+        "target_id": "AD-21-EL-044",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #44: Bản quyền và tên hệ thống ở chân trang",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #44 tại (407,1570) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #44 (Bản quyền và tên hệ thống ở chân trang) nằm tại (407,1570) pixel nguồn. Nội dung chân trang tĩnh; không phải trạng thái hệ thống. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #44; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-045",
+        "target_id": "AD-21-EL-045",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #45: Liên kết chính sách riêng tư",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #45 tại (785,1570) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #45 (Liên kết chính sách riêng tư) nằm tại (785,1570) pixel nguồn. Anchor href #; không có trang chính sách được xác nhận. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #45; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-046",
+        "target_id": "AD-21-EL-046",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #46: Liên kết tiêu chuẩn RBAC",
+        "requirement_ids": [
+          "AD-21-YC-001",
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #46 tại (987,1570) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #46 (Liên kết tiêu chuẩn RBAC) nằm tại (987,1570) pixel nguồn. Anchor href #; không có trang chuẩn RBAC được xác nhận. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #46; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-047",
+        "target_id": "AD-21-EL-047",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #47: Liên kết hỗ trợ kỹ thuật",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Ảnh Stitch clean/annotated; không dùng user, notification hoặc nội dung thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đánh số AD-21.",
+          "Đối chiếu marker #47 tại (1218,1570) pixel trên ảnh nguồn 1425×1600.",
+          "So khớp với hàng tương ứng trong DD; ghi riêng bằng chứng thiết kế và Angular source."
+        ],
+        "expected": "Marker #47 (Liên kết hỗ trợ kỹ thuật) nằm tại (1218,1570) pixel nguồn. Anchor href #; không có đích hỗ trợ được xác nhận. Chỉ xác minh tài liệu tĩnh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #47; AD-21_markers.json; screen.png; screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-048",
+        "target_id": "AD-21-EL-048",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Guard route AD-21 và tham số notificationId",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-003",
+          "AD-21-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Tuyến bảo vệ AD-21 và tham số notificationId: bộ định tuyến khai báo /admin/notifications/:notificationId; trang đọc văn bản nguyên dạng, chấp nhận chữ số dương trong giới hạn int64 có dấu rồi mới gọi API. Đây là bằng chứng mã nguồn, chưa phải kết quả thực thi. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "admin.routes.ts; AD21 page.ts; admin-screen-state.ts; API #96 validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-049",
+        "target_id": "AD-21-EL-049",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Trạng thái route ID thiếu/sai",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-003",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Trạng thái route ID thiếu/sai: Missing hoặc invalid param trả lỗi cục bộ state và bỏ qua GET; không tự dùng ID mặc định. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-screen-state.ts; AD21 page.ts; DD EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-050",
+        "target_id": "AD-21-EL-050",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Trạng thái loading",
+        "requirement_ids": [
+          "AD-21-YC-004",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Trạng thái loading: adminRouteState bắt đầu loading trong lúc GET #96 đang chờ. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "admin-screen-state.ts; ad21-page.html; ad21-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-051",
+        "target_id": "AD-21-EL-051",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Trạng thái loaded #96",
+        "requirement_ids": [
+          "AD-21-YC-006",
+          "AD-21-YC-007",
+          "AD-21-YC-008",
+          "AD-21-YC-010",
+          "AD-21-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Trạng thái loaded #96: Template chỉ render projection đã được boundary kiểm tra; hiện title/content/channels/status/created_at và thông báo dữ liệu thiếu. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.html; models/boundary; admin-screen-renderers.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-052",
+        "target_id": "AD-21-EL-052",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Trạng thái error và shared mapper",
+        "requirement_ids": [
+          "AD-21-YC-005",
+          "AD-21-YC-017",
+          "AD-21-YC-018",
+          "AD-21-YC-019"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Trạng thái error và shared mapper: 401 kết thúc phiên cục bộ; 403/404 có thông báo riêng; lỗi khác vào trạng thái lỗi chung; không có retry button. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AdminApiService; admin-screen-state.ts; AD21 page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-053",
+        "target_id": "AD-21-EL-053",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Kiểm tra envelope và response identity",
+        "requirement_ids": [
+          "AD-21-YC-006",
+          "AD-21-YC-007"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Kiểm tra envelope và danh tính phản hồi: ranh giới yêu cầu success/businessCode/message/meta/traceId, cấu trúc Notification và data.id trùng ID tuyến bằng BigInt. Đây là bằng chứng mã nguồn, chưa phải kết quả thực thi. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 notification.models.ts; ad21-api.service.ts; API #96 models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-054",
+        "target_id": "AD-21-EL-054",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Giới hạn safe integer cho ID trong phản hồi",
+        "requirement_ids": [
+          "AD-21-YC-008"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Giới hạn safe integer cho ID trong phản hồi: Route hỗ trợ path int64 dạng text, nhưng wire model là number và từ chối id không phải Number.isSafeInteger; đây là mã nguồn hiện tại limitation. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 models; admin-api.models.ts; ad21-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-055",
+        "target_id": "AD-21-EL-055",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Nhãn API #96 và dữ liệu trả về",
+        "requirement_ids": [
+          "AD-21-YC-008",
+          "AD-21-YC-010",
+          "AD-21-YC-016"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Nhãn API #96 và dữ liệu trả về: template Angular ghi API #96; status được ánh xạ và giữ nguyên token. Không có ánh xạ sang delivered/draft. Đây là bằng chứng mã nguồn, chưa phải kết quả thực thi. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.html; admin-screen-renderers.ts; UI definition"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-056",
+        "target_id": "AD-21-EL-056",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Liên kết Angular quay về danh sách",
+        "requirement_ids": [
+          "AD-21-YC-021"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Liên kết Angular quay về danh sách: RouterLink /admin/notifications hoạt động trong template source; không giữ query/filter/page/scroll. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.html; admin.routes.ts; DD 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-057",
+        "target_id": "AD-21-EL-057",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Thao tác cập nhật bị khóa",
+        "requirement_ids": [
+          "AD-21-YC-013",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Thao tác cập nhật bị khóa: Nút Cập nhật bản nháp có disabled; source không gọi PUT #94. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.html; ad21-page.spec.ts; API #94 catalog"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-058",
+        "target_id": "AD-21-EL-058",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: Hủy/xóa bị khóa",
+        "requirement_ids": [
+          "AD-21-YC-014",
+          "AD-21-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "Hủy/xóa bị khóa: Nút Hủy bỏ phát hành có disabled; source không gọi DELETE #95. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.html; ad21-page.spec.ts; API #95 catalog"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-059",
+        "target_id": "AD-21-EL-059",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: SH-07 handoff không được wired",
+        "requirement_ids": [
+          "AD-21-YC-015"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "SH-07 handoff không được wired: Nút disabled; AD-21 không inject/call API #18; không có polling hoặc operation ID binding. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.html/ts/service; API #18 catalog/source; SH-07 DD"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-TP-060",
+        "target_id": "AD-21-EL-060",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái mã nguồn: CSS responsive và focus",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-022"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Dữ liệu tổng hợp; source/test đã đọc nhưng không chạy app test hoặc browser.",
+        "steps": [
+          "Đối chiếu route/template/helper/API boundary được dẫn.",
+          "Kiểm tra điều kiện và trạng thái mô tả.",
+          "Ghi rõ phần chưa được xác minh ở browser/deployment."
+        ],
+        "expected": "CSS responsive và focus: Scoped CSS có focus-visible và reflow ở max-width 1023px/767px; chỉ là style bằng chứng từ mã nguồn. Đây là bằng chứng source, chưa phải kết quả thực thi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD21 page.css"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-21-TC-SK-001",
+        "target_id": "AD-21-EV-001",
+        "group": "Sự kiện",
+        "title": "Tải trang và đọc trạng thái #96",
+        "requirement_ids": [
+          "AD-21-YC-001",
+          "AD-21-YC-002",
+          "AD-21-YC-003",
+          "AD-21-YC-004",
+          "AD-21-YC-005",
+          "AD-21-YC-006",
+          "AD-21-YC-007",
+          "AD-21-YC-008",
+          "AD-21-YC-009",
+          "AD-21-YC-010",
+          "AD-21-YC-011",
+          "AD-21-YC-012",
+          "AD-21-YC-016",
+          "AD-21-YC-017",
+          "AD-21-YC-018",
+          "AD-21-YC-020",
+          "AD-21-YC-022"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Mở route /admin/notifications/:notificationId.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Angular hiện kiểm tra ID nguyên bản, phải là số nguyên có dấu 64 bit dương, trước khi gửi GET. Với ID hợp lệ, gọi #96 kèm Bearer, kiểm tra envelope thành công, businessCode, định danh/dữ liệu rồi hiển thị trạng thái đang tải/đã tải/lỗi. Stitch chỉ là nội dung tĩnh; không tự thử lại hay dò trạng thái. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-004"
+        ],
+        "source_refs": [
+          "02-events.md EV-01; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-SK-002",
+        "target_id": "AD-21-EV-002",
+        "group": "Sự kiện",
+        "title": "Dùng shell navigation và breadcrumb",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Chọn nav/breadcrumb trong Stitch.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Các liên kết điều hướng trong bản mẫu dùng href=\"#\", còn breadcrumb là văn bản. Trang hiện tại chỉ có breadcrumb/điều hướng cục bộ; chưa có bằng chứng về API hoặc tuyến của khung ứng dụng dùng chung. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-02; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-SK-003",
+        "target_id": "AD-21-EV-003",
+        "group": "Sự kiện",
+        "title": "Mở chuông Notifications",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Bấm nút Notifications trong artifact.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Nút prototype không có click handler/menu/API; unread dot tĩnh. Không gán hành vi từ tên nút. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-03; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-SK-004",
+        "target_id": "AD-21-EV-004",
+        "group": "Sự kiện",
+        "title": "Quay lại AD-19",
+        "requirement_ids": [
+          "AD-21-YC-002",
+          "AD-21-YC-021"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Chọn đường quay về danh sách.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Stitch anchor href #; Angular uses RouterLink /admin/notifications. Không giữ filter/page/scroll state và không gọi API riêng. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-04; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-SK-005",
+        "target_id": "AD-21-EV-005",
+        "group": "Sự kiện",
+        "title": "Cập nhật bản nháp qua #94",
+        "requirement_ids": [
+          "AD-21-YC-013",
+          "AD-21-YC-016",
+          "AD-21-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Thử nút cập nhật trên Stitch/Angular template.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Cả nút Stitch và Angular đều bị vô hiệu hóa; không phát biểu form/body/request. #94 thiếu body trực tiếp; cách xử lý cục bộ {title,content}/QUEUED chỉ suy ra từ mã nguồn. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-002"
+        ],
+        "source_refs": [
+          "02-events.md EV-05; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-SK-006",
+        "target_id": "AD-21-EV-006",
+        "group": "Sự kiện",
+        "title": "Hủy/xóa thông báo qua #95",
+        "requirement_ids": [
+          "AD-21-YC-014",
+          "AD-21-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Thử nút hủy phát hành.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Nút trong bản mẫu và Angular đều bị vô hiệu hóa; không có hộp xác nhận hay yêu cầu DELETE. Xóa vật lý cục bộ ở #95 không dừng nhà cung cấp; chính sách vẫn còn bỏ ngỏ. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-003"
+        ],
+        "source_refs": [
+          "02-events.md EV-06; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-SK-007",
+        "target_id": "AD-21-EV-007",
+        "group": "Sự kiện",
+        "title": "Mở theo dõi SH-07 qua #18",
+        "requirement_ids": [
+          "AD-21-YC-015",
+          "AD-21-YC-018",
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Thử nút SH-07 khi #96 không trả Operation ID.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Nút vẫn bị vô hiệu hóa; AD-21 không có client #18, luồng bàn giao hay bộ thăm dò. Catalog trực tiếp và tuyến cục bộ dùng UUID, trong khi đoạn DD cũ ghi int64; không tự tạo ID. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-21-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-07; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-21-TC-SK-008",
+        "target_id": "AD-21-EV-008",
+        "group": "Sự kiện",
+        "title": "Mở liên kết chân trang",
+        "requirement_ids": [
+          "AD-21-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ dùng dữ liệu tổng hợp và response fixture; không gọi PUT #94 hoặc DELETE #95 thật, không xác nhận delivery hoặc thao tác SH-07.",
+        "data": "Chọn các liên kết privacy/RBAC/support trong prototype.",
+        "steps": [
+          "Đối chiếu event theo DD nguồn và Angular hiện tại template/source.",
+          "Kiểm tra điều kiện/handler/request được mô tả.",
+          "Ghi riêng prototype static và hành vi source hiện có."
+        ],
+        "expected": "Cả ba liên kết đều dùng href #; không có tuyến, URL ngoài, hộp thoại hoặc hợp đồng API được cung cấp. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-08; current Angular source/template; API catalog khi có liên quan"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

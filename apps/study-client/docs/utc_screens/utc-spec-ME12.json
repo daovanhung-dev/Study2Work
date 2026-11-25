@@ -1,0 +1,3310 @@
+{
+  "metadata": {
+    "screen_id": "ME-12",
+    "screen_name": "Trao đổi và đóng yêu cầu",
+    "module": "Khu vực Mentor của ứng dụng Study",
+    "route": "/mentor/support/:requestId",
+    "actor": "Mentor đã đăng nhập; API trong mã nguồn yêu cầu Bearer/JWT, vai trò MENTOR, chủ thể xác thực là số nguyên và quyền sở hữu khóa học.",
+    "version": "1.0",
+    "dd_version": "0.1 (cập nhật nguồn đến 2026-11-21)",
+    "dd_status": "DD đang ở trạng thái chặn. Người dùng xác nhận dùng DD hiện có làm tài liệu chuẩn dù tài liệu còn điểm chặn; API #59–#61 ở trạng thái Bản nháp — cần xác nhận.",
+    "runtime_status": "Chưa xác minh trên trình duyệt, môi trường chạy, kết nối API thật, cơ sở dữ liệu hoặc bản chuyển đổi cơ sở dữ liệu đã áp dụng.",
+    "author": "Chưa được cung cấp",
+    "reviewer": "Chưa được cung cấp",
+    "approver": "Người dùng xác nhận dùng DD hiện có làm tài liệu chuẩn; tên người phê duyệt cụ thể chưa được cung cấp.",
+    "date": "2026-11-24",
+    "source_name": "Tài liệu DD ME-12 mục 00–07; ảnh màn hình và 43 mốc đánh dấu; tuyến/trang ME12; mã nguồn API #59–#61 và các câu hỏi còn mở.",
+    "baseline_authorization": "Người dùng xác nhận dùng DD ME-12 hiện có làm tài liệu chuẩn dù DD đang ở trạng thái chặn. Ghi lại các điểm chặn, không tự suy đoán để giải quyết.",
+    "release_readiness": "Chưa đủ căn cứ xác nhận sẵn sàng kiểm thử/phát hành: DD và API còn điểm chặn, mọi ca đều chưa chạy, môi trường chạy thực tế chưa được xác minh.",
+    "discrepancy_note": "Một số đoạn cũ trong DD ghi tuyến chưa được nối hoặc chỉ có ảnh tĩnh. Cập nhật tổng quan ngày 2026-11-21 và mã nguồn `mentor.route.ts`, `me12-page.ts`, `me12-page.html` xác nhận tuyến/trang hiện gọi #59/#60; trang chưa gọi #61. Dùng mã nguồn hiện tại để mô tả hành vi hiện tại, đồng thời giữ riêng yêu cầu thiết kế và điểm chặn.",
+    "source_hashes": [
+      {
+        "path": "apps/study-client/docs/list_screen.md",
+        "sha256": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/00-overview.md",
+        "sha256": "fc4f64d47134d200ef83963da49fbd27d6492bf1115a2fe9215407c01a4fd59f"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/01-ui-elements.md",
+        "sha256": "9a0b585a41fb07cd36436aee4d286ff364a5836acbf00991cd8b24b1067e6b35"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/02-events.md",
+        "sha256": "9ceac58bce2933f959d5af1a8e71317e2c07ad11261dbcdb09e9d8ac81dd1a1c"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/03-data-flow.md",
+        "sha256": "cf78c004a8bbfd3e17f3f127655ee7df253906096a3b7da6e4517491b496bb9a"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/04-api-integration.md",
+        "sha256": "c6e0851d73d9bf28039e9a92ba5966744a5918882549724cc4c9d3dc22e14a4c"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/05-business-rules.md",
+        "sha256": "068a1d457278fcad9bd9f196d12c52f1b4221feb8864b2bc2e6fc0a974634d3b"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/06-navigation.md",
+        "sha256": "0cae51db2baec5c0c89b547f21f20e413a3eac88b6eba87128a626804f0b752b"
+      },
+      {
+        "path": "apps/study-client/docs/dd_screens/ME-12-TraoDoiVaDongYeuCau/07-test-cases.md",
+        "sha256": "8acd437a78d61ed4be8a3090479b0cd67370dd7f12ae7818d86e497fca38c7c2"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/ME-12.md",
+        "sha256": "5d9ab193f7eb387efe3f1f1cddabe485c54c14abcf718fadde480e8d99bb5a6b"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/ME-12_PLAN.md",
+        "sha256": "355985d82017df8a65c50300b1fc49180bf2a0e47b2446cb29ec7816b71bf6ce"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/ME-12_markers.json",
+        "sha256": "dae1d971067292b413c533a4977303fb994d90b9b2c5b1d7ada7dd97644d9827"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/screen.png",
+        "sha256": "35e218e17f8e9a55d7a8ba315887f3910979b2e3920801ef9d2c781e6b6f6df4"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/screen_annotated.png",
+        "sha256": "f47e5bbeb2d13658858efb3c327657a141bcb5faed9b59bde98d89aebc6be1f1"
+      },
+      {
+        "path": "apps/study-client/docs/screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/code.html",
+        "sha256": "4d4290f881dfaa94208851250083f95e4fddfa619be787fe43fcfc6512f3e6fc"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME12/pages/me12-page.ts",
+        "sha256": "4168dd3775492b172e62646151892c15f6fd6fe2854b017a8f9d79062fda657d"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME12/pages/me12-page.html",
+        "sha256": "80de67ab734526d2db5547495968fa1152e4a56af32b6865517f32508efd29a0"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME12/pages/me12-page.css",
+        "sha256": "016d5e271298bc551948605f0324716b4f7faca3a95f1fc5672f845f7f6f6578"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/ME12/data-access/me12-support-thread.service.ts",
+        "sha256": "7c94bff2889f74ecb8e52d3bc7d722e33c25d48b54290e388affce21d36f0052"
+      },
+      {
+        "path": "apps/study-client/src/app/features/mentor/mentor.route.ts",
+        "sha256": "e06357d47f5318efd79109ebd1b4aa4efd06898f19741cbbd0ebeb54b31a89e1"
+      },
+      {
+        "path": "apps/study-server/app/api/v1.py",
+        "sha256": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/models.py",
+        "sha256": "563e2a5692c3a5aa0e9d5aac028e1ee19d20093471060c35328ee0747060786b"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/validate.py",
+        "sha256": "8ea6636343712c43ce8b3550fe53e86bc666e87ef52a1a3703617aa551772b6e"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/query.py",
+        "sha256": "a723bf7e7a330605257884d8044fd6b745e9473d34121fd112fbf6c385c0b426"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/view.py",
+        "sha256": "ca94ed94cd7a550d5f57640e46a6e892e8f9c58cced1b51c6f8520dc99a188f9"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/models.py",
+        "sha256": "e93c4b1907483ea91dce040f3067ccb8154cb83adaee573ccca5274022d68ab0"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/validate.py",
+        "sha256": "69e188f5bf4880749174344f445e278ad62017748ba5f81a51deaf49283f5906"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/query.py",
+        "sha256": "7d23c5bcd5637590755dc9198333fc0321e5abbda14cfb9958fa417327657673"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/view.py",
+        "sha256": "7cd2d3b17370e415937273b41f63a161bd3b003b2df1c8654b3b304a82ab47ec"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/models.py",
+        "sha256": "5a728f3238c24175eb240292eb787bb272cc626abeb62b0376f9a1e44b714b95"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/validate.py",
+        "sha256": "c23b5443ffb63d13dadea6977944918d4a922425b7babbab0eca8caa571dda37"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/query.py",
+        "sha256": "40d521a11154a94e58cb426762b60f82214875045589953648db27c101c82446"
+      },
+      {
+        "path": "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/view.py",
+        "sha256": "466feea33b05b643a15c63b1fb5db01bf44dcdf880bc8c11b8964baa7e1d92e8"
+      },
+      {
+        "path": "apps/study-server/docs/dd/59_mentor_support_request_detail/OPEN_QUESTIONS.md",
+        "sha256": "3590068728413f1029d876484b0cb2c7406fc1ba667c03712fd4a943a845b530"
+      },
+      {
+        "path": "apps/study-server/docs/dd/60_mentor_support_reply/OPEN_QUESTIONS.md",
+        "sha256": "e405f233675f310d0c9bb1c5b0f541045f7c120c11a9daf0a75f706598fe4bd2"
+      },
+      {
+        "path": "apps/study-server/docs/dd/61_mentor_support_resolve/OPEN_QUESTIONS.md",
+        "sha256": "9ec5487973ccaeaf6b549f531ffb79d189b222742d40f696bea88163c2b1a680"
+      }
+    ],
+    "verification_boundary": "Chỉ đối chiếu tĩnh tài liệu, ảnh và mã nguồn. Không chạy ứng dụng, bộ kiểm thử, trình duyệt, API hoặc truy vấn cơ sở data."
+  },
+  "overall": {
+    "objective": "Đối chiếu yêu cầu hỗ trợ theo DD chuẩn, ảnh có mốc đánh dấu, trang hiện tại và mã nguồn API; chuẩn bị ca kiểm thử để thực hiện sau khi các điểm chặn được duyệt.",
+    "inputs": "ID `requestId` trên tuyến, phiên Mentor và GET #59; khi phản hồi, nội dung tin nhắn cùng `attachment_refs`. Trang hiện chưa gọi #61.",
+    "outputs": "Trạng thái đang tải/không hợp lệ/rỗng/luồng trao đổi/không có quyền/không tìm thấy/lỗi; phản hồi được xác nhận hoặc chờ đối soát; đóng yêu cầu vẫn bị khóa.",
+    "main_flow": "ME-11 → `/mentor/support/:requestId` → GET #59 → kiểm tra yêu cầu và luồng trao đổi → soạn POST #60 → xác nhận phản hồi rồi tải lại bằng GET; chỉ xem xét #61 sau khi điều kiện và bước xác nhận được duyệt.",
+    "preconditions": "Dùng dữ liệu và danh tính giả. Mã nguồn API yêu cầu vai trò MENTOR; quyền thực tế, lược đồ, triển khai và môi trường chạy chưa được xác minh.",
+    "states": [
+      "Đang tải",
+      "ID tuyến không hợp lệ",
+      "Luồng trao đổi rỗng hợp lệ",
+      "Luồng trao đổi có tin nhắn",
+      "Không có quyền",
+      "Không tìm thấy",
+      "Lỗi và tải lại thủ công",
+      "Đang gửi",
+      "Kết quả phản hồi chưa rõ, chờ GET đối soát",
+      "Đã giải quyết theo phản hồi"
+    ],
+    "security": "Không dùng ID/trạng thái phía trình duyệt làm quyền; máy chủ kiểm tra MENTOR và chủ khóa học. Không hiện dữ liệu sau 403/404 và không ghi tin nhắn/URL tệp vào log.",
+    "out_of_scope": "Không tự quyết định quyền, lược đồ/vòng đời trạng thái, trạng thái sau khi đóng, giới hạn ký tự, hỗ trợ tệp, số lượt trao đổi tối thiểu, xác nhận hài lòng, phân trang, Socket/TLS, SLA, kết toán/khảo sát, URL mẫu, WCAG hoặc hành vi của cơ sở dữ liệu đang vận hành.",
+    "summary": {
+      "requirements": 12,
+      "elements": 43,
+      "events": 7,
+      "apis": 3,
+      "blockers": 8,
+      "test_cases": {
+        "screen": 30,
+        "elements": 43,
+        "events": 7,
+        "total": 80
+      }
+    }
+  },
+  "apis": [
+    {
+      "id": "API #59",
+      "number": "59",
+      "method": "GET",
+      "path": "/api/v1/mentor/support/{request_id}",
+      "request": "Bearer/JWT vai trò MENTOR; đường dẫn `request_id`, không nội dung gửi/tham số truy vấn. Ứng dụng khách chỉ gọi với ID dương an toàn; API trong mã nguồn hiện tại phân tích cú pháp có dấu int64.",
+      "response": "HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `data` là một SupportRequest gồm `id`, `course_id`, `student`, `status`, `created_at`, `resolved_at?`, `messages[]` và siêu dữ liệu tệp đính kèm. Trả toàn bộ luồng trao đổi; tin nhắn tăng dần theo `created_at` rồi `id`, tệp đính kèm theo `asset_position`.",
+      "errors": "401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 `DESIGN_RESOURCE_NOT_FOUND` cho ID sai/không có; 500 `DESIGN_INTERNAL_ERROR` cho lỗi tham số truy vấn/ánh xạ. Mạng là lỗi vận chuyển phía ứng dụng khách.",
+      "auth": "Bearer/JWT, MENTOR, chủ thể xác thực là số nguyên; mã nguồn hiện tại kiểm tra chủ khóa học `courses.mentor_id`. Quy tắc giao quyền và hành vi trong môi trường thực tế còn cần xác nhận.",
+      "design_status": "DD API #59 ở trạng thái Bản nháp — cần xác nhận. Quy tắc về lược đồ và quyền mới được suy ra từ mã nguồn; cơ sở dữ liệu đang vận hành chưa được xác minh.",
+      "event_ids": [
+        "ME-12-EV-001",
+        "ME-12-EV-002"
+      ],
+      "source_ref": "apps/study-server/app/api/v1.py; api_59_mentor_support_request_detail/{models.py,validate.py,query.py,view.py}; OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "API #60",
+      "number": "60",
+      "method": "POST",
+      "path": "/api/v1/mentor/support/{request_id}/reply",
+      "request": "Bearer/JWT vai trò MENTOR; JSON nội dung gửi theo đúng cấu trúc đúng hai trường `message` và `attachment_refs`. `message` phải có ký tự không trắng; chuỗi gốc được giữ. `attachment_refs` là chuỗi JSON chứa ID của UploadAsset int64 duy nhất; chuỗi `\"[]\"` nghĩa là không kèm tệp.",
+      "response": "HTTP 200, `DESIGN_RESOURCE_UPDATED`, trả SupportRequest đã nạp lại cùng toàn bộ luồng trao đổi; trạng thái yêu cầu được giữ. Trang hiện yêu cầu có tin nhắn mới khớp mới coi là đã xác nhận.",
+      "errors": "401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 yêu cầu hoặc tệp ngoài phạm vi/không có; 422 `DESIGN_VALIDATION_ERROR`; 500 `DESIGN_INTERNAL_ERROR`. Cấu trúc nội dung gửi sai có thể bị từ chối 422 trước bước kiểm tra quyền trong API.",
+      "auth": "Bearer/JWT, MENTOR, chủ khóa học trực tiếp; tệp phải thuộc cùng Mentor/khóa học, `purpose=LECTURE`, `status=UPLOADED`. Mã nguồn hiện tại không giới hạn độ dài, không có khóa chống gửi lặp và không chặn trạng thái RESOLVED/CANCELLED.",
+      "design_status": "DD API #60 ở trạng thái Bản nháp — cần xác nhận. Cấu trúc dữ liệu gửi, quy trình lưu và đính kèm tệp, vòng đời trạng thái cùng lược đồ còn được suy ra từ mã nguồn; môi trường thật chưa được xác minh.",
+      "event_ids": [
+        "ME-12-EV-001",
+        "ME-12-EV-004",
+        "ME-12-EV-005"
+      ],
+      "source_ref": "apps/study-server/app/api/v1.py; api_60_mentor_support_reply/{models.py,validate.py,query.py,view.py}; OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "API #61",
+      "number": "61",
+      "method": "PATCH",
+      "path": "/api/v1/mentor/support/{request_id}/resolve",
+      "request": "Bearer/JWT vai trò MENTOR; đường dẫn `request_id`; không nội dung gửi/tham số truy vấn. Trang hiện không gọi địa chỉ API này.",
+      "response": "HTTP 200, `DESIGN_RESOURCE_UPDATED`, trả SupportRequest và toàn bộ luồng trao đổi. Mã nguồn hiện tại chuyển OPEN/IN_PROGRESS/WAITING_LEARNER thành RESOLVED; lần gọi lại khi đã RESOLVED là an toàn khi gọi lặp.",
+      "errors": "401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 không có yêu cầu; 422 `DESIGN_VALIDATION_ERROR`, gồm `STATE_NOT_RESOLVABLE`; 500 `DESIGN_INTERNAL_ERROR`.",
+      "auth": "Bearer/JWT, MENTOR, chủ khóa học trực tiếp. API trong mã nguồn hiện tại không kiểm tra số tin nhắn tối thiểu hoặc quyết định học viên hài lòng.",
+      "design_status": "DD API #61 ở trạng thái Bản nháp — cần xác nhận. Quy tắc chuyển trạng thái mới được suy ra từ mã nguồn và chưa được đối chiếu với cơ sở dữ liệu đang vận hành.",
+      "event_ids": [
+        "ME-12-EV-001",
+        "ME-12-EV-006"
+      ],
+      "source_ref": "apps/study-server/app/api/v1.py; api_61_mentor_support_resolve/{models.py,validate.py,query.py,view.py}; OPEN_QUESTIONS.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ME-12-YC-001",
+      "group": "Tải theo tuyến",
+      "title": "Tải theo tuyến",
+      "description": "Khi có `requestId` an toàn, trang gọi GET #59, kiểm tra phong bì và đối chiếu `data.id` với ID trên tuyến.",
+      "source_ref": "Tuyến ME12Page, dịch vụ #59 và kiểm tra phản hồi trong me12-page.ts; môi trường chạy thực tế chưa kiểm chứng.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-002",
+      "group": "Phân quyền và dữ liệu riêng tư",
+      "title": "Phân quyền và dữ liệu riêng tư",
+      "description": "API trong mã nguồn hiện tại yêu cầu vai trò MENTOR và giới hạn theo chủ khóa học; giao diện không được coi ID hoặc trạng thái do trình duyệt gửi là bằng chứng quyền.",
+      "source_ref": "API #59–#61 mã nguồn; các API DD ghi Bản nháp — cần xác nhận, phạm vi quyền theo chủ sở hữu còn suy ra từ mã nguồn, chưa được xác nhận.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-003",
+      "group": "Luồng trao đổi rỗng hoặc có tin nhắn",
+      "title": "Luồng trao đổi rỗng hoặc có tin nhắn",
+      "description": "`messages: []` là luồng trao đổi hợp lệ; khi có dữ liệu, API #59 trả toàn bộ tin nhắn theo thứ tự thời gian và tệp đính kèm theo vị trí. Bố cục luồng trao đổi sau khi tải và giới hạn luồng dài chưa được duyệt.",
+      "source_ref": "API #59 truy vấn; ME-12 00-overview.md và 01-ui-elements.md; bố cục hiện tại trong me12-page.html.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-004",
+      "group": "Lỗi tải và phản hồi sai",
+      "title": "Lỗi tải và phản hồi sai",
+      "description": "Phân biệt đang tải, ID sai, không tìm thấy, 403 và lỗi có thể tải lại; phản hồi sai cấu trúc hoặc sai ID không được hiển thị như dữ liệu hợp lệ.",
+      "source_ref": "me12-page.ts/html; API #59 view.py; trình duyệt và thông điệp môi trường chạy thực tế chưa kiểm chứng.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-005",
+      "group": "Soạn phản hồi",
+      "title": "Soạn phản hồi",
+      "description": "Bản nháp được giữ trên trang; chặn nội dung chỉ có khoảng trắng. Ảnh mẫu ghi 2000 ký tự nhưng API #60 không đặt giới hạn; cách đếm Unicode và bộ đếm chưa được duyệt.",
+      "source_ref": "me12-page.ts/html; API #60 validate.py; ME12-B02.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-006",
+      "group": "Hợp đồng gửi phản hồi và tệp",
+      "title": "Hợp đồng gửi phản hồi và tệp",
+      "description": "POST #60 dùng đúng `message` và `attachment_refs`; giao diện hiện không có bộ chọn tệp và chỉ hỗ trợ giá trị chuỗi `\"[]\"` khi không gửi tệp. Quy trình đính kèm chưa được duyệt.",
+      "source_ref": "me12-support-thread.service.ts; API #60 models.py/validate.py/query.py/view.py; ME12-B03.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-007",
+      "group": "Đối soát sau khi gửi",
+      "title": "Đối soát sau khi gửi",
+      "description": "Gửi một lần; chỉ xác nhận khi `DESIGN_RESOURCE_UPDATED` trả về luồng trao đổi có tin nhắn mới khớp. Sau POST thành công, GET #59 được gọi; lỗi GET không làm mất xác nhận POST. Kết quả POST mơ hồ phải được GET đối soát trước khi cho gửi lại.",
+      "source_ref": "me12-page.ts; API #60 view.py; ME-12 02-events.md E04; lúc chạy chưa kiểm chứng.",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-008",
+      "group": "Trạng thái cho phép trả lời",
+      "title": "Trạng thái cho phép trả lời",
+      "description": "Giao diện hiện cho trả lời ở `OPEN`, `IN_PROGRESS`, `WAITING_LEARNER`; trạng thái khác bị khóa. API #60 mã nguồn vẫn nhận phản hồi khi `RESOLVED`/`CANCELLED`, nên quy tắc sau khi đóng còn cần duyệt.",
+      "source_ref": "me12-page.ts; API #60 view.py; ME12-B05.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-009",
+      "group": "Đóng yêu cầu",
+      "title": "Đóng yêu cầu",
+      "description": "Nút #61 hiện bị khóa cho trạng thái đang xử lý. AC-24 yêu cầu quyết định hài lòng; điều kiện tối thiểu một lượt trao đổi và cách xác nhận chưa được duyệt. Không gọi #61 từ trang hiện tại.",
+      "source_ref": "me12-page.html/ts; API #61 view.py; AC-24 và ME12-B04.",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-010",
+      "group": "Điều hướng",
+      "title": "Điều hướng",
+      "description": "Liên kết quay lại hộp thư dùng `/mentor/support`; khôi phục bộ lọc/trạng thái danh sách chưa có hợp đồng. Các đích đầu trang, trợ giúp và chân trang của ảnh chưa được xác nhận.",
+      "source_ref": "me12-page.html; ME-12 02-events.md E02/E06; ME12-B07/B08.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-011",
+      "group": "Không biến nội dung mẫu thành tính năng",
+      "title": "Không biến nội dung mẫu thành tính năng",
+      "description": "Không coi Socket/TLS, SLA 24 giờ, tự kết toán, khảo sát, nguồn tham khảo, tuyên bố riêng tư/WCAG hoặc liên kết mẫu là chức năng đã chạy nếu chưa có bằng chứng.",
+      "source_ref": "ME-12_markers.json, ảnh, code.html; không có trường/tác động phụ tương ứng trong API #59–#61.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    },
+    {
+      "id": "ME-12-YC-012",
+      "group": "Trạng thái phê duyệt và môi trường",
+      "title": "Trạng thái phê duyệt và môi trường",
+      "description": "Ghi rõ khác biệt giữa tài liệu cũ và tuyến/trang hiện tại. DD API, lược đồ và vòng đời trạng thái còn ở bản nháp hoặc chỉ suy ra từ mã nguồn, chưa được xác nhận; cơ sở dữ liệu, triển khai và trình duyệt chưa được kiểm chứng. Không đánh dấu ca đã chạy hoặc sẵn sàng phát hành.",
+      "source_ref": "ME-12 00-overview.md cập nhật 2026-11-21; mentor.route.ts; API #59–#61 OPEN_QUESTIONS.md.",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Đối chiếu tĩnh; chưa chạy ứng dụng, trình duyệt hoặc API."
+    }
+  ],
+  "elements": [
+    {
+      "id": "ME-12-EL-001",
+      "marker": "1",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Logo và thương hiệu Mentor",
+      "type": "Thành phần thương hiệu",
+      "position": "Tọa độ x=76, y=72 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh mẫu có thương hiệu; liên kết không có đích được xác nhận.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #1; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-002",
+      "marker": "2",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Điều hướng Tổng quan",
+      "type": "Điều hướng mẫu",
+      "position": "Tọa độ x=304, y=19 trên ảnh nguồn 1600×1585",
+      "properties": "Tên mục trong ảnh; đích điều hướng chưa được xác nhận.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #2; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-003",
+      "marker": "3",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Điều hướng Khóa học phụ trách",
+      "type": "Điều hướng mẫu",
+      "position": "Tọa độ x=432, y=19 trên ảnh nguồn 1600×1585",
+      "properties": "Tên mục trong ảnh; đích và cách giữ trạng thái chưa được xác nhận.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #3; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-004",
+      "marker": "4",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Điều hướng Chấm bài",
+      "type": "Điều hướng mẫu",
+      "position": "Tọa độ x=630, y=19 trên ảnh nguồn 1600×1585",
+      "properties": "Tên mục trong ảnh; đích chưa được xác nhận.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #4; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-005",
+      "marker": "5",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Điều hướng Hộp thư hỗ trợ đang chọn",
+      "type": "Điều hướng mẫu",
+      "position": "Tọa độ x=738, y=18 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh đánh dấu mục hiện hành; tuyến hiện có `/mentor/support` ở ME-11.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #5; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-006",
+      "marker": "6",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Điều hướng Thông báo",
+      "type": "Điều hướng mẫu",
+      "position": "Tọa độ x=924, y=19 trên ảnh nguồn 1600×1585",
+      "properties": "Đích và trạng thái thông báo chưa được xác nhận.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #6; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-007",
+      "marker": "7",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Chuông và dấu báo thông báo",
+      "type": "Biểu tượng mẫu",
+      "position": "Tọa độ x=1244, y=64 trên ảnh nguồn 1600×1585",
+      "properties": "Không có số thông báo hoặc API thông báo trên màn hình này.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #7; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-008",
+      "marker": "8",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tên, vai trò và hồ sơ Mentor",
+      "type": "Thông tin hồ sơ mẫu",
+      "position": "Tọa độ x=1538, y=69 trên ảnh nguồn 1600×1585",
+      "properties": "Thông tin trên ảnh là mẫu; dữ liệu phiên hiện tại không được nối trong thiết kế này.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #8; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-009",
+      "marker": "9",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Đường dẫn phân cấp Hộp thư hỗ trợ",
+      "type": "Điều hướng mẫu",
+      "position": "Tọa độ x=48, y=126 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh mong muốn quay về ME-11; trang hiện có nút quay lại riêng, chưa có đường dẫn phân cấp này.",
+      "event_ids": [
+        "ME-12-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #9; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-010",
+      "marker": "10",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Đường dẫn phân cấp Chi tiết yêu cầu",
+      "type": "Nhãn vị trí hiện tại",
+      "position": "Tọa độ x=207, y=126 trên ảnh nguồn 1600×1585",
+      "properties": "Nhãn văn bản trong ảnh; không có tương tác.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #10; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-011",
+      "marker": "11",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Nút quay lại danh sách ME-11",
+      "type": "Liên kết điều hướng",
+      "position": "Tọa độ x=1180, y=190 trên ảnh nguồn 1600×1585",
+      "properties": "Trang hiện liên kết về `/mentor/support`; khôi phục bộ lọc chưa được định nghĩa.",
+      "event_ids": [
+        "ME-12-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #11; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-012",
+      "marker": "12",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Nhãn mã tiến trình ME-12",
+      "type": "Nhãn tĩnh",
+      "position": "Tọa độ x=58, y=258 trên ảnh nguồn 1600×1585",
+      "properties": "Mã màn hình cố định, không phải dữ liệu từ API.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #12; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-013",
+      "marker": "13",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tiêu đề chính",
+      "type": "Nội dung tĩnh",
+      "position": "Tọa độ x=50, y=282 trên ảnh nguồn 1600×1585",
+      "properties": "Tiêu đề trong ảnh; trang hiện dùng tiêu đề “Trao đổi và xử lý yêu cầu”.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #13; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-014",
+      "marker": "14",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Mô tả màn hình",
+      "type": "Nội dung tĩnh",
+      "position": "Tọa độ x=50, y=335 trên ảnh nguồn 1600×1585",
+      "properties": "Mô tả trong ảnh không tạo thêm trường hoặc hành vi API.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #14; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-015",
+      "marker": "15",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Mã yêu cầu và trạng thái đang tải",
+      "type": "Dữ liệu yêu cầu",
+      "position": "Tọa độ x=1202, y=268 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh có chữ đang nạp; trang hiện tải theo tuyến và hiển thị mã yêu cầu từ phản hồi.",
+      "event_ids": [
+        "ME-12-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #15; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-016",
+      "marker": "16",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Trạng thái yêu cầu",
+      "type": "Dữ liệu trạng thái",
+      "position": "Tọa độ x=1382, y=268 trên ảnh nguồn 1600×1585",
+      "properties": "Lấy từ `SupportRequest.status`; trang hiện hiển thị chuỗi trả về, không ánh xạ trạng thái lạ.",
+      "event_ids": [
+        "ME-12-EV-002",
+        "ME-12-EV-005",
+        "ME-12-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #16; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-017",
+      "marker": "17",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tiêu đề luồng hội thoại",
+      "type": "Tiêu đề vùng nội dung",
+      "position": "Tọa độ x=58, y=477 trên ảnh nguồn 1600×1585",
+      "properties": "Trang hiện hiển thị danh sách tin nhắn sau khi tải thành công.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #17; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-018",
+      "marker": "18",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tuyên bố kênh đồng bộ bảo mật",
+      "type": "Tuyên bố trên ảnh",
+      "position": "Tọa độ x=660, y=461 trên ảnh nguồn 1600×1585",
+      "properties": "Không có kết nối Socket hay trạng thái đồng bộ được chứng minh.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #18; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-019",
+      "marker": "19",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Hình minh họa luồng trao đổi rỗng",
+      "type": "Hình trang trí",
+      "position": "Tọa độ x=465, y=650 trên ảnh nguồn 1600×1585",
+      "properties": "Chỉ ảnh mẫu có minh họa này; trạng thái rỗng phụ thuộc `messages: []` hợp lệ.",
+      "event_ids": [
+        "ME-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #19; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-020",
+      "marker": "20",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tiêu đề luồng trao đổi rỗng",
+      "type": "Nội dung trạng thái rỗng",
+      "position": "Tọa độ x=342, y=764 trên ảnh nguồn 1600×1585",
+      "properties": "Không được nhầm luồng trao đổi rỗng hợp lệ với lỗi hoặc yêu cầu không tồn tại.",
+      "event_ids": [
+        "ME-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #20; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-021",
+      "marker": "21",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Mô tả luồng trao đổi rỗng",
+      "type": "Nội dung trạng thái rỗng",
+      "position": "Tọa độ x=240, y=805 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh nói chờ đồng bộ/giữ phiên; không có Socket hoặc tự đồng bộ trong mã nguồn.",
+      "event_ids": [
+        "ME-12-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #21; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-022",
+      "marker": "22",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Nhãn Socket và TLS 1.3",
+      "type": "Tuyên bố trên ảnh",
+      "position": "Tọa độ x=320, y=884 trên ảnh nguồn 1600×1585",
+      "properties": "Không có mã hoặc API kiểm chứng trạng thái kết nối này.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #22; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-023",
+      "marker": "23",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tiêu đề khung phản hồi",
+      "type": "Tiêu đề vùng nhập",
+      "position": "Tọa độ x=58, y=1111 trên ảnh nguồn 1600×1585",
+      "properties": "Trang hiện có khung trả lời cho trạng thái được phép.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #23; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-024",
+      "marker": "24",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Bộ đếm 0/2000 ký tự",
+      "type": "Chỉ báo số ký tự mẫu",
+      "position": "Tọa độ x=856, y=1095 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh ghi 2000; trang hiện không có bộ đếm và API #60 không giới hạn độ dài.",
+      "event_ids": [
+        "ME-12-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #24; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-025",
+      "marker": "25",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Ô nhập nội dung phản hồi",
+      "type": "Vùng nhập văn bản",
+      "position": "Tọa độ x=58, y=1160 trên ảnh nguồn 1600×1585",
+      "properties": "Trang giữ bản nháp trong mã nguồn hiện tại, chặn nội dung trắng; không có bộ chọn tệp hoặc giới hạn độ dài.",
+      "event_ids": [
+        "ME-12-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #25; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-026",
+      "marker": "26",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Cảnh báo khóa gửi phản hồi",
+      "type": "Thông báo trạng thái",
+      "position": "Tọa độ x=52, y=1357 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh nói chờ kết nối hợp đồng; hiện trạng phụ thuộc trạng thái và trạng thái gửi/đối soát.",
+      "event_ids": [
+        "ME-12-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #26; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-027",
+      "marker": "27",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Nút gửi phản hồi",
+      "type": "Nút thao tác",
+      "position": "Tọa độ x=760, y=1358 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh mẫu tắt nút; trang hiện bật theo trạng thái và khóa khi đang gửi hoặc chưa đối soát.",
+      "event_ids": [
+        "ME-12-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #27; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-028",
+      "marker": "28",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tiêu đề tùy chọn đóng yêu cầu",
+      "type": "Tiêu đề vùng thao tác",
+      "position": "Tọa độ x=1094, y=485 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh có thẻ đóng; trang hiện chỉ hiện nút bị vô hiệu hóa cho trạng thái đang xử lý.",
+      "event_ids": [
+        "ME-12-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #28; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-029",
+      "marker": "29",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Giải thích điều kiện đóng yêu cầu",
+      "type": "Nội dung quy tắc mẫu",
+      "position": "Tọa độ x=1093, y=560 trên ảnh nguồn 1600×1585",
+      "properties": "AC-24 cần ý kiến học viên; cách xác nhận chưa được quyết định.",
+      "event_ids": [
+        "ME-12-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #29; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-030",
+      "marker": "30",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Dòng tự động kết toán",
+      "type": "Tuyên bố tác động phụ",
+      "position": "Tọa độ x=1095, y=614 trên ảnh nguồn 1600×1585",
+      "properties": "Không có API hoặc tác động phụ kết toán trong #59–#61.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #30; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-031",
+      "marker": "31",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Dòng khảo sát hài lòng",
+      "type": "Tuyên bố tác động phụ",
+      "position": "Tọa độ x=1095, y=652 trên ảnh nguồn 1600×1585",
+      "properties": "Không có API hoặc lịch gửi khảo sát trong #59–#61.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #31; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-032",
+      "marker": "32",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Nút đánh dấu đã giải quyết",
+      "type": "Nút thao tác",
+      "position": "Tọa độ x=1095, y=706 trên ảnh nguồn 1600×1585",
+      "properties": "Trang hiện vô hiệu hóa nút; chưa gọi #61 vì điều kiện và tương tác xác nhận chưa duyệt.",
+      "event_ids": [
+        "ME-12-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #32; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-033",
+      "marker": "33",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Ghi chú yêu cầu ít nhất một lượt trao đổi",
+      "type": "Ghi chú quy tắc mẫu",
+      "position": "Tọa độ x=1095, y=790 trên ảnh nguồn 1600×1585",
+      "properties": "#61 mã nguồn không áp dụng điều kiện tối thiểu một tin nhắn.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #33; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-034",
+      "marker": "34",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tiêu đề tiêu chuẩn dành cho Mentor",
+      "type": "Tiêu đề nội dung mẫu",
+      "position": "Tọa độ x=1095, y=950 trên ảnh nguồn 1600×1585",
+      "properties": "Ảnh mẫu; chưa có quy tắc liên quan được API xác nhận.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #34; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-035",
+      "marker": "35",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tuyên bố thời hạn phản hồi 24 giờ",
+      "type": "Tuyên bố SLA",
+      "position": "Tọa độ x=1095, y=991 trên ảnh nguồn 1600×1585",
+      "properties": "API không trả thời hạn hoặc dữ liệu đo SLA.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #35; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-036",
+      "marker": "36",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tuyên bố cung cấp nguồn tham khảo",
+      "type": "Hướng dẫn nội dung mẫu",
+      "position": "Tọa độ x=1095, y=1047 trên ảnh nguồn 1600×1585",
+      "properties": "API không có trường nguồn tham khảo hoặc kiểm tra nội dung này.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #36; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-037",
+      "marker": "37",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Tuyên bố bảo vệ thông tin học viên",
+      "type": "Tuyên bố riêng tư",
+      "position": "Tọa độ x=1095, y=1103 trên ảnh nguồn 1600×1585",
+      "properties": "API có kiểm tra vai trò và quyền chủ khóa học; dòng chữ trên ảnh không phải toàn bộ chính sách riêng tư.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #37; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-038",
+      "marker": "38",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Liên kết hướng dẫn xử lý khúc mắc",
+      "type": "Liên kết ngoài mẫu",
+      "position": "Tọa độ x=1095, y=1174 trên ảnh nguồn 1600×1585",
+      "properties": "Địa chỉ đích chưa được cung cấp.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #38; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-039",
+      "marker": "39",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Biểu tượng thương hiệu chân trang",
+      "type": "Biểu tượng tĩnh",
+      "position": "Tọa độ x=53, y=1565 trên ảnh nguồn 1600×1585",
+      "properties": "Không mang dữ liệu hoặc tương tác màn hình.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #39; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-040",
+      "marker": "40",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Dòng bản quyền và tuyên bố WCAG",
+      "type": "Tuyên bố chân trang",
+      "position": "Tọa độ x=80, y=1507 trên ảnh nguồn 1600×1585",
+      "properties": "Chữ trên ảnh không chứng minh đã kiểm tra hoặc đạt WCAG.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #40; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-041",
+      "marker": "41",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Liên kết Quy chế Giảng viên",
+      "type": "Liên kết chân trang mẫu",
+      "position": "Tọa độ x=1050, y=1507 trên ảnh nguồn 1600×1585",
+      "properties": "Đích liên kết chưa có trong hợp đồng điều hướng.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #41; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-042",
+      "marker": "42",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Liên kết Tiêu chuẩn đánh giá",
+      "type": "Liên kết chân trang mẫu",
+      "position": "Tọa độ x=1230, y=1507 trên ảnh nguồn 1600×1585",
+      "properties": "Đích liên kết chưa được xác nhận.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #42; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    },
+    {
+      "id": "ME-12-EL-043",
+      "marker": "43",
+      "source_element_id": "Không được cung cấp trong JSON mốc đánh dấu nguồn",
+      "name": "Liên kết Hỗ trợ kỹ thuật",
+      "type": "Liên kết chân trang mẫu",
+      "position": "Tọa độ x=1415, y=1507 trên ảnh nguồn 1600×1585",
+      "properties": "Địa chỉ hoặc kênh hỗ trợ chưa được xác nhận.",
+      "event_ids": [
+        "ME-12-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12_markers.json mốc đánh dấu #43; ME-12 01-ui-elements.md; ảnh ME-12 và mã nguồn trang hiện tại"
+    }
+  ],
+  "events": [
+    {
+      "id": "ME-12-EV-001",
+      "source_event_id": "D.1",
+      "name": "Đối chiếu phong bì API và lỗi chung",
+      "trigger": "Trước/sau phản hồi của #59, #60 hoặc #61. Đây là bí danh hợp đồng chung, không phải thao tác riêng trên giao diện.",
+      "processing": "Kiểm tra `success`, mã nghiệp vụ và cấu trúc `data`; không suy ra thành công chỉ từ HTTP. Không đưa nội dung tin nhắn vào nhật ký. Mã cụ thể và thứ tự lỗi vẫn theo mã nguồn API; hợp đồng còn bản nháp.",
+      "element_ids": [
+        "ME-12-EL-015",
+        "ME-12-EL-016",
+        "ME-12-EL-026",
+        "ME-12-EL-027",
+        "ME-12-EL-032"
+      ],
+      "api_ids": [
+        "API #59",
+        "API #60",
+        "API #61"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12 02-events.md D.1; API #59–#61 models.py/view.py."
+    },
+    {
+      "id": "ME-12-EV-002",
+      "source_event_id": "E01",
+      "name": "Tải chi tiết yêu cầu",
+      "trigger": "Mở `/mentor/support/:requestId`, đổi `requestId`, hoặc người dùng chọn tải lại.",
+      "processing": "Từ chối ID không an toàn trước API; gọi GET #59; hủy đăng ký truy vấn cũ khi tuyến đổi; kiểm tra phong bì phản hồi, mã `DESIGN_RESOURCE_RETRIEVED`, ID, trạng thái, tác giả, tin nhắn, tệp đính kèm và ngày. Phân biệt rỗng luồng trao đổi với lỗi. Bố cục luồng trao đổi sau khi tải chưa được duyệt.",
+      "element_ids": [
+        "ME-12-EL-015",
+        "ME-12-EL-016",
+        "ME-12-EL-019",
+        "ME-12-EL-020",
+        "ME-12-EL-021"
+      ],
+      "api_ids": [
+        "API #59"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12 02-events.md E01; me12-page.ts/html; API #59 view.py/query.py."
+    },
+    {
+      "id": "ME-12-EV-003",
+      "source_event_id": "E02",
+      "name": "Quay lại ME-11",
+      "trigger": "Chọn liên kết quay lại hoặc đường dẫn phân cấp theo thiết kế.",
+      "processing": "Trang hiện có liên kết bộ định tuyến về `/mentor/support`; không gọi API. Khôi phục bộ lọc, cuộn và lịch sử trình duyệt chưa được định nghĩa. Đường dẫn phân cấp trong ảnh chưa có trên mẫu giao diện hiện tại.",
+      "element_ids": [
+        "ME-12-EL-009",
+        "ME-12-EL-011"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12 02-events.md E02; me12-page.html; ME-12 06-navigation.md."
+    },
+    {
+      "id": "ME-12-EV-004",
+      "source_event_id": "E03",
+      "name": "Nhập và kiểm tra bản nháp",
+      "trigger": "Người dùng nhập hoặc sửa nội dung tại #25.",
+      "processing": "Giữ bản nháp trên trang; chặn nội dung chỉ có khoảng trắng theo `trim`. Trang hiện không áp giới hạn 2.000 ký tự, không có bộ đếm và không gọi API khi người dùng chỉ sửa nội dung. Cách đếm Unicode cùng giới hạn cuối cùng vẫn cần được duyệt.",
+      "element_ids": [
+        "ME-12-EL-024",
+        "ME-12-EL-025"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12 02-events.md E03; me12-page.ts/html; API #60 validate.py."
+    },
+    {
+      "id": "ME-12-EV-005",
+      "source_event_id": "E04",
+      "name": "Gửi phản hồi",
+      "trigger": "Gửi biểu mẫu phản hồi ở trạng thái được trang cho phép.",
+      "processing": "Gửi POST #60 một lần với `{message, attachment_refs:\"[]\"}` từ giao diện hiện tại; khóa nút khi đang gửi. Chỉ coi là xác nhận khi phản hồi có mã `DESIGN_RESOURCE_UPDATED`, ID đúng và tin nhắn mới khớp. Sau đó gọi GET #59; nếu kết quả xử lý mơ hồ thì khóa gửi tới khi đọc lại luồng trao đổi. Không tự thử lại POST.",
+      "element_ids": [
+        "ME-12-EL-026",
+        "ME-12-EL-027"
+      ],
+      "api_ids": [
+        "API #60",
+        "API #59"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12 02-events.md E04; me12-page.ts; me12-support-thread.service.ts; API #60 view.py."
+    },
+    {
+      "id": "ME-12-EV-006",
+      "source_event_id": "E05",
+      "name": "Đóng yêu cầu",
+      "trigger": "Nút đánh dấu giải quyết theo ảnh mẫu; hiện đang bị khóa trên trang.",
+      "processing": "Trang hiện không gọi #61. Chỉ mở thao tác sau khi duyệt quyết định hài lòng, điều kiện lượt trao đổi tối thiểu và tương tác xác nhận. API trong mã nguồn hiện tại nhận PATCH không nội dung gửi, đổi ba trạng thái đang xử lý thành RESOLVED và từ chối trạng thái khác; không tạo kết toán/khảo sát.",
+      "element_ids": [
+        "ME-12-EL-028",
+        "ME-12-EL-029",
+        "ME-12-EL-032",
+        "ME-12-EL-033"
+      ],
+      "api_ids": [
+        "API #61"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12 02-events.md E05; me12-page.html/ts; API #61 view.py; AC-24."
+    },
+    {
+      "id": "ME-12-EV-007",
+      "source_event_id": "E06",
+      "name": "Điều hướng đầu trang, trợ giúp và chân trang",
+      "trigger": "Chọn logo, mục thanh điều hướng, chuông, hướng dẫn hoặc liên kết chân trang theo ảnh.",
+      "processing": "Không có API hoặc tác động dữ liệu được hỗ trợ từ mã nguồn màn hình. Chỉ mục tiêu về ME-11 có tuyến hiện tại; các đích khác chưa được xác nhận. Không khẳng định liên kết mẫu hoạt động.",
+      "element_ids": [
+        "ME-12-EL-001",
+        "ME-12-EL-002",
+        "ME-12-EL-003",
+        "ME-12-EL-004",
+        "ME-12-EL-005",
+        "ME-12-EL-006",
+        "ME-12-EL-007",
+        "ME-12-EL-008",
+        "ME-12-EL-038",
+        "ME-12-EL-041",
+        "ME-12-EL-042",
+        "ME-12-EL-043"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "ME-12 02-events.md E06; ME-12_markers.json; me12-page.html; ME-12 06-navigation.md."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ME12-B01",
+      "description": "Bố cục luồng trao đổi sau khi tải, thông tin tác giả/thời gian/tệp, thích ứng kích thước màn hình và xử lý luồng dài chưa được duyệt.",
+      "impact": "#59 trả toàn bộ luồng trao đổi, không phân trang; ảnh chỉ có trạng thái rỗng.",
+      "decision": "Duyệt trạng thái có tin nhắn, siêu dữ liệu tệp đính kèm, giới hạn/chiến lược luồng dài và thích ứng kích thước màn hình.",
+      "source_ref": "ME-12 00-overview.md; 01-ui-elements.md; API #59 query.py.",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME12-B02",
+      "description": "Bộ đếm 2000 ký tự trên ảnh không khớp API #60 không có giới hạn; đơn vị đếm Unicode và nội dung kiểm tra hợp lệ chưa rõ.",
+      "impact": "Không thể chốt giới hạn nhập hoặc kết quả khi nội dung dài.",
+      "decision": "Chủ sản phẩm/API duyệt giới hạn, cách đếm, bộ đếm và thông báo lỗi trước khi phát hành.",
+      "source_ref": "ME-12 01-ui-elements.md; 02-events.md E03; API #60 validate.py.",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME12-B03",
+      "description": "Giao diện hiện chưa có bộ chọn tệp; API #60 yêu cầu chuỗi JSON chứa ID tệp thuộc cùng chủ sở hữu/khóa học và có `purpose=LECTURE`.",
+      "impact": "Không thể kiểm thử gửi phản hồi có tệp theo luồng hiện có.",
+      "decision": "Duyệt có hỗ trợ đính kèm tệp hay chỉ gửi văn bản; nếu hỗ trợ, chốt nguồn tải tệp, bộ chọn và mục đích sử dụng.",
+      "source_ref": "ME-12 02-events.md E04; API #60 OPEN_QUESTIONS.md.",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME12-B04",
+      "description": "AC-24 yêu cầu xét mức độ hài lòng, ảnh yêu cầu tối thiểu một lượt trao đổi, còn #61 không kiểm tra cả hai.",
+      "impact": "Nút đóng đang bị khóa; chưa có dữ liệu gửi hay tương tác xác nhận đã duyệt.",
+      "decision": "Duyệt tiêu chí hài lòng, điều kiện tối thiểu và thao tác xác nhận, rồi đối chiếu với API #61.",
+      "source_ref": "ME-12 02-events.md E05; ME-12 07-test-cases.md; API #61 OPEN_QUESTIONS.md.",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME12-B05",
+      "description": "Trang khóa phản hồi với trạng thái đã kết thúc/không biết, trong khi API #60 mã nguồn hiện tại vẫn nhận RESOLVED/CANCELLED và giữ nguyên trạng thái.",
+      "impact": "Giao diện và API có thể có kết quả khác nhau về phản hồi sau khi đóng.",
+      "decision": "Duyệt ma trận trạng thái cho phép phản hồi và thống nhất giữa giao diện/API.",
+      "source_ref": "me12-page.ts; API #60 view.py/OPEN_QUESTIONS.md.",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME12-B06",
+      "description": "#60 trả toàn bộ luồng trao đổi sau khi ghi, trong khi bảng tổng hợp yêu cầu yêu cầu GET #59; POST không có khóa chống gửi lặp.",
+      "impact": "Tăng lượt đọc và cần xử lý khác nhau giữa lỗi GET sau thành công với POST kết quả xử lý mơ hồ.",
+      "decision": "Duyệt quy tắc tải lại, thông báo đã cũ và cách người dùng phục hồi khi chưa rõ POST đã ghi hay chưa.",
+      "source_ref": "ME-12 02-events.md E04; API #60 OPEN_QUESTIONS.md; me12-page.ts.",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME12-B07/B08",
+      "description": "Ảnh có Socket/TLS, SLA, kết toán, khảo sát, riêng tư/tham khảo/WCAG và các liên kết mẫu; đồng thời chưa chốt đích đầu trang, trợ giúp và chân trang hoặc khôi phục trạng thái ME-11.",
+      "impact": "Không được kiểm thử các lời hứa hoặc điều hướng không có trường/API/đích nguồn.",
+      "decision": "Chủ sản phẩm/nền tảng xác minh hoặc bỏ/sửa từng tuyên bố; giao diện xác nhận URL/tuyến và quy tắc quay lại danh sách.",
+      "source_ref": "ME-12_markers.json; code.html; ME-12 02-events.md E06; ME-12 06-navigation.md.",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ME12-B09",
+      "description": "Quy tắc về lược đồ, quyền và vòng đời trạng thái của API #59–#61 hiện chỉ suy ra từ mã nguồn, chưa được xác nhận; bản chuyển đổi cơ sở dữ liệu 008 chưa được kiểm chứng trên cơ sở dữ liệu đang vận hành.",
+      "impact": "Mã nguồn và bộ kiểm thử dùng cơ sở dữ liệu giả không chứng minh môi trường thật có cùng cấu trúc hoặc quy tắc.",
+      "decision": "Chủ API và cơ sở dữ liệu duyệt hợp đồng cùng vòng đời trạng thái, sau đó xác nhận bản chuyển đổi, triển khai và môi trường chạy trước khi coi UTC sẵn sàng thực hiện.",
+      "source_ref": "API #59/#60/#61 OPEN_QUESTIONS.md; ME-12 00-overview.md.",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ME12-TS-001",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-002"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Mở trang bằng ID hợp lệ",
+        "precondition": "Tài khoản Mentor giả; tuyến chứa ID dương an toàn; chưa chạy trình duyệt.",
+        "data": "`requestId=1201`, dữ liệu giả; không dùng thông tin học viên thật.",
+        "steps": [
+          "Mở `/mentor/support/1201`.",
+          "Đối chiếu tuyến, dịch vụ và yêu cầu GET được khai báo."
+        ],
+        "expected": "Tuyến gắn ME12Page, lấy ID an toàn và gọi GET #59; phản hồi chỉ được dùng sau khi qua kiểm tra. Trạng thái chạy thực tế chưa xác minh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-002",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-004"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Từ chối ID tuyến sai trước khi gọi API",
+        "precondition": "Đã mở nguồn trang; dùng tuyến giả có ID không hợp lệ.",
+        "data": "`requestId=abc`, rỗng hoặc vượt miền số an toàn.",
+        "steps": [
+          "Mở tuyến với từng giá trị giả.",
+          "Kiểm tra nhánh invalidId và việc gọi dịch vụ."
+        ],
+        "expected": "Trang vào trạng thái ID không hợp lệ, không phát GET #59; không trộn với lỗi 404 của ID hợp lệ nhưng không tồn tại. Chưa chạy giao diện.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-003",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-007"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Đổi ID tuyến khi GET cũ còn chờ",
+        "precondition": "Hai ID giả; GET thứ nhất chưa trả về khi tuyến đổi.",
+        "data": "ID 1201 rồi 1202; không dùng dữ liệu thật.",
+        "steps": [
+          "Mở ID 1201.",
+          "Đổi tuyến sang 1202 trước khi phản hồi đầu tiên về.",
+          "Đối chiếu `switchMap` và kiểm tra requestId trước khi áp kết quả."
+        ],
+        "expected": "Đăng ký GET cũ bị hủy; phản hồi không khớp ID hiện hành không được áp vào trang. Hành vi được xác minh từ mã nguồn, chưa chạy.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-004",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-003"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Hiện trạng thái đang tải",
+        "precondition": "GET #59 cho ID giả đang chờ.",
+        "data": "ID 1201 và phản hồi chưa hoàn tất.",
+        "steps": [
+          "Mở tuyến hợp lệ.",
+          "Đối chiếu tín hiệu đang tải và mẫu giao diện."
+        ],
+        "expected": "Trang đặt đang tải khi chưa có phản hồi và hiển thị trạng thái đang tải; không dùng dữ liệu giả trong ảnh như phản hồi. Chưa chạy trình duyệt.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-005",
+        "requirement_ids": [
+          "ME-12-YC-003",
+          "ME-12-YC-004"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt luồng trao đổi rỗng với không tìm thấy",
+        "precondition": "Dữ liệu giả giả có yêu cầu hợp lệ; #59 trả thành công với `messages: []`.",
+        "data": "HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `data.id=1201`, `messages=[]`.",
+        "steps": [
+          "Đối chiếu điều kiện phản hồi thành công.",
+          "Đối chiếu nhánh mẫu giao diện rỗng."
+        ],
+        "expected": "Chờ xác nhận: yêu cầu vẫn được nhận diện là tồn tại; trang hiển thị nội dung “chưa có tin nhắn” trong vùng luồng trao đổi, không phải trạng thái không tìm thấy. Câu chữ hiển thị khi luồng trao đổi rỗng vẫn cần được duyệt.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-006",
+        "requirement_ids": [
+          "ME-12-YC-003",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu luồng trao đổi có nhiều tin nhắn",
+        "precondition": "Dữ liệu giả giả có ít nhất hai tin nhắn và tệp đính kèm siêu dữ liệu; bố cục chưa duyệt.",
+        "data": "Thứ tự `created_at ASC, id ASC`; tệp theo `asset_position ASC`; không có phân trang.",
+        "steps": [
+          "Đối chiếu tham số truy vấn/API projection.",
+          "Đối chiếu trang mẫu giao diện hiện tại và blocker bố cục."
+        ],
+        "expected": "API trong mã nguồn hiện tại trả đầy đủ luồng trao đổi theo thứ tự đã nêu; trang hiện hiển thị tin nhắn theo phản hồi nhưng cách trình bày luồng trao đổi có dữ liệu và luồng dài chưa được duyệt. Không suy ra phân trang hoặc giới hạn.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-007",
+        "requirement_ids": [
+          "ME-12-YC-004",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phong bì hoặc mã nghiệp vụ không đạt",
+        "precondition": "Dữ liệu giả giả trả phong bì phản hồi sai cấu trúc hoặc sai thành công/business mã.",
+        "data": "Thiếu trường phong bì phản hồi, `success=false` hoặc mã khác `DESIGN_RESOURCE_RETRIEVED`.",
+        "steps": [
+          "Đối chiếu phản hồi với guard trong trang.",
+          "Kiểm tra nhánh lỗi an toàn."
+        ],
+        "expected": "Không hiển thị dữ liệu như luồng trao đổi hợp lệ; trang hiển thị lỗi đọc phù hợp với mã nguồn. Không suy diễn trạng thái thành luồng trao đổi rỗng.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-008",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-004"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Từ chối ID phản hồi hoặc trường lồng nhau không hợp lệ",
+        "precondition": "Dữ liệu giả giả có phản hồi id khác tuyến hoặc trường tin nhắn/ngày giờ/tệp đính kèm sai kiểu.",
+        "data": "Tuyến id 1201, `data.id=1202`; hoặc tin nhắn/tác giả/tệp đính kèm/ngày giờ không đạt kiểm tra.",
+        "steps": [
+          "Đối chiếu bộ kiểm tra `isSupportRequest` và `isSupportMessage`.",
+          "Kiểm tra nhánh không khớp."
+        ],
+        "expected": "Trang không gắn dữ liệu sai ID/cấu trúc vào yêu cầu hiện tại; hiển thị lỗi phản hồi không hợp lệ. Chưa xác minh lúc chạy.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-009",
+        "requirement_ids": [
+          "ME-12-YC-002",
+          "ME-12-YC-004"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Ẩn dữ liệu khi API trả 403",
+        "precondition": "Dữ liệu giả giả mô phỏng yêu cầu thuộc Mentor khác.",
+        "data": "HTTP 403 `DESIGN_ACCESS_DENIED`; không có dữ liệu cá nhân thật.",
+        "steps": [
+          "Đối chiếu trạng thái không có quyền.",
+          "Kiểm tra mẫu giao diện không hiển thị luồng trao đổi khi bị từ chối."
+        ],
+        "expected": "Trang hiển thị trạng thái không có quyền riêng; không hiển thị tên học viên, tin nhắn hoặc tệp đính kèm của yêu cầu bị từ chối.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-010",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-004"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt yêu cầu không tồn tại với luồng trao đổi rỗng",
+        "precondition": "Dữ liệu giả giả trả 404 cho ID hợp lệ về cú pháp.",
+        "data": "HTTP 404 `DESIGN_RESOURCE_NOT_FOUND`.",
+        "steps": [
+          "Đối chiếu nhánh notFound.",
+          "So sánh với thành công có `messages: []`."
+        ],
+        "expected": "404 hiển thị trạng thái không tìm thấy riêng; không hiển thị trạng thái luồng trao đổi rỗng. Chưa chạy trình duyệt.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-011",
+        "requirement_ids": [
+          "ME-12-YC-002",
+          "ME-12-YC-004"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Xử lý 401 theo lỗi chung hiện có",
+        "precondition": "Dữ liệu giả giả trả 401 hoặc hết phiên.",
+        "data": "HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`.",
+        "steps": [
+          "Đối chiếu `applyReadResult` và helper lỗi chung.",
+          "Ghi nhận trang không có nhánh phiên-lỗi riêng."
+        ],
+        "expected": "Chờ xác nhận: trang hiện đưa 401 vào lỗi tải chung có thao tác thử lại; hành vi hết phiên/đăng nhập lại thuộc quy tắc chung chưa được xác minh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-012",
+        "requirement_ids": [
+          "ME-12-YC-004",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Tải lại thủ công sau lỗi 500 hoặc mạng",
+        "precondition": "GET #59 giả lỗi 500 hoặc lỗi vận chuyển.",
+        "data": "500 `DESIGN_INTERNAL_ERROR` hoặc lỗi mạng; một lần chọn Thử lại.",
+        "steps": [
+          "Mở tuyến giả để nhận lỗi.",
+          "Chọn Thử lại và đếm thao tác GET theo mã nguồn."
+        ],
+        "expected": "Trang hiện hiển thị lỗi an toàn và chỉ gọi lại khi người dùng chọn Thử lại; không có tự động thử lại được khai báo. Chưa chạy giao diện/API.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-013",
+        "requirement_ids": [
+          "ME-12-YC-002",
+          "ME-12-YC-004"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Không để dữ liệu cũ lộ sau khi đổi sang yêu cầu bị cấm",
+        "precondition": "Có luồng trao đổi giả ở ID trước; tuyến chuyển sang ID trả 403.",
+        "data": "ID A có dữ liệu giả; ID B trả 403.",
+        "steps": [
+          "Tải ID A.",
+          "Đổi sang ID B và mô phỏng 403.",
+          "Kiểm tra `resetForRoute` và `resetReadState`."
+        ],
+        "expected": "Trang xóa yêu cầu cũ trước lần tải mới và không hiển thị thông tin ID A trong trạng thái 403 của ID B.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-014",
+        "requirement_ids": [
+          "ME-12-YC-003",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Không tự ánh xạ trạng thái lạ",
+        "precondition": "Dữ liệu giả giả trả trạng thái chuỗi chưa có trong ma trận trong mã nguồn hiện tại.",
+        "data": "`status=\"UNKNOWN_STATUS\"`; không coi là danh sách giá trị được duyệt.",
+        "steps": [
+          "Đối chiếu trạng thái kiểm tra hợp lệ và `canReply`/`isResolveCandidate`.",
+          "Kiểm tra không mở thao tác ghi."
+        ],
+        "expected": "Chờ xác nhận: Trang không mở khung soạn phản hồi theo trạng thái chưa hỗ trợ và không hiện nút đóng; cách trình bày/nhãn trạng thái lạ vẫn cần quyết định sản phẩm.",
+        "api_ids": [
+          "API #59",
+          "API #60",
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-015",
+        "requirement_ids": [
+          "ME-12-YC-003",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị tệp dưới dạng siêu dữ liệu, không mở URL",
+        "precondition": "Dữ liệu giả giả có một tệp đính kèm siêu data.",
+        "data": "`id`, `name`, `url`, `content_type`, `size_bytes`, `status`; URL thử nghiệm không truy cập.",
+        "steps": [
+          "Đối chiếu kiểm tra cấu trúc của tệp đính kèm.",
+          "Đối chiếu mẫu giao diện để xác nhận không có liên kết tải."
+        ],
+        "expected": "Chờ xác nhận: trang hiện chỉ hiển thị tên, loại, dung lượng và cho biết chức năng mở hoặc tải tệp chưa được bật; không mở URL. Chính sách hiển thị siêu dữ liệu/tệp vẫn cần duyệt.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-016",
+        "requirement_ids": [
+          "ME-12-YC-005",
+          "ME-12-YC-006"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Chặn phản hồi chỉ có khoảng trắng",
+        "precondition": "Yêu cầu giả ở trạng thái `OPEN`; bản nháp gồm khoảng trắng.",
+        "data": "`message=\"   \"`; `attachment_refs=\"[]\"`.",
+        "steps": [
+          "Nhập chuỗi trắng.",
+          "Gửi biểu mẫu.",
+          "Đối chiếu nhánh kiểm tra trước khi gọi dịch vụ."
+        ],
+        "expected": "Trang đặt lỗi nội dung không được để trống và không gọi POST #60; phù hợp bộ kiểm tra trong mã nguồn hiện tại, môi trường chạy thực tế chưa được xác minh.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-017",
+        "requirement_ids": [
+          "ME-12-YC-005",
+          "ME-12-YC-006"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Giữ nguyên ký tự ngoài khoảng trắng trong tin nhắn",
+        "precondition": "Yêu cầu giả ở trạng thái `OPEN`; nội dung có khoảng trắng đầu/cuối nhưng không rỗng.",
+        "data": "`message=\"  Nội dung giả  \"`; tham chiếu là chuỗi `\"[]\"`.",
+        "steps": [
+          "Nhập nội dung giả.",
+          "Đối chiếu dữ liệu gửi ứng dụng khách và kiểm tra hợp lệ máy chủ."
+        ],
+        "expected": "Trang kiểm tra `trim` chỉ để phát hiện rỗng rồi gửi chuỗi gốc; máy chủ trong mã nguồn hiện tại lưu chuỗi được gửi. Không có dữ liệu thật.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-018",
+        "requirement_ids": [
+          "ME-12-YC-005",
+          "ME-12-YC-006"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Không áp giới hạn 2.000 ký tự trên ảnh khi chưa được duyệt",
+        "precondition": "Nội dung dữ liệu giả dài hơn 2000 ký tự; không gửi ra API trong kiểm tra này.",
+        "data": "Ảnh ghi 0/2000; trang hiện không có bộ đếm hoặc giới hạn độ dài; API #60 không khai báo giới hạn tối đa.",
+        "steps": [
+          "Đối chiếu ảnh, mẫu giao diện và bộ kiểm tra của máy chủ.",
+          "Ghi lại điểm chưa có quyết định thay vì tự đặt ngưỡng."
+        ],
+        "expected": "Chờ xác nhận: Không coi 2.000 ký tự là giới hạn đã duyệt; chưa chốt cách đếm Unicode hoặc thông báo khi vượt giới hạn. Cần xác nhận trước khi kiểm thử hành vi cuối.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-019",
+        "requirement_ids": [
+          "ME-12-YC-005",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Mở khung trả lời với trạng thái OPEN",
+        "precondition": "Dữ liệu giả giả yêu cầu trả trạng thái được phép theo trang.",
+        "data": "`status=\"OPEN\"`, phản hồi hợp lệ.",
+        "steps": [
+          "Nạp yêu cầu giả.",
+          "Đối chiếu `canReply` và vùng biểu mẫu trong mẫu giao diện."
+        ],
+        "expected": "Trang hiện hiển thị khung soạn phản hồi cho OPEN; điều kiện API/quyền vẫn do máy chủ kiểm tra. Trạng thái môi trường thật chưa xác minh.",
+        "api_ids": [
+          "API #59",
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-020",
+        "requirement_ids": [
+          "ME-12-YC-005",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Mở khung trả lời với hai trạng thái còn lại đang hỗ trợ",
+        "precondition": "Dữ liệu giả giả lần lượt có trạng thái IN_PROGRESS và WAITING_LEARNER.",
+        "data": "`IN_PROGRESS`; `WAITING_LEARNER`.",
+        "steps": [
+          "Nạp từng phản hồi giả.",
+          "Đối chiếu `canReply`."
+        ],
+        "expected": "Chờ xác nhận: trang hiện cho trả lời với cả hai trạng thái; việc chủ sản phẩm có duyệt ma trận này hay không còn mở.",
+        "api_ids": [
+          "API #59",
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-021",
+        "requirement_ids": [
+          "ME-12-YC-005",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Khóa trả lời với trạng thái khác ba trạng thái hỗ trợ",
+        "precondition": "Dữ liệu giả giả có trạng thái RESOLVED, CANCELLED hoặc trạng thái không biết.",
+        "data": "Từng trạng thái đã kết thúc/không được trang liệt kê.",
+        "steps": [
+          "Nạp phản hồi giả cho từng trạng thái.",
+          "Đối chiếu nhánh khóa khung soạn phản hồi.",
+          "Ghi nhận khác biệt với API #60."
+        ],
+        "expected": "Chờ xác nhận: trang hiện khóa khung soạn phản hồi; API #60 mã nguồn hiện tại vẫn nhận phản hồi cho RESOLVED/CANCELLED, vì vậy quy tắc sau khi đóng chưa thể coi là thống nhất.",
+        "api_ids": [
+          "API #59",
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-022",
+        "requirement_ids": [
+          "ME-12-YC-006",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Gửi đúng nội dung gửi văn bản không đính kèm theo mã nguồn hiện tại",
+        "precondition": "Yêu cầu giả ở trạng thái đang cho phản hồi; không có bộ chọn tệp.",
+        "data": "POST nội dung gửi đúng `{message, attachment_refs:\"[]\"}`; `message` không trắng.",
+        "steps": [
+          "Gửi một lần.",
+          "Đối chiếu dịch vụ nội dung gửi và lược đồ nghiêm ngặt của #60."
+        ],
+        "expected": "Chờ xác nhận: ứng dụng khách gửi hai khóa theo đúng kiểu; máy chủ yêu cầu `attachment_refs` là chuỗi JSON và chấp nhận `\"[]\"`. Cấu trúc hợp đồng và quy trình đính kèm vẫn bản nháp.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-023",
+        "requirement_ids": [
+          "ME-12-YC-006",
+          "ME-12-YC-007"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Khóa nút khi POST đang chờ",
+        "precondition": "POST #60 giả chưa trả phản hồi.",
+        "data": "`sending=true`; chưa có phản hồi.",
+        "steps": [
+          "Gửi phản hồi giả.",
+          "Thử gửi lần nữa khi lần đầu đang chờ."
+        ],
+        "expected": "Nút bị vô hiệu hóa trong lúc gửi; không tạo yêu cầu thứ hai từ thao tác lặp trên biểu mẫu.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-024",
+        "requirement_ids": [
+          "ME-12-YC-007",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Xác nhận phản hồi khi phản hồi chứa tin nhắn mới khớp",
+        "precondition": "POST trả phản hồi thành công với đúng ID và tin nhắn mới; GET sau đó thành công.",
+        "data": "`DESIGN_RESOURCE_UPDATED`; tin nhắn mới có ID chưa thấy và nội dung khớp.",
+        "steps": [
+          "Gửi phản hồi giả một lần.",
+          "Đối chiếu xác thực phản hồi.",
+          "Theo dõi GET #59 sau POST thành công."
+        ],
+        "expected": "Trang đặt luồng trao đổi từ phản hồi, xóa bản nháp, hiện xác nhận thành công và gọi GET #59; không gửi POST lần hai.",
+        "api_ids": [
+          "API #60",
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-025",
+        "requirement_ids": [
+          "ME-12-YC-007",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Giữ xác nhận POST nếu GET tiếp theo lỗi",
+        "precondition": "POST #60 giả thành công; lần GET #59 kế tiếp lỗi.",
+        "data": "POST `DESIGN_RESOURCE_UPDATED`; GET trả lỗi mạng hoặc 500.",
+        "steps": [
+          "Gửi phản hồi giả.",
+          "Mô phỏng GET sau POST thất bại.",
+          "Đối chiếu banner thành công và lỗi tải."
+        ],
+        "expected": "Chờ xác nhận: trang giữ thông báo POST đã được ghi nhận và không tự gửi lại; việc hiển thị trạng thái tải lại chưa cập nhật theo cách trình bày đã duyệt còn là điểm chặn.",
+        "api_ids": [
+          "API #60",
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-026",
+        "requirement_ids": [
+          "ME-12-YC-007",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Đối soát kết quả xử lý POST mơ hồ bằng cách tải lại luồng trao đổi",
+        "precondition": "POST lỗi vận chuyển/phản hồi sai khiến kết quả xử lý chưa rõ.",
+        "data": "Tin nhắn giả; sau đó GET có tin nhắn mới trùng nội dung hoặc chưa có tin nhắn.",
+        "steps": [
+          "Mô phỏng POST không xác định.",
+          "Xác nhận biểu mẫu bị khóa.",
+          "Chọn tải lại luồng trao đổi một lần."
+        ],
+        "expected": "Trang khóa gửi cho tới GET; nếu thấy tin nhắn mới khớp thì xác nhận đã xuất hiện; nếu chưa thấy, mở lại bản nháp kèm hướng dẫn kiểm tra trước khi quyết định gửi lại.",
+        "api_ids": [
+          "API #60",
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-TS-027",
+        "requirement_ids": [
+          "ME-12-YC-007",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Không coi phản hồi sau khi giải quyết/hủy là quy tắc đã duyệt",
+        "precondition": "Đối chiếu mã nguồn #60 với trạng thái giao diện; không thực hiện POST thật.",
+        "data": "Trạng thái RESOLVED hoặc CANCELLED; trang khóa; API trong mã nguồn hiện tại không chặn hai trạng thái này.",
+        "steps": [
+          "Đọc ma trận `canReply`.",
+          "Đọc tham số truy vấn/view #60.",
+          "Ghi discrepancy và đợi chủ sở hữu duyệt."
+        ],
+        "expected": "Chờ xác nhận: Ghi nhận rõ giao diện/API hiện lệch; không gọi địa chỉ API để hợp thức hóa hành vi và không tự chọn quy tắc.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-028",
+        "requirement_ids": [
+          "ME-12-YC-009",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Không gọi #61 khi điều kiện đóng chưa duyệt",
+        "precondition": "Yêu cầu giả ở trạng thái OPEN/IN_PROGRESS/WAITING_LEARNER.",
+        "data": "Nút hiện bị vô hiệu hóa; chưa có điều kiện sẵn sàng/mức độ hài lòng xác nhận.",
+        "steps": [
+          "Đối chiếu mẫu giao diện, trang method và dịch vụ methods.",
+          "Kiểm tra tuyến/API call tham khảo."
+        ],
+        "expected": "Chờ xác nhận: trang không có nơi gọi #61 và nút đóng bị khóa; không phát PATCH cho tới khi tiêu chí/xác nhận được duyệt.",
+        "api_ids": [
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-029",
+        "requirement_ids": [
+          "ME-12-YC-009",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu ma trận API #61 mà không xem là lúc chạy đã xác nhận",
+        "precondition": "Chỉ kiểm tra hợp đồng mã nguồn; không gọi API.",
+        "data": "Đang xử lý → RESOLVED; RESOLVED thử lại an toàn khi gọi lặp; CANCELLED/khác →422 theo mã nguồn hiện tại.",
+        "steps": [
+          "Đối chiếu tệp xử lý API #61 (`view.py`), phần truy vấn và tài liệu câu hỏi còn mở.",
+          "Ghi riêng hành vi mã với yêu cầu AC-24."
+        ],
+        "expected": "Chờ xác nhận: Ma trận chuyển trạng thái trong mã nguồn được ghi nhận nhưng chưa được chốt trong DD/API; API không kiểm tra mức độ hài lòng hoặc số tin nhắn tối thiểu, và trang hiện chưa gọi #61.",
+        "api_ids": [
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-TS-030",
+        "requirement_ids": [
+          "ME-12-YC-010",
+          "ME-12-YC-011",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12",
+        "group": "Toàn màn hình",
+        "title": "Rà soát điều hướng, tuyên bố mẫu và điều kiện phát hành",
+        "precondition": "Dùng ảnh/mẫu giao diện và mã nguồn tĩnh; không chạy trình duyệt.",
+        "data": "Tuyến trở về ME-11; các liên kết khác, Socket/TLS/SLA/khảo sát/kết toán/WCAG chưa có nguồn xác nhận.",
+        "steps": [
+          "Đối chiếu đầu trang, trợ giúp và chân trang, ảnh và API trường/tác động phụ.",
+          "Kiểm tra mọi blocker còn ghi Chờ xác nhận.",
+          "Để nguyên trạng thái chạy."
+        ],
+        "expected": "Chờ xác nhận: Chỉ `/mentor/support` có liên kết về danh sách trong trang hiện tại; không khẳng định các đích hoặc tuyên bố mẫu. DD/API còn blocker, cơ sở dữ liệu đang vận hành và trình duyệt chưa được xác minh và tất cả ca vẫn Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12 DD mục 00–07",
+          "me12-page.ts/html",
+          "API #59–#61 mã nguồn"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ME12-ELTC-001",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #1: Logo và thương hiệu Mentor",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 1; Tọa độ x=76, y=72 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh mẫu có thương hiệu; liên kết không có đích được xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #1",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-002",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #2: Điều hướng Tổng quan",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 2; Tọa độ x=304, y=19 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Tên mục trong ảnh; đích điều hướng chưa được xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #2",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-003",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #3: Điều hướng Khóa học phụ trách",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 3; Tọa độ x=432, y=19 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Tên mục trong ảnh; đích và cách giữ trạng thái chưa được xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #3",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-004",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #4: Điều hướng Chấm bài",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 4; Tọa độ x=630, y=19 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Tên mục trong ảnh; đích chưa được xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #4",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-005",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #5: Điều hướng Hộp thư hỗ trợ đang chọn",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 5; Tọa độ x=738, y=18 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh đánh dấu mục hiện hành; tuyến hiện có `/mentor/support` ở ME-11. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #5",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-006",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #6: Điều hướng Thông báo",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 6; Tọa độ x=924, y=19 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Đích và trạng thái thông báo chưa được xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #6",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-007",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #7: Chuông và dấu báo thông báo",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 7; Tọa độ x=1244, y=64 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Không có số thông báo hoặc API thông báo trên màn hình này. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #7",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-008",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #8: Tên, vai trò và hồ sơ Mentor",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 8; Tọa độ x=1538, y=69 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Thông tin trên ảnh là mẫu; dữ liệu phiên hiện tại không được nối trong thiết kế này. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #8",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-009",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #9: Đường dẫn phân cấp Hộp thư hỗ trợ",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 9; Tọa độ x=48, y=126 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh mong muốn quay về ME-11; trang hiện có nút quay lại riêng, chưa có đường dẫn phân cấp này. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #9",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-010",
+        "requirement_ids": [
+          "ME-12-YC-001"
+        ],
+        "target_id": "ME-12-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #10: Đường dẫn phân cấp Chi tiết yêu cầu",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 10; Tọa độ x=207, y=126 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Nhãn văn bản trong ảnh; không có tương tác. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #10",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-011",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #11: Nút quay lại danh sách ME-11",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 11; Tọa độ x=1180, y=190 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Trang hiện liên kết về `/mentor/support`; khôi phục bộ lọc chưa được định nghĩa. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #11",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-012",
+        "requirement_ids": [
+          "ME-12-YC-001"
+        ],
+        "target_id": "ME-12-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #12: Nhãn mã tiến trình ME-12",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 12; Tọa độ x=58, y=258 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Mã màn hình cố định, không phải dữ liệu từ API. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #12",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-013",
+        "requirement_ids": [
+          "ME-12-YC-001"
+        ],
+        "target_id": "ME-12-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #13: Tiêu đề chính",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 13; Tọa độ x=50, y=282 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Tiêu đề trong ảnh; trang hiện dùng tiêu đề “Trao đổi và xử lý yêu cầu”. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #13",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-014",
+        "requirement_ids": [
+          "ME-12-YC-001"
+        ],
+        "target_id": "ME-12-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #14: Mô tả màn hình",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 14; Tọa độ x=50, y=335 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Mô tả trong ảnh không tạo thêm trường hoặc hành vi API. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #14",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-015",
+        "requirement_ids": [
+          "ME-12-YC-001"
+        ],
+        "target_id": "ME-12-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #15: Mã yêu cầu và trạng thái đang tải",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 15; Tọa độ x=1202, y=268 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Ảnh có chữ đang nạp; trang hiện tải theo tuyến và hiển thị mã yêu cầu từ phản hồi. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #15",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-016",
+        "requirement_ids": [
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #16: Trạng thái yêu cầu",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 16; Tọa độ x=1382, y=268 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Lấy từ `SupportRequest.status`; trang hiện hiển thị chuỗi trả về, không ánh xạ trạng thái lạ. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #16",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-017",
+        "requirement_ids": [
+          "ME-12-YC-003"
+        ],
+        "target_id": "ME-12-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #17: Tiêu đề luồng hội thoại",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 17; Tọa độ x=58, y=477 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Trang hiện hiển thị danh sách tin nhắn sau khi tải thành công. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #17",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-018",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #18: Tuyên bố kênh đồng bộ bảo mật",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 18; Tọa độ x=660, y=461 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Không có kết nối Socket hay trạng thái đồng bộ được chứng minh. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #18",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-019",
+        "requirement_ids": [
+          "ME-12-YC-003"
+        ],
+        "target_id": "ME-12-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #19: Hình minh họa luồng trao đổi rỗng",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 19; Tọa độ x=465, y=650 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Chỉ ảnh mẫu có minh họa này; trạng thái rỗng phụ thuộc `messages: []` hợp lệ. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #19",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-020",
+        "requirement_ids": [
+          "ME-12-YC-003"
+        ],
+        "target_id": "ME-12-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #20: Tiêu đề luồng trao đổi rỗng",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 20; Tọa độ x=342, y=764 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Không được nhầm luồng trao đổi rỗng hợp lệ với lỗi hoặc yêu cầu không tồn tại. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #20",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-021",
+        "requirement_ids": [
+          "ME-12-YC-003"
+        ],
+        "target_id": "ME-12-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #21: Mô tả luồng trao đổi rỗng",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 21; Tọa độ x=240, y=805 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh nói chờ đồng bộ/giữ phiên; không có Socket hoặc tự đồng bộ trong mã nguồn. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #21",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-022",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #22: Nhãn Socket và TLS 1.3",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 22; Tọa độ x=320, y=884 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Không có mã hoặc API kiểm chứng trạng thái kết nối này. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #22",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-023",
+        "requirement_ids": [
+          "ME-12-YC-005"
+        ],
+        "target_id": "ME-12-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #23: Tiêu đề khung phản hồi",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 23; Tọa độ x=58, y=1111 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Trang hiện có khung trả lời cho trạng thái được phép. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #23",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-024",
+        "requirement_ids": [
+          "ME-12-YC-005"
+        ],
+        "target_id": "ME-12-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #24: Bộ đếm 0/2000 ký tự",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 24; Tọa độ x=856, y=1095 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh ghi 2000; trang hiện không có bộ đếm và API #60 không giới hạn độ dài. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #24",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-025",
+        "requirement_ids": [
+          "ME-12-YC-005"
+        ],
+        "target_id": "ME-12-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #25: Ô nhập nội dung phản hồi",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 25; Tọa độ x=58, y=1160 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Trang giữ bản nháp trong mã nguồn hiện tại, chặn nội dung trắng; không có bộ chọn tệp hoặc giới hạn độ dài. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #25",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-026",
+        "requirement_ids": [
+          "ME-12-YC-006"
+        ],
+        "target_id": "ME-12-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #26: Cảnh báo khóa gửi phản hồi",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 26; Tọa độ x=52, y=1357 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh nói chờ kết nối hợp đồng; hiện trạng phụ thuộc trạng thái và trạng thái gửi/đối soát. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #26",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-027",
+        "requirement_ids": [
+          "ME-12-YC-006"
+        ],
+        "target_id": "ME-12-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #27: Nút gửi phản hồi",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 27; Tọa độ x=760, y=1358 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh mẫu tắt nút; trang hiện bật theo trạng thái và khóa khi đang gửi hoặc chưa đối soát. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #60"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #27",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-028",
+        "requirement_ids": [
+          "ME-12-YC-009"
+        ],
+        "target_id": "ME-12-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #28: Tiêu đề tùy chọn đóng yêu cầu",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 28; Tọa độ x=1094, y=485 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh có thẻ đóng; trang hiện chỉ hiện nút bị vô hiệu hóa cho trạng thái đang xử lý. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #28",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-029",
+        "requirement_ids": [
+          "ME-12-YC-009"
+        ],
+        "target_id": "ME-12-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #29: Giải thích điều kiện đóng yêu cầu",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 29; Tọa độ x=1093, y=560 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: AC-24 cần ý kiến học viên; cách xác nhận chưa được quyết định. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #29",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-030",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #30: Dòng tự động kết toán",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 30; Tọa độ x=1095, y=614 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Không có API hoặc tác động phụ kết toán trong #59–#61. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #30",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-031",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #31: Dòng khảo sát hài lòng",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 31; Tọa độ x=1095, y=652 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Không có API hoặc lịch gửi khảo sát trong #59–#61. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #31",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-032",
+        "requirement_ids": [
+          "ME-12-YC-009"
+        ],
+        "target_id": "ME-12-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #32: Nút đánh dấu đã giải quyết",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 32; Tọa độ x=1095, y=706 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Trang hiện vô hiệu hóa nút; chưa gọi #61 vì điều kiện và tương tác xác nhận chưa duyệt. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #32",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-033",
+        "requirement_ids": [
+          "ME-12-YC-009"
+        ],
+        "target_id": "ME-12-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #33: Ghi chú yêu cầu ít nhất một lượt trao đổi",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 33; Tọa độ x=1095, y=790 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: #61 mã nguồn không áp dụng điều kiện tối thiểu một tin nhắn. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #33",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-034",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-034",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #34: Tiêu đề tiêu chuẩn dành cho Mentor",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 34; Tọa độ x=1095, y=950 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Ảnh mẫu; chưa có quy tắc liên quan được API xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #34",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-035",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-035",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #35: Tuyên bố thời hạn phản hồi 24 giờ",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 35; Tọa độ x=1095, y=991 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: API không trả thời hạn hoặc dữ liệu đo SLA. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #35",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-036",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-036",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #36: Tuyên bố cung cấp nguồn tham khảo",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 36; Tọa độ x=1095, y=1047 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: API không có trường nguồn tham khảo hoặc kiểm tra nội dung này. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #36",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-037",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-037",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #37: Tuyên bố bảo vệ thông tin học viên",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 37; Tọa độ x=1095, y=1103 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: API có kiểm tra vai trò và quyền chủ khóa học; dòng chữ trên ảnh không phải toàn bộ chính sách riêng tư. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #37",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-038",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-038",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #38: Liên kết hướng dẫn xử lý khúc mắc",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 38; Tọa độ x=1095, y=1174 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Địa chỉ đích chưa được cung cấp. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #38",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-039",
+        "requirement_ids": [
+          "ME-12-YC-001"
+        ],
+        "target_id": "ME-12-EL-039",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #39: Biểu tượng thương hiệu chân trang",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 39; Tọa độ x=53, y=1565 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Không mang dữ liệu hoặc tương tác màn hình. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #39",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-040",
+        "requirement_ids": [
+          "ME-12-YC-011"
+        ],
+        "target_id": "ME-12-EL-040",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #40: Dòng bản quyền và tuyên bố WCAG",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 40; Tọa độ x=80, y=1507 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Chữ trên ảnh không chứng minh đã kiểm tra hoặc đạt WCAG. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #40",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-041",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-041",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #41: Liên kết Quy chế Giảng viên",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 41; Tọa độ x=1050, y=1507 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Đích liên kết chưa có trong hợp đồng điều hướng. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #41",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-042",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-042",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #42: Liên kết Tiêu chuẩn đánh giá",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 42; Tọa độ x=1230, y=1507 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Đích liên kết chưa được xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #42",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-ELTC-043",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EL-043",
+        "group": "Thành phần",
+        "title": "Đối chiếu mốc #43: Liên kết Hỗ trợ kỹ thuật",
+        "precondition": "Có ảnh đánh số/mốc đánh dấu JSON và mã nguồn tĩnh; chưa chạy trình duyệt.",
+        "data": "Mốc số 43; Tọa độ x=1415, y=1507 trên ảnh nguồn 1600×1585; không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm mốc trên ảnh đánh số.",
+          "Đối chiếu tên, vị trí và ghi chú của phần tử.",
+          "So với trang hiện tại nếu phần tử có mã nguồn giao diện."
+        ],
+        "expected": "Chờ xác nhận: Địa chỉ hoặc kênh hỗ trợ chưa được xác nhận. Không biến nội dung ảnh mẫu thành hành vi đã duyệt. Đối chiếu đúng mốc đánh dấu và tọa độ; không suy diễn từ ảnh tĩnh.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12_markers.json mốc đánh dấu #43",
+          "ME-12 01-ui-elements.md",
+          "Ảnh ME-12",
+          "me12-page.ts/html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ME12-EVTC-001",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-002",
+          "ME-12-YC-004",
+          "ME-12-YC-007"
+        ],
+        "target_id": "ME-12-EV-001",
+        "group": "Sự kiện",
+        "title": "Kiểm tra phong bì và mã lỗi",
+        "precondition": "Dùng phản hồi giả của #59/#60/#61.",
+        "data": "Thử thành công, sai mã, 401/403/404/422/500 theo mã nguồn tương ứng.",
+        "steps": [
+          "Đối chiếu businessCode trước khi dùng data.",
+          "Ghi lỗi theo API; không lấy nội dung vào nhật ký."
+        ],
+        "expected": "Chờ xác nhận: D.1 là hợp đồng chung, không thao tác giao diện. Hành vi API DD còn bản nháp và chưa được chạy.",
+        "api_ids": [
+          "API #59",
+          "API #60",
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12 02-events.md D.1",
+          "ME-12 DD mục 00–07",
+          "Mã nguồn trang/API đã nêu"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-EVTC-002",
+        "requirement_ids": [
+          "ME-12-YC-001",
+          "ME-12-YC-003",
+          "ME-12-YC-004",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12-EV-002",
+        "group": "Sự kiện",
+        "title": "Tải chi tiết theo ID tuyến",
+        "precondition": "Có tuyến ID giả hợp lệ và dữ liệu giả giả lập.",
+        "data": "GET #59; thử rỗng, có dữ liệu, không khớp ID và lỗi.",
+        "steps": [
+          "Đối chiếu trigger, dịch vụ, kiểm tra hợp lệ và trạng thái.",
+          "Không nhầm rỗng với 404."
+        ],
+        "expected": "Chờ xác nhận: mã nguồn trang gọi #59, hủy lượt tải cũ và phân biệt không hợp lệ/không tìm thấy/không có quyền/lỗi; bố cục luồng trao đổi sau khi tải và môi trường chạy thực tế chưa được xác minh.",
+        "api_ids": [
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 02-events.md E01",
+          "ME-12 DD mục 00–07",
+          "Mã nguồn trang/API đã nêu"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-EVTC-003",
+        "requirement_ids": [
+          "ME-12-YC-010"
+        ],
+        "target_id": "ME-12-EV-003",
+        "group": "Sự kiện",
+        "title": "Quay lại ME-11",
+        "precondition": "Đối chiếu mẫu giao diện và tuyến đã khai báo.",
+        "data": "Liên kết quay lại `/mentor/support`; chưa có quy định về việc giữ bộ lọc trong dữ liệu gửi.",
+        "steps": [
+          "Đối chiếu liên kết và đích tuyến.",
+          "Không giả định khôi phục bộ lọc/vị trí cuộn."
+        ],
+        "expected": "Trang hiện có liên kết về danh sách; đường dẫn phân cấp trong ảnh và hành vi giữ trạng thái chưa được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12 02-events.md E02",
+          "ME-12 DD mục 00–07",
+          "Mã nguồn trang/API đã nêu"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-EVTC-004",
+        "requirement_ids": [
+          "ME-12-YC-005"
+        ],
+        "target_id": "ME-12-EV-004",
+        "group": "Sự kiện",
+        "title": "Sửa bản nháp và kiểm tra nội dung trắng",
+        "precondition": "Yêu cầu giả ở trạng thái cho phản hồi.",
+        "data": "Bản nháp rỗng, chỉ có khoảng trắng hoặc dài hơn 2.000 ký tự; dùng dữ liệu giả.",
+        "steps": [
+          "Nhập các nội dung.",
+          "Đối chiếu trim kiểm tra hợp lệ, bộ đếm và không phát API khi chỉ sửa."
+        ],
+        "expected": "Chờ xác nhận: Nội dung chỉ có khoảng trắng bị chặn theo mã nguồn; chưa chốt bộ đếm, cách đếm Unicode hoặc giới hạn 2.000 ký tự. Không gửi nội dung dài trong ca này.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12 02-events.md E03",
+          "ME-12 DD mục 00–07",
+          "Mã nguồn trang/API đã nêu"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-EVTC-005",
+        "requirement_ids": [
+          "ME-12-YC-006",
+          "ME-12-YC-007",
+          "ME-12-YC-008"
+        ],
+        "target_id": "ME-12-EV-005",
+        "group": "Sự kiện",
+        "title": "Gửi phản hồi một lần và đối soát kết quả",
+        "precondition": "Trạng thái được trang hỗ trợ, Mentor giả, bản nháp không rỗng.",
+        "data": "Nội dung gửi nghiêm ngặt `message` và `attachment_refs=\"[]\"`; không có cơ chế chống lặp.",
+        "steps": [
+          "Gửi một lần.",
+          "Đối chiếu POST, phản hồi mới khớp và GET tiếp theo.",
+          "Thử lỗi mơ hồ chỉ với dữ liệu giả."
+        ],
+        "expected": "Chờ xác nhận: Không tự thử lại POST; xác nhận thành công qua phản hồi mới và tải lại; nếu mơ hồ khóa tới khi đọc lại. Quy tắc tệp đính kèm/vòng đời trạng thái còn bản nháp.",
+        "api_ids": [
+          "API #60",
+          "API #59"
+        ],
+        "source_refs": [
+          "ME-12 02-events.md E04",
+          "ME-12 DD mục 00–07",
+          "Mã nguồn trang/API đã nêu"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-EVTC-006",
+        "requirement_ids": [
+          "ME-12-YC-009"
+        ],
+        "target_id": "ME-12-EV-006",
+        "group": "Sự kiện",
+        "title": "Đóng yêu cầu sau khi được duyệt",
+        "precondition": "Hiện trang chưa có nơi gọi #61 và nút đang bị vô hiệu hóa.",
+        "data": "#61 chuyển trạng thái đang xử lý sang RESOLVED theo mã nguồn; điều kiện hài lòng và số lượt trao đổi tối thiểu còn chờ duyệt.",
+        "steps": [
+          "Đối chiếu trang điều khiển và dịch vụ call.",
+          "Đối chiếu API trong mã nguồn hiện tại riêng, không gọi API."
+        ],
+        "expected": "Chờ xác nhận: Trang hiện không gửi PATCH. Ma trận chuyển trạng thái #61 chỉ suy ra từ mã nguồn; API không kiểm tra mức độ hài lòng hoặc số tin nhắn tối thiểu, và chưa có xác nhận thiết kế.",
+        "api_ids": [
+          "API #61"
+        ],
+        "source_refs": [
+          "ME-12 02-events.md E05",
+          "ME-12 DD mục 00–07",
+          "Mã nguồn trang/API đã nêu"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ME12-EVTC-007",
+        "requirement_ids": [
+          "ME-12-YC-010",
+          "ME-12-YC-011",
+          "ME-12-YC-012"
+        ],
+        "target_id": "ME-12-EV-007",
+        "group": "Sự kiện",
+        "title": "Rà soát đầu trang, trợ giúp và chân trang",
+        "precondition": "Ảnh mẫu và bộ định tuyến/trang mã nguồn đã khai báo.",
+        "data": "Các mục điều hướng, hướng dẫn, quy chế, đánh giá và hỗ trợ kỹ thuật trong ảnh mẫu.",
+        "steps": [
+          "Đối chiếu các đích trên ảnh với tuyến/URL mã nguồn.",
+          "Tách điều hướng về ME-11 khỏi các đích chưa biết."
+        ],
+        "expected": "Chờ xác nhận: Không kết luận liên kết mẫu hoạt động; các URL đích và khôi phục danh sách cần người phụ trách xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "ME-12 02-events.md E06",
+          "ME-12 DD mục 00–07",
+          "Mã nguồn trang/API đã nêu"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

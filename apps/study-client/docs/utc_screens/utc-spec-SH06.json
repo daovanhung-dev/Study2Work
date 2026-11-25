@@ -1,0 +1,2706 @@
+{
+  "metadata": {
+    "screen_id": "SH-06",
+    "screen_name": "Không tìm thấy trang hoặc tài nguyên",
+    "module": "Study Web — Phần dùng chung",
+    "route": "/not-found",
+    "actor": "Người mở đường dẫn không tồn tại hoặc người xem khóa học công khai nhận phản hồi không tìm thấy.",
+    "version": "1.0 — UTC chính thức theo DD hiện có; các ca chưa chạy",
+    "dd_version": "DD SH-06 hiện có; đối chiếu mã nguồn đến 2026-11-25",
+    "dd_status": "BLOCKED ở mục quy tắc nghiệp vụ và tiêu chí nghiệm thu. Mục đối chiếu ngày 2026-11-21 ghi phạm vi tối giản đã duyệt. Người dùng xác nhận dùng DD hiện có làm chuẩn; các điểm chặn và mâu thuẫn trong DD vẫn còn hiệu lực.",
+    "runtime_status": "Mã nguồn Angular có tuyến tường minh, tuyến ký tự đại diện và bàn giao 404 từ GS-03. DD ghi 11 tệp kiểm thử/36 ca đã đạt ngày 2026-11-21; lượt lập UTC này chỉ đọc các khẳng định kiểm thử, không chạy lại. Trình duyệt, máy chủ triển khai, máy chủ tĩnh và mã HTTP thực tế chưa xác minh.",
+    "author": "Chưa ghi trong DD",
+    "reviewer": "Chưa ghi trong DD",
+    "approver": "Chưa ghi trong DD",
+    "date": "2026-11-25",
+    "source_name": "DD SH-06, ảnh đánh số và mã nguồn Study Web/Study Server",
+    "baseline_authorization": "Người dùng xác nhận dùng DD hiện có làm chuẩn, kể cả khi DD ghi BLOCKED. Điều này không đóng blocker, không hợp thức hóa khác biệt nội bộ và không chứng minh kiểm thử đã chạy.",
+    "release_readiness": "Đã lập bộ UTC có truy vết. Chưa đủ căn cứ ghi nhận nghiệm thu/phê duyệt phát hành vì DD còn blocker, một số quyết định mâu thuẫn, môi trường chạy chưa xác minh và mọi ca trong workbook đều Chưa chạy.",
+    "discrepancy_note": "Mục 00-overview.md, đối chiếu ngày 2026-11-21, ghi phạm vi trang 404 tối giản với hai liên kết /courses và / là đã duyệt; các mục 05-business-rules.md và 07-test-cases.md vẫn ghi BLOCKED vì chưa chốt gợi ý khóa học, liên hệ, chân trang, nội dung pháp lý và sai khác AC-05 404/403. Mã nguồn hiện hành có tuyến ký tự đại diện và GS-03 bàn giao 404 của API #08, trái với bản ghi phiên bản cũ ở một số mục DD. Danh mục API ghi hợp đồng thiết kế đã duyệt nhưng API DD #08 còn Draft — Needs Confirmation (bản nháp — cần xác nhận); danh sách màn hình ghi D, chỉ mục API ghi R. Không tự giải quyết các sai khác này."
+  },
+  "overall": {
+    "objective": "Hiển thị thông báo 404 chung, không tiết lộ đường dẫn, mã khóa học, trạng thái nháp hay dữ liệu riêng tư; cung cấp lối về danh sách khóa học hoặc trang chủ.",
+    "inputs": "Đầu vào là tuyến /not-found hoặc kết quả 404 của GET /api/v1/courses/{course_id} được GS-03 chuyển tiếp. Màn hình không đọc ID, query, nội dung phản hồi hay trạng thái lỗi từ URL để dựng thông báo.",
+    "outputs": "Trang có nhãn HTTP 404, số 404, tiêu đề/mô tả trung tính, liên kết /courses và /. Không có API yêu cầu từ chính trang SH-06.",
+    "main_flow": "Mở /not-found trực tiếp hoặc đi từ tuyến ký tự đại diện Angular sẽ hiển thị trang 404 chung. Khi GS-03 nhận 404 từ API #08, mã nguồn hiện hành điều hướng tới /not-found bằng replaceUrl và không truyền ID/nội dung lỗi. 500, lỗi mạng và 404 của API #09 ở GS-03 giữ luồng riêng.",
+    "preconditions": "Tuyến SH-06 được đăng ký trong shared tuyến; /courses và / là các đích đã đăng ký. API #08 là GET công khai, không yêu cầu Bearer. Mã nguồn và kiểm thử khẳng định trong bài kiểm thử được đọc; không chạy ứng dụng, kiểm thử, gọi API hoặc trình duyệt trong lượt lập tài liệu này.",
+    "states": [
+      "ROUTE_404 — tuyến không khớp hoặc mở /not-found trực tiếp",
+      "RESOURCE_404 — API #08 trả 404 cho ID sai, khóa học vắng mặt hoặc chưa PUBLISHED",
+      "SERVICE_ERROR — 500, mạng, hết thời gian chờ hoặc phản hồi không hợp lệ; không đổi thành 404",
+      "FORBIDDEN — 403 từ guard khác; xử lý theo SH-05, không gán cho API #08",
+      "NAVIGATING — người dùng chọn /courses hoặc /"
+    ],
+    "security": "Không hiển thị URL đầu vào, query, course_id, nội dung lỗi thô, thông tin khóa học nháp/chưa công khai, lỗi SQL hoặc stack trace. 404 của API #08 dùng cùng mã và thông điệp cho bản ghi không có hoặc không PUBLISHED. Không tuyên bố chính sách rộng hơn bằng nội dung Phạm vi an toàn chưa được xác nhận.",
+    "out_of_scope": "Không tạo API gợi ý; không dùng dữ liệu khóa học mẫu; không tự quyết định giữ/bỏ gợi ý khóa học, hỗ trợ, liên hệ, chân trang hoặc nội dung pháp lý; không suy ra hành vi 403 của API #08; không khẳng định HTTP 404 ở máy chủ tĩnh/triển khai khi chưa xác minh."
+  },
+  "apis": [
+    {
+      "id": "API-008",
+      "number": "08",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}",
+      "request": "Đường dẫn bắt buộc course_id theo thiết kế int64; không có tham số truy vấn hoặc thân yêu cầu. API công khai, không yêu cầu Bearer. Mã nguồn nhận chuỗi thô rồi xác thực số nguyên có dấu 64-bit.",
+      "response": "HTTP 200 DESIGN_RESOURCE_RETRIEVED trả cấu trúc phản hồi chuẩn; trường data chứa một Page<Course> và trường pagination ghi {page:1,size:1,total:1,total_pages:1}. SH-06 không dùng dữ liệu thành công; GS-03 tiếp tục trang chi tiết.",
+      "errors": "HTTP 404 DESIGN_RESOURCE_NOT_FOUND với thông điệp cố định theo mã nguồn cho ID không hợp lệ, không có bản ghi hoặc trạng thái khác PUBLISHED. HTTP 500 DESIGN_INTERNAL_ERROR cho lỗi truy vấn, ánh xạ hoặc kiểm tra model; hàm xử lý hiện hành không có nhánh 403. GS-03 không đổi lỗi 500, lỗi mạng hoặc hết thời gian chờ thành 404.",
+      "auth": "Công khai; không yêu cầu Bearer token.",
+      "design_status": "Chờ xác nhận",
+      "event_ids": [
+        "SH-06-EV-002"
+      ],
+      "source_ref": "docs/lists/list_api.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_08_courses_detail/view.py; apps/study-server/app/modules/guest/api_08_courses_detail/validate.py; apps/study-server/app/modules/guest/api_08_courses_detail/query.py; apps/study-server/app/modules/shared/course_catalog/models.py; apps/study-server/app/modules/shared/course_catalog/helpers.py; apps/study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SH-06-YC-001",
+      "description": "Tuyến /not-found được đăng ký tường minh và tải trang SH-06.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/src/app/features/shared/shared.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-002",
+      "description": "Đường dẫn không khớp được tuyến ký tự đại diện Angular chuyển tới /not-found; đường dẫn và tham số truy vấn ban đầu không được giữ trong URL đích.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/src/app/app.routes.ts; apps/study-client/src/app/app.routes.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-003",
+      "description": "Mở trực tiếp /not-found không gọi API để dựng trạng thái.",
+      "group": "API và luồng dữ liệu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.ts; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-004",
+      "description": "Trang hiển thị một trạng thái 404 chung với nội dung trung tính cho tuyến hoặc tài nguyên không khả dụng.",
+      "group": "Nội dung",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-005",
+      "description": "Không đưa URL, query, course_id, nội dung lỗi thô, trạng thái nháp hoặc dữ liệu riêng tư lên trang 404.",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/src/app/app.routes.spec.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-006",
+      "description": "API #08 hiện trả 404 DESIGN_RESOURCE_NOT_FOUND cho ID không hợp lệ, khóa học không tồn tại hoặc khóa học chưa PUBLISHED; các trường hợp này dùng cùng thông điệp.",
+      "group": "API và luồng dữ liệu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-server/app/modules/guest/api_08_courses_detail/view.py; apps/study-server/app/modules/guest/api_08_courses_detail/validate.py; apps/study-server/app/modules/guest/api_08_courses_detail/query.py; apps/study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-007",
+      "description": "GS-03 chuyển phản hồi 404 của API #08 đến /not-found bằng replaceUrl và không chuyển tiếp course_id hoặc thân phản hồi.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-008",
+      "description": "HTTP 500, lỗi mạng, hết thời gian chờ hoặc phản hồi sai cấu trúc không được đổi thành trạng thái 404.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts; apps/study-server/app/modules/guest/api_08_courses_detail/view.py",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-009",
+      "description": "404 của API #09 về chương/bài học tiếp tục xử lý riêng tại GS-03, không tự điều hướng thành SH-06.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-010",
+      "description": "API #08 hiện không có nhánh 403; nếu guard khác trả 403 thì giữ luồng từ chối quyền SH-05.",
+      "group": "Xử lý lỗi",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-011",
+      "description": "Phản hồi 200 hợp lệ của API #08 tiếp tục hiển thị chi tiết tại GS-03, không mở SH-06.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-012",
+      "description": "Liên kết chính của SH-06 dẫn tới /courses và không mang theo mã khóa học.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/shared.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-013",
+      "description": "Liên kết phụ của SH-06 dẫn tới / và không mang theo dữ liệu riêng tư.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/shared.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-014",
+      "description": "Logo Study2Work hiện dẫn nội bộ tới /; không phụ thuộc đường dẫn đề xuất từ ảnh mẫu.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-015",
+      "description": "Chỉ dùng đích nội bộ đã có nguồn; không kích hoạt liên kết giữ chỗ href=\"#\" hoặc tự tạo tuyến.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-016",
+      "description": "Không đưa ba thẻ khóa học mẫu vào giao diện như dữ liệu thật và không tạo ID từ tiêu đề/thứ tự thẻ.",
+      "group": "Dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-017",
+      "description": "Quyết định giữ/bỏ khu vực gợi ý khóa học và nguồn dữ liệu vẫn cần đối chiếu vì DD vừa ghi phạm vi tối giản đã duyệt vừa còn blocker.",
+      "group": "Phạm vi",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-018",
+      "description": "Quyết định hỗ trợ/liên hệ/chân trang/nội dung pháp lý và đích tương ứng chưa được xác nhận; không biến nội dung mẫu thành luồng đang chạy.",
+      "group": "Phạm vi",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-019",
+      "description": "Thông báo Phạm vi an toàn không được khẳng định chính sách toàn sản phẩm khi nguồn chỉ xác nhận API #08 lọc khóa học PUBLISHED.",
+      "group": "Nội dung và bảo mật",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-020",
+      "description": "Giữ nguyên chênh lệch giữa 22 mốc ảnh bản mẫu và trang Angular tối giản; không tuyên bố ảnh mẫu là giao diện khi chạy.",
+      "group": "Phạm vi",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-021",
+      "description": "Mã trạng thái không chỉ được truyền tải bằng màu; H1 404, tiêu đề mô tả và phần tử trang trí phải có ngữ nghĩa tương ứng.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-022",
+      "description": "Liên kết logo có chiều cao tối thiểu 44px và hai nút điều hướng có chiều cao tối thiểu 48px theo CSS hiện tại.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-023",
+      "description": "Ở chiều rộng tối đa 560px, hai nút điều hướng xếp dọc và chiếm hết chiều rộng; bố cục không tràn ngang.",
+      "group": "Đáp ứng màn hình",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-024",
+      "description": "Khi bật prefers-reduced-motion, hiệu ứng chuyển màu của liên kết được tắt.",
+      "group": "Khả năng tiếp cận",
+      "design_status": "Đã xác nhận",
+      "priority": "Thấp",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-025",
+      "description": "Không nâng trạng thái triển khai API #08 thành khi chạy đã xác minh khi danh sách màn hình, chỉ mục API, API DD và bằng chứng triển khai còn khác nhau.",
+      "group": "Trạng thái bằng chứng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-026",
+      "description": "Giữ sai khác AC-05 ghi 404/403 tách biệt với API #08 hiện ghi/triển khai 404/500 cho tới khi người phụ trách làm rõ.",
+      "group": "Trạng thái bằng chứng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-027",
+      "description": "Không khẳng định máy chủ tĩnh hỗ trợ phương án dự phòng /not-found hoặc trả HTTP 404 nếu chưa kiểm tra môi trường triển khai.",
+      "group": "Trạng thái bằng chứng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-06-YC-028",
+      "description": "Nguồn DD ghi có lần chạy 11 tệp/36 ca ngày 2026-11-21; lượt lập UTC này không chạy lại và mọi ca workbook vẫn Chưa chạy.",
+      "group": "Trạng thái kiểm thử",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts; apps/study-client/src/app/app.routes.spec.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "SH-06-EL-001",
+      "marker": "#1",
+      "source_element_id": "SH06-EL-01",
+      "name": "Logo Study2Work",
+      "type": "Liên kết",
+      "position": "Góc trên trái của đầu trang",
+      "properties": "#Study2Work LMS; ảnh mẫu dùng href=\"#\". Mã nguồn hiện hành có logo liên kết thật tới / với aria-label “Study2Work LMS — trang chủ”.",
+      "event_ids": [
+        "SH-06-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+    },
+    {
+      "id": "SH-06-EL-002",
+      "marker": "#2",
+      "source_element_id": "SH06-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm điều hướng",
+      "position": "Giữa đầu trang bản mẫu",
+      "properties": "Ảnh mẫu có Trang chủ, Khóa học, Tìm kiếm; các href=\"#\" và tuyến tìm kiếm chưa có hợp đồng. Nhóm này không có trong trang Angular tối giản hiện tại.",
+      "event_ids": [
+        "SH-06-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png"
+    },
+    {
+      "id": "SH-06-EL-003",
+      "marker": "#3",
+      "source_element_id": "SH06-EL-03",
+      "name": "Liên kết Đăng nhập",
+      "type": "Liên kết",
+      "position": "Phía phải đầu trang bản mẫu",
+      "properties": "Ảnh mẫu dùng href=\"#\"; mã nguồn SH-06 hiện tại không hiển thị liên kết này. Không tự gắn /login vào phạm vi SH-06 nếu chưa chốt đầu trang.",
+      "event_ids": [
+        "SH-06-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png"
+    },
+    {
+      "id": "SH-06-EL-004",
+      "marker": "#4",
+      "source_element_id": "SH06-EL-04",
+      "name": "Nút Đăng ký",
+      "type": "Liên kết",
+      "position": "Phía phải đầu trang bản mẫu",
+      "properties": "Ảnh mẫu dùng href=\"#\"; mã nguồn SH-06 hiện tại không hiển thị nút này. Không tự gắn /register vào phạm vi SH-06 nếu chưa chốt đầu trang.",
+      "event_ids": [
+        "SH-06-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png"
+    },
+    {
+      "id": "SH-06-EL-005",
+      "marker": "#5",
+      "source_element_id": "SH06-EL-05",
+      "name": "Biểu tượng tài khoản trang trí",
+      "type": "Biểu tượng trang trí",
+      "position": "Góc phải đầu trang bản mẫu",
+      "properties": "Ảnh mẫu là div không có liên kết, nút, role hay hàm xử lý. Không đổi thành thao tác hồ sơ; phần tử không có trong mã nguồn trang hiện tại.",
+      "event_ids": [
+        "SH-06-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png"
+    },
+    {
+      "id": "SH-06-EL-006",
+      "marker": "#6",
+      "source_element_id": "SH06-EL-06",
+      "name": "Nhãn trạng thái HTTP 404",
+      "type": "Nhãn trạng thái",
+      "position": "Phía trên số 404",
+      "properties": "Ảnh mẫu ghi “Không tìm thấy tài nguyên”; mã nguồn trang ghi “HTTP 404 · Không tìm thấy”. Chấm màu trong mã nguồn được ẩn khỏi cây trợ năng.",
+      "event_ids": [
+        "SH-06-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    },
+    {
+      "id": "SH-06-EL-007",
+      "marker": "#7",
+      "source_element_id": "SH06-EL-07",
+      "name": "Số 404 và đường phân cách",
+      "type": "Tiêu đề và trang trí",
+      "position": "Trung tâm trang",
+      "properties": "Mã nguồn có H1 “404”; đường phân cách là span trang trí và có aria-hidden=\"true\".",
+      "event_ids": [
+        "SH-06-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    },
+    {
+      "id": "SH-06-EL-008",
+      "marker": "#8",
+      "source_element_id": "SH06-EL-08",
+      "name": "Tiêu đề không tìm thấy",
+      "type": "Tiêu đề",
+      "position": "Dưới số 404",
+      "properties": "Nội dung mã nguồn: “Không tìm thấy trang hoặc tài nguyên yêu cầu”; không dùng cho 403 hoặc 500.",
+      "event_ids": [
+        "SH-06-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    },
+    {
+      "id": "SH-06-EL-009",
+      "marker": "#9",
+      "source_element_id": "SH06-EL-09",
+      "name": "Mô tả trạng thái",
+      "type": "Văn bản mô tả",
+      "position": "Dưới tiêu đề",
+      "properties": "Nội dung hiện tại nói trang/tài nguyên không khả dụng; không khẳng định bị xóa hoặc chuyển đi, không nhúng URL hay ID.",
+      "event_ids": [
+        "SH-06-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    },
+    {
+      "id": "SH-06-EL-010",
+      "marker": "#10",
+      "source_element_id": "SH06-EL-10",
+      "name": "Liên kết về danh sách khóa học",
+      "type": "Liên kết chính",
+      "position": "Dưới mô tả",
+      "properties": "Nhãn trong mã nguồn “Danh sách khóa học”, routerLink=\"/courses\"; ảnh mẫu ghi “Về danh sách khóa học (GS-01)”.",
+      "event_ids": [
+        "SH-06-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    },
+    {
+      "id": "SH-06-EL-011",
+      "marker": "#11",
+      "source_element_id": "SH06-EL-11",
+      "name": "Liên kết về trang chủ",
+      "type": "Liên kết phụ",
+      "position": "Cạnh liên kết chính",
+      "properties": "Nhãn trong mã nguồn “Về trang chủ”, routerLink=\"/\"; ảnh mẫu ghi “Về trang chủ (SH-01)”.",
+      "event_ids": [
+        "SH-06-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    },
+    {
+      "id": "SH-06-EL-012",
+      "marker": "#12",
+      "source_element_id": "SH06-EL-12",
+      "name": "Thông báo Phạm vi an toàn",
+      "type": "Thẻ thông tin",
+      "position": "Dưới hai liên kết trong ảnh mẫu",
+      "properties": "Bản mẫu nêu chính sách ẩn tài nguyên nội bộ/nháp và nhãn Đặc tả chuẩn. Không có trong mã nguồn trang; chỉ API #08 được xác minh là truy vấn khóa học PUBLISHED.",
+      "event_ids": [
+        "SH-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-013",
+      "marker": "#13",
+      "source_element_id": "SH06-EL-13",
+      "name": "Tiêu đề phần gợi ý khóa học",
+      "type": "Tiêu đề khu vực",
+      "position": "Nửa dưới ảnh mẫu",
+      "properties": "Bản mẫu ghi “Khám phá các khóa học khả dụng”; không có trong mã nguồn hiện hành. Trạng thái giữ/bỏ còn mâu thuẫn trong DD.",
+      "event_ids": [
+        "SH-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-014",
+      "marker": "#14",
+      "source_element_id": "SH06-EL-14",
+      "name": "Liên kết xem tất cả",
+      "type": "Liên kết",
+      "position": "Bên phải tiêu đề gợi ý",
+      "properties": "Bản mẫu dùng href=\"#\" và đề xuất /courses; khu vực gợi ý chưa có quyết định giữ/bỏ thống nhất.",
+      "event_ids": [
+        "SH-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-015",
+      "marker": "#15",
+      "source_element_id": "SH06-EL-15",
+      "name": "Thẻ khóa học mẫu 1",
+      "type": "Thẻ/liên kết",
+      "position": "Cột trái trong ảnh mẫu",
+      "properties": "Tên, thời lượng, mô tả và số học viên là dữ liệu giả trong bản mẫu; không có course_id hoặc nguồn được SH-06 duyệt.",
+      "event_ids": [
+        "SH-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-016",
+      "marker": "#16",
+      "source_element_id": "SH06-EL-16",
+      "name": "Thẻ khóa học mẫu 2",
+      "type": "Thẻ/liên kết",
+      "position": "Cột giữa trong ảnh mẫu",
+      "properties": "Tên, thời lượng, mô tả và số học viên là dữ liệu giả trong bản mẫu; không có course_id hoặc nguồn được SH-06 duyệt.",
+      "event_ids": [
+        "SH-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-017",
+      "marker": "#17",
+      "source_element_id": "SH06-EL-17",
+      "name": "Thẻ khóa học mẫu 3",
+      "type": "Thẻ/liên kết",
+      "position": "Cột phải trong ảnh mẫu",
+      "properties": "Tên, thời lượng, mô tả và số học viên là dữ liệu giả trong bản mẫu; không có course_id hoặc nguồn được SH-06 duyệt.",
+      "event_ids": [
+        "SH-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-018",
+      "marker": "#18",
+      "source_element_id": "SH06-EL-18",
+      "name": "Dải thông tin trợ giúp",
+      "type": "Nhóm thông tin",
+      "position": "Dưới danh sách thẻ trong ảnh mẫu",
+      "properties": "Bản mẫu hỏi về tài khoản/môn đã đăng ký; mã nguồn hiện hành không hiển thị dải này và không có help luồng xử lý riêng cho SH-06.",
+      "event_ids": [
+        "SH-06-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-019",
+      "marker": "#19",
+      "source_element_id": "SH06-EL-19",
+      "name": "Liên hệ ban giáo vụ",
+      "type": "Liên kết liên hệ",
+      "position": "Phía phải dải trợ giúp",
+      "properties": "Ảnh mẫu dùng href=\"#\"; chưa có URL, tuyến, thư điện tử hoặc kênh trong hợp đồng SH-06.",
+      "event_ids": [
+        "SH-06-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-020",
+      "marker": "#20",
+      "source_element_id": "SH06-EL-20",
+      "name": "Tên và mô tả nền tảng ở chân trang",
+      "type": "Khối nhận diện",
+      "position": "Bên trái chân trang bản mẫu",
+      "properties": "Ảnh mẫu ghi Study2Work LMS và mô tả nền tảng; chân trang không có trong mã nguồn SH-06 tối giản hiện tại.",
+      "event_ids": [
+        "SH-06-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-021",
+      "marker": "#21",
+      "source_element_id": "SH06-EL-21",
+      "name": "Nhóm liên kết chân trang",
+      "type": "Nhóm điều hướng",
+      "position": "Giữa chân trang bản mẫu",
+      "properties": "Bốn đích trong ảnh mẫu không có hợp đồng thống nhất; các href=\"#\" không phải tuyến thực. Không suy tuyến từ data-path.",
+      "event_ids": [
+        "SH-06-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-022",
+      "marker": "#22",
+      "source_element_id": "SH06-EL-22",
+      "name": "Bản quyền",
+      "type": "Văn bản chân trang",
+      "position": "Bên phải chân trang bản mẫu",
+      "properties": "Ảnh mẫu ghi năm 2025 và câu bản quyền tiếng Anh. Chưa có quy tắc/nội dung pháp lý được xác nhận; không tự thay năm hoặc dịch thành nghĩa vụ pháp lý.",
+      "event_ids": [
+        "SH-06-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-023",
+      "marker": "—",
+      "source_element_id": "SOURCE-ROOT",
+      "name": "Gốc trang SH-06",
+      "type": "Vùng chính",
+      "position": "Toàn màn hình",
+      "properties": "Chính có data-screen-id=\"SH-06\"; tạo mốc định danh trong DOM, không mang dữ liệu API.",
+      "event_ids": [
+        "SH-06-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.ts; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+    },
+    {
+      "id": "SH-06-EL-024",
+      "marker": "—",
+      "source_element_id": "SOURCE-SECTION",
+      "name": "Vùng nội dung có nhãn",
+      "type": "Vùng ngữ nghĩa",
+      "position": "Phần nội dung căn giữa",
+      "properties": "Khu vực liên kết aria-labelledby=\"not-found-title\" để tiêu đề mô tả vùng; không có state binding.",
+      "event_ids": [
+        "SH-06-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+    },
+    {
+      "id": "SH-06-EL-025",
+      "marker": "—",
+      "source_element_id": "SOURCE-STATUS-DOT",
+      "name": "Chấm màu trạng thái",
+      "type": "Trang trí",
+      "position": "Cạnh nhãn HTTP 404",
+      "properties": "Span có aria-hidden=\"true\"; nội dung chữ “HTTP 404 · Không tìm thấy” vẫn truyền trạng thái không phụ thuộc màu.",
+      "event_ids": [
+        "SH-06-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EL-026",
+      "marker": "—",
+      "source_element_id": "SOURCE-RESPONSIVE",
+      "name": "Bố cục trên màn hình nhỏ",
+      "type": "Quy tắc giao diện",
+      "position": "Chiều rộng tối đa 560px",
+      "properties": "Quy tắc @media xếp hai thao tác theo cột và đặt mỗi thao tác rộng 100%; trang giảm padding và cỡ chữ mô tả.",
+      "event_ids": [
+        "SH-06-EV-003",
+        "SH-06-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    },
+    {
+      "id": "SH-06-EL-027",
+      "marker": "—",
+      "source_element_id": "SOURCE-REDUCED-MOTION",
+      "name": "Tôn trọng giảm chuyển động",
+      "type": "Quy tắc giao diện",
+      "position": "Khi hệ điều hành bật giảm chuyển động",
+      "properties": "Prefers-reduced-motion: reduce đặt hiệu ứng chuyển của thao tác thành none.",
+      "event_ids": [
+        "SH-06-EV-003",
+        "SH-06-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+    }
+  ],
+  "events": [
+    {
+      "id": "SH-06-EV-001",
+      "source_event_id": "SH06-EV-01",
+      "name": "Mở tuyến không tìm thấy",
+      "trigger": "Mở trực tiếp /not-found hoặc router chuyển URL không khớp.",
+      "processing": "Tuyến tường minh tải SH06Page; tuyến ký tự đại diện tạo UrlTree tới /not-found và làm rơi path/tham số truy vấn gốc. Trang hiển thị nội dung chung, không gọi API và không echo URL. Máy chủ tĩnh phương án dự phòng chưa xác minh.",
+      "element_ids": [
+        "SH-06-EL-006",
+        "SH-06-EL-007",
+        "SH-06-EL-008",
+        "SH-06-EL-009",
+        "SH-06-EL-023",
+        "SH-06-EL-024",
+        "SH-06-EL-025"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/src/app/features/shared/shared.route.ts; apps/study-client/src/app/app.routes.ts; apps/study-client/src/app/app.routes.spec.ts; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+    },
+    {
+      "id": "SH-06-EV-002",
+      "source_event_id": "SH06-EV-02",
+      "name": "Chuyển 404 chi tiết khóa học từ GS-03",
+      "trigger": "GS-03 nhận HTTP 404 khi gọi GET /api/v1/courses/{course_id}.",
+      "processing": "API #08 hiện trả DESIGN_RESOURCE_NOT_FOUND cho ID không hợp lệ hoặc không có khóa học PUBLISHED. GS-03 ánh xạ lỗi chi tiết thành not-found rồi router.navigateByUrl(\"/not-found\", {replaceUrl:true}); không truyền khóa học ID hay thân lỗi. Mục sự kiện cũ ghi bàn giao chưa được nối nhưng tổng quan/mã nguồn cập nhật ngày 2026-11-21 và mã nguồn hiện hành cho thấy đã nối; giữ sai khác. HTTP 500, mạng và API #09 đề cương 404 không đi theo nhánh này.",
+      "element_ids": [
+        "SH-06-EL-006",
+        "SH-06-EL-008",
+        "SH-06-EL-009",
+        "SH-06-EL-023"
+      ],
+      "api_ids": [
+        "API-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts; apps/study-server/app/modules/guest/api_08_courses_detail/view.py; apps/study-server/app/modules/guest/api_08_courses_detail/validate.py"
+    },
+    {
+      "id": "SH-06-EV-003",
+      "source_event_id": "SH06-EV-03",
+      "name": "Mở danh sách khóa học",
+      "trigger": "Chọn liên kết chính “Danh sách khóa học”.",
+      "processing": "Điều hướng nội bộ tới /courses; SH-06 không gọi API #05/#06 trước khi rời trang. Trang GS-01 sở hữu việc tải danh sách.",
+      "element_ids": [
+        "SH-06-EL-010",
+        "SH-06-EL-026",
+        "SH-06-EL-027"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css; apps/study-client/src/app/features/shared/shared.route.ts"
+    },
+    {
+      "id": "SH-06-EV-004",
+      "source_event_id": "SH06-EV-04",
+      "name": "Mở trang chủ",
+      "trigger": "Chọn logo Study2Work hoặc liên kết phụ “Về trang chủ”.",
+      "processing": "Điều hướng nội bộ tới /; không chuyển course_id, tham số truy vấn riêng tư hoặc thân phản hồi API. Trang SH-01 chịu trách nhiệm tải dữ liệu của mình.",
+      "element_ids": [
+        "SH-06-EL-001",
+        "SH-06-EL-011"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html; apps/study-client/src/app/features/shared/shared.route.ts"
+    },
+    {
+      "id": "SH-06-EV-005",
+      "source_event_id": "SH06-EV-05",
+      "name": "Điều hướng đầu trang của bản mẫu",
+      "trigger": "Chọn Trang chủ, Khóa học, Tìm kiếm, Đăng nhập hoặc Đăng ký trong đầu trang của ảnh mẫu.",
+      "processing": "Các phần tử điều khiển này không có trong mã nguồn trang; HTML bản mẫu dùng href=\"#\" và tuyến tìm kiếm chưa có hợp đồng. Không coi chọn là hành vi bản phát hành. Giữ chờ quyết định về phạm vi đầu trang và tuyến.",
+      "element_ids": [
+        "SH-06-EL-002",
+        "SH-06-EL-003",
+        "SH-06-EL-004",
+        "SH-06-EL-005"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+    },
+    {
+      "id": "SH-06-EV-006",
+      "source_event_id": "SH06-EV-06",
+      "name": "Mở toàn bộ khóa học từ mục gợi ý",
+      "trigger": "Chọn “Xem tất cả” ở khu vực gợi ý trong bản mẫu.",
+      "processing": "Đích đề xuất là /courses, nhưng chính khu vực gợi ý còn blocker và liên kết bản mẫu là href=\"#\". Chưa tạo phần tử điều khiển hoặc ca nghiệm thu hành vi trước khi xác nhận quyết định giữ/bỏ.",
+      "element_ids": [
+        "SH-06-EL-014"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md"
+    },
+    {
+      "id": "SH-06-EV-007",
+      "source_event_id": "SH06-EV-07",
+      "name": "Mở thẻ khóa học gợi ý",
+      "trigger": "Chọn một trong ba thẻ khóa học mẫu.",
+      "processing": "Thẻ không có course_id hoặc nguồn dữ liệu duyệt. Không dùng tên, chỉ số thẻ hoặc dữ liệu mẫu để tạo ID/tuyến. Chỉ lập hành vi sau khi người phụ trách sản phẩm/trải nghiệm duyệt khu vực và nguồn data.",
+      "element_ids": [
+        "SH-06-EL-015",
+        "SH-06-EL-016",
+        "SH-06-EL-017"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+    },
+    {
+      "id": "SH-06-EV-008",
+      "source_event_id": "SH06-EV-08",
+      "name": "Tải khu vực khóa học gợi ý",
+      "trigger": "Trang dựng khu vực gợi ý khóa học trong bản mẫu.",
+      "processing": "Không dùng ba thẻ hard-code làm dữ liệu thật. API #08 chỉ trả chi tiết một khóa học; API #06 không có semantics gợi ý khóa học được duyệt cho SH-06. Kết quả giữ chờ quyết định giữ/bỏ và hợp đồng data.",
+      "element_ids": [
+        "SH-06-EL-012",
+        "SH-06-EL-013",
+        "SH-06-EL-015",
+        "SH-06-EL-016",
+        "SH-06-EL-017"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md"
+    },
+    {
+      "id": "SH-06-EV-009",
+      "source_event_id": "SH06-EV-09",
+      "name": "Liên hệ ban giáo vụ",
+      "trigger": "Chọn liên kết liên hệ trong ảnh mẫu.",
+      "processing": "Bản mẫu dùng href=\"#\" và không có URL, thư điện tử hoặc kênh hỗ trợ. Không tạo mailto, tuyến hoặc API mới; chờ xác nhận phần tử điều khiển và đích.",
+      "element_ids": [
+        "SH-06-EL-018",
+        "SH-06-EL-019"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md"
+    },
+    {
+      "id": "SH-06-EV-010",
+      "source_event_id": "SH06-EV-10",
+      "name": "Điều hướng chân trang của bản mẫu",
+      "trigger": "Chọn một trong bốn mục chân trang của ảnh mẫu.",
+      "processing": "Các đích tuyến không có hợp đồng thống nhất và các thẻ liên kết dùng href=\"#\". Không suy tuyến chứng chỉ, quy chế hoặc hỗ trợ từ data-path; chờ người phụ trách sản phẩm/trải nghiệm chốt từng mục.",
+      "element_ids": [
+        "SH-06-EL-020",
+        "SH-06-EL-021",
+        "SH-06-EL-022"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "SH06-B01",
+      "description": "Mục tổng quan ghi phạm vi tối giản gồm hai liên kết đã duyệt; mục quy tắc nghiệp vụ và tiêu chí nghiệm thu vẫn ghi BLOCKED vì chưa chốt khu vực gợi ý khóa học, liên hệ, chân trang và nội dung pháp lý.",
+      "impact": "Không thể coi việc bỏ các marker bản mẫu là quyết định sản phẩm đã được thống nhất xuyên suốt DD. Các ca tương ứng chỉ ở trạng thái Chờ xác nhận.",
+      "decision": "Người phụ trách đối chiếu với người phản biện và cập nhật DD cho nhất quán; tới khi đó không dùng dữ liệu giả lập hoặc liên kết giữ chỗ làm hành vi bản phát hành.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "status": "BLOCKED theo DD; cần làm rõ mâu thuẫn"
+    },
+    {
+      "id": "SH06-B02",
+      "description": "AC-05 mô tả nhánh 404/403 cho khóa học không tồn tại/không công khai, trong khi danh mục và hàm xử lý API #08 hiện mô tả 404/500, không có 403.",
+      "impact": "Luồng phối hợp giữa SH-06 và SH-05 chưa thể chốt cho nhánh 403 theo AC.",
+      "decision": "Người phụ trách AC/API xác nhận sửa AC hoặc bổ sung hợp đồng có nguồn; hiện giữ 403 tách khỏi API #08 và thuộc luồng từ chối quyền nếu bộ chặn khác trả về.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "status": "BỊ CHẶN theo DD"
+    },
+    {
+      "id": "SH06-D01",
+      "description": "Trạng thái nguồn không đồng nhất: danh sách màn hình ghi BE D, chỉ mục API ghi #008 R, danh mục API ghi hợp đồng thiết kế đã duyệt, API DD #08 ghi Draft — Needs Confirmation (bản nháp — cần xác nhận).",
+      "impact": "Mã nguồn/kiểm thử tồn tại không chứng minh API hoặc schema đã được triển khai ở môi trường thật.",
+      "decision": "Giữ riêng từng loại bằng chứng; không gắn nhãn đã xác minh khi chạy trước khi kiểm tra môi trường triển khai và cơ sở dữ liệu thật.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+      "status": "Sai khác trạng thái; chưa xác minh khi chạy"
+    },
+    {
+      "id": "SH06-I01",
+      "description": "Cơ chế dự phòng của máy chủ tĩnh, mã HTTP khi mở liên kết sâu và hoạt động trên trình duyệt chưa được kiểm tra.",
+      "impact": "Wildcard Angular đã có trong mã nguồn nhưng chưa đủ bằng chứng về phản hồi của máy chủ triển khai.",
+      "decision": "Chỉ xác nhận sau khi có bằng chứng từ môi trường đang chạy; bộ UTC hiện giữ mọi ca ở trạng thái Chưa chạy.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md; apps/study-client/src/app/app.routes.ts",
+      "status": "Chưa xác minh"
+    },
+    {
+      "id": "SH06-I02",
+      "description": "Một số mục DD cũ ghi tuyến ký tự đại diện và bàn giao 404 từ GS-03 chưa được nối; phần đối chiếu ngày 2026-11-21 và mã nguồn hiện hành cho thấy cả hai đã được nối.",
+      "impact": "Các mục DD chưa đồng bộ có thể làm người đọc hiểu sai phạm vi triển khai.",
+      "decision": "Giữ mã nguồn hiện hành làm bằng chứng hiện trạng và ghi nhận sai khác; không sửa DD ngoài phạm vi lập UTC.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md; apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md; apps/study-client/src/app/app.routes.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "status": "Sai khác ghi nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "SH-06-TC-MH-001",
+        "requirement_ids": [
+          "SH-06-YC-001",
+          "SH-06-YC-003",
+          "SH-06-YC-004",
+          "SH-06-YC-021"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến /not-found trực tiếp",
+        "precondition": "Ứng dụng Angular đã được khởi chạy trong môi trường kiểm thử; mở tuyến nội bộ /not-found.",
+        "data": "Không truyền tham số; không dùng dữ liệu người dùng thật.",
+        "steps": [
+          "Mở trực tiếp /not-found.",
+          "Quan sát nhãn trạng thái, số lỗi và tiêu đề.",
+          "Kiểm tra vùng nội dung chính có định danh SH-06."
+        ],
+        "expected": "Trang SH-06 xuất hiện với HTTP 404, số 404 và tiêu đề chung; không có yêu cầu API phát sinh từ trang.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-002",
+        "requirement_ids": [
+          "SH-06-YC-002",
+          "SH-06-YC-004",
+          "SH-06-YC-005"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Chuyển đường dẫn lạ và bỏ tham số truy vấn gốc",
+        "precondition": "Wildcard Angular đang được nạp trong router của ứng dụng.",
+        "data": "URL đầu vào giả lập: /unknown/private-tài nguyên?token=must-not-be-kept.",
+        "steps": [
+          "Mở URL đầu vào.",
+          "Quan sát URL sau khi router hoàn tất.",
+          "Tìm chuỗi đường dẫn và tham số truy vấn ban đầu trong nội dung trang."
+        ],
+        "expected": "Router kết thúc tại /not-found; pathname và tham số truy vấn ban đầu không còn trong URL đích và không được in ra nội dung trang.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/app.routes.ts",
+          "apps/study-client/src/app/app.routes.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-003",
+        "requirement_ids": [
+          "SH-06-YC-003",
+          "SH-06-YC-005"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Mở SH-06 không tạo yêu cầu dữ liệu",
+        "precondition": "Mở trang trực tiếp ở trạng thái tuyến 404.",
+        "data": "Không có mã khóa học hoặc phản hồi API.",
+        "steps": [
+          "Mở /not-found.",
+          "Theo dõi yêu cầu phát sinh từ SH-06."
+        ],
+        "expected": "SH-06 chỉ hiển thị nội dung tĩnh; trang không gọi API #08 hoặc API khác để dựng 404.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.ts",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-004",
+        "requirement_ids": [
+          "SH-06-YC-004",
+          "SH-06-YC-005",
+          "SH-06-YC-006",
+          "SH-06-YC-007"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Khóa học không có bản ghi được ánh xạ sang 404 chung",
+        "precondition": "GS-03 đang mở một khóa học không có bản ghi được công khai; dùng bộ dữ liệu giả lập giả lập.",
+        "data": "GET #08 trả 404 DESIGN_RESOURCE_NOT_FOUND với thông điệp Published khóa học not found.; ID bộ dữ liệu giả lập 732119.",
+        "steps": [
+          "Mở /courses/732119 trong luồng GS-03.",
+          "Cho API #08 trả phản hồi 404 giả lập.",
+          "Quan sát URL và trang sau khi điều hướng."
+        ],
+        "expected": "GS-03 điều hướng tới /not-found bằng replaceUrl; trang chỉ hiển thị thông báo chung, không có ID hoặc thân phản hồi lỗi.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/view.py",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/validate.py",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-005",
+        "requirement_ids": [
+          "SH-06-YC-005",
+          "SH-06-YC-006",
+          "SH-06-YC-007",
+          "SH-06-YC-016"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Khóa học chưa PUBLISHED không bị phân biệt với khóa học vắng mặt",
+        "precondition": "Có thể tạo phản hồi giả lập từ nguồn kiểm thử; không dùng dữ liệu môi trường thật.",
+        "data": "Hai trường hợp bộ dữ liệu giả lập: không có row; row có trạng thái khác PUBLISHED. Cả hai dự kiến 404 cùng businessCode/thông điệp.",
+        "steps": [
+          "Lần lượt gửi hai bộ dữ liệu giả lập qua API #08 trong môi trường kiểm thử.",
+          "Mở kết quả ở GS-03.",
+          "So sánh URL và nội dung SH-06."
+        ],
+        "expected": "Hai trường hợp đều dùng cùng nhánh 404 chung; SH-06 không tiết lộ trạng thái nháp hoặc lý do không công khai. Ca chưa chạy trong lượt tạo tài liệu.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/view.py",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/query.py",
+          "apps/study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-006",
+        "requirement_ids": [
+          "SH-06-YC-005",
+          "SH-06-YC-006"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "ID API #08 không hợp lệ không làm lộ dữ liệu đầu vào",
+        "precondition": "Kịch bản kiểm thử API #08 và GS-03 được cấu hình với dữ liệu giả.",
+        "data": "course_id dạng không phải số và một giá trị vượt miền int64.",
+        "steps": [
+          "Gửi từng giá trị qua lớp kiểm tra API #08.",
+          "Quan sát mã HTTP/businessCode.",
+          "Nếu ứng dụng đi tới SH-06, kiểm tra nội dung không echo ID."
+        ],
+        "expected": "API #08 hiện trả 404 DESIGN_RESOURCE_NOT_FOUND cho ID không phân tích được hoặc ngoài int64; nếu bàn giao xảy ra, trang vẫn chung và không đưa giá trị đầu vào ra giao diện.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/validate.py",
+          "apps/study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-007",
+        "requirement_ids": [
+          "SH-06-YC-008"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Lỗi truy vấn API #08 giữ trạng thái dịch vụ riêng",
+        "precondition": "GS-03 gọi API #08 và môi trường kiểm thử giả lập lỗi truy vấn.",
+        "data": "HTTP 500 DESIGN_INTERNAL_ERROR; thông điệp nội bộ giả lập “internal detail”.",
+        "steps": [
+          "Mở trang chi tiết khóa học.",
+          "Cho API #08 trả HTTP 500.",
+          "Quan sát thông báo GS-03 và URL."
+        ],
+        "expected": "GS-03 hiển thị lỗi dịch vụ riêng; không chuyển tới /not-found và không lộ thông điệp nội bộ.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-server/app/modules/guest/api_08_courses_detail/view.py",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-008",
+        "requirement_ids": [
+          "SH-06-YC-008"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Lỗi mạng hoặc hết thời gian chờ không bị đổi thành 404",
+        "precondition": "GS-03 đang gọi API #08; dùng mô phỏng mạng trong môi trường kiểm thử.",
+        "data": "Một trường hợp mạng error hoặc hết thời gian chờ, không có HTTP 404 hợp lệ.",
+        "steps": [
+          "Mở trang chi tiết.",
+          "Mô phỏng lỗi mạng hoặc hết thời gian chờ.",
+          "Quan sát state và URL cuối."
+        ],
+        "expected": "Kết quả vẫn là xử lý lỗi dịch vụ theo GS-03; SH-06 không được dùng thay cho lỗi mạng.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-009",
+        "requirement_ids": [
+          "SH-06-YC-008"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Lỗi phản hồi sai cấu trúc không bị coi là tài nguyên 404",
+        "precondition": "GS-03 gọi API #08 trong môi trường kiểm thử.",
+        "data": "HTTP thành công/error envelope thiếu trường hoặc JSON không hợp lệ.",
+        "steps": [
+          "Gửi bộ dữ liệu giả lập phản hồi sai cấu trúc.",
+          "Quan sát state của GS-03.",
+          "Kiểm tra router không chuyển tới /not-found chỉ vì parse lỗi."
+        ],
+        "expected": "Lỗi phân tích/cấu trúc được xử lý như lỗi dịch vụ riêng; không tuyên bố tài nguyên không tồn tại.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-010",
+        "requirement_ids": [
+          "SH-06-YC-010",
+          "SH-06-YC-026"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "403 từ guard khác không bị gán cho API #08",
+        "precondition": "Có guard giả lập khác trả 403; không gán phản hồi này cho API #08.",
+        "data": "HTTP 403 DESIGN_ACCESS_DENIED do guard ngoài API #08.",
+        "steps": [
+          "Kích hoạt 403 giả lập từ guard khác.",
+          "Quan sát màn hình/luồng đích.",
+          "Đối chiếu nhãn lỗi với tuyến SH-05."
+        ],
+        "expected": "403 đi theo luồng từ chối quyền SH-05 nếu guard đó cấu hình như vậy; hàm xử lý API #08 hiện không có nhánh 403. Sai khác với AC-05 vẫn chờ người phụ trách làm rõ. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-011",
+        "requirement_ids": [
+          "SH-06-YC-009"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "404 đề cương API #09 tiếp tục ở GS-03",
+        "precondition": "Màn hình GS-03 đã mở thành công khóa học; người dùng chuyển sang tab đề cương.",
+        "data": "API #08 thành công; API #09 trả 404 DESIGN_RESOURCE_NOT_FOUND.",
+        "steps": [
+          "Mở một khóa học hợp lệ ở GS-03.",
+          "Chọn tab đề cương.",
+          "Cho API #09 trả 404 và quan sát trang."
+        ],
+        "expected": "404 của đề cương được xử lý trong phần đề cương GS-03 theo mã nguồn; không điều hướng sang SH-06.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-012",
+        "requirement_ids": [
+          "SH-06-YC-011"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "200 hợp lệ tiếp tục màn hình chi tiết GS-03",
+        "precondition": "GS-03 đang yêu cầu chi tiết khóa học có trạng thái PUBLISHED.",
+        "data": "API #08 trả 200 DESIGN_RESOURCE_RETRIEVED với trang một phần tử giả lập.",
+        "steps": [
+          "Mở tuyến chi tiết khóa học.",
+          "Cho API #08 trả phản hồi thành công hợp lệ.",
+          "Quan sát màn hình đang hiển thị."
+        ],
+        "expected": "GS-03 hiển thị chi tiết khóa học; không hiển thị SH-06.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/data-access/gs03-course-detail.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-013",
+        "requirement_ids": [
+          "SH-06-YC-012",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Thao tác chính về /courses",
+        "precondition": "SH-06 đang hiển thị trang 404.",
+        "data": "Chọn liên kết có nhãn “Danh sách khóa học”.",
+        "steps": [
+          "Mở /not-found.",
+          "Chọn liên kết chính.",
+          "Quan sát đường dẫn đích."
+        ],
+        "expected": "Router mở /courses; SH-06 không gọi API danh sách trước khi điều hướng và không gắn course_id vào tuyến.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-014",
+        "requirement_ids": [
+          "SH-06-YC-013",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Thao tác phụ về trang chủ",
+        "precondition": "SH-06 đang hiển thị trang 404.",
+        "data": "Chọn liên kết “Về trang chủ”.",
+        "steps": [
+          "Mở /not-found.",
+          "Chọn liên kết phụ.",
+          "Quan sát đường dẫn đích và dữ liệu truyền theo."
+        ],
+        "expected": "Router mở /; không truyền course_id, tham số truy vấn riêng tư hoặc thân phản hồi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-015",
+        "requirement_ids": [
+          "SH-06-YC-014",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Logo về trang chủ",
+        "precondition": "Logo logo của mã nguồn trang hiện diện trong góc trên trái.",
+        "data": "Chọn liên kết có aria-label “Study2Work LMS — trang chủ”.",
+        "steps": [
+          "Mở /not-found.",
+          "Chọn logo Study2Work LMS.",
+          "Quan sát đường dẫn đích."
+        ],
+        "expected": "Logo mở tuyến / bằng liên kết nội bộ; không dùng href=\"#\".",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-016",
+        "requirement_ids": [
+          "SH-06-YC-005",
+          "SH-06-YC-006",
+          "SH-06-YC-007",
+          "SH-06-YC-008"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị dữ liệu nhạy cảm ở nhiều nguồn lỗi",
+        "precondition": "Chạy riêng các bộ dữ liệu giả lập 404, 500 và tuyến không khớp với giá trị giả.",
+        "data": "Giá trị giả: mã khóa học riêng tư 732119; token tham số truy vấn khong-duoc-giu-lai; thông điệp “chi tiết khóa học riêng tư”.",
+        "steps": [
+          "Mở tuyến lạ có tham số truy vấn giả.",
+          "Mở GS-03 với phản hồi 404 giả.",
+          "Mở GS-03 với phản hồi 500 có thông điệp giả.",
+          "Tìm từng giá trị trong trang hiển thị."
+        ],
+        "expected": "Không giá trị private, query token, khóa học ID hoặc thông điệp nội bộ nào xuất hiện trong trang SH-06/GS-03.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/app.routes.spec.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-017",
+        "requirement_ids": [
+          "SH-06-YC-004",
+          "SH-06-YC-005",
+          "SH-06-YC-011"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Nội dung 404 không đoán tài nguyên đã xóa hoặc dời",
+        "precondition": "Mở SH-06 bằng tuyến 404 hoặc tài nguyên 404.",
+        "data": "Không có metadata nguyên nhân xóa/dời.",
+        "steps": [
+          "Mở trang 404.",
+          "Đọc nhãn, tiêu đề và mô tả.",
+          "Đối chiếu với bộ dữ liệu giả lập không cung cấp nguyên nhân."
+        ],
+        "expected": "Nội dung giữ ở mức “không khả dụng”; không nói tài nguyên đã bị xóa, dời hoặc bị chặn vì một nguyên nhân chưa có nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-018",
+        "requirement_ids": [
+          "SH-06-YC-016",
+          "SH-06-YC-017",
+          "SH-06-YC-018",
+          "SH-06-YC-019",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Các khu vực bản mẫu chưa được coi là hành vi hiện hành",
+        "precondition": "Đối chiếu DD có blocker với mã nguồn hiện hành trước khi nghiệm thu.",
+        "data": "Ảnh đánh số có 22 marker; mã nguồn Angular chỉ có trang 404 tối giản.",
+        "steps": [
+          "Mở ảnh bản mẫu và ghi nhận marker #12–#22.",
+          "Mở tuyến SH-06 từ mã nguồn hiện hành.",
+          "Đối chiếu mã nguồn với các quyết định còn mở trong DD."
+        ],
+        "expected": "Không đánh dấu các thẻ giả, hỗ trợ/liên hệ, chân trang hoặc nội dung pháp lý là đã triển khai/được duyệt; các ca liên quan giữ Chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-019",
+        "requirement_ids": [
+          "SH-06-YC-016",
+          "SH-06-YC-017",
+          "SH-06-YC-019"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Khu vực gợi ý không gọi API mới theo suy đoán",
+        "precondition": "SH-06 đang ở phạm vi hiện hành; chưa có hợp đồng gợi ý khóa học.",
+        "data": "Không tạo yêu cầu API #06 hoặc API khác chỉ từ ảnh mẫu.",
+        "steps": [
+          "Mở /not-found.",
+          "Theo dõi yêu cầu từ SH-06.",
+          "Đối chiếu danh mục API/hợp đồng của SH-06."
+        ],
+        "expected": "Trang không gọi API gợi ý; API #08 không được tái dùng để lấy danh sách đề xuất. Phạm vi/hợp đồng dữ liệu vẫn cần xác nhận. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-020",
+        "requirement_ids": [
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Giữ ranh giới giữa ảnh mẫu và giao diện triển khai",
+        "precondition": "Có ảnh sạch, ảnh đánh số và mã nguồn SH06Page.",
+        "data": "Bản mẫu 1600×1425 với 22 mốc; trang ở Mã nguồn hiện hành có cấu trúc tối giản.",
+        "steps": [
+          "So sánh ảnh đã đánh số với mã nguồn trang.",
+          "Ghi nhận yếu tố có trong bản mẫu nhưng không có trong code.",
+          "Kiểm tra metadata UTC không tuyên bố visual parity."
+        ],
+        "expected": "Bộ UTC ghi rõ ảnh là bằng chứng bản mẫu, không dùng ảnh để kết luận mã nguồn hoặc khi chạy đã hiển thị đủ 22 marker. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-numbered.png",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/images/screen-clean.png",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-021",
+        "requirement_ids": [
+          "SH-06-YC-004",
+          "SH-06-YC-021"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái bằng chữ và cấu trúc tiêu đề",
+        "precondition": "Mở trang SH-06 bằng trình đọc màn hình hoặc kiểm tra DOM trong môi trường kiểm thử.",
+        "data": "Trạng thái được thể hiện bằng nội dung HTTP 404; chấm màu và đường phân cách là trang trí.",
+        "steps": [
+          "Kiểm tra thứ tự tiêu đề.",
+          "Đọc trạng thái line khi tắt CSS/màu.",
+          "Kiểm tra chấm màu/đường phân cách không tạo tên trợ năng thừa."
+        ],
+        "expected": "Có H1 “404”, H2 mô tả; nhãn có chữ HTTP 404; chấm màu và đường phân cách bị ẩn khỏi cây trợ năng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-022",
+        "requirement_ids": [
+          "SH-06-YC-022"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Kích thước điều hướng đáp ứng ngưỡng mã nguồn",
+        "precondition": "Mở trang trong công cụ kiểm tra bố cục hoặc đo DOM.",
+        "data": "logo min-height 44px; thao tác min-height 48px.",
+        "steps": [
+          "Đo chiều cao vùng liên kết logo.",
+          "Đo chiều cao hai thao tác.",
+          "So sánh với giá trị CSS."
+        ],
+        "expected": "Logo có tối thiểu 44px; hai thao tác có tối thiểu 48px theo CSS hiện tại.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-023",
+        "requirement_ids": [
+          "SH-06-YC-023"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Bố cục tại breakpoint 560px",
+        "precondition": "Mở trang ở viewport nhỏ hơn hoặc bằng 560px và lớn hơn 560px.",
+        "data": "Viewports giả lập: 560px và 561px.",
+        "steps": [
+          "Tại 560px, kiểm tra thao tác xếp dọc và rộng 100%.",
+          "Tại 561px, kiểm tra flex-wrap hoạt động và không có tràn ngang."
+        ],
+        "expected": "Breakpoint max-width:560px áp dụng bố cục cột ở 560px; trang không tràn ngang ở cả hai kích thước.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-024",
+        "requirement_ids": [
+          "SH-06-YC-024"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Tôn trọng tùy chọn giảm chuyển động",
+        "precondition": "Thiết bị kiểm thử cho phép bật prefers-reduced-motion.",
+        "data": "Media feature prefers-reduced-motion: reduce.",
+        "steps": [
+          "Bật tùy chọn giảm chuyển động.",
+          "Mở SH-06 và quan sát hai thao tác.",
+          "Kiểm tra style hiệu ứng chuyển computed."
+        ],
+        "expected": "Hiệu ứng chuyển của thao tác bị tắt khi tùy chọn giảm chuyển động được bật.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+        ],
+        "priority": "Thấp",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-025",
+        "requirement_ids": [
+          "SH-06-YC-025"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Giữ nguyên trạng thái chưa xác minh của API #08",
+        "precondition": "Đọc danh mục API, API DD và màn hình danh sách màn hình hiện tại.",
+        "data": "danh mục thiết kế đã duyệt; API DD Draft; danh sách màn hình D; chỉ mục API R; chưa có triển khai evidence.",
+        "steps": [
+          "Đối chiếu nhãn trạng thái trong các nguồn.",
+          "Kiểm tra metadata UTC và API matrix."
+        ],
+        "expected": "UTC ghi riêng mã nguồn, thiết kế hợp đồng và khi chạy; không kết luận API đã triển khai/đã xác minh. Ca tài liệu chờ người phụ trách xác nhận. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-026",
+        "requirement_ids": [
+          "SH-06-YC-010",
+          "SH-06-YC-026"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Giữ sai khác AC-05 404/403",
+        "precondition": "Đối chiếu sơ đồ AC-05 với danh mục API và hàm xử lý #08.",
+        "data": "AC-05 có 404/403; hàm xử lý #08 có 404/500, không có nhánh 403.",
+        "steps": [
+          "Đọc hai mô tả branch.",
+          "Đối chiếu với mã nguồn hiện hành.",
+          "Ghi lại kết quả và người có thẩm quyền xử lý."
+        ],
+        "expected": "Sai khác được giữ mở; không tự sửa AC hoặc gán 403 cho API #08. Ca không thể được xác nhận cho tới khi người phụ trách làm rõ. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-027",
+        "requirement_ids": [
+          "SH-06-YC-027",
+          "SH-06-YC-028"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Không suy đoán mã HTTP của máy chủ tĩnh",
+        "precondition": "Chỉ có mã nguồn Angular; chưa có môi trường triển khai được xác minh.",
+        "data": "Deep liên kết bất kỳ và mã HTTP chưa kiểm tra.",
+        "steps": [
+          "Đọc cấu hình/mã nguồn đã khai báo.",
+          "Kiểm tra trạng thái evidence của máy chủ tĩnh/triển khai."
+        ],
+        "expected": "Báo cáo giữ cơ chế dự phòng của máy chủ tĩnh/mã HTTP là chưa xác minh; không ghi ca khi chạy đạt dựa riêng vào router mã nguồn. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+          "apps/study-client/src/app/app.routes.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-MH-028",
+        "requirement_ids": [
+          "SH-06-YC-028"
+        ],
+        "target_id": "SH-06",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt lần chạy được DD ghi và lượt lập UTC hiện tại",
+        "precondition": "DD ghi kiểm thử tập trung 11 tệp/36 ca vào 2026-11-21; lượt này chỉ đọc mã nguồn.",
+        "data": "Không chạy sản phẩm tests; execution trạng thái của tất cả dòng workbook là Chưa chạy.",
+        "steps": [
+          "Đối chiếu ghi chú trong DD với worklog và workbook.",
+          "Kiểm tra cột trạng thái thực thi."
+        ],
+        "expected": "UTC nêu rõ kết quả 2026-11-21 chỉ là bằng chứng DD ghi; mọi ca của workbook mới vẫn Chưa chạy, không có kết quả/bằng chứng/người/ngày giả.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts",
+          "apps/study-client/src/app/app.routes.spec.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "SH-06-TC-TP-001",
+        "requirement_ids": [
+          "SH-06-YC-014",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06-EL-001",
+        "group": "Thành phần",
+        "title": "Logo Study2Work dẫn tới trang chủ",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Liên kết có aria-label Study2Work LMS — trang chủ.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Liên kết thật dùng routerLink=\"/\"; khi mở, đường dẫn đích là trang chủ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-002",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-002",
+        "group": "Thành phần",
+        "title": "Nhóm điều hướng đầu trang trong ảnh mẫu",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Ảnh có Trang chủ, Khóa học, Tìm kiếm; các thẻ liên kết là href=\"#\".",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Mã nguồn trang hiện không hiển thị nhóm này. Phạm vi và đường dẫn đích của từng mục còn blocker; không kiểm là hành vi đã duyệt. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-003",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-003",
+        "group": "Thành phần",
+        "title": "Liên kết Đăng nhập mẫu",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "thẻ liên kết Đăng nhập dùng href=\"#\"; tuyến /login là đề xuất trong DD.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Mã nguồn trang hiện không hiển thị liên kết; không điều hướng tới đường dẫn đề xuất cho tới khi phạm vi đầu trang được chốt. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-004",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-004",
+        "group": "Thành phần",
+        "title": "Nút Đăng ký mẫu",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "thẻ liên kết Đăng ký dùng href=\"#\"; tuyến /register là đề xuất trong DD.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Mã nguồn trang hiện không hiển thị nút; không tạo luồng đăng ký từ ảnh bản mẫu. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-005",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-005",
+        "group": "Thành phần",
+        "title": "Biểu tượng tài khoản mẫu không tạo thao tác",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu có div biểu tượng không role/liên kết/nút; không có user data.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không có biểu tượng trong mã nguồn trang hiện tại; không phát sinh thao tác mở hồ sơ khi chọn. Nếu phạm vi thay đổi, cần quyết định sản phẩm riêng. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-006",
+        "requirement_ids": [
+          "SH-06-YC-004",
+          "SH-06-YC-021"
+        ],
+        "target_id": "SH-06-EL-006",
+        "group": "Thành phần",
+        "title": "Nhãn HTTP 404 có nội dung chữ",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "mã nguồn nội dung: HTTP 404 · Không tìm thấy.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Nhãn cho biết HTTP 404 bằng chữ; không phụ thuộc riêng vào chấm màu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-007",
+        "requirement_ids": [
+          "SH-06-YC-004",
+          "SH-06-YC-021"
+        ],
+        "target_id": "SH-06-EL-007",
+        "group": "Thành phần",
+        "title": "H1 404 và đường phân cách trang trí",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "H1 có nội dung 404; đường phân cách aria-hidden=true.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Có một H1 “404”; đường phân cách không tạo nội dung đọc thêm cho trình đọc màn hình.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-008",
+        "requirement_ids": [
+          "SH-06-YC-004",
+          "SH-06-YC-008",
+          "SH-06-YC-010",
+          "SH-06-YC-011"
+        ],
+        "target_id": "SH-06-EL-008",
+        "group": "Thành phần",
+        "title": "Tiêu đề không tìm thấy trung tính",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "nội dung: Không tìm thấy trang hoặc tài nguyên yêu cầu.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Tiêu đề chung xuất hiện cho 404; không được dùng làm thông điệp cho lỗi 403 hoặc 500.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-009",
+        "requirement_ids": [
+          "SH-06-YC-004",
+          "SH-06-YC-005",
+          "SH-06-YC-011"
+        ],
+        "target_id": "SH-06-EL-009",
+        "group": "Thành phần",
+        "title": "Mô tả không khẳng định nguyên nhân",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "nội dung: Trang hoặc tài nguyên này hiện không khả dụng…",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Mô tả không nói tài nguyên đã bị xóa/chuyển và không chứa ID, URL hay dữ liệu lỗi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-010",
+        "requirement_ids": [
+          "SH-06-YC-012",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06-EL-010",
+        "group": "Thành phần",
+        "title": "Liên kết chính mở danh sách khóa học",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Nhãn mã nguồn: Danh sách khóa học; routerLink=/courses.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Liên kết mở /courses; không giữ giữ chỗ href=\"#\" hoặc course_id.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-011",
+        "requirement_ids": [
+          "SH-06-YC-013",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06-EL-011",
+        "group": "Thành phần",
+        "title": "Liên kết phụ mở trang chủ",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Nhãn mã nguồn: Về trang chủ; routerLink=/.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Liên kết mở / bằng điều hướng nội bộ, không truyền dữ liệu riêng tư.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-012",
+        "requirement_ids": [
+          "SH-06-YC-019",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-012",
+        "group": "Thành phần",
+        "title": "Thẻ Phạm vi an toàn không tuyên bố quá nguồn",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu có tuyên bố về tài nguyên nội bộ/nháp và nhãn Đặc tả chuẩn; mã nguồn không hiển thị thẻ.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không có tuyên bố Phạm vi an toàn trong mã nguồn trang; phạm vi thông báo này cần xác nhận trước khi bổ sung. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-013",
+        "requirement_ids": [
+          "SH-06-YC-017",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-013",
+        "group": "Thành phần",
+        "title": "Tiêu đề gợi ý khóa học chưa có quyết định",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu ghi Khám phá các khóa học khả dụng.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không có tiêu đề gợi ý khóa học trong mã nguồn; DD hiện còn mâu thuẫn về quyết định giữ/bỏ nên chưa kết luận ẩn/bỏ đã được duyệt. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-014",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-017"
+        ],
+        "target_id": "SH-06-EL-014",
+        "group": "Thành phần",
+        "title": "Liên kết xem tất cả chưa thành phần tử điều khiển khi chạy",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu dùng href=\"#\"; đề xuất đích /courses.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không có liên kết này trong mã nguồn hiện hành; không dùng thẻ liên kết giữ chỗ làm thao tác. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-015",
+        "requirement_ids": [
+          "SH-06-YC-016",
+          "SH-06-YC-017",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-015",
+        "group": "Thành phần",
+        "title": "Thẻ mẫu 1 không hiện dữ liệu giả",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu: Lập trình viên web toàn diện, 12 tuần, 1.420 học viên; không có ID/API field.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không dùng nội dung/thẻ mẫu làm dữ liệu thật; không tạo tuyến từ tiêu đề. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-016",
+        "requirement_ids": [
+          "SH-06-YC-016",
+          "SH-06-YC-017",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-016",
+        "group": "Thành phần",
+        "title": "Thẻ mẫu 2 không hiện dữ liệu giả",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu: Nền tảng phân tích dữ liệu, 8 tuần, 980 học viên; không có ID/API field.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không dùng nội dung/thẻ mẫu làm dữ liệu thật; không tạo tuyến từ tiêu đề. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-017",
+        "requirement_ids": [
+          "SH-06-YC-016",
+          "SH-06-YC-017",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-017",
+        "group": "Thành phần",
+        "title": "Thẻ mẫu 3 không hiện dữ liệu giả",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu: Chủ sản phẩm và Scrum, 6 tuần, 750 học viên; không có ID/API field.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không dùng nội dung/thẻ mẫu làm dữ liệu thật; không tạo tuyến từ tiêu đề. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-018",
+        "requirement_ids": [
+          "SH-06-YC-018",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-018",
+        "group": "Thành phần",
+        "title": "Dải trợ giúp chưa có luồng xử lý nguồn",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu hỏi về tài khoản hoặc môn học đã đăng ký.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Mã nguồn trang hiện không hiển thị dải trợ giúp; chưa có luồng xử lý/nội dung hỗ trợ được xác nhận cho SH-06. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-019",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-018",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-019",
+        "group": "Thành phần",
+        "title": "Liên hệ giáo vụ chưa có đích",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu ghi Liên hệ ban giáo vụ Study2Work và href=\"#\".",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không tạo thư điện tử, mailto, tuyến hoặc API; chưa có kênh/đích được xác nhận. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-020",
+        "requirement_ids": [
+          "SH-06-YC-018",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-020",
+        "group": "Thành phần",
+        "title": "Chân trang nhận diện chưa có quyết định",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu có tên Study2Work LMS và descriptor.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Chân trang không có trong mã nguồn hiện hành; giữ blocker về quyết định giữ/bỏ, không tuyên bố nội dung được duyệt. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-021",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-018",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-021",
+        "group": "Thành phần",
+        "title": "Chân trang điều hướng không suy tuyến",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu có bốn thẻ liên kết giữ chỗ cho đào tạo, chứng chỉ, quy chế và hỗ trợ.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không coi href=\"#\" là tuyến; không suy đích chứng chỉ/quy chế/hỗ trợ từ data-path. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-022",
+        "requirement_ids": [
+          "SH-06-YC-018",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EL-022",
+        "group": "Thành phần",
+        "title": "Bản quyền/nội dung pháp lý chưa có nguồn",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Bản mẫu có © 2025 và câu tiếng Anh; DD chưa có quy tắc đổi năm/nội dung pháp lý.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Không thêm hoặc tự cập nhật bản quyền/nội dung pháp lý trong mã nguồn trang nếu chưa có nội dung được xác nhận. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-023",
+        "requirement_ids": [
+          "SH-06-YC-001",
+          "SH-06-YC-004"
+        ],
+        "target_id": "SH-06-EL-023",
+        "group": "Thành phần",
+        "title": "Gốc chính có định danh màn hình",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "chính có data-screen-id=\"SH-06\".",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "DOM của trang có đúng định danh SH-06 trên chính; không chứa dữ liệu cá nhân.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-024",
+        "requirement_ids": [
+          "SH-06-YC-021"
+        ],
+        "target_id": "SH-06-EL-024",
+        "group": "Thành phần",
+        "title": "Vùng nội dung liên kết với tiêu đề",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "khu vực dùng aria-labelledby=\"not-found-title\".",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Khu vực tham chiếu đúng id tiêu đề; quan hệ tên trợ năng có thể kiểm tra trong DOM.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-025",
+        "requirement_ids": [
+          "SH-06-YC-021"
+        ],
+        "target_id": "SH-06-EL-025",
+        "group": "Thành phần",
+        "title": "Chấm màu bị ẩn khỏi cây trợ năng",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "span class not-found__status-chấm màu có aria-hidden=true.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Chấm chỉ trang trí; text trạng thái vẫn đọc được độc lập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-026",
+        "requirement_ids": [
+          "SH-06-YC-022",
+          "SH-06-YC-023"
+        ],
+        "target_id": "SH-06-EL-026",
+        "group": "Thành phần",
+        "title": "Bố cục thao tác tại breakpoint nhỏ",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "Quy tắc @media max-width:560px; thao tác flex-direction:column và width:100%.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Tại 560px thao tác xếp dọc và chiếm chiều rộng; bố cục không tràn ngang.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-TP-027",
+        "requirement_ids": [
+          "SH-06-YC-024"
+        ],
+        "target_id": "SH-06-EL-027",
+        "group": "Thành phần",
+        "title": "Tắt hiệu ứng chuyển khi giảm chuyển động",
+        "precondition": "Trang/ảnh SH-06 được mở trong môi trường kiểm thử hoặc được đối chiếu tĩnh theo nguồn ghi dưới đây.",
+        "data": "prefers-reduced-motion: reduce; hiệu ứng chuyển:none trên thao tác.",
+        "steps": [
+          "Mở /not-found hoặc đối chiếu đúng DOM/CSS theo nguồn.",
+          "Kiểm tra thành phần và kết quả quan sát nêu trong ca."
+        ],
+        "expected": "Khi tùy chọn giảm chuyển động bật, thao tác không còn hiệu ứng chuyển CSS.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "SH-06-TC-SK-001",
+        "requirement_ids": [
+          "SH-06-YC-001",
+          "SH-06-YC-002",
+          "SH-06-YC-003",
+          "SH-06-YC-004",
+          "SH-06-YC-005"
+        ],
+        "target_id": "SH-06-EV-001",
+        "group": "Sự kiện",
+        "title": "Nạp SH-06 từ tuyến trực tiếp hoặc tuyến ký tự đại diện",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "/not-found trực tiếp; hoặc /unknown/private-tài nguyên?token=must-not-be-kept.",
+        "steps": [
+          "Mở /not-found; sau đó mở một URL không khớp có đường dẫn/tham số truy vấn giả.",
+          "Quan sát URL kết thúc, nội dung và yêu cầu phát sinh."
+        ],
+        "expected": "Cả hai luồng hiển thị 404 chung tại /not-found; tuyến ký tự đại diện bỏ path/tham số truy vấn gốc; SH-06 không gọi API và không in dữ liệu đầu vào.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/src/app/app.routes.ts",
+          "apps/study-client/src/app/app.routes.spec.ts",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-002",
+        "requirement_ids": [
+          "SH-06-YC-005",
+          "SH-06-YC-006",
+          "SH-06-YC-007",
+          "SH-06-YC-008",
+          "SH-06-YC-010",
+          "SH-06-YC-025",
+          "SH-06-YC-026"
+        ],
+        "target_id": "SH-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Bàn giao API #08 404 từ GS-03",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "GET #08 giả trả 404 DESIGN_RESOURCE_NOT_FOUND; course_id 732119 và thông điệp giả không được truyền.",
+        "steps": [
+          "Mở tuyến chi tiết khóa học trong GS-03.",
+          "Trả 404 giả từ API #08.",
+          "Quan sát URL và nội dung sau khi điều hướng."
+        ],
+        "expected": "Mã nguồn hiện hành điều hướng tới /not-found bằng replaceUrl; trang không nhận course_id hoặc thân phản hồi. Lưu ý: mục Sự kiện của DD có bản ghi phiên bản “chưa được nối”, còn đối chiếu/mã nguồn hiện tại cho thấy đã nối.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-003",
+        "requirement_ids": [
+          "SH-06-YC-008"
+        ],
+        "target_id": "SH-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Lỗi 500/mạng của API #08 không đi vào 404",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "GET #08 trả 500 DESIGN_INTERNAL_ERROR hoặc mạng error.",
+        "steps": [
+          "Kích hoạt lỗi 500 hoặc mạng giả trong GS-03.",
+          "Quan sát thông báo và router URL."
+        ],
+        "expected": "GS-03 xử lý lỗi dịch vụ riêng; sự kiện không điều hướng sang SH-06 chỉ vì 500/mạng.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-004",
+        "requirement_ids": [
+          "SH-06-YC-012",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06-EV-003",
+        "group": "Sự kiện",
+        "title": "Chọn liên kết danh sách khóa học",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "chọn liên kết chính có routerLink=/courses.",
+        "steps": [
+          "Mở /not-found.",
+          "Chọn Danh sách khóa học.",
+          "Quan sát tuyến và yêu cầu do SH-06 phát sinh trước khi rời trang."
+        ],
+        "expected": "Đường dẫn đích là /courses; SH-06 không tải API #05/#06 trước khi rời màn hình.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-005",
+        "requirement_ids": [
+          "SH-06-YC-013",
+          "SH-06-YC-014",
+          "SH-06-YC-015"
+        ],
+        "target_id": "SH-06-EV-004",
+        "group": "Sự kiện",
+        "title": "Chọn logo hoặc liên kết trang chủ",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "chọn logo Study2Work hoặc liên kết Về trang chủ.",
+        "steps": [
+          "Mở /not-found.",
+          "Chọn lần lượt logo và liên kết phụ.",
+          "Quan sát đường dẫn đích."
+        ],
+        "expected": "Cả hai liên kết đưa người dùng tới / và không truyền dữ liệu riêng tư.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html",
+          "apps/study-client/src/app/features/shared/shared.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-006",
+        "requirement_ids": [
+          "SH-06-YC-010",
+          "SH-06-YC-026"
+        ],
+        "target_id": "SH-06-EV-002",
+        "group": "Sự kiện",
+        "title": "403 từ guard ngoài API #08",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "Guard ngoài API #08 trả 403 DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Tạo phản hồi 403 giả từ guard khác.",
+          "Quan sát tuyến/state được cấu hình ở luồng từ chối quyền."
+        ],
+        "expected": "Không gán 403 cho API #08. Nếu guard đã cấu hình từ chối quyền, luồng thuộc SH-05; AC-05 còn sai khác nên chưa đánh dấu đạt. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [
+          "API-008"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-007",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-020"
+        ],
+        "target_id": "SH-06-EV-005",
+        "group": "Sự kiện",
+        "title": "Đầu trang liên kết bản mẫu chưa được bật",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "Trang mẫu có năm liên kết được đề xuất, trang ở mã nguồn không có đầu trang nhóm đó.",
+        "steps": [
+          "Đối chiếu ảnh bản mẫu với mã nguồn trang.",
+          "Kiểm tra nhóm liên kết và đích hiện hành."
+        ],
+        "expected": "Không coi giữ chỗ href=\"#\" hoặc đích đề xuất là hành vi bản phát hành; chờ xác nhận phạm vi đầu trang.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-008",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-017"
+        ],
+        "target_id": "SH-06-EV-006",
+        "group": "Sự kiện",
+        "title": "Liên kết “Xem tất cả” chờ xác nhận quyết định giữ/bỏ",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "liên kết bản mẫu href=\"#\" thuộc khu vực gợi ý chưa chốt.",
+        "steps": [
+          "Kiểm tra trạng thái khu vực gợi ý trong DD.",
+          "Không kích hoạt tuyến giả từ href=\"#\"."
+        ],
+        "expected": "Chưa tạo thao tác khi chạy; nếu khu vực được duyệt, đích /courses phải được giữ đúng theo quyết định có nguồn. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/07-test-cases.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-009",
+        "requirement_ids": [
+          "SH-06-YC-016",
+          "SH-06-YC-017"
+        ],
+        "target_id": "SH-06-EV-007",
+        "group": "Sự kiện",
+        "title": "Chọn thẻ khóa học không suy ID",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "Ba thẻ không có course_id hoặc phần tử data.",
+        "steps": [
+          "Kiểm tra trường ID của từng thẻ mẫu.",
+          "Thử đối chiếu tuyến dự kiến với hợp đồng data."
+        ],
+        "expected": "Không tạo ID từ title/chỉ mục, không điều hướng GS-03; giữ điểm chặn đến khi có nguồn và quyết định khu vực. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-010",
+        "requirement_ids": [
+          "SH-06-YC-016",
+          "SH-06-YC-017",
+          "SH-06-YC-019"
+        ],
+        "target_id": "SH-06-EV-008",
+        "group": "Sự kiện",
+        "title": "Tải gợi ý khóa học không dùng dữ liệu giả lập",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "Không có mã nguồn gợi ý khóa học hợp đồng cho SH-06; API #08 chỉ trả về một khóa học chi tiết.",
+        "steps": [
+          "Mở mã nguồn trang.",
+          "Kiểm tra yêu cầu và dữ liệu gợi ý.",
+          "Đối chiếu API được định nghĩa trong danh sách màn hình."
+        ],
+        "expected": "Không hiển thị thẻ giả lập hoặc gọi API mới; cần quyết định giữ/bỏ khu vực và nguồn dữ liệu trước khi kiểm thử hành vi. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH06/pages/sh06-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-011",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-018"
+        ],
+        "target_id": "SH-06-EV-009",
+        "group": "Sự kiện",
+        "title": "Liên hệ hỗ trợ không tạo đích giả",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "Bản mẫu liên hệ href=\"#\"; không có kênh đã duyệt.",
+        "steps": [
+          "Kiểm tra đích/liên hệ metadata.",
+          "Thử không tạo mailto hoặc tuyến thay thế."
+        ],
+        "expected": "Không phát sinh yêu cầu/điều hướng; giữ sự kiện chờ sản phẩm xác nhận kênh và quyết định giữ/bỏ. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-06-TC-SK-012",
+        "requirement_ids": [
+          "SH-06-YC-015",
+          "SH-06-YC-018"
+        ],
+        "target_id": "SH-06-EV-010",
+        "group": "Sự kiện",
+        "title": "Chân trang điều hướng không suy tuyến từ data-path",
+        "precondition": "Tuyến SH-06 hoặc luồng bản mẫu tương ứng được tái hiện trong môi trường kiểm thử; mọi dữ liệu đều là giả.",
+        "data": "chân trang có bốn thẻ liên kết mẫu; một số data-path không ánh xạ đến màn hình tuyến.",
+        "steps": [
+          "Đối chiếu nhãn từng liên kết với tuyến registry.",
+          "Kiểm tra không dùng data-path để tự tạo tuyến."
+        ],
+        "expected": "Không điều hướng tới tuyến không có hợp đồng; các thẻ liên kết giữ chỗ không được tính là hoạt động. Trạng thái ca: Chờ xác nhận DD; chưa được duyệt nghiệm thu hành vi này.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/06-navigation.md",
+          "apps/study-client/docs/dd_screens/SH-06-TrangKhongTonTaiTaiNguyenKhongCon/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

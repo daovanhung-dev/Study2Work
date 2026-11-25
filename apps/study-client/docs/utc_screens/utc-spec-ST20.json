@@ -1,0 +1,3142 @@
+{
+  "metadata": {
+    "screen_id": "ST-20",
+    "screen_name": "Tổng quan tiến độ",
+    "module": "Ứng dụng Study — Người học",
+    "route": "/student/progress",
+    "actor": "Người học đã xác thực theo hợp đồng Bearer; môi trường chạy chưa được xác minh.",
+    "version": "1.0 — Kế hoạch kiểm thử chấp nhận",
+    "dd_version": "0.1 (2026-11-08); bổ sung ghi nhận mã nguồn ngày 2026-11-20/21",
+    "dd_status": "Bị chặn — bản nháp được người dùng xác nhận làm nguồn chuẩn; các câu hỏi mở vẫn giữ nguyên.",
+    "runtime_status": "Mã nguồn giao diện và máy chủ hiện có; chưa xác minh ứng dụng hoặc dữ liệu trong môi trường thật.",
+    "author": "Codex — lập hồ sơ UTC",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "Đặc tả ST-20, danh mục màn hình, tài liệu Stitch và mã nguồn giao diện/máy chủ được đối chiếu đến 2026-11-25.",
+    "release_readiness": "Chưa sẵn sàng thực thi: DD còn bị chặn, `API #21`/#38 còn quyết định mở và môi trường chạy chưa kiểm tra.",
+    "baseline_authorization": "Người dùng xác nhận DD đang Bị chặn vẫn là nguồn chuẩn; không coi xác nhận này là đóng blocker hoặc đổi trạng thái DD.",
+    "discrepancy_note": "Các đoạn cũ của DD ghi `UNWIRED/NOT_FOUND`, nhưng ghi chú cập nhật và mã nguồn hiện có tuyến ST-20, API #21/#38 và lời gọi #38 từ trang. Hiện trạng mã nguồn được tách riêng; trạng thái vận hành chưa được xác minh."
+  },
+  "overall": {
+    "objective": "Người học xem tổng số bài học, tiến độ theo khóa và thành tích do hệ thống ghi nhận sau khi hợp đồng dữ liệu được chốt.",
+    "inputs": "Phiên Bearer do lớp API dành cho người học quản lý; phản hồi #21 và #38 theo hợp đồng. Hiện ST20 chỉ gọi #38, không truyền tham số truy vấn; trang chưa gọi #21.",
+    "outputs": "Hiển thị danh sách thành tích từ các bản ghi #38 đã qua kiểm tra; khối tiến độ hiện luôn báo chưa khả dụng. Không tự tính tổng bài học, tỷ lệ, chứng chỉ hoặc thành tích.",
+    "main_flow": "Mở `/student/progress` → tuyến tải `ST20Page` → mã nguồn gọi #38 bằng `StudentApiService` → kiểm tra bao dữ liệu, mã nghiệp vụ, `Page<Achievement>`, `total` và số bản ghi → hiển thị trạng thái đang tải, lỗi, sai lệch, rỗng hoặc danh sách. #21, #37 và thứ tự AC-18 vẫn chờ quyết định; mã nguồn chưa được xác minh khi chạy.",
+    "states": [
+      "Đang tải thành tích",
+      "Lỗi tải thành tích và có thể tải lại",
+      "Tổng số và danh sách chưa khớp",
+      "Chưa có thành tích được ghi nhận",
+      "Đã nhận danh sách thành tích",
+      "Khối tiến độ cố định chưa khả dụng",
+      "Đang tải/một phần/rỗng/lỗi theo danh mục — điều kiện còn chờ xác nhận"
+    ],
+    "preconditions": "Tuyến và API có trong kho mã nguồn; cần môi trường thử, phiên giả lập và phản hồi giả lập sau khi hợp đồng được chốt. DD vẫn là bản nháp/bị chặn theo chỉ dẫn người dùng; mọi ca mới đều Chưa chạy.",
+    "security": "API dùng mã Bearer của người học và đường dẫn `/me`; mã nguồn lấy ID người dùng từ mã trong JWT. Trang không gửi `user_id`, không dùng API dành cho cố vấn và không tự tạo tiến độ hoặc thành tích.",
+    "out_of_scope": "Không xác minh trình duyệt, ứng dụng đang chạy, API môi trường thật, cơ sở dữ liệu/migration đã triển khai, dữ liệu thành tích thật, bộ cấp thành tích, hiệu năng hoặc khả năng trợ năng ngoài tiêu chí có nguồn. Hồ sơ này không sửa DD, API hoặc mã nguồn."
+  },
+  "apis": [
+    {
+      "id": "#21",
+      "method": "GET",
+      "path": "/api/v1/users/me/progress",
+      "event_ids": [
+        "ST20-EV-02",
+        "ST20-EV-04",
+        "ST20-EV-06",
+        "ST20-EV-07",
+        "ST20-EV-11"
+      ],
+      "request": "Danh mục API: Bearer JWT; tham số truy vấn được ghi nguyên văn là `course_id list hoặc aggregate?:string`, cú pháp và ý nghĩa chưa rõ; không có nội dung gửi. Tuyến nguồn nhận `course_id` và `aggregate` dạng tùy chọn, nhưng hàm xử lý hiện bỏ qua cả hai giá trị.",
+      "response": "Danh mục: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<UserProfile>`; lược đồ này không có trường tiến độ. Mã nguồn hiện trả hồ sơ người dùng từ bảng `users`.",
+      "errors": "Danh mục: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`; không khai báo 404/422.",
+      "auth": "Người học dùng Bearer JWT. Mã nguồn hiện xác thực vai trò người học và lấy ID người dùng từ JWT để đọc hồ sơ.",
+      "design_status": "Bản nháp — Chờ xác nhận; phản hồi và tham số truy vấn tiến độ còn khác biệt. Tuyến và hàm xử lý hiện có trong mã nguồn; môi trường chạy chưa xác minh.",
+      "source_ref": "docs/lists/list_api.md dòng 21; apps/study-server/docs/dd/21_users_me_progress/02_Overview.md; apps/study-server/docs/dd/21_users_me_progress/03_Request.md; apps/study-server/docs/dd/21_users_me_progress/04_Response.md; apps/study-server/docs/dd/21_users_me_progress/06_Error.md; apps/study-server/docs/dd/21_users_me_progress/OPEN_QUESTIONS.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_21_users_me_progress/view.py; apps/study-server/app/modules/student/api_21_users_me_progress/query.py; apps/study-server/app/modules/student/api_21_users_me_progress/models.py"
+    },
+    {
+      "id": "#38",
+      "method": "GET",
+      "path": "/api/v1/users/me/achievements",
+      "event_ids": [
+        "ST20-EV-03",
+        "ST20-EV-05",
+        "ST20-EV-06",
+        "ST20-EV-08",
+        "ST20-EV-11",
+        "ST20-EV-12",
+        "ST20-EV-13",
+        "ST20-EV-14",
+        "ST20-EV-15"
+      ],
+      "request": "Danh mục API: Bearer JWT và tham số `course_id:int64` tùy chọn; không có nội dung gửi hoặc tham số `page`, `size`, `sort`. Trang hiện không truyền tham số truy vấn; tuyến máy chủ nhận `course_id` dạng chuỗi.",
+      "response": "Danh mục: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Page<Achievement>>`. Mã nguồn hiện trả trường `items` và thông tin phân trang cố định ở trang đầu; hai truy vấn `COUNT` và `LIST` chạy riêng.",
+      "errors": "Danh mục: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`; không khai báo 404/422. Mã nguồn hiện trả 500 khi lỗi truy vấn/ánh xạ hoặc `course_id` sai định dạng.",
+      "auth": "Người học dùng Bearer JWT; mã nguồn lấy ID người dùng từ JWT. Quyền truy cập khóa học và nguồn tạo thành tích chưa được chốt.",
+      "design_status": "Bản nháp — Chờ xác nhận; tiêu chí thành tích, tham số truy vấn, phân trang và trạng thái rỗng còn mở. Tuyến, mô-đun và lớp gọi hiện có trong mã nguồn; môi trường và dữ liệu thật chưa xác minh.",
+      "source_ref": "docs/lists/list_api.md dòng 38; apps/study-server/docs/dd/38_users_me_achievements/02_Overview.md; apps/study-server/docs/dd/38_users_me_achievements/03_Request.md; apps/study-server/docs/dd/38_users_me_achievements/04_Response.md; apps/study-server/docs/dd/38_users_me_achievements/05_Data_Mapping.md; apps/study-server/docs/dd/38_users_me_achievements/06_Error.md; apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_38_users_me_achievements/view.py; apps/study-server/app/modules/student/api_38_users_me_achievements/query.py; apps/study-server/app/modules/student/api_38_users_me_achievements/models.py; apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-20-YC-001",
+      "description": "`AC-18` yêu cầu tổng quan thể hiện tổng số bài học, tiến độ theo khóa học và thành tích đã được ghi nhận.",
+      "group": "Mục tiêu màn hình",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §1–2; apps/study-client/docs/list_screen.md dòng ST-20",
+      "notes": "Các chỉ số tiến độ vẫn chưa thể kiểm thử theo hợp đồng #21; hiện chỉ có dữ liệu thành tích từ mã nguồn.",
+      "action": "Đối chiếu từng vùng số liệu trên trang với hợp đồng API đã được chủ sở hữu xác nhận.",
+      "oracle": "Không có số tổng bài học hoặc phần trăm tiến độ nào được dựng từ dữ liệu chưa có hợp đồng; thành tích chỉ lấy từ bản ghi #38. Hiện trạng giao diện đã nêu thẻ tiến độ cố định và danh sách thành tích; chưa xác minh môi trường chạy.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21",
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-002",
+      "description": "Tuyến màn hình của ST-20 là `/student/progress`.",
+      "group": "Điểm vào và tuyến",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §A.1; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Mã nguồn hiện đăng ký tuyến con `progress` trong `studentRoutes`; trạng thái triển khai thực tế chưa được xác minh.",
+      "action": "Đối chiếu cấu hình tuyến và mở trực tiếp đường dẫn trong môi trường thử khi được cấp.",
+      "oracle": "Cấu hình nguồn ánh xạ `/student/progress` tới `ST20Page`; kết quả mở trên môi trường thật chưa được xác minh.",
+      "priority": "Trung bình",
+      "api_ids": []
+    },
+    {
+      "id": "ST-20-YC-003",
+      "description": "Tác nhân thiết kế là người học đã xác thực bằng mã `Bearer`.",
+      "group": "Quyền truy cập",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/04-api-integration.md API #21/#38; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts; apps/study-client/src/app/core/http/student-api.service.ts",
+      "notes": "DD/danh mục API yêu cầu `Bearer` của người học; ST20 gọi `StudentApiService`; không xác minh phiên thật.",
+      "action": "Dùng phiên người học giả lập sau khi được duyệt và kiểm tra yêu cầu API do ứng dụng tạo.",
+      "oracle": "Yêu cầu của ST20 đi qua lớp API của người học để nhận mã `Bearer`; không có trường `user_id` do trang tự gửi. Quyền trong môi trường chạy chưa được xác minh.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-004",
+      "description": "Danh mục yêu cầu GET #21 và #38 độc lập, mỗi phần có trạng thái riêng.",
+      "group": "Luồng dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §1, §5; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/03-data-flow.md §3; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts; apps/study-client/docs/list_screen.md dòng ST-20",
+      "notes": "Sơ đồ `AC-18` lại đặt #37 giữa #21 và #38; thứ tự/chạy đồng thời chưa được thống nhất. Mã nguồn hiện tại chỉ gọi #38.",
+      "action": "Quan sát yêu cầu khi vào trang sau khi chủ sở hữu quyết định luồng chuẩn.",
+      "oracle": "Không tuyên bố #21 đang được gọi: ST20 hiện chỉ gọi #38; cách chạy độc lập hay nối tiếp qua #37 phải chờ quyết định từ chủ sở hữu.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21",
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-005",
+      "description": "`API #21` được thiết kế là GET `/api/v1/users/me/progress` và không khai báo yêu cầu nội dung gửi.",
+      "group": "Hợp đồng `API #21`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md dòng 21; apps/study-server/docs/dd/21_users_me_progress/03_Request.md; apps/study-server/app/api/v1.py đăng ký #21; apps/study-server/app/modules/student/api_21_users_me_progress/view.py",
+      "notes": "Danh mục API giữ tham số truy vấn nguyên văn `course_id list hoặc aggregate?:string`; cú pháp, kiểu và ý nghĩa chưa chốt.",
+      "action": "Đối chiếu phương thức, đường dẫn, đầu trang, tham số truy vấn và nội dung gửi của yêu cầu #21 sau khi luồng được duyệt.",
+      "oracle": "Hợp đồng chỉ nêu GET, `Bearer`, tham số truy vấn cụm từ khai báo chưa rõ và không có nội dung gửi; mã nguồn tuyến nhận chuỗi `course_id`/`aggregate` nhưng hàm xử lý hiện không dùng hai giá trị này.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21"
+      ]
+    },
+    {
+      "id": "ST-20-YC-006",
+      "description": "Phản hồi #21 theo danh mục API là `ApiEnvelope<UserProfile>` dù lược đồ này không có trường tiến độ.",
+      "group": "Hợp đồng `API #21`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md dòng 21; apps/study-server/docs/dd/21_users_me_progress/04_Response.md; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": "Đây là khác biệt trực tiếp giữa danh mục API và dữ liệu AC-13/`AC-18` cần dùng.",
+      "action": "Đối chiếu dữ liệu #21 với lược đồ tiến độ chỉ sau khi chủ sở hữu API chốt phản hồi.",
+      "oracle": "Giữ nguyên `ApiEnvelope<UserProfile>` trong kỳ vọng; không tự thêm tổng bài, tiến độ khóa học, tỷ lệ hay trường tổng hợp.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21"
+      ]
+    },
+    {
+      "id": "ST-20-YC-007",
+      "description": "Nguồn hiện tại của #21 chỉ trả `UserProfile` sau khi xác thực Người học.",
+      "group": "Hiện trạng máy chủ #21",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/student/api_21_users_me_progress/view.py; apps/study-server/app/modules/student/api_21_users_me_progress/query.py; apps/study-server/app/modules/student/api_21_users_me_progress/models.py; apps/study-server/app/modules/student/api_21_users_me_progress/validate.py",
+      "notes": "Mã nguồn tìm hồ sơ theo ID người dùng lấy từ JWT; truy vấn chỉ đọc bảng `users`, không đọc dữ liệu tiến độ.",
+      "action": "Dùng phản hồi giả #21 và đối chiếu đúng các trường hồ sơ, không coi hồ sơ là tiến độ.",
+      "oracle": "Nguồn bộ xử lý chỉ ánh xạ `id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at`; không có trường tiến độ. Không có kết quả môi trường chạy.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21"
+      ]
+    },
+    {
+      "id": "ST-20-YC-008",
+      "description": "Danh mục API #21 chỉ khai báo các mã lỗi 401, 403 và 500.",
+      "group": "Lỗi `API #21`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md dòng 21; apps/study-server/docs/dd/21_users_me_progress/06_Error.md",
+      "notes": "Không thêm 404/422 vào hợp đồng; hành vi tham số truy vấn chưa được quyết định.",
+      "action": "Đối chiếu nhánh lỗi #21 với đúng danh sách mã danh mục API.",
+      "oracle": "Kỳ vọng tài liệu giữ 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`; không phát sinh mã lỗi khác.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#21"
+      ]
+    },
+    {
+      "id": "ST-20-YC-009",
+      "description": "`API #38` là GET `/api/v1/users/me/achievements` với tham số truy vấn `course_id:int64` không bắt buộc.",
+      "group": "Hợp đồng `API #38`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md dòng 38; apps/study-server/docs/dd/38_users_me_achievements/03_Request.md; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts; apps/study-server/app/api/v1.py đăng ký #38",
+      "notes": "Danh mục API không khai báo `page`, `size`, `sort` hoặc nội dung gửi.",
+      "action": "So sánh yêu cầu tạo ra với danh mục API, đặc biệt khi trang tổng quan không có nguồn chọn khóa học.",
+      "oracle": "Trang hiện gọi `API #38` mà không truyền tham số truy vấn; không thêm `course_id`, `page`, `size` hoặc `sort` khi chưa có quyết định.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-010",
+      "description": "Phản hồi #38 theo danh mục API là `ApiEnvelope<Page<Achievement>>` với các trường thành tích đã khai báo.",
+      "group": "Hợp đồng `API #38`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md dòng 38; apps/study-server/docs/dd/38_users_me_achievements/04_Response.md; apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md",
+      "notes": "Ứng viên Thành tích gồm `id`, `code`, `title`, `awarded_at`, `course_id` tùy chọn; quy tắc cấp thành tích chưa được chốt.",
+      "action": "Đối chiếu từng bản ghi và siêu dữ liệu với lược đồ trong danh mục API; không tự tạo huy hiệu hoặc chứng nhận.",
+      "oracle": "Chỉ chấp nhận các trường lược đồ được định nghĩa; không tính thành tích/huy hiệu chưa mở ở giao diện. Hình ảnh nguồn không có thành phần thành tích.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-011",
+      "description": "Nguồn #38 hiện lọc theo user lấy từ `Bearer` và nhận bộ lọc `course_id` tùy chọn.",
+      "group": "Hiện trạng máy chủ #38",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/student/api_38_users_me_achievements/view.py; apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py; apps/study-server/app/modules/student/api_38_users_me_achievements/query.py; apps/study-server/app/api/v1.py đăng ký #38",
+      "notes": "Mã nguồn hiện tại dùng điều kiện lọc `user_id` và `course_id`; quyền truy cập khóa theo khóa học chưa được quyết định.",
+      "action": "Dùng yêu cầu giả không có `course_id` và có khóa học giả hợp lệ; kiểm tra nguồn binding danh tính phiên.",
+      "oracle": "Mã nguồn lấy ID người dùng qua bộ kiểm tra Người học và dùng làm điều kiện lọc truy vấn; bộ lọc khóa học chỉ được truyền khi có. Không kết luận chính sách khóa học ngoài phần có trong mã.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-012",
+      "description": "Nguồn #38 hiện trả trang cố định đầu tiên, không có đầu vào phân trang.",
+      "group": "Hiện trạng máy chủ #38",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/student/api_38_users_me_achievements/view.py; apps/study-server/app/modules/student/api_38_users_me_achievements/models.py; apps/study-server/docs/dd/38_users_me_achievements/03_Request.md; apps/study-server/docs/dd/38_users_me_achievements/04_Response.md",
+      "notes": "Mã nguồn đặt `page=1`, `size=max(số bản ghi,1)`, `total` theo truy vấn đếm và `total_pages` bằng 1 khi `total>0`, ngược lại là 0.",
+      "action": "Dùng dữ liệu giả gồm 0 và nhiều thành tích để đối chiếu siêu dữ liệu trang trả về.",
+      "oracle": "Siêu dữ liệu theo mã nguồn là trang 1; kích thước bằng số bản ghi hoặc 1 khi danh sách rỗng; `total_pages` bằng 1 nếu `total>0`, bằng 0 nếu không. Đây là ghi nhận từ mã nguồn, chưa chứng minh dữ liệu môi trường.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-013",
+      "description": "Nguồn #38 sắp xếp thành tích theo `awarded_at DESC, id DESC` và ứng dụng giao diện kiểm tra thứ tự, ID duy nhất, kiểu trường.",
+      "group": "Kiểm tra dữ liệu #38",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/student/api_38_users_me_achievements/query.py; apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+      "notes": "Bộ kiểm tra phía giao diện yêu cầu siêu dữ liệu trang cố định và các bản ghi theo thứ tự mới nhất trước.",
+      "action": "Đưa các phản hồi giả có thứ tự đúng/sai, ID lặp, ngày sai định dạng hoặc kiểu trường sai vào nhánh kiểm tra.",
+      "oracle": "Bộ kiểm tra chỉ nhận bản ghi có ID số nguyên dương an toàn, mã/tiêu đề chuỗi, thời điểm hợp lệ, `course_id` tùy chọn hợp lệ, ID không lặp và thứ tự giảm dần; dữ liệu sai được xem là lỗi.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-014",
+      "description": "Mã nguồn #38 chạy riêng truy vấn đếm và truy vấn lấy danh sách; ST-20 so sánh `total` với số bản ghi để tránh hiện nhầm trạng thái rỗng.",
+      "group": "Đồng bộ dữ liệu #38",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md ghi chú hiện trạng mã nguồn; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/04-api-integration.md ghi chú hiện trạng nơi gọi; apps/study-server/app/modules/student/api_38_users_me_achievements/view.py; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+      "notes": "Nếu hai kết quả khác nhau, trang giữ các bản ghi đã đọc, hiện thông báo đồng bộ và cho tải lại.",
+      "action": "Tạo phản hồi giả có `total` khác số bản ghi và kiểm tra trạng thái trang.",
+      "oracle": "Trang bật thông báo sai lệch, không hiện thông báo rỗng và vẫn giữ các bản ghi đã nhận; nguyên nhân do hai truy vấn riêng chưa được giải quyết.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-015",
+      "description": "Nguồn thành tích, tiêu chí mở khóa, biểu diễn thành tích và quy tắc rỗng #38 chưa được chốt.",
+      "group": "Quy tắc thành tích",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md Q-01–Q-05; apps/study-client/docs/list_screen.md dòng API 38; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/05-business-rules.md",
+      "notes": "DD #38 là bản nháp cần xác nhận; danh mục ghi chưa có bộ tạo thành tích.",
+      "action": "Đối chiếu từng bản ghi giả với nguồn cấp thành tích được chủ sở hữu phê duyệt trước khi nghiệm thu.",
+      "oracle": "Không dựng huy hiệu, chứng nhận, trạng thái khóa/mở hoặc thời điểm thành tích từ dữ liệu mẫu; chỉ ghi nhận hàng trả về của #38.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-016",
+      "description": "Danh mục yêu cầu trạng thái `loading`, `partial`, `empty`, `error` và tải lại.",
+      "group": "Trạng thái giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/list_screen.md dòng ST-20; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/03-data-flow.md §E.1; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+      "notes": "Điều kiện rỗng/không ghi danh/đồng bộ đang chờ và chính sách một phần chưa thống nhất.",
+      "action": "Lần lượt chuẩn bị phản hồi riêng cho #21 và #38: đang chờ, rỗng, thành công và lỗi.",
+      "oracle": "Các trạng thái theo danh mục phải được đối chiếu sau khi điều kiện và giao diện được duyệt; nguồn hiện có trạng thái tải/lỗi/rỗng/sai lệch cho #38 nhưng tiến độ vẫn là thẻ tiến độ cố định.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21",
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-017",
+      "description": "Mỗi thành phần cần giữ trạng thái riêng để có thể biểu diễn kết quả một phần.",
+      "group": "Trạng thái dữ liệu một phần",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §1; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/03-data-flow.md §E.1; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_PLAN.md §2–3",
+      "notes": "Danh mục yêu cầu độc lập; sơ đồ `AC-18` lại mô tả chuỗi #21→#37→#38.",
+      "action": "Dùng phản hồi thành công cho một API và lỗi cho API còn lại sau khi chủ sở hữu thống nhất cách phối hợp các yêu cầu.",
+      "oracle": "Không gộp hai luồng và không khẳng định một phần đúng nghiệp vụ cho tới khi mâu thuẫn thứ tự được giải quyết; hiện chỉ có luồng thành tích.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21",
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-018",
+      "description": "Thành tích rỗng, chưa ghi danh, chưa có tiến độ, đang đồng bộ và lỗi phải được phân biệt theo hợp đồng.",
+      "group": "Trạng thái rỗng và lỗi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-06; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/03-data-flow.md §E.1; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/05-business-rules.md §F.2",
+      "notes": "Điều kiện hiển thị thẻ trạng thái rỗng trong `HTML` là tĩnh; không thể đại diện cho nhánh API rỗng đã duyệt.",
+      "action": "Dùng dữ liệu giả lập riêng cho từng trạng thái chỉ sau khi hợp đồng nêu rõ đầu ra.",
+      "oracle": "Không coi cùng một nội dung là bằng chứng các trạng thái tương đương; mọi nhánh chưa có điều kiện vẫn Chờ xác nhận.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21",
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-019",
+      "description": "Ảnh đánh dấu chứa 16 nhóm thành phần của `HTML` được dựng tĩnh; `PNG` nguồn ban đầu để trống vùng nội dung chính.",
+      "group": "Thiết kế và điểm đánh dấu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §1–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/screen.png; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/screen_rendered.png",
+      "notes": "Ảnh `screen_rendered.png` không phải ứng dụng hoặc API đang chạy trong môi trường; các điểm đánh dấu không bao gồm bảng tổng quan sau khi tải data.",
+      "action": "Đối chiếu 16 điểm đánh dấu với JSON và bảng thành phần; kiểm tra riêng `PNG` gốc và ảnh dựng từ `HTML`.",
+      "oracle": "Có đúng 16 điểm đánh dấu `ST20-EL-01`…`ST20-EL-16` trên ảnh `HTML` dựng tĩnh. `PNG` gốc không có tiêu đề, thành phần hoặc nội dung gửi; không tự tạo điểm đánh dấu cho biểu đồ hoặc thành tích.",
+      "priority": "Trung bình",
+      "api_ids": []
+    },
+    {
+      "id": "ST-20-YC-020",
+      "description": "`HTML` nguyên mẫu chỉ mô tả thẻ rỗng và liên kết khóa học; không chứa logic tải data.",
+      "group": "Giới hạn nguyên mẫu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_PLAN.md §2; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §A.2–A.3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/code.html",
+      "notes": "`HTML` có mã Tailwind `CDN` và kiểu chữ từ xa; ảnh hiển thị chỉ chứng minh bố cục tĩnh.",
+      "action": "Đối chiếu `code.html`/ảnh hiển thị với yêu cầu không suy môi trường chạy hoặc API từ nguyên mẫu.",
+      "oracle": "Không coi thẻ trạng thái rỗng, nội dung “đang cập nhật” hoặc liên kết `HTML` là phản hồi #21/#38; không chạy JavaScript trong `HTML` nguồn.",
+      "priority": "Trung bình",
+      "api_ids": []
+    },
+    {
+      "id": "ST-20-YC-021",
+      "description": "Mã nguồn Angular hiện có thẻ tiến độ cố định vì #21 chưa trả dữ liệu tiến độ.",
+      "group": "Hiện trạng giao diện tiến độ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts",
+      "notes": "Mẫu giao diện hiện luôn hiển thị thẻ “Chưa có dữ liệu tiến độ” cùng lời giải thích rằng tiến độ chưa khả dụng.",
+      "action": "Kiểm tra mẫu giao diện hiện hành mà không coi thẻ này là phản hồi API rỗng.",
+      "oracle": "Thẻ tiến độ hiện là nội dung cố định trong mẫu giao diện; không có chỉ số, biểu đồ, thẻ khóa học hoặc lời gọi #21 từ dịch vụ ST-20.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21"
+      ]
+    },
+    {
+      "id": "ST-20-YC-022",
+      "description": "Trang hiện tải danh sách thành tích bằng `API #38` và chỉ hiển thị `title`, `awarded_at`.",
+      "group": "Hiện trạng giao diện thành tích",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts",
+      "notes": "Mã `code` và `course_id` được kiểm tra nhưng không hiển thị trong bản ghi hiện tại.",
+      "action": "Dùng dữ liệu giả có các trường lược đồ và so sánh nội dung hiển thị với mẫu giao diện.",
+      "oracle": "Danh sách chỉ hiện tiêu đề và `awarded_at` đã định dạng; không tự thêm mã, khóa học, chứng nhận, liên kết tải hoặc số liệu khác.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-023",
+      "description": "Trang hiện kiểm tra `success`, mã nghiệp vụ và cấu trúc trang trước khi hiển thị data.",
+      "group": "Kiểm tra phản hồi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+      "notes": "Mã nguồn yêu cầu `DESIGN_RESOURCE_RETRIEVED`; bao dữ liệu hoặc trang không hợp lệ chuyển sang thông báo lỗi.",
+      "action": "Dùng phản hồi giả thành công sai, mã nghiệp vụ sai và Trang sai cấu trúc.",
+      "oracle": "Chỉ dữ liệu có `success=true`, mã nghiệp vụ chính xác và trang dữ liệu hợp lệ được đưa vào danh sách; nhánh khác hiện lỗi an toàn.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-024",
+      "description": "Lỗi yêu cầu #38 hiện hiển thị thông báo và nút tải lại thành tích.",
+      "group": "Lỗi và thử lại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts; apps/study-client/src/app/core/http/student-api.service.ts",
+      "notes": "Lớp API của người học tự làm mới/chuyển tuyến chỉ cho API #4; không áp dụng chính sách đó cho #38 theo mã hiện tại.",
+      "action": "Làm `API #38` trả lỗi giả và quan sát thông báo, nút tải lại, thay đổi tuyến.",
+      "oracle": "Trang hiện hiển thị thông báo lỗi cùng nút tải lại; không tự chuyển tuyến 401/403 cho #38 từ lớp gọi dùng chung hiện đọc. Môi trường chạy chưa xác minh.",
+      "priority": "Cao",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-025",
+      "description": "Nút tải lại hiện phát sinh yêu cầu #38 mới và xóa trạng thái lỗi/dữ liệu cũ khi bắt đầu tải.",
+      "group": "Tải lại dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts",
+      "notes": "Nguồn hiện gọi lại duy nhất `API #38`; yêu cầu #21 chưa được nối vào thao tác thử lại.",
+      "action": "Bấm tải lại trong trạng thái lỗi hoặc sai lệch và quan sát yêu cầu, danh sách và trạng thái tải.",
+      "oracle": "Một yêu cầu #38 mới được tạo; trạng thái đang tải bật, lỗi/sai lệch và danh sách cũ được xóa trước khi nhận kết quả mới.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-026",
+      "description": "Liên kết danh sách thành tích dự kiến mở `ST-22`; hiện mẫu giao diện trỏ tới `/student/achievements`.",
+      "group": "Điều hướng tới `ST-22`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/06-navigation.md; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Đường dẫn được đăng ký trong cấu hình người học; luồng chạy chưa được kiểm tra trên trình duyệt.",
+      "action": "Đối chiếu liên kết trong mẫu giao diện với tuyến `achievements` trong mã nguồn.",
+      "oracle": "Liên kết hiện dùng `routerLink=/student/achievements`; tuyến con `ST-22` được khai báo trong `studentRoutes`; kết quả điều hướng môi trường thật chưa xác minh.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-027",
+      "description": "Chọn khóa học để mở `ST-21` chỉ được thực hiện khi có ID khóa học từ nguồn tiến độ đã duyệt.",
+      "group": "Điều hướng tới `ST-21`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-07; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/06-navigation.md §E.2; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Giao diện hiện không có thẻ khóa học hoặc liên kết; thẻ tiến độ bị giới hạn ở nội dung cố định vì #21 chưa trả dữ liệu tiến độ. Không thể lấy ID khóa học từ nội dung hoặc dữ liệu mẫu.",
+      "action": "Kiểm tra không xuất hiện lựa chọn khóa học giả; sau khi có hợp đồng, thử bàn giao ID đã duyệt.",
+      "oracle": "Không tạo liên kết `ST-21` hoặc ID khóa học giả trong Giao diện hiện tại; kỳ vọng điều hướng `ST-21` phải chờ nguồn dữ liệu/trạng thái đã tải được duyệt.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#21"
+      ]
+    },
+    {
+      "id": "ST-20-YC-028",
+      "description": "CTA tiến độ hiện dẫn tới danh sách khóa học `/student/courses` và không mang ID khóa học.",
+      "group": "Điều hướng về `ST-08`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-09; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "`HTML` nguyên mẫu và Angular hiện tại đều có liên kết khóa học, nhưng nhãn liên kết khác nhau.",
+      "action": "Kiểm tra liên kết hoặc nút hiện hành trong mẫu giao diện và đích tuyến.",
+      "oracle": "Liên kết trong mẫu giao diện hiện dẫn tới `/student/courses`; không có ID khóa học hoặc dữ liệu tiến độ trên liên kết.",
+      "priority": "Trung bình",
+      "api_ids": []
+    },
+    {
+      "id": "ST-20-YC-029",
+      "description": "Không dùng dữ liệu từ API dành cho cố vấn #65/#67 để thay thế tiến độ dành cho người học.",
+      "group": "Ranh giới quyền và dữ liệu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §A.2, §A.5; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts",
+      "notes": "Vai trò và đường dẫn của API dành cho cố vấn khác với API #21/#37 dành cho người học.",
+      "action": "Rà danh sách yêu cầu của ST-20 và đối chiếu mã API cùng vai trò.",
+      "oracle": "Trang chỉ được gắn API #21/#38 theo cấu hình tuyến và dịch vụ; không gọi API dành cho cố vấn để bù dữ liệu còn thiếu.",
+      "priority": "Cao",
+      "api_ids": [
+        "#21",
+        "#38"
+      ]
+    },
+    {
+      "id": "ST-20-YC-030",
+      "description": "Mã nguồn và kiểm thử tài liệu không chứng minh ứng dụng, cơ sở dữ liệu hoặc API môi trường thật đã chạy.",
+      "group": "Bằng chứng kiểm thử",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/07-test-cases.md; apps/study-client/docs/list_screen.md dòng API 21/38; apps/study-server/app/modules/student/api_21_users_me_progress/; apps/study-server/app/modules/student/api_38_users_me_achievements/; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+      "notes": "Có kiểm thử #21 trong kho mã nguồn; danh mục không tìm thấy kiểm thử tập trung #38; task này chỉ sinh UTC tĩnh.",
+      "action": "Đối chiếu trạng thái kiểm thử và môi trường trước khi chuyển bất kỳ ca nào sang Đạt.",
+      "oracle": "Mọi ca mới ở `Chưa chạy`; không ghi kết quả/bằng chứng/người/ngày; chưa kết luận môi trường chạy, lược đồ môi trường thật, dữ liệu hoặc bộ ghi nhận thành tích.",
+      "priority": "Trung bình",
+      "api_ids": []
+    },
+    {
+      "id": "ST-20-YC-031",
+      "description": "Danh mục API #38 chỉ khai báo các mã lỗi 401, 403 và 500.",
+      "group": "Lỗi `API #38`",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md dòng 38; apps/study-server/docs/dd/38_users_me_achievements/06_Error.md; apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md Q-06; apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py",
+      "notes": "Câu hỏi mở #38 chưa chốt thêm mã lỗi cho `course_id` sai; không tự thay đổi danh mục.",
+      "action": "Đối chiếu từng nhánh lỗi #38 với đúng mã danh mục API và ghi riêng mã nguồn hiện tại.",
+      "oracle": "Kỳ vọng theo danh mục API: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`; không thêm 404/422. Mã nguồn hiện ánh xạ `course_id` sai định dạng sang 500; đây là hiện trạng, không phải quyết định mới.",
+      "priority": "Trung bình",
+      "api_ids": [
+        "#38"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-20-EL-001",
+      "marker": "#1 / ST20-EL-01",
+      "name": "Thương hiệu Study2Work và liên kết trang chủ",
+      "type": "Logo/liên kết",
+      "position": "Đầu trang, bên trái",
+      "properties": "Logo và tên tĩnh trong ảnh `HTML`; đích liên kết trong nguyên mẫu không xác nhận tuyến chạy.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-002",
+      "marker": "#2 / ST20-EL-02",
+      "name": "Nhóm điều hướng chính: Tổng quan, Khóa học của tôi, Tiến độ",
+      "type": "Nhóm liên kết",
+      "position": "Đầu trang",
+      "properties": "Ba liên kết tĩnh; Tiến độ được đánh dấu đang chọn trong nguyên mẫu.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-003",
+      "marker": "#3 / ST20-EL-03",
+      "name": "Dấu vết vị trí: Trang chủ, Học viên, Tổng quan tiến độ",
+      "type": "Điều hướng vị trí",
+      "position": "Trên tiêu đề trang",
+      "properties": "Nhãn tĩnh trên ảnh dựng từ `HTML`; khác với dấu vết vị trí của Angular hiện tại.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-004",
+      "marker": "#4 / ST20-EL-04",
+      "name": "Tiêu đề “Tổng quan tiến độ”",
+      "type": "Tiêu đề cấp một",
+      "position": "Đầu vùng nội dung",
+      "properties": "Có trong `HTML` dựng tĩnh; `PNG` gốc không có tiêu đề trong vùng chính.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-005",
+      "marker": "#5 / ST20-EL-05",
+      "name": "Mô tả theo dõi tiến trình học",
+      "type": "Văn bản mô tả",
+      "position": "Ngay dưới tiêu đề",
+      "properties": "Nội dung tĩnh; không phải số liệu hoặc công thức tiến độ.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-006",
+      "marker": "#6 / ST20-EL-06",
+      "name": "Biểu tượng trạng thái rỗng",
+      "type": "Biểu tượng",
+      "position": "Giữa thẻ trạng thái rỗng",
+      "properties": "Chỉ có trong `HTML` dựng tĩnh; không gắn giá trị API hoặc thao tác riêng.",
+      "event_ids": [
+        "ST20-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-007",
+      "marker": "#7 / ST20-EL-07",
+      "name": "Tiêu đề trạng thái rỗng “Chưa có dữ liệu tiến độ để hiển thị.”",
+      "type": "Tiêu đề trạng thái",
+      "position": "Giữa thẻ trạng thái rỗng",
+      "properties": "Điều kiện hiển thị trong nghiệp vụ chưa được chốt; không dùng làm chuẩn phản hồi API rỗng.",
+      "event_ids": [
+        "ST20-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-008",
+      "marker": "#8 / ST20-EL-08",
+      "name": "Giải thích trạng thái rỗng và hướng dẫn kiểm tra lại",
+      "type": "Văn bản trạng thái",
+      "position": "Dưới tiêu đề trạng thái rỗng",
+      "properties": "Nội dung nêu khả năng hệ thống cập nhật; không có hợp đồng polling hoặc đồng bộ.",
+      "event_ids": [
+        "ST20-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-009",
+      "marker": "#9 / ST20-EL-09",
+      "name": "Liên kết “Xem khóa học của tôi”",
+      "type": "Liên kết tạo kiểu nút",
+      "position": "Cuối thẻ trạng thái rỗng",
+      "properties": "Liên kết `HTML` trỏ `/student/courses`; không mang ID khóa học.",
+      "event_ids": [
+        "ST20-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-010",
+      "marker": "#10 / ST20-EL-10",
+      "name": "Thương hiệu và mô tả Study2Work LMS ở chân trang",
+      "type": "Nhóm nội dung chân trang",
+      "position": "Chân trang, bên trái",
+      "properties": "Nội dung tĩnh; không lấy từ API ST-20.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-011",
+      "marker": "#11 / ST20-EL-11",
+      "name": "Nhóm liên kết Chương trình",
+      "type": "Nhóm liên kết chân trang",
+      "position": "Chân trang, cột chương trình",
+      "properties": "Liên kết khóa học, lộ trình và đồ án; đích trong `HTML` chưa xác nhận.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-012",
+      "marker": "#12 / ST20-EL-12",
+      "name": "Nhóm liên kết Hỗ trợ",
+      "type": "Nhóm liên kết chân trang",
+      "position": "Chân trang, cột hỗ trợ",
+      "properties": "Liên kết diễn đàn, cố vấn và trợ giúp; không tạo API từ các mục tĩnh.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-013",
+      "marker": "#13 / ST20-EL-13",
+      "name": "Thông tin Liên hệ",
+      "type": "Thông tin tĩnh",
+      "position": "Chân trang, cột liên hệ",
+      "properties": "Địa điểm, đường dây nóng và thư điện tử trong hình; không phải dữ liệu hồ sơ/cấu hình của ST-20.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-014",
+      "marker": "#14 / ST20-EL-14",
+      "name": "Dải bản quyền và mô tả nền tảng",
+      "type": "Văn bản chân trang",
+      "position": "Dải pháp lý cuối trang",
+      "properties": "Nội dung tĩnh; không có hành vi tương tác riêng.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-015",
+      "marker": "#15 / ST20-EL-15",
+      "name": "Liên kết Điều khoản sử dụng",
+      "type": "Liên kết chân trang",
+      "position": "Bên phải dải pháp lý",
+      "properties": "Đích trong nguyên mẫu không xác nhận trang đích môi trường chạy.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-EL-016",
+      "marker": "#16 / ST20-EL-16",
+      "name": "Liên kết Chính sách bảo mật",
+      "type": "Liên kết chân trang",
+      "position": "Cuối dải pháp lý",
+      "properties": "Đích trong nguyên mẫu không xác nhận trang đích môi trường chạy.",
+      "event_ids": [
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §2–3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json"
+    },
+    {
+      "id": "ST-20-SRC-EL-001",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Dấu vết vị trí Angular",
+      "type": "Điều hướng vị trí",
+      "position": "Đầu trang nội dung",
+      "properties": "Liên kết Trang chủ trỏ `/student`; nhãn cuối là Tổng quan tiến độ.",
+      "event_ids": [
+        "ST20-EV-01",
+        "ST20-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-002",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Tiêu đề và mô tả Angular",
+      "type": "Tiêu đề/văn bản",
+      "position": "Đầu vùng nội dung",
+      "properties": "Hiện “Tổng quan tiến độ” và nội dung “Theo dõi các khóa học và thành tích đã được ghi nhận.”",
+      "event_ids": [
+        "ST20-EV-01"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-003",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Thẻ tiến độ cố định",
+      "type": "Thẻ trạng thái",
+      "position": "Vùng nội dung chính",
+      "properties": "Hiện “Chưa có dữ liệu tiến độ” và “Tiến độ tổng hợp hiện chưa khả dụng.”; không gắn với kết quả `API #21`.",
+      "event_ids": [
+        "ST20-EV-04",
+        "ST20-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-004",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Liên kết Khóa học của tôi",
+      "type": "Liên kết",
+      "position": "Trong thẻ tiến độ cố định",
+      "properties": "Liên kết tới `/student/courses`; hiện không có ID khóa học.",
+      "event_ids": [
+        "ST20-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-005",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Tiêu đề khu vực thành tích",
+      "type": "Tiêu đề cấp hai",
+      "position": "Đầu thẻ thành tích",
+      "properties": "Hiện nội dung “Thành tích đã được hệ thống ghi nhận.”",
+      "event_ids": [
+        "ST20-EV-03",
+        "ST20-EV-05"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-006",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Liên kết xem danh sách thành tích",
+      "type": "Liên kết",
+      "position": "Đầu thẻ thành tích, bên phải",
+      "properties": "Liên kết tới `/student/achievements`.",
+      "event_ids": [
+        "ST20-EV-08"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-007",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Thông báo đang tải thành tích",
+      "type": "Thông báo trạng thái",
+      "position": "Thân thẻ thành tích",
+      "properties": "Hiện khi `loading()` là true; phần tử có `role=status`.",
+      "event_ids": [
+        "ST20-EV-12"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-008",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Thông báo lỗi thành tích",
+      "type": "Cảnh báo",
+      "position": "Thân thẻ thành tích",
+      "properties": "Hiện nội dung lỗi động; phần tử có `role=alert`.",
+      "event_ids": [
+        "ST20-EV-11",
+        "ST20-EV-15"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-009",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Nút tải lại thành tích",
+      "type": "Nút",
+      "position": "Trong nhánh lỗi hoặc sai lệch",
+      "properties": "Gọi `retryAchievements()` để gửi yêu cầu #38 mới.",
+      "event_ids": [
+        "ST20-EV-13",
+        "ST20-EV-15"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-010",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Thông báo số lượng chưa khớp",
+      "type": "Thông báo trạng thái",
+      "position": "Thân thẻ thành tích",
+      "properties": "So sánh `pagination.total` với số bản ghi; khi lệch thì không hiện nội dung rỗng.",
+      "event_ids": [
+        "ST20-EV-14"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-011",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Trạng thái chưa có thành tích",
+      "type": "Thông báo rỗng",
+      "position": "Thân thẻ thành tích",
+      "properties": "Hiện khi tải xong, không lỗi, không lệch và không có bản ghi. Nội dung hiện có không được coi là chính sách rỗng đã duyệt.",
+      "event_ids": [
+        "ST20-EV-06",
+        "ST20-EV-05"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    },
+    {
+      "id": "ST-20-SRC-EL-012",
+      "marker": "Không có điểm đánh dấu — chỉ có trong mã nguồn hiện tại",
+      "name": "Tiêu đề và ngày ghi nhận của từng thành tích",
+      "type": "Nội dung danh sách",
+      "position": "Mỗi hàng trong danh sách thành tích",
+      "properties": "Chỉ hiện `title` và `awarded_at`; theo dõi hàng bằng `id`; không hiện mã/`course_id`.",
+      "event_ids": [
+        "ST20-EV-05",
+        "ST20-EV-14"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST20-EV-01",
+      "name": "Vào trang và kiểm tra phiên",
+      "trigger": "Mở `/student/progress` trong ngữ cảnh người học.",
+      "element_ids": [
+        "ST-20-SRC-EL-001",
+        "ST-20-SRC-EL-002"
+      ],
+      "api_ids": [],
+      "processing": "DD yêu cầu người học đã xác thực. Mã nguồn khai báo tuyến `ST20Page`; hành vi bảo vệ tuyến và kết quả môi trường chạy chưa được xác minh.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-01; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST20-EV-02",
+      "name": "Tải tiến độ qua `API #21`",
+      "trigger": "Vào trang sau khi có phiên người học theo thiết kế.",
+      "element_ids": [
+        "ST-20-SRC-EL-003"
+      ],
+      "api_ids": [
+        "#21"
+      ],
+      "processing": "DD kỳ vọng GET #21; danh mục API có tham số truy vấn cụm từ khai báo chưa rõ và phản hồi `UserProfile`. Mã nguồn ST20 hiện không gọi #21; hàm xử lý #21 hiện chỉ trả `UserProfile`, không có dữ liệu trả về tiến độ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-02; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts; apps/study-server/app/modules/student/api_21_users_me_progress/view.py; docs/lists/list_api.md dòng 21"
+    },
+    {
+      "id": "ST20-EV-03",
+      "name": "Tải thành tích qua `API #38`",
+      "trigger": "Vào trang; danh mục yêu cầu đọc thành tích.",
+      "element_ids": [
+        "ST-20-SRC-EL-005",
+        "ST-20-SRC-EL-007"
+      ],
+      "api_ids": [
+        "#38"
+      ],
+      "processing": "Mã nguồn hiện gọi `ST20ProgressService.achievements()` qua `StudentApiService`, không truyền tham số truy vấn; máy chủ lọc danh tính phiên hiện tại và chạy truy vấn đếm và truy vấn lấy danh sách. Môi trường chạy chưa được kiểm tra.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-03; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts; apps/study-server/app/modules/student/api_38_users_me_achievements/view.py; apps/study-server/app/modules/student/api_38_users_me_achievements/query.py"
+    },
+    {
+      "id": "ST20-EV-04",
+      "name": "Tổng hợp và ánh xạ tiến độ",
+      "trigger": "#21 trả thành công với lược đồ tiến độ đã được duyệt.",
+      "element_ids": [
+        "ST-20-SRC-EL-003"
+      ],
+      "api_ids": [
+        "#21"
+      ],
+      "processing": "Chưa có lược đồ tiến độ, công thức, khóa ghép, phạm vi hoặc quy tắc kết quả rỗng được chốt. Mã nguồn giao diện hiện để thẻ tiến độ cố định; không tính tỷ lệ từ `lesson_progress`.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-04; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/03-data-flow.md; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-server/docs/dd/21_users_me_progress/OPEN_QUESTIONS.md"
+    },
+    {
+      "id": "ST20-EV-05",
+      "name": "Ánh xạ danh sách thành tích",
+      "trigger": "#38 trả phản hồi hợp lệ và có bản ghi.",
+      "element_ids": [
+        "ST-20-SRC-EL-005",
+        "ST-20-SRC-EL-012"
+      ],
+      "api_ids": [
+        "#38"
+      ],
+      "processing": "Ứng dụng giao diện kiểm tra mã thành công, siêu dữ liệu, kiểu trường, thứ tự và ID duy nhất. Khi có bản ghi, giao diện hiện tiêu đề và ngày `awarded_at`; không tự tạo thành tích hoặc chứng nhận.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-05; apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts"
+    },
+    {
+      "id": "ST20-EV-06",
+      "name": "Hiển thị trạng thái rỗng, một phần hoặc lỗi",
+      "trigger": "Có kết quả riêng từ một hoặc nhiều thành phần.",
+      "element_ids": [
+        "ST-20-EL-007",
+        "ST-20-EL-008",
+        "ST-20-SRC-EL-003",
+        "ST-20-SRC-EL-007",
+        "ST-20-SRC-EL-008",
+        "ST-20-SRC-EL-010",
+        "ST-20-SRC-EL-011"
+      ],
+      "api_ids": [
+        "#21",
+        "#38"
+      ],
+      "processing": "Danh mục nêu các trạng thái đang tải, một phần, rỗng và lỗi. Định nghĩa trạng thái rỗng và thứ tự yêu cầu còn mở; mã nguồn hiện có các trạng thái riêng cho #38, trong khi tiến độ đang hiển thị bằng thẻ cố định.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-06; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/03-data-flow.md §E.1; apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+    },
+    {
+      "id": "ST20-EV-07",
+      "name": "Chọn khóa học để mở `ST-21`",
+      "trigger": "Người học chọn khóa từ giao diện ở trạng thái đã tải.",
+      "element_ids": [
+        "ST-20-SRC-EL-003"
+      ],
+      "api_ids": [
+        "#21"
+      ],
+      "processing": "Ở trạng thái đã tải, giao diện hiện chưa có bản ghi khóa học; #21 không trả dữ liệu tiến độ. Không tự tạo ID hoặc điều hướng tới `ST-21` từ nội dung. Luồng #37 cần tuân theo DD `ST-21`.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-07; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/06-navigation.md §E.2; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST20-EV-08",
+      "name": "Mở `ST-22` Thành tích và chứng nhận",
+      "trigger": "Chọn liên kết xem danh sách thành tích.",
+      "element_ids": [
+        "ST-20-SRC-EL-006"
+      ],
+      "api_ids": [
+        "#38"
+      ],
+      "processing": "Mẫu giao diện hiện trỏ tới `/student/achievements`; tuyến `ST-22` đã được khai báo. Liên kết hiện tại không kèm bộ lọc khóa học hoặc thông tin bàn giao; chưa xác minh môi trường chạy.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-08; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST20-EV-09",
+      "name": "Từ thẻ tiến độ cố định mở danh sách khóa học `ST-08`",
+      "trigger": "Chọn liên kết Khóa học của tôi.",
+      "element_ids": [
+        "ST-20-EL-009",
+        "ST-20-SRC-EL-004"
+      ],
+      "api_ids": [],
+      "processing": "`HTML` gốc và Angular hiện có liên kết tới `/student/courses`; không gửi ID khóa học. Hành vi trên trình duyệt thật chưa được kiểm tra.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-09; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/code.html"
+    },
+    {
+      "id": "ST20-EV-10",
+      "name": "Dùng liên kết đầu trang, dấu vết vị trí và chân trang",
+      "trigger": "Chọn thương hiệu, mục điều hướng, dấu vết vị trí hoặc liên kết chân trang trong nguyên mẫu.",
+      "element_ids": [
+        "ST-20-EL-001",
+        "ST-20-EL-002",
+        "ST-20-EL-003",
+        "ST-20-EL-011",
+        "ST-20-EL-012",
+        "ST-20-EL-015",
+        "ST-20-EL-016",
+        "ST-20-SRC-EL-001"
+      ],
+      "api_ids": [],
+      "processing": "Các liên kết trên ảnh nguyên mẫu là tĩnh; mã nguồn mẫu giao diện ST20 có dấu vết vị trí tới `/student`. Không suy đích môi trường chạy cho phần tử ngoài mẫu giao diện.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-10; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md; apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+    },
+    {
+      "id": "ST20-EV-11",
+      "name": "Xử lý lỗi API và phiên",
+      "trigger": "#21/#38 trả lỗi danh mục API hoặc yêu cầu không nhận phản hồi.",
+      "element_ids": [
+        "ST-20-SRC-EL-008",
+        "ST-20-SRC-EL-009"
+      ],
+      "api_ids": [
+        "#21",
+        "#38"
+      ],
+      "processing": "Danh mục API giữ các mã lỗi 401/403/500. Lỗi #38 hiện được chuyển thành thông báo qua `studentApiErrorMessage`; `StudentApiService` chỉ tự làm mới phiên hoặc chuyển tuyến cho API #4. Giao diện có nút tải lại cho #38; chưa có lớp gọi #21.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md ST20-EV-11; docs/lists/list_api.md dòng 21/38; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts; apps/study-client/src/app/core/http/student-api.service.ts"
+    },
+    {
+      "id": "ST20-EV-12",
+      "name": "Khởi tạo trạng thái tải thành tích",
+      "trigger": "`ST20Page.ngOnInit()` bắt đầu luồng đọc #38.",
+      "element_ids": [
+        "ST-20-SRC-EL-007"
+      ],
+      "api_ids": [
+        "#38"
+      ],
+      "processing": "Luồng tải lại bắt đầu bằng lần phát đầu; trước yêu cầu bật đang tải, xóa lỗi, sai lệch và danh sách cũ.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts"
+    },
+    {
+      "id": "ST20-EV-13",
+      "name": "Thử tải lại thành tích",
+      "trigger": "Chọn nút tải lại trong trạng thái lỗi hoặc sai lệch.",
+      "element_ids": [
+        "ST-20-SRC-EL-009"
+      ],
+      "api_ids": [
+        "#38"
+      ],
+      "processing": "`retryAchievements()` phát yêu cầu mới; thao tác đầu luồng xóa trạng thái cũ và gọi lại #38. Không gọi #21.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/ST20/data-access/st20-progress.service.ts"
+    },
+    {
+      "id": "ST20-EV-14",
+      "name": "Xử lý sai lệch giữa tổng và danh sách",
+      "trigger": "#38 trả trang dữ liệu hợp lệ nhưng `pagination.total` khác số bản ghi.",
+      "element_ids": [
+        "ST-20-SRC-EL-010",
+        "ST-20-SRC-EL-009",
+        "ST-20-SRC-EL-012"
+      ],
+      "api_ids": [
+        "#38"
+      ],
+      "processing": "Trang bật `snapshotMismatch` và giữ các bản ghi nhận được; giao diện hiện thông báo cùng nút tải lại, đồng thời không hiện trạng thái rỗng. Phép so sánh được thực hiện tại thành phần trang, không nằm trong bộ kiểm tra dùng chung.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts; apps/study-server/app/modules/student/api_38_users_me_achievements/view.py"
+    },
+    {
+      "id": "ST20-EV-15",
+      "name": "Kiểm tra phản hồi và chọn trạng thái hiển thị",
+      "trigger": "Yêu cầu #38 hoàn tất thành công hoặc lỗi.",
+      "element_ids": [
+        "ST-20-SRC-EL-008",
+        "ST-20-SRC-EL-011",
+        "ST-20-SRC-EL-012"
+      ],
+      "api_ids": [
+        "#38"
+      ],
+      "processing": "Mã nguồn kiểm tra bao dữ liệu, mã nghiệp vụ và bộ kiểm tra Trang; dữ liệu hợp lệ đi tới danh sách/rỗng/sai lệch. Lỗi chuyển thành thông báo; không kết luận môi trường chạy đạt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts; apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST20-B01",
+      "description": "#21 hiện trả hồ sơ người dùng; cú pháp tham số truy vấn, đối tượng dữ liệu tiến độ, nguồn và công thức tổng hợp, khóa ghép, phạm vi, mẫu số, làm tròn và cấu trúc kết quả rỗng chưa được chốt.",
+      "impact": "Không thể xác nhận tổng số bài học hoặc tiến độ theo khóa học để nghiệm thu bảng tổng quan.",
+      "decision": "Chủ sở hữu API chốt tham số truy vấn, nguồn dữ liệu, lược đồ phản hồi, công thức, khóa ghép theo khóa học, cách gắn ID từ phiên và trường hợp không ghi danh/không có tiến độ; cập nhật danh mục và DD.",
+      "source_ref": "apps/study-server/docs/dd/21_users_me_progress/OPEN_QUESTIONS.md Q-21-01…05; apps/study-server/app/modules/student/api_21_users_me_progress/view.py; apps/study-server/app/modules/student/api_21_users_me_progress/query.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST20-B02",
+      "description": "#38 chưa có tiêu chí cấp thành tích, nguồn tạo, ánh xạ trường ổn định và quy tắc mở khóa/thu hồi được duyệt.",
+      "impact": "Chưa thể xác nhận bản ghi nào là thành tích thật hoặc thời điểm được ghi nhận. Mã nguồn đọc bảng `user_achievements`, nhưng chưa xác nhận có bộ tạo thành tích.",
+      "decision": "Chốt danh mục thành tích, điều kiện, nguồn và cách tạo từng trường phản hồi; xác nhận khả năng lưu trữ trong lược đồ môi trường trước khi nghiệm thu.",
+      "source_ref": "apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md Q-01–02; apps/study-client/docs/list_screen.md dòng API 38; apps/study-server/app/modules/student/api_38_users_me_achievements/query.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST20-B03",
+      "description": "#38 chưa chốt ý nghĩa bộ lọc `course_id`, quyền theo khóa học, việc có bao gồm thành tích toàn cục hay không và cách xử lý khóa học không hợp lệ.",
+      "impact": "Có thể đưa nhầm thành tích vào kết quả lọc hoặc trả lỗi không khớp danh mục; mã nguồn hiện trả 500 khi `course_id` không hợp lệ.",
+      "decision": "Chốt quy tắc lọc, quyền truy cập, khóa không tồn tại/ngoài quyền và ID sai; cập nhật danh mục trước nếu cần mã lỗi khác.",
+      "source_ref": "apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md Q-03, Q-06; apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py; docs/lists/list_api.md dòng 38",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST20-B04",
+      "description": "#38 chưa có chính sách phân trang, sắp xếp, tổng số và kết quả rỗng; mã nguồn hiện trả trang đầu cố định và đọc tổng số/danh sách bằng hai truy vấn riêng.",
+      "impact": "Có thể thiếu dữ liệu hoặc hiện nhầm trạng thái rỗng nếu hai truy vấn trả số lượng khác nhau; chưa có kiểm thử biên được duyệt.",
+      "decision": "Chốt tham số trang, kích thước, thứ tự, cách tính tổng, cấu trúc trang rỗng và tính nhất quán giữa hai truy vấn; cập nhật hợp đồng trước khi dùng làm tiêu chí.",
+      "source_ref": "apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md Q-04–05; apps/study-server/app/modules/student/api_38_users_me_achievements/view.py; apps/study-server/app/modules/student/api_38_users_me_achievements/query.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST20-B05",
+      "description": "Danh mục màn hình yêu cầu gọi #21/#38 độc lập, còn sơ đồ AC-18 mô tả #21 → tổng hợp → #37 → tổng hợp → #38 → hiển thị.",
+      "impact": "Chưa thể xác định thứ tự yêu cầu, điều kiện gọi #37, thời điểm hiển thị một phần và ranh giới ST-20/ST-21.",
+      "decision": "Chủ sở hữu nghiệp vụ/API thống nhất luồng và cập nhật danh mục, sơ đồ, DD ST-20/ST-21.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §A.2–A.3; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_PLAN.md §2–3; apps/study-client/docs/list_screen.md dòng ST-20/ST-21",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST20-B06",
+      "description": "PNG gốc không có nội dung trong vùng chính; HTML chỉ có trạng thái rỗng; giao diện sau khi có dữ liệu chưa được duyệt và mã Angular hiện khác nguyên mẫu.",
+      "impact": "Chưa có hình đích cho tổng số bài, tiến độ theo khóa, thành tích và trạng thái một phần để đối chiếu giao diện.",
+      "decision": "Duyệt giao diện sau khi có dữ liệu cùng các trạng thái đang tải/một phần/rỗng/lỗi, nội dung và điều kiện hiển thị; cập nhật DD và ảnh đánh dấu.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §A.2–A.3; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md §3; apps/study-client/src/app/features/student/ST20/pages/st20-page.html; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/screen.png; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/code.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST20-B07",
+      "description": "Tài liệu có các đoạn lịch sử ghi `UNWIRED/NOT_FOUND`, trong khi ghi chú mới và mã nguồn hiện có tuyến, #21/#38 và lời gọi #38; môi trường triển khai chưa được kiểm tra.",
+      "impact": "Người đọc có thể nhầm trạng thái mã nguồn hiện tại với ghi chú cũ hoặc coi mã nguồn là bằng chứng ứng dụng đã chạy.",
+      "decision": "Cập nhật hoặc đánh dấu rõ các đoạn lịch sử trong DD; kiểm tra môi trường riêng. UTC giữ hai lớp bằng chứng tách biệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md — mục hiện trạng mã nguồn; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/04-api-integration.md — mục hiện trạng nơi gọi; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/06-navigation.md — mục tuyến nguồn hiện tại; apps/study-client/src/app/features/student/student.route.ts; apps/study-server/app/api/v1.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST20-B08",
+      "description": "Nguyên mẫu tải Tailwind qua CDN và kiểu chữ từ xa, dùng chiều rộng 1440px và màu chính không thống nhất với hướng dẫn Study Web; lược đồ cơ sở dữ liệu/thành tích và môi trường chạy chưa được kiểm tra.",
+      "impact": "Chưa đủ căn cứ chốt giao diện cuối, khả năng triển khai hoặc dữ liệu thành tích thật.",
+      "decision": "Duyệt giao diện theo định hướng thiết kế; sau đó kiểm tra môi trường, bản chuyển đổi cơ sở dữ liệu/lược đồ, API và quyền bằng bộ kiểm thử được phê duyệt; ghi người thực hiện, ngày và bằng chứng.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md §A.3–A.5; apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/05-business-rules.md §F.2; apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_PLAN.md §2; apps/study-client/docs/list_screen.md dòng ST-20",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST-20-TC-MH-001",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20",
+        "group": "Mục tiêu màn hình",
+        "title": "`AC-18` yêu cầu tổng quan thể hiện tổng số bài học, tiến độ theo khóa học và thành tích đã được ghi nhận.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Các chỉ số tiến độ vẫn chưa thể kiểm thử theo hợp đồng #21; hiện chỉ có dữ liệu thành tích từ mã nguồn. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu từng vùng số liệu trên trang với hợp đồng API đã được chủ sở hữu xác nhận.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Không có số tổng bài học hoặc phần trăm tiến độ nào được dựng từ dữ liệu chưa có hợp đồng; thành tích chỉ lấy từ bản ghi #38. Hiện trạng giao diện đã nêu thẻ tiến độ cố định và danh sách thành tích; chưa xác minh môi trường chạy. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-002",
+        "requirement_ids": [
+          "ST-20-YC-002"
+        ],
+        "target_id": "ST-20",
+        "group": "Điểm vào và tuyến",
+        "title": "Tuyến màn hình của ST-20 là `/student/progress`.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Mã nguồn hiện đăng ký tuyến con `progress` trong `studentRoutes`; trạng thái triển khai thực tế chưa được xác minh. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu cấu hình tuyến và mở trực tiếp đường dẫn trong môi trường thử khi được cấp.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Cấu hình nguồn ánh xạ `/student/progress` tới `ST20Page`; kết quả mở trên môi trường thật chưa được xác minh. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-003",
+        "requirement_ids": [
+          "ST-20-YC-003"
+        ],
+        "target_id": "ST-20",
+        "group": "Quyền truy cập",
+        "title": "Tác nhân thiết kế là người học đã xác thực bằng mã `Bearer`.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "DD/danh mục API yêu cầu `Bearer` của người học; ST20 gọi `StudentApiService`; không xác minh phiên thật. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng phiên người học giả lập sau khi được duyệt và kiểm tra yêu cầu API do ứng dụng tạo.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Yêu cầu của ST20 đi qua lớp API của người học để nhận mã `Bearer`; không có trường `user_id` do trang tự gửi. Quyền trong môi trường chạy chưa được xác minh. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/04-api-integration.md API #21/#38"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-004",
+        "requirement_ids": [
+          "ST-20-YC-004"
+        ],
+        "target_id": "ST-20",
+        "group": "Luồng dữ liệu",
+        "title": "Danh mục yêu cầu GET #21 và #38 độc lập, mỗi phần có trạng thái riêng.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Sơ đồ `AC-18` lại đặt #37 giữa #21 và #38; thứ tự/chạy đồng thời chưa được thống nhất. Mã nguồn hiện tại chỉ gọi #38. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Quan sát yêu cầu khi vào trang sau khi chủ sở hữu quyết định luồng chuẩn.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Không tuyên bố #21 đang được gọi: ST20 hiện chỉ gọi #38; cách chạy độc lập hay nối tiếp qua #37 phải chờ quyết định từ chủ sở hữu. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-005",
+        "requirement_ids": [
+          "ST-20-YC-005"
+        ],
+        "target_id": "ST-20",
+        "group": "Hợp đồng `API #21`",
+        "title": "`API #21` được thiết kế là GET `/api/v1/users/me/progress` và không khai báo yêu cầu nội dung gửi.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Danh mục API giữ tham số truy vấn nguyên văn `course_id list hoặc aggregate?:string`; cú pháp, kiểu và ý nghĩa chưa chốt. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu phương thức, đường dẫn, đầu trang, tham số truy vấn và nội dung gửi của yêu cầu #21 sau khi luồng được duyệt.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Hợp đồng chỉ nêu GET, `Bearer`, tham số truy vấn cụm từ khai báo chưa rõ và không có nội dung gửi; mã nguồn tuyến nhận chuỗi `course_id`/`aggregate` nhưng hàm xử lý hiện không dùng hai giá trị này. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-006",
+        "requirement_ids": [
+          "ST-20-YC-006"
+        ],
+        "target_id": "ST-20",
+        "group": "Hợp đồng `API #21`",
+        "title": "Phản hồi #21 theo danh mục API là `ApiEnvelope<UserProfile>` dù lược đồ này không có trường tiến độ.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Đây là khác biệt trực tiếp giữa danh mục API và dữ liệu AC-13/`AC-18` cần dùng. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu dữ liệu #21 với lược đồ tiến độ chỉ sau khi chủ sở hữu API chốt phản hồi.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Giữ nguyên `ApiEnvelope<UserProfile>` trong kỳ vọng; không tự thêm tổng bài, tiến độ khóa học, tỷ lệ hay trường tổng hợp. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-007",
+        "requirement_ids": [
+          "ST-20-YC-007"
+        ],
+        "target_id": "ST-20",
+        "group": "Hiện trạng máy chủ #21",
+        "title": "Nguồn hiện tại của #21 chỉ trả `UserProfile` sau khi xác thực Người học.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Mã nguồn tìm hồ sơ theo ID người dùng lấy từ JWT; truy vấn chỉ đọc bảng `users`, không đọc dữ liệu tiến độ. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng phản hồi giả #21 và đối chiếu đúng các trường hồ sơ, không coi hồ sơ là tiến độ.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Nguồn bộ xử lý chỉ ánh xạ `id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at`; không có trường tiến độ. Không có kết quả môi trường chạy. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_21_users_me_progress/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-008",
+        "requirement_ids": [
+          "ST-20-YC-008"
+        ],
+        "target_id": "ST-20",
+        "group": "Lỗi `API #21`",
+        "title": "Danh mục API #21 chỉ khai báo các mã lỗi 401, 403 và 500.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Không thêm 404/422 vào hợp đồng; hành vi tham số truy vấn chưa được quyết định. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu nhánh lỗi #21 với đúng danh sách mã danh mục API.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Kỳ vọng tài liệu giữ 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`; không phát sinh mã lỗi khác. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-009",
+        "requirement_ids": [
+          "ST-20-YC-009"
+        ],
+        "target_id": "ST-20",
+        "group": "Hợp đồng `API #38`",
+        "title": "`API #38` là GET `/api/v1/users/me/achievements` với tham số truy vấn `course_id:int64` không bắt buộc.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Danh mục API không khai báo `page`, `size`, `sort` hoặc nội dung gửi. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: So sánh yêu cầu tạo ra với danh mục API, đặc biệt khi trang tổng quan không có nguồn chọn khóa học.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Trang hiện gọi `API #38` mà không truyền tham số truy vấn; không thêm `course_id`, `page`, `size` hoặc `sort` khi chưa có quyết định. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-010",
+        "requirement_ids": [
+          "ST-20-YC-010"
+        ],
+        "target_id": "ST-20",
+        "group": "Hợp đồng `API #38`",
+        "title": "Phản hồi #38 theo danh mục API là `ApiEnvelope<Page<Achievement>>` với các trường thành tích đã khai báo.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Ứng viên Thành tích gồm `id`, `code`, `title`, `awarded_at`, `course_id` tùy chọn; quy tắc cấp thành tích chưa được chốt. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu từng bản ghi và siêu dữ liệu với lược đồ danh mục API, không tạo huy hiệu hoặc chứng nhận cục bộ.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Chỉ chấp nhận các trường lược đồ được định nghĩa; không tính thành tích/huy hiệu chưa mở ở giao diện. Hình ảnh nguồn không có thành phần thành tích. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-011",
+        "requirement_ids": [
+          "ST-20-YC-011"
+        ],
+        "target_id": "ST-20",
+        "group": "Hiện trạng máy chủ #38",
+        "title": "Nguồn #38 hiện lọc theo user lấy từ `Bearer` và nhận bộ lọc `course_id` tùy chọn.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Mã nguồn hiện tại dùng điều kiện lọc `user_id` và `course_id`; quyền truy cập khóa theo khóa học chưa được quyết định. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng yêu cầu giả không có `course_id` và có khóa học giả hợp lệ; kiểm tra nguồn binding danh tính phiên.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Mã nguồn lấy ID người dùng qua bộ kiểm tra Người học và dùng làm điều kiện lọc truy vấn; bộ lọc khóa học chỉ được truyền khi có. Không kết luận chính sách khóa học ngoài phần có trong mã. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-012",
+        "requirement_ids": [
+          "ST-20-YC-012"
+        ],
+        "target_id": "ST-20",
+        "group": "Hiện trạng máy chủ #38",
+        "title": "Nguồn #38 hiện trả trang cố định đầu tiên, không có đầu vào phân trang.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Mã nguồn đặt `page=1`, `size=max(số bản ghi,1)`, `total` theo truy vấn đếm và `total_pages` bằng 1 khi `total>0`, ngược lại là 0. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng dữ liệu giả gồm 0 và nhiều thành tích để đối chiếu siêu dữ liệu trang trả về.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Siêu dữ liệu phản hồi theo mã nguồn là trang 1; kích thước bằng số bản ghi hoặc 1 khi danh sách rỗng; tổng trang là 1 nếu có tổng, 0 nếu không. Đây là ghi nhận nguồn, chưa chứng minh dữ liệu môi trường. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-013",
+        "requirement_ids": [
+          "ST-20-YC-013"
+        ],
+        "target_id": "ST-20",
+        "group": "Kiểm tra dữ liệu #38",
+        "title": "Nguồn #38 sắp xếp thành tích theo `awarded_at DESC, id DESC` và ứng dụng giao diện kiểm tra thứ tự, ID duy nhất, kiểu trường.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Bộ kiểm tra phía giao diện yêu cầu siêu dữ liệu trang cố định và các bản ghi theo thứ tự mới nhất trước. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đưa các phản hồi giả có thứ tự đúng/sai, ID lặp, ngày sai định dạng hoặc kiểu trường sai vào nhánh kiểm tra.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Bộ kiểm tra chỉ nhận bản ghi có ID số nguyên dương an toàn, mã/tiêu đề chuỗi, thời điểm hợp lệ, `course_id` tùy chọn hợp lệ, ID không lặp và thứ tự giảm dần; dữ liệu sai được xem là lỗi. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-014",
+        "requirement_ids": [
+          "ST-20-YC-014"
+        ],
+        "target_id": "ST-20",
+        "group": "Đồng bộ dữ liệu #38",
+        "title": "Mã nguồn #38 đọc truy vấn đếm và truy vấn lấy danh sách riêng biệt; ST20 so sánh `total` với số bản ghi để tránh thông báo rỗng sai.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Nếu hai kết quả khác nhau, trang giữ các bản ghi đã đọc, hiện thông báo đồng bộ và cho tải lại. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Tạo phản hồi giả có `total` khác số bản ghi và kiểm tra trạng thái trang.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Trang bật thông báo sai lệch, không hiện thông báo rỗng và vẫn giữ các bản ghi đã nhận; nguyên nhân do hai truy vấn riêng chưa được giải quyết. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-015",
+        "requirement_ids": [
+          "ST-20-YC-015"
+        ],
+        "target_id": "ST-20",
+        "group": "Quy tắc thành tích",
+        "title": "Nguồn thành tích, tiêu chí mở khóa, biểu diễn thành tích và quy tắc rỗng #38 chưa được chốt.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "DD #38 là bản nháp cần xác nhận; danh mục ghi chưa có bộ tạo thành tích. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu từng bản ghi giả với nguồn cấp thành tích được chủ sở hữu phê duyệt trước khi nghiệm thu.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Không dựng huy hiệu, chứng nhận, trạng thái khóa/mở hoặc thời điểm thành tích từ dữ liệu mẫu; chỉ ghi nhận hàng trả về của #38. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-016",
+        "requirement_ids": [
+          "ST-20-YC-016"
+        ],
+        "target_id": "ST-20",
+        "group": "Trạng thái giao diện",
+        "title": "Danh mục yêu cầu trạng thái `loading`, `partial`, `empty`, `error` và tải lại.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Điều kiện rỗng/không ghi danh/đồng bộ đang chờ và chính sách một phần chưa thống nhất. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Lần lượt chuẩn bị phản hồi riêng cho #21 và #38: đang chờ, rỗng, thành công và lỗi.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Các trạng thái theo danh mục phải được đối chiếu sau khi điều kiện và giao diện được duyệt; nguồn hiện có trạng thái tải/lỗi/rỗng/sai lệch cho #38 nhưng tiến độ vẫn là thẻ tiến độ cố định. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/list_screen.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-017",
+        "requirement_ids": [
+          "ST-20-YC-017"
+        ],
+        "target_id": "ST-20",
+        "group": "Trạng thái dữ liệu một phần",
+        "title": "Mỗi thành phần cần giữ trạng thái riêng để có thể biểu diễn kết quả một phần.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Danh mục yêu cầu độc lập; sơ đồ `AC-18` lại mô tả chuỗi #21→#37→#38. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng một API thành công và API còn lại lỗi sau khi chủ sở hữu thống nhất cách phối hợp các yêu cầu.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Không gộp hai luồng và không khẳng định một phần đúng nghiệp vụ cho tới khi mâu thuẫn thứ tự được giải quyết; hiện chỉ có luồng thành tích. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-018",
+        "requirement_ids": [
+          "ST-20-YC-018"
+        ],
+        "target_id": "ST-20",
+        "group": "Trạng thái rỗng và lỗi",
+        "title": "Thành tích rỗng, chưa ghi danh, chưa có tiến độ, đang đồng bộ và lỗi phải được phân biệt theo hợp đồng.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Điều kiện hiển thị thẻ trạng thái rỗng trong `HTML` là tĩnh; không thể đại diện cho nhánh API rỗng đã duyệt. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng dữ liệu giả lập riêng cho từng trạng thái chỉ sau khi hợp đồng nêu rõ đầu ra.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Không coi cùng một nội dung là bằng chứng các trạng thái tương đương; mọi nhánh chưa có điều kiện vẫn Chờ xác nhận. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-019",
+        "requirement_ids": [
+          "ST-20-YC-019"
+        ],
+        "target_id": "ST-20",
+        "group": "Thiết kế và điểm đánh dấu",
+        "title": "Ảnh đánh dấu chứa 16 nhóm thành phần của `HTML` được dựng tĩnh; `PNG` nguồn ban đầu để trống vùng nội dung chính.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Ảnh `screen_rendered.png` không phải ứng dụng hoặc API môi trường chạy; điểm đánh dấu không bao gồm bảng tổng quan đã tải data. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu 16 điểm đánh dấu với JSON và bảng element; kiểm tra riêng `PNG` ban đầu và ảnh dựng từ `HTML`.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Có đúng 16 điểm đánh dấu `ST20-EL-01…16` trên ảnh `HTML` dựng tĩnh; `PNG` gốc không có tiêu đề, thành phần hoặc nội dung gửi; không tạo điểm đánh dấu giả cho biểu đồ hoặc thành tích. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-020",
+        "requirement_ids": [
+          "ST-20-YC-020"
+        ],
+        "target_id": "ST-20",
+        "group": "Giới hạn nguyên mẫu",
+        "title": "`HTML` nguyên mẫu chỉ mô tả thẻ rỗng và liên kết khóa học; không chứa logic tải data.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "`HTML` có mã Tailwind `CDN` và kiểu chữ từ xa; ảnh hiển thị chỉ chứng minh bố cục tĩnh. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu `code.html`/ảnh hiển thị với yêu cầu không suy môi trường chạy hoặc API từ nguyên mẫu.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Không coi thẻ trạng thái rỗng, nội dung “đang cập nhật” hoặc liên kết `HTML` là phản hồi #21/#38; không chạy JavaScript trong `HTML` nguồn. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_PLAN.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-021",
+        "requirement_ids": [
+          "ST-20-YC-021"
+        ],
+        "target_id": "ST-20",
+        "group": "Hiện trạng giao diện tiến độ",
+        "title": "Trang Angular hiện có thẻ tiến độ cố định do #21 chưa trả dữ liệu tiến độ.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Mẫu giao diện hiện luôn hiển thị thẻ “Chưa có dữ liệu tiến độ” và lời giải thích tiến độ chưa khả dụng. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Kiểm tra mẫu giao diện hiện hành mà không gán thẻ thành phản hồi API rỗng.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Thẻ tiến độ hiện là nội dung cố định trong mẫu giao diện; không có chỉ số, biểu đồ, thẻ khóa học hoặc lời gọi #21 từ dịch vụ ST-20. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-022",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20",
+        "group": "Hiện trạng giao diện thành tích",
+        "title": "Trang hiện tải danh sách thành tích bằng `API #38` và chỉ hiển thị `title`, `awarded_at`.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Mã `code` và `course_id` được kiểm tra nhưng không hiển thị trong bản ghi hiện tại. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng dữ liệu giả có các trường lược đồ và so sánh nội dung hiển thị với mẫu giao diện.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Danh sách chỉ hiện tiêu đề và `awarded_at` đã định dạng; không tự thêm mã, khóa học, chứng nhận, liên kết tải hoặc số liệu khác. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-023",
+        "requirement_ids": [
+          "ST-20-YC-023"
+        ],
+        "target_id": "ST-20",
+        "group": "Kiểm tra phản hồi",
+        "title": "Trang hiện kiểm tra `success`, mã nghiệp vụ và cấu trúc trang trước khi hiển thị data.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Mã nguồn yêu cầu `DESIGN_RESOURCE_RETRIEVED`; bao dữ liệu hoặc trang không hợp lệ chuyển sang thông báo lỗi. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Dùng phản hồi giả thành công sai, mã nghiệp vụ sai và Trang sai cấu trúc.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Chỉ dữ liệu có `success=true`, mã nghiệp vụ chính xác và trang dữ liệu hợp lệ được đưa vào danh sách; nhánh khác hiện lỗi an toàn. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-024",
+        "requirement_ids": [
+          "ST-20-YC-024"
+        ],
+        "target_id": "ST-20",
+        "group": "Lỗi và thử lại",
+        "title": "Lỗi yêu cầu #38 hiện hiển thị thông báo và nút tải lại thành tích.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Lớp API của người học tự làm mới/chuyển tuyến chỉ cho API #4; không áp dụng chính sách đó cho #38 theo mã hiện tại. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Làm `API #38` trả lỗi giả và quan sát thông báo, nút tải lại, thay đổi tuyến.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Trang hiện hiển thị thông báo lỗi cùng nút tải lại; không tự chuyển tuyến 401/403 cho #38 từ lớp gọi dùng chung hiện đọc. Môi trường chạy chưa xác minh. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-025",
+        "requirement_ids": [
+          "ST-20-YC-025"
+        ],
+        "target_id": "ST-20",
+        "group": "Tải lại dữ liệu",
+        "title": "Nút tải lại hiện phát sinh yêu cầu #38 mới và xóa trạng thái lỗi/dữ liệu cũ khi bắt đầu tải.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Nguồn hiện gọi lại duy nhất `API #38`; yêu cầu #21 chưa được nối vào thao tác thử lại. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Bấm tải lại trong trạng thái lỗi hoặc sai lệch và quan sát yêu cầu, danh sách và trạng thái tải.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Một yêu cầu #38 mới được tạo; trạng thái đang tải bật, lỗi/sai lệch và danh sách cũ được xóa trước khi nhận kết quả mới. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-026",
+        "requirement_ids": [
+          "ST-20-YC-026"
+        ],
+        "target_id": "ST-20",
+        "group": "Điều hướng tới `ST-22`",
+        "title": "Liên kết danh sách thành tích dự kiến mở `ST-22`; hiện mẫu giao diện trỏ tới `/student/achievements`.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Đường dẫn được đăng ký trong cấu hình người học; luồng chạy chưa được kiểm tra trên trình duyệt. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu liên kết trong mẫu giao diện và tuyến `achievements` trong mã nguồn.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Liên kết hiện dùng `routerLink=/student/achievements`; tuyến con `ST-22` được khai báo trong `studentRoutes`; kết quả điều hướng môi trường thật chưa xác minh. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-027",
+        "requirement_ids": [
+          "ST-20-YC-027"
+        ],
+        "target_id": "ST-20",
+        "group": "Điều hướng tới `ST-21`",
+        "title": "Chọn khóa học để mở `ST-21` chỉ được thực hiện khi có ID khóa học từ nguồn tiến độ đã duyệt.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Giao diện hiện không có thẻ khóa học hoặc liên kết và #21 bị thẻ tiến độ cố định; không thể lấy ID khóa học từ nội dung hoặc dữ liệu mẫu. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Kiểm tra không xuất hiện lựa chọn khóa học giả; sau khi có hợp đồng, thử bàn giao ID đã duyệt.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Không tạo liên kết `ST-21` hoặc ID khóa học giả trong Giao diện hiện tại; kỳ vọng điều hướng `ST-21` phải chờ nguồn dữ liệu/trạng thái đã tải được duyệt. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-028",
+        "requirement_ids": [
+          "ST-20-YC-028"
+        ],
+        "target_id": "ST-20",
+        "group": "Điều hướng về `ST-08`",
+        "title": "CTA tiến độ hiện dẫn tới danh sách khóa học `/student/courses` và không mang ID khóa học.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "`HTML` nguyên mẫu và Angular hiện tại cùng có liên kết khóa học, nhưng nhãn hiện tại khác nhau. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Kiểm tra liên kết hoặc nút hiện hành trong mẫu giao diện và đích tuyến.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Liên kết trong mẫu giao diện hiện dẫn `/student/courses`; không có ID khóa học hay dữ liệu tiến độ trên liên kết. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-029",
+        "requirement_ids": [
+          "ST-20-YC-029"
+        ],
+        "target_id": "ST-20",
+        "group": "Ranh giới quyền và dữ liệu",
+        "title": "Không dùng dữ liệu từ API dành cho cố vấn #65/#67 để thay thế tiến độ dành cho người học.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Vai trò/đường dẫn của các API dành cho cố vấn khác với `API #21`/#37 của người học. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Rà danh sách yêu cầu của ST20 và đối chiếu mã API/vai trò.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Trang chỉ được gắn #21/#38 theo tuyến siêu dữ liệu/service; không gọi API dành cho cố vấn để lấp dữ liệu còn thiếu. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-030",
+        "requirement_ids": [
+          "ST-20-YC-030"
+        ],
+        "target_id": "ST-20",
+        "group": "Bằng chứng kiểm thử",
+        "title": "Mã nguồn và kiểm thử tài liệu không chứng minh ứng dụng, cơ sở dữ liệu hoặc API môi trường thật đã chạy.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Có kiểm thử #21 trong kho mã nguồn; danh mục không tìm thấy kiểm thử tập trung #38; task này chỉ sinh UTC tĩnh. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu trạng thái kiểm thử và môi trường trước khi chuyển bất kỳ ca nào sang Đạt.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Mọi ca mới ở `Chưa chạy`; không ghi kết quả/bằng chứng/người/ngày; chưa kết luận môi trường chạy, lược đồ môi trường thật, dữ liệu hoặc bộ ghi nhận thành tích. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/07-test-cases.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-MH-031",
+        "requirement_ids": [
+          "ST-20-YC-031"
+        ],
+        "target_id": "ST-20",
+        "group": "Lỗi `API #38`",
+        "title": "Danh mục API #38 chỉ khai báo các mã lỗi 401, 403 và 500.",
+        "precondition": "Dùng môi trường kiểm thử riêng và dữ liệu giả; DD ST-20 hiện Bị chặn/bản nháp theo xác nhận của người dùng; chưa kiểm tra môi trường chạy.",
+        "data": "Câu hỏi mở #38 chưa chốt thêm mã lỗi cho `course_id` sai; không tự thay đổi danh mục. Không dùng dữ liệu cá nhân thật hoặc coi thành tích giả là dữ liệu kỳ vọng đã duyệt.",
+        "steps": [
+          "Chuẩn bị trạng thái và dữ liệu giả theo mô tả; ghi nhận phiên bản DD/mã nguồn đang đối chiếu.",
+          "Thực hiện thao tác: Đối chiếu từng nhánh lỗi #38 với đúng mã danh mục API và ghi riêng mã nguồn hiện tại.",
+          "Quan sát giao diện, tuyến, yêu cầu/phản hồi hoặc siêu dữ liệu được nêu; đối chiếu riêng hợp đồng và hiện trạng mã nguồn."
+        ],
+        "expected": "Kỳ vọng danh mục API giữ 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`; không thêm 404/422. Nguồn hiện ánh xạ `course_id` sai sang 500; đây là hiện trạng, không phải quyết định đã được duyệt. Ca Chờ xác nhận theo DD và Chưa chạy; chưa được kết luận đạt.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST-20-TC-TP-001",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-001",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Thương hiệu Study2Work và liên kết trang chủ",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #1 / `ST20-EL-01`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #1 / `ST20-EL-01` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #1 / `ST20-EL-01` trỏ đúng nhóm “Thương hiệu Study2Work và liên kết trang chủ” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-002",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-002",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Nhóm điều hướng chính: Tổng quan, Khóa học của tôi, Tiến độ",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #2 / `ST20-EL-02`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #2 / `ST20-EL-02` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #2 / `ST20-EL-02` trỏ đúng nhóm “Nhóm điều hướng chính: Tổng quan, Khóa học của tôi, Tiến độ” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-003",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-003",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Dấu vết vị trí: Trang chủ, Học viên, Tổng quan tiến độ",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #3 / `ST20-EL-03`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #3 / `ST20-EL-03` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #3 / `ST20-EL-03` trỏ đúng nhóm “Dấu vết vị trí: Trang chủ, Học viên, Tổng quan tiến độ” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-004",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-004",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Tiêu đề “Tổng quan tiến độ”",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #4 / `ST20-EL-04`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #4 / `ST20-EL-04` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #4 / `ST20-EL-04` trỏ đúng nhóm “Tiêu đề “Tổng quan tiến độ”” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-005",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-005",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Mô tả theo dõi tiến trình học",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #5 / `ST20-EL-05`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #5 / `ST20-EL-05` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #5 / `ST20-EL-05` trỏ đúng nhóm “Mô tả theo dõi tiến trình học” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-006",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-006",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Biểu tượng trạng thái rỗng",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #6 / `ST20-EL-06`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #6 / `ST20-EL-06` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #6 / `ST20-EL-06` trỏ đúng nhóm “Biểu tượng trạng thái rỗng” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-007",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-007",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Tiêu đề trạng thái rỗng “Chưa có dữ liệu tiến độ để hiển thị.”",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #7 / `ST20-EL-07`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #7 / `ST20-EL-07` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #7 / `ST20-EL-07` trỏ đúng nhóm “Tiêu đề trạng thái rỗng “Chưa có dữ liệu tiến độ để hiển thị.”” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-008",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-008",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Giải thích trạng thái rỗng và hướng dẫn kiểm tra lại",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #8 / `ST20-EL-08`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #8 / `ST20-EL-08` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #8 / `ST20-EL-08` trỏ đúng nhóm “Giải thích trạng thái rỗng và hướng dẫn kiểm tra lại” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-009",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-009",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Liên kết “Xem khóa học của tôi”",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #9 / `ST20-EL-09`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #9 / `ST20-EL-09` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #9 / `ST20-EL-09` trỏ đúng nhóm “Liên kết “Xem khóa học của tôi”” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-010",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-010",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Thương hiệu và mô tả Study2Work LMS ở chân trang",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #10 / `ST20-EL-10`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #10 / `ST20-EL-10` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #10 / `ST20-EL-10` trỏ đúng nhóm “Thương hiệu và mô tả Study2Work LMS ở chân trang” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-011",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-011",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Nhóm liên kết Chương trình",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #11 / `ST20-EL-11`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #11 / `ST20-EL-11` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #11 / `ST20-EL-11` trỏ đúng nhóm “Nhóm liên kết Chương trình” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-012",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-012",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Nhóm liên kết Hỗ trợ",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #12 / `ST20-EL-12`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #12 / `ST20-EL-12` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #12 / `ST20-EL-12` trỏ đúng nhóm “Nhóm liên kết Hỗ trợ” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-013",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-013",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Thông tin Liên hệ",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #13 / `ST20-EL-13`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #13 / `ST20-EL-13` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #13 / `ST20-EL-13` trỏ đúng nhóm “Thông tin Liên hệ” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-014",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-014",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Dải bản quyền và mô tả nền tảng",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #14 / `ST20-EL-14`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #14 / `ST20-EL-14` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #14 / `ST20-EL-14` trỏ đúng nhóm “Dải bản quyền và mô tả nền tảng” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-015",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-015",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Liên kết Điều khoản sử dụng",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #15 / `ST20-EL-15`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #15 / `ST20-EL-15` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #15 / `ST20-EL-15` trỏ đúng nhóm “Liên kết Điều khoản sử dụng” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-016",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST-20-EL-016",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Liên kết Chính sách bảo mật",
+        "precondition": "Dùng ảnh `HTML` dựng tĩnh và ảnh đánh dấu của ST-20; không dùng ảnh này làm chứng cứ môi trường chạy.",
+        "data": "Đối chiếu điểm đánh dấu #16 / `ST20-EL-16`; nội dung là hình tham khảo, không nhập dữ liệu người dùng thật.",
+        "steps": [
+          "Xác định điểm đánh dấu #16 / `ST20-EL-16` trên ảnh đánh dấu và so sánh với mô tả trong DD.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Điểm đánh dấu #16 / `ST20-EL-16` trỏ đúng nhóm “Liên kết Chính sách bảo mật” theo bảng DD; không diễn giải nội dung tĩnh thành API/tuyến đang chạy. Thiết kế vẫn Chờ xác nhận. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-017",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-001",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Dấu vết vị trí Angular",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Liên kết Trang chủ trỏ `/student`; nhãn cuối là Tổng quan tiến độ.",
+        "steps": [
+          "Tìm thành phần “Dấu vết vị trí Angular” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Dấu vết vị trí Angular” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-018",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-002",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Tiêu đề và mô tả Angular",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Hiện “Tổng quan tiến độ” và nội dung “Theo dõi các khóa học và thành tích đã được ghi nhận.”",
+        "steps": [
+          "Tìm thành phần “Tiêu đề và mô tả Angular” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Tiêu đề và mô tả Angular” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-019",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-003",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra thẻ tiến độ cố định",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Hiện “Chưa có dữ liệu tiến độ” và “Tiến độ tổng hợp hiện chưa khả dụng.”; không gắn với kết quả `API #21`.",
+        "steps": [
+          "Tìm thành phần “Thẻ tiến độ cố định” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Thẻ tiến độ cố định” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-020",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-004",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Liên kết Khóa học của tôi",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Liên kết tới `/student/courses`; hiện không có ID khóa học.",
+        "steps": [
+          "Tìm thành phần “Liên kết Khóa học của tôi” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Liên kết Khóa học của tôi” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-021",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-005",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Tiêu đề khu vực thành tích",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Hiện nội dung “Thành tích đã được hệ thống ghi nhận.”",
+        "steps": [
+          "Tìm thành phần “Tiêu đề khu vực thành tích” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Tiêu đề khu vực thành tích” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-022",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-006",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Liên kết xem danh sách thành tích",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Liên kết tới `/student/achievements`.",
+        "steps": [
+          "Tìm thành phần “Liên kết xem danh sách thành tích” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Liên kết xem danh sách thành tích” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-023",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-007",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Thông báo đang tải thành tích",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Hiện khi `loading()` là true; phần tử có `role=status`.",
+        "steps": [
+          "Tìm thành phần “Thông báo đang tải thành tích” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Thông báo đang tải thành tích” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-024",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-008",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Thông báo lỗi thành tích",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Hiện nội dung lỗi động; phần tử có `role=alert`.",
+        "steps": [
+          "Tìm thành phần “Thông báo lỗi thành tích” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Thông báo lỗi thành tích” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-025",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-009",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Nút tải lại thành tích",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Gọi `retryAchievements()` để gửi yêu cầu #38 mới.",
+        "steps": [
+          "Tìm thành phần “Nút tải lại thành tích” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Nút tải lại thành tích” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-026",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-010",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Thông báo số lượng chưa khớp",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "So sánh `pagination.total` với số bản ghi; khi lệch thì không hiện nội dung rỗng.",
+        "steps": [
+          "Tìm thành phần “Thông báo số lượng chưa khớp” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Thông báo số lượng chưa khớp” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-027",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-011",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Trạng thái chưa có thành tích",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Hiện khi tải xong, không lỗi, không lệch và không có bản ghi. Nội dung hiện có không được coi là chính sách rỗng đã duyệt.",
+        "steps": [
+          "Tìm thành phần “Trạng thái chưa có thành tích” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Trạng thái chưa có thành tích” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-TP-028",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST-20-SRC-EL-012",
+        "group": "Nhận diện thành phần",
+        "title": "Kiểm tra Tiêu đề và ngày ghi nhận của từng thành tích",
+        "precondition": "Đối chiếu mẫu giao diện/logic Angular nguồn; dùng dữ liệu giả và không mở rộng hành vi ngoài mã hiện có.",
+        "data": "Chỉ hiện `title` và `awarded_at`; theo dõi hàng bằng `id`; không hiện mã/`course_id`.",
+        "steps": [
+          "Tìm thành phần “Tiêu đề và ngày ghi nhận của từng thành tích” trong mẫu giao diện hoặc logic ST20 và đối chiếu điều kiện hiển thị.",
+          "Đối chiếu nhãn, vị trí, kiểu hoặc điều kiện với nguồn được trích.",
+          "Ghi lại sai khác; không sửa nội dung nguồn trong lần kiểm tra này."
+        ],
+        "expected": "Mã nguồn hiện có thành phần “Tiêu đề và ngày ghi nhận của từng thành tích” với đặc tính đã ghi; đây là ghi nhận nguồn, không xác nhận thiết kế hoặc môi trường chạy. Ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST-20-TC-SK-001",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST20-EV-01",
+        "group": "Vào trang và kiểm tra phiên",
+        "title": "Kiểm tra sự kiện: Vào trang và kiểm tra phiên",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "DD yêu cầu người học đã xác thực. Mã nguồn khai báo tuyến `ST20Page`; hành vi bảo vệ tuyến và kết quả môi trường chạy chưa được xác minh.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Mở `/student/progress` trong ngữ cảnh người học.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "DD yêu cầu người học đã xác thực. Mã nguồn khai báo tuyến `ST20Page`; hành vi bảo vệ tuyến và kết quả môi trường chạy chưa được xác minh. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-002",
+        "requirement_ids": [
+          "ST-20-YC-004"
+        ],
+        "target_id": "ST20-EV-02",
+        "group": "Tải tiến độ qua `API #21`",
+        "title": "Kiểm tra sự kiện: Tải tiến độ qua `API #21`",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "DD kỳ vọng GET #21; danh mục API có tham số truy vấn cụm từ khai báo chưa rõ và phản hồi `UserProfile`. Mã nguồn ST20 hiện không gọi #21; hàm xử lý #21 hiện chỉ trả `UserProfile`, không có dữ liệu trả về tiến độ.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Vào trang sau khi có phiên người học theo thiết kế.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "DD kỳ vọng GET #21; danh mục API có tham số truy vấn cụm từ khai báo chưa rõ và phản hồi `UserProfile`. Mã nguồn ST20 hiện không gọi #21; hàm xử lý #21 hiện chỉ trả `UserProfile`, không có dữ liệu trả về tiến độ. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-003",
+        "requirement_ids": [
+          "ST-20-YC-004"
+        ],
+        "target_id": "ST20-EV-03",
+        "group": "Tải thành tích qua `API #38`",
+        "title": "Kiểm tra sự kiện: Tải thành tích qua `API #38`",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Mã nguồn hiện gọi `ST20ProgressService.achievements()` qua `StudentApiService`, không truyền tham số truy vấn; máy chủ lọc danh tính phiên hiện tại và chạy truy vấn đếm và truy vấn lấy danh sách. Môi trường chạy chưa được kiểm tra.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Vào trang; danh mục yêu cầu đọc thành tích.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Mã nguồn hiện gọi `ST20ProgressService.achievements()` qua `StudentApiService`, không truyền tham số truy vấn; máy chủ lọc danh tính phiên hiện tại và chạy truy vấn đếm và truy vấn lấy danh sách. Môi trường chạy chưa được kiểm tra. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-004",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST20-EV-04",
+        "group": "Tổng hợp và ánh xạ tiến độ",
+        "title": "Kiểm tra sự kiện: Tổng hợp và ánh xạ tiến độ",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Chưa có lược đồ tiến độ, công thức, khóa ghép, phạm vi hoặc quy tắc rỗng được chốt. Mẫu giao diện hiện để thẻ tiến độ cố định; không tính tỷ lệ từ `lesson_progress`.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: #21 trả thành công với lược đồ tiến độ đã được duyệt.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Chưa có lược đồ tiến độ, công thức, khóa ghép, phạm vi hoặc quy tắc rỗng được chốt. Mẫu giao diện hiện để thẻ tiến độ cố định; không tính tỷ lệ từ `lesson_progress`. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-005",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST20-EV-05",
+        "group": "Ánh xạ danh sách thành tích",
+        "title": "Kiểm tra sự kiện: Ánh xạ danh sách thành tích",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Ứng dụng giao diện kiểm tra mã thành công, siêu dữ liệu, kiểu trường, thứ tự và ID duy nhất. Khi có bản ghi, giao diện hiện tiêu đề và ngày `awarded_at`; không tạo thành tích hoặc chứng nhận.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: #38 trả phản hồi hợp lệ và có bản ghi.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Ứng dụng giao diện kiểm tra mã thành công, siêu dữ liệu, kiểu trường, thứ tự và ID duy nhất. Khi có bản ghi, giao diện hiện tiêu đề và ngày `awarded_at`; không tạo thành tích hoặc chứng nhận. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-006",
+        "requirement_ids": [
+          "ST-20-YC-004"
+        ],
+        "target_id": "ST20-EV-06",
+        "group": "Hiển thị trạng thái rỗng, một phần hoặc lỗi",
+        "title": "Kiểm tra sự kiện: Hiển thị trạng thái rỗng, một phần hoặc lỗi",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Danh mục nêu đang tải/một phần/rỗng/lỗi. Định nghĩa rỗng và thứ tự yêu cầu còn mở; mã nguồn hiện có các trạng thái riêng cho #38, trong khi tiến độ là thẻ tiến độ cố định.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Có kết quả riêng từ một hoặc nhiều thành phần.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Danh mục nêu đang tải/một phần/rỗng/lỗi. Định nghĩa rỗng và thứ tự yêu cầu còn mở; mã nguồn hiện có các trạng thái riêng cho #38, trong khi tiến độ là thẻ tiến độ cố định. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-007",
+        "requirement_ids": [
+          "ST-20-YC-004"
+        ],
+        "target_id": "ST20-EV-07",
+        "group": "Chọn khóa học để mở `ST-21`",
+        "title": "Kiểm tra sự kiện: Chọn khóa học để mở `ST-21`",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Giao diện ở trạng thái đã tải hiện chưa có bản ghi khóa học; #21 không trả dữ liệu tiến độ. Không tạo ID hoặc điều hướng `ST-21` từ nội dung. Luồng #37 phải theo DD `ST-21`.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Người học chọn khóa từ giao diện ở trạng thái đã tải.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Giao diện ở trạng thái đã tải hiện chưa có bản ghi khóa học; #21 không trả dữ liệu tiến độ. Không tạo ID hoặc điều hướng `ST-21` từ nội dung. Luồng #37 phải theo DD `ST-21`. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-008",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST20-EV-08",
+        "group": "Mở `ST-22` Thành tích và chứng nhận",
+        "title": "Kiểm tra sự kiện: Mở `ST-22` Thành tích và chứng nhận",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Mẫu giao diện hiện trỏ `/student/achievements`; tuyến `ST-22` được khai báo. Khóa học bộ lọc hoặc bàn giao không có trong liên kết hiện tại; môi trường chạy chưa xác minh.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Chọn liên kết xem danh sách thành tích.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Mẫu giao diện hiện trỏ `/student/achievements`; tuyến `ST-22` được khai báo. Khóa học bộ lọc hoặc bàn giao không có trong liên kết hiện tại; môi trường chạy chưa xác minh. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-009",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST20-EV-09",
+        "group": "Từ thẻ tiến độ cố định mở danh sách khóa học `ST-08`",
+        "title": "Kiểm tra sự kiện: Từ thẻ tiến độ cố định mở danh sách khóa học `ST-08`",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "`HTML` gốc và Angular hiện có liên kết tới `/student/courses`; không gửi ID khóa học. Hành vi trên trình duyệt thật chưa được kiểm tra.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Chọn liên kết Khóa học của tôi.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "`HTML` gốc và Angular hiện có liên kết tới `/student/courses`; không gửi ID khóa học. Hành vi trên trình duyệt thật chưa được kiểm tra. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-010",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST20-EV-10",
+        "group": "Dùng liên kết đầu trang, dấu vết vị trí và chân trang",
+        "title": "Kiểm tra sự kiện: Dùng liên kết đầu trang, dấu vết vị trí và chân trang",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Các liên kết trên ảnh nguyên mẫu là tĩnh; mã nguồn mẫu giao diện ST20 có dấu vết vị trí tới `/student`. Không suy đích môi trường chạy cho phần tử ngoài mẫu giao diện.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Chọn thương hiệu, điều hướng, dấu vết vị trí hoặc liên kết chân trang trong nguyên mẫu.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Các liên kết trên ảnh nguyên mẫu là tĩnh; mã nguồn mẫu giao diện ST20 có dấu vết vị trí tới `/student`. Không suy đích môi trường chạy cho phần tử ngoài mẫu giao diện. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-011",
+        "requirement_ids": [
+          "ST-20-YC-001"
+        ],
+        "target_id": "ST20-EV-11",
+        "group": "Xử lý lỗi API và phiên",
+        "title": "Kiểm tra sự kiện: Xử lý lỗi API và phiên",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Danh mục API giữ 401/403/500. Hiện tại #38 lỗi qua `studentApiErrorMessage`; `StudentApiService` chỉ tự làm mới/chuyển tuyến cho API #4. Giao diện hiện có nút tải lại cho #38; xử lý #21 chưa có lớp gọi.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: #21/#38 trả lỗi danh mục API hoặc yêu cầu không nhận phản hồi.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Danh mục API giữ 401/403/500. Hiện tại #38 lỗi qua `studentApiErrorMessage`; `StudentApiService` chỉ tự làm mới/chuyển tuyến cho API #4. Giao diện hiện có nút tải lại cho #38; xử lý #21 chưa có lớp gọi. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#21",
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-20-TongQuanTienDo/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-012",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST20-EV-12",
+        "group": "Khởi tạo trạng thái tải thành tích",
+        "title": "Kiểm tra sự kiện: Khởi tạo trạng thái tải thành tích",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Luồng tải lại bắt đầu bằng lần phát đầu; trước yêu cầu bật đang tải, xóa lỗi, sai lệch và danh sách cũ.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: `ST20Page.ngOnInit()` bắt đầu luồng đọc #38.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Luồng tải lại bắt đầu bằng lần phát đầu; trước yêu cầu bật đang tải, xóa lỗi, sai lệch và danh sách cũ. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-013",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST20-EV-13",
+        "group": "Thử tải lại thành tích",
+        "title": "Kiểm tra sự kiện: Thử tải lại thành tích",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "`retryAchievements()` phát yêu cầu mới; thao tác đầu luồng xóa trạng thái cũ và gọi lại #38. Không gọi #21.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Chọn nút tải lại trong trạng thái lỗi hoặc sai lệch.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "`retryAchievements()` phát yêu cầu mới; thao tác đầu luồng xóa trạng thái cũ và gọi lại #38. Không gọi #21. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-014",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST20-EV-14",
+        "group": "Xử lý sai lệch giữa tổng và danh sách",
+        "title": "Kiểm tra sự kiện: Xử lý sai lệch giữa tổng và danh sách",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Trang bật `snapshotMismatch`, giữ bản ghi danh sách; mẫu giao diện hiện thông báo và nút tải lại, đồng thời không hiện thông báo rỗng. So sánh này nằm ở thành phần, không nằm trong dùng chung bộ kiểm tra.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: #38 trả trang dữ liệu hợp lệ nhưng `pagination.total` khác số bản ghi.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Trang bật `snapshotMismatch`, giữ bản ghi danh sách; mẫu giao diện hiện thông báo và nút tải lại, đồng thời không hiện thông báo rỗng. So sánh này nằm ở thành phần, không nằm trong dùng chung bộ kiểm tra. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-015",
+        "requirement_ids": [
+          "ST-20-YC-022"
+        ],
+        "target_id": "ST20-EV-15",
+        "group": "Kiểm tra phản hồi và chọn trạng thái hiển thị",
+        "title": "Kiểm tra sự kiện: Kiểm tra phản hồi và chọn trạng thái hiển thị",
+        "precondition": "Dùng phiên và phản hồi giả trong môi trường kiểm thử riêng; các quyết định liên quan còn Chờ xác nhận.",
+        "data": "Mã nguồn kiểm tra bao dữ liệu, mã nghiệp vụ và bộ kiểm tra Trang; dữ liệu hợp lệ đi tới danh sách/rỗng/sai lệch. Lỗi chuyển thành thông báo; không kết luận môi trường chạy đạt.",
+        "steps": [
+          "Chuẩn bị điều kiện kích hoạt: Yêu cầu #38 hoàn tất thành công hoặc lỗi.",
+          "Thực hiện thao tác hoặc cấp phản hồi giả tương ứng.",
+          "Quan sát trạng thái, yêu cầu, dữ liệu và tuyến; so sánh với nguồn được nêu, không coi mã nguồn là môi trường chạy đã xác minh."
+        ],
+        "expected": "Mã nguồn kiểm tra bao dữ liệu, mã nghiệp vụ và bộ kiểm tra Trang; dữ liệu hợp lệ đi tới danh sách/rỗng/sai lệch. Lỗi chuyển thành thông báo; không kết luận môi trường chạy đạt. Kỳ vọng chốt sau khi DD được duyệt; ca Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-016",
+        "requirement_ids": [
+          "ST-20-YC-031"
+        ],
+        "target_id": "ST20-EV-11",
+        "group": "Phân nhánh `API #38`",
+        "title": "Kiểm tra nhánh #38 trả HTTP 401",
+        "precondition": "Dùng bộ giả lập HTTP/Trang đã duyệt; tuyệt đối không gọi dữ liệu môi trường thật trong bộ hồ sơ này.",
+        "data": "Phản hồi giả: 401; mã/điều kiện: `DESIGN_AUTHENTICATION_REQUIRED`. Mã danh mục API #38 và thông báo/điều hướng theo nguồn; không thêm cách khôi phục phiên chưa có.",
+        "steps": [
+          "Cấu hình phản hồi giả của nhánh đã nêu.",
+          "Vào trang hoặc bấm tải lại để tạo yêu cầu #38.",
+          "Quan sát thông báo, danh sách, trạng thái rỗng và tuyến; so sánh với danh mục API, nguồn và câu hỏi mở."
+        ],
+        "expected": "Mã danh mục API #38 và thông báo/điều hướng theo nguồn; không thêm cách khôi phục phiên chưa có. Giữ nguyên mã nguồn hiện tại và hợp đồng danh mục API thành hai lớp bằng chứng; nhánh này Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md dòng 38",
+          "apps/study-server/docs/dd/38_users_me_achievements/06_Error.md",
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py",
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-017",
+        "requirement_ids": [
+          "ST-20-YC-031"
+        ],
+        "target_id": "ST20-EV-11",
+        "group": "Phân nhánh `API #38`",
+        "title": "Kiểm tra nhánh #38 trả HTTP 403",
+        "precondition": "Dùng bộ giả lập HTTP/Trang đã duyệt; tuyệt đối không gọi dữ liệu môi trường thật trong bộ hồ sơ này.",
+        "data": "Phản hồi giả: 403; mã/điều kiện: `DESIGN_ACCESS_DENIED`. Mã danh mục API #38; không hiển thị dữ liệu bị từ chối và không tự suy ra điều hướng.",
+        "steps": [
+          "Cấu hình phản hồi giả của nhánh đã nêu.",
+          "Vào trang hoặc bấm tải lại để tạo yêu cầu #38.",
+          "Quan sát thông báo, danh sách, trạng thái rỗng và tuyến; so sánh với danh mục API, nguồn và câu hỏi mở."
+        ],
+        "expected": "Mã danh mục API #38; không hiển thị dữ liệu bị từ chối và không tự suy ra điều hướng. Giữ nguyên mã nguồn hiện tại và hợp đồng danh mục API thành hai lớp bằng chứng; nhánh này Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md dòng 38",
+          "apps/study-server/docs/dd/38_users_me_achievements/06_Error.md",
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py",
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-018",
+        "requirement_ids": [
+          "ST-20-YC-031"
+        ],
+        "target_id": "ST20-EV-11",
+        "group": "Phân nhánh `API #38`",
+        "title": "Kiểm tra nhánh #38 trả HTTP 500",
+        "precondition": "Dùng bộ giả lập HTTP/Trang đã duyệt; tuyệt đối không gọi dữ liệu môi trường thật trong bộ hồ sơ này.",
+        "data": "Phản hồi giả: 500; mã/điều kiện: `DESIGN_INTERNAL_ERROR`. Mã danh mục API #38; trang hiện ánh xạ lỗi và hiển thị nút tải lại. Không gộp với 401/403.",
+        "steps": [
+          "Cấu hình phản hồi giả của nhánh đã nêu.",
+          "Vào trang hoặc bấm tải lại để tạo yêu cầu #38.",
+          "Quan sát thông báo, danh sách, trạng thái rỗng và tuyến; so sánh với danh mục API, nguồn và câu hỏi mở."
+        ],
+        "expected": "Mã danh mục API #38; trang hiện ánh xạ lỗi và hiển thị nút tải lại. Không gộp với 401/403. Giữ nguyên mã nguồn hiện tại và hợp đồng danh mục API thành hai lớp bằng chứng; nhánh này Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md dòng 38",
+          "apps/study-server/docs/dd/38_users_me_achievements/06_Error.md",
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py",
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-019",
+        "requirement_ids": [
+          "ST-20-YC-023"
+        ],
+        "target_id": "ST20-EV-15",
+        "group": "Phân nhánh `API #38`",
+        "title": "Kiểm tra nhánh #38 trả Trang rỗng hợp lệ",
+        "precondition": "Dùng bộ giả lập HTTP/Trang đã duyệt; tuyệt đối không gọi dữ liệu môi trường thật trong bộ hồ sơ này.",
+        "data": "Phản hồi giả: 200; mã/điều kiện: `DESIGN_RESOURCE_RETRIEVED`. Chỉ hiện trạng thái rỗng khi trang hợp lệ, `total` và số bản ghi không lệch; chính sách rỗng vẫn chờ xác nhận.",
+        "steps": [
+          "Cấu hình phản hồi giả của nhánh đã nêu.",
+          "Vào trang hoặc bấm tải lại để tạo yêu cầu #38.",
+          "Quan sát thông báo, danh sách, trạng thái rỗng và tuyến; so sánh với danh mục API, nguồn và câu hỏi mở."
+        ],
+        "expected": "Chỉ hiện trạng thái rỗng khi trang hợp lệ, `total` và số bản ghi không lệch; chính sách rỗng vẫn chờ xác nhận. Giữ nguyên mã nguồn hiện tại và hợp đồng danh mục API thành hai lớp bằng chứng; nhánh này Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md dòng 38",
+          "apps/study-server/docs/dd/38_users_me_achievements/06_Error.md",
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py",
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-020",
+        "requirement_ids": [
+          "ST-20-YC-023"
+        ],
+        "target_id": "ST20-EV-15",
+        "group": "Phân nhánh `API #38`",
+        "title": "Kiểm tra nhánh #38 trả Trang sai cấu trúc hoặc sai thứ tự",
+        "precondition": "Dùng bộ giả lập HTTP/Trang đã duyệt; tuyệt đối không gọi dữ liệu môi trường thật trong bộ hồ sơ này.",
+        "data": "Phản hồi giả: phản hồi giả; mã/điều kiện: Lược đồ Trang/Thành tích. Bộ kiểm tra phải từ chối trang sai trường, siêu dữ liệu trang, ID lặp hoặc thứ tự `awarded_at`/ID tăng; trang hiện chuyển sang lỗi.",
+        "steps": [
+          "Cấu hình phản hồi giả của nhánh đã nêu.",
+          "Vào trang hoặc bấm tải lại để tạo yêu cầu #38.",
+          "Quan sát thông báo, danh sách, trạng thái rỗng và tuyến; so sánh với danh mục API, nguồn và câu hỏi mở."
+        ],
+        "expected": "Bộ kiểm tra phải từ chối trang sai trường, siêu dữ liệu trang, ID lặp hoặc thứ tự `awarded_at`/ID tăng; trang hiện chuyển sang lỗi. Giữ nguyên mã nguồn hiện tại và hợp đồng danh mục API thành hai lớp bằng chứng; nhánh này Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md dòng 38",
+          "apps/study-server/docs/dd/38_users_me_achievements/06_Error.md",
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py",
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-20-TC-SK-021",
+        "requirement_ids": [
+          "ST-20-YC-031"
+        ],
+        "target_id": "ST20-EV-11",
+        "group": "Phân nhánh `API #38`",
+        "title": "Kiểm tra nhánh #38 trả `course_id` không hợp lệ",
+        "precondition": "Dùng bộ giả lập HTTP/Trang đã duyệt; tuyệt đối không gọi dữ liệu môi trường thật trong bộ hồ sơ này.",
+        "data": "Phản hồi giả: 500; mã/điều kiện: `DESIGN_INTERNAL_ERROR`. Mã nguồn hiện ánh xạ lỗi phân tích cú pháp sang 500 dù câu hỏi mở yêu cầu quyết định validation; không xem đây là hợp đồng được duyệt.",
+        "steps": [
+          "Cấu hình phản hồi giả của nhánh đã nêu.",
+          "Vào trang hoặc bấm tải lại để tạo yêu cầu #38.",
+          "Quan sát thông báo, danh sách, trạng thái rỗng và tuyến; so sánh với danh mục API, nguồn và câu hỏi mở."
+        ],
+        "expected": "Mã nguồn hiện ánh xạ lỗi phân tích cú pháp sang 500 dù câu hỏi mở yêu cầu quyết định validation; không xem đây là hợp đồng được duyệt. Giữ nguyên mã nguồn hiện tại và hợp đồng danh mục API thành hai lớp bằng chứng; nhánh này Chờ xác nhận và Chưa chạy.",
+        "api_ids": [
+          "#38"
+        ],
+        "source_refs": [
+          "docs/lists/list_api.md dòng 38",
+          "apps/study-server/docs/dd/38_users_me_achievements/06_Error.md",
+          "apps/study-server/app/modules/student/api_38_users_me_achievements/validate.py",
+          "apps/study-client/src/app/features/student/ST20/pages/st20-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-achievement-page.guard.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

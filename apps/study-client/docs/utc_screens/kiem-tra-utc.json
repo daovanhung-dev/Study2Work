@@ -1,0 +1,72 @@
+{
+  "hop_le_ve_cau_truc": true,
+  "du_dieu_kien_phe_duyet": false,
+  "thong_tin": [
+    "44 yêu cầu, 35 thành phần, 8 sự kiện, 1 API",
+    "9 ca toàn màn hình, 35 ca thành phần, 18 ca sự kiện",
+    "Tổng ca: 62; yêu cầu được truy vết: 44/44"
+  ],
+  "loi": [],
+  "canh_bao": [
+    "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+  ],
+  "danh_sach_blocker": [
+    {
+      "id": "AD-01-BL-001",
+      "description": "API #101: DD vẫn ở trạng thái Bản nháp (Draft)/Chờ xác nhận (Needs Confirmation); ghi chú cũ nói API chưa được nối (UNWIRED), trong khi mã nguồn hiện có bên gọi giao diện, descriptor ghi đã nối (WIRED) và tuyến/phân hệ Study Server.",
+      "impact": "Không thể xem mã nguồn là hợp đồng đã được duyệt hoặc khẳng định hành vi đã chạy.",
+      "decision": "Người phụ trách xác nhận hợp đồng/phiên bản API và cập nhật DD; quyết định chính sách ngày, hình dạng phản hồi, quyền và cách xử lý lỗi.",
+      "source_ref": "00-overview.md §5; 02-events.md EV-01; 04-api-integration.md; đối chiếu lại mã nguồn hiện hành ngày 2026-11-23",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-002",
+      "description": "Bốn KPI chưa có cách ánh xạ được duyệt; API/mã nguồn hiện đếm số bản ghi được tạo, không tương đương số khóa học đang hoạt động, nội dung chờ kiểm duyệt hay tải hệ thống.",
+      "impact": "Chưa thể xác nhận nhãn, giá trị, đơn vị, tập dữ liệu tính toán, công thức hoặc thứ tự thẻ thống kê.",
+      "decision": "Người phụ trách duyệt khóa chỉ số, công thức, tập dữ liệu, đơn vị, thứ tự và cách ánh xạ cho từng thẻ.",
+      "source_ref": "01-ui-elements.md #13–#16; 04-api-integration.md; 05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-003",
+      "description": "Chính sách ngày và hành vi điều khiển mâu thuẫn: bản mẫu DD vô hiệu hóa điều khiển; mã nguồn hiện hành có lựa chọn kỳ và giới hạn truy vấn.",
+      "impact": "Chưa xác nhận giá trị mặc định, múi giờ, cách tính hai đầu mút, trường hợp chỉ có một đầu mút, khoảng ngày đảo ngược/không hợp lệ và kỳ trong phản hồi.",
+      "decision": "Người phụ trách duyệt cách ánh xạ lựa chọn sang ngày, giá trị mặc định, múi giờ, quy tắc tính đầu mút, kiểm tra dữ liệu và ý nghĩa của thao tác làm mới.",
+      "source_ref": "02-events.md EV-02–EV-03; 04-api-integration.md; 05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-004",
+      "description": "Định danh/quyền truy cập: khung hiện hành kiểm tra vai trò ADMIN và dùng hồ sơ từ phiên API #03; DD/API #101 chưa duyệt quyền dành riêng cho báo cáo và hợp đồng hồ sơ.",
+      "impact": "Chưa thể chốt quyền xem báo cáo, trạng thái bị từ chối, hành vi token/phiên hoặc cách hiển thị hồ sơ.",
+      "decision": "Người phụ trách xác nhận quyền xem báo cáo, cách ánh xạ 401/403 và nguồn định danh được duyệt.",
+      "source_ref": "00-overview.md §4–§5; 02-events.md EV-01; 04-api-integration.md; 05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-005",
+      "description": "Các thông tin về hoạt động, kiểm toán, tình trạng dịch vụ, mức độ sẵn sàng và tuân thủ chưa có nguồn dữ liệu trên bảng điều khiển; giao diện hiện hành giữ chúng ở trạng thái chưa khả dụng/vô hiệu hóa.",
+      "impact": "Không thể khẳng định trạng thái cơ sở dữ liệu/xác thực/hàng đợi, lịch sử, ISO/RBAC hoặc tuyên bố “SYSTEM NORMAL”.",
+      "decision": "Người phụ trách quyết định loại bỏ hay cung cấp API/mã nguồn, quyền, ý nghĩa trạng thái rỗng/lỗi và bằng chứng cho từng thông tin.",
+      "source_ref": "01-ui-elements.md #3, #7, #17–#27; 02-events.md EV-05, EV-07",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-006",
+      "description": "Ghi chú mã nguồn về kết nối giao diện/điều hướng trong DD đã cũ: giao diện hiện hành có bên gọi #101 và RouterLinks; tuyến, triển khai và môi trường chạy trên trình duyệt chưa được xác minh.",
+      "impact": "Không thể dùng hành vi href/hẹn giờ trong bản mẫu làm kỳ vọng cho môi trường chạy hiện hành hoặc kết luận tuyến đã triển khai hoạt động.",
+      "decision": "Người phụ trách đối chiếu kết quả rà soát mã nguồn trong DD với mã giao diện/máy chủ; xác minh bản dựng, trình duyệt và môi trường triển khai trước khi thực thi.",
+      "source_ref": "01-ui-elements.md ghi chú mã nguồn hiện hành; 02-events.md ghi chú mã nguồn hiện hành; 06-navigation.md; đối chiếu lại mã nguồn ngày 2026-11-23",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD-01-BL-007",
+      "description": "Ảnh thiết kế dùng bảng màu, phông chữ và biến thiết kế khác với Study Web.",
+      "impact": "Chưa thể duyệt mức độ tương đồng trực quan hoặc xem bản mẫu là chuẩn giao diện hiện hành.",
+      "decision": "Người phụ trách duyệt ngoại lệ của hệ thống thiết kế hoặc cập nhật ảnh/DD theo biến thiết kế của Study Web.",
+      "source_ref": "00-overview.md; 01-ui-elements.md; 07-test-cases.md §3",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "ket_luan": "Chỉ sử dụng gói này như kế hoạch UTC; chưa phê duyệt để thực thi vì DD còn BỊ CHẶN và 7 điểm chặn chưa được giải quyết."
+}

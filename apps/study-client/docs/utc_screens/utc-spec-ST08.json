@@ -1,0 +1,2032 @@
+{
+  "metadata": {
+    "screen_id": "ST-08",
+    "screen_name": "Khóa học của tôi",
+    "module": "Học viên — danh sách khóa học đã ghi danh",
+    "route": "/student/courses",
+    "actor": "Học viên đã đăng nhập theo AC-13; tuyến hiện nằm dưới StudentLayout; hành vi triển khai chưa xác minh.",
+    "version": "UTC v0.1",
+    "dd_version": "DD v0.3",
+    "dd_status": "BLOCKED",
+    "runtime_status": "Mã Angular và API có trong bản mã trong kho; chưa xác minh trên trình duyệt, API, cơ sở dữ liệu hoặc môi trường triển khai.",
+    "author": "Chưa xác định trong DD",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/00-overview.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/03-data-flow.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/04-api-integration.md; apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/ST-08.md; mã Angular ST08; API #20/#21 trên máy chủ Study.",
+    "release_readiness": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+    "baseline_authorization": "Theo chỉ dẫn của người dùng, dùng DD ST-08 trong kho làm nguồn chuẩn dù tài liệu ghi `BLOCKED`; giữ nguyên quyết định còn mở, không tự chốt thay người phụ trách.",
+    "discrepancy_note": "Mã hiện có gọi #20 và hiển thị danh sách/phân trang/bộ lọc; #20 trả CourseSummaryPage thay cho UserProfile trong danh mục API. #21 hiện trả UserProfile, không phải tiến độ và không được ST-08 gọi. Ảnh Stitch chỉ có trạng thái rỗng và nút hành động/điều hướng khác Angular. Chủ sở hữu DD và khi chạy chưa xác minh."
+  },
+  "overall": {
+    "objective": "Kiểm tra luồng Khóa học của tôi theo AC-13, phân biệt yêu cầu DD với hành vi mã nguồn hiện tại và không tự suy ra tiến độ.",
+    "inputs": "Phiên học viên; `page` hiện chọn; bộ lọc Tất cả/Đang học; phản hồi phong bì #20 chứa CourseSummaryPage trong mã nguồn. Tuyến không nhận mã học viên.",
+    "outputs": "Hiện tại: trạng thái tải/lỗi/rỗng/lệch số lượng/danh sách khóa học, thẻ và phân trang từ #20. Không có phần trăm tiến độ và không gọi #21. Mẫu thiết kế chỉ thể hiện trạng thái rỗng với nút hành động tới /student/progress.",
+    "main_flow": "Mã hiện tại: StudentLayout → ST-08 → GET #20 `page`/`status` → kiểm tra phong bì và CourseSummaryPage → hiển thị rỗng hoặc thẻ; tải lại/phân trang dùng lại #20. DD dự kiến thêm bộ lọc/tiến độ từ #21 và ghép theo `course_id`, nhưng hợp đồng chưa thống nhất.",
+    "preconditions": "Tuyến /student/courses được đăng ký dưới `StudentLayout`; API #20 yêu cầu phiên học viên đã xác thực. Chưa xác minh cấu hình môi trường, cơ chế chặn truy cập khi chạy và lược đồ cơ sở dữ liệu đang triển khai.",
+    "states": [
+      "Đang tải khóa học",
+      "Lỗi và có nút thử lại",
+      "Rỗng theo Tất cả",
+      "Rỗng theo Đang học",
+      "Danh sách khóa học đã tải",
+      "Dữ liệu đếm và danh sách chưa đồng nhất",
+      "Trang yêu cầu vượt tổng số trang và cần tải lại trang hợp lệ",
+      "Tiến độ tổng hợp chưa có; #21 hiện không được gọi"
+    ],
+    "security": "Phía ứng dụng gửi Bearer token qua StudentApiService; API #20 yêu cầu học viên và lọc theo `user_id` lấy từ danh tính phiên. Không gửi `user_id` do người dùng tự nhập; không coi mã trạng thái, `courseId` hoặc tuyến siêu dữ liệu là quyền truy cập. Môi trường triển khai chưa xác minh.",
+    "out_of_scope": "Không gọi API thật, không chạy kiểm thử ứng dụng/máy chủ, không truy cập cơ sở dữ liệu triển khai, không xác minh trình duyệt hoặc triển khai, không tính/giả lập tiến độ và không phê duyệt quyết định DD còn mở."
+  },
+  "apis": [
+    {
+      "id": "#20",
+      "method": "GET",
+      "path": "/api/v1/users/me/courses",
+      "event_ids": [
+        "ST-08-EV-001",
+        "ST-08-EV-003",
+        "ST-08-EV-008",
+        "ST-08-EV-009"
+      ],
+      "request": "Bearer JWT của học viên; tham số truy vấn `page`?: `int32` và `status`?: `string`; phía ứng dụng hiện gửi `page` bắt đầu từ 1 và `status`=`ACTIVE` khi chọn Đang học. Mã nguồn mặc định `page` theo hằng dùng chung, giới hạn số dương `int32` và cắt khoảng trắng `status` nhưng không kiểm enum.",
+      "response": "Danh mục API/DD khai báo `ApiEnvelope<UserProfile>`. Mã nguồn hiện trả phong bì thành công với `CourseSummaryPage`: `items`, `pagination` {`page`,`size`,`total`,`total_pages`}; mỗi dòng gồm `course_id`, `name`, `description`?, `thumbnail_url`?, `price`?, `course_status`?, `enrollment_status`, `enrolled_at`. Phía ứng dụng cố định `size`=20 và kiểm tra kiểu/trang/thứ tự trước khi hiển thị.",
+      "errors": "Danh mục API: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR. Mã nguồn có lỗi xác thực/vai trò, `page` không hợp lệ 422, và lỗi đọc/ánh xạ 500; môi trường triển khai chưa xác minh.",
+      "auth": "Bearer JWT; yêu cầu học viên. Mã nguồn lấy `user_id` từ danh tính phiên và lọc các lượt ghi danh theo `user_id`.",
+      "design_status": "Đường dẫn/mô-đun/tham số truy vấn/trình xử lý hiện có; phản hồi `CourseSummaryPage` khác `UserProfile` trong danh mục API/DD. DD API ở trạng thái dự thảo, cần xác nhận; chưa xác minh khi triển khai.",
+      "source_ref": "docs/lists/list_api.md — API #20; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_20_users_me_courses/models.py; apps/study-server/app/modules/student/api_20_users_me_courses/validate.py; apps/study-server/app/modules/student/api_20_users_me_courses/query.py; apps/study-server/app/modules/student/api_20_users_me_courses/view.py; apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts"
+    },
+    {
+      "id": "#21",
+      "method": "GET",
+      "path": "/api/v1/users/me/progress",
+      "event_ids": [
+        "ST-08-EV-002"
+      ],
+      "request": "Danh mục API: Bearer JWT của học viên; tham số truy vấn `course_id` dạng `list` hoặc `aggregate`?: `string` nhưng cú pháp chưa rõ. Tuyến hiện nhận `course_id`?: `string` và `aggregate`?: `string`; trình xử lý không dùng hai giá trị này để lấy tiến độ.",
+      "response": "Danh mục API/DD khai báo `ApiEnvelope<UserProfile>`. Mã nguồn hiện cũng trả `UserProfile` của người dùng hiện tại, không trả danh sách hay phần trăm tiến độ. ST-08 không gọi #21.",
+      "errors": "Danh mục API khai báo 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR. Mã nguồn có lỗi xác thực/vai trò, người dùng không tồn tại trả 401, lỗi truy vấn/ánh xạ trả 500. Chưa xác minh khi triển khai.",
+      "auth": "Bearer JWT; yêu cầu học viên; mã nguồn dùng `user_id` từ danh tính phiên để tra hồ sơ hiện tại.",
+      "design_status": "Tuyến/mô-đun/trình xử lý và một tệp kiểm thử tập trung hiện có; phản hồi `UserProfile` không đáp ứng AC-13. DD API ở trạng thái dự thảo, cần xác nhận; ST-08 không gọi API này.",
+      "source_ref": "docs/lists/list_api.md — API #21; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_21_users_me_progress/models.py; apps/study-server/app/modules/student/api_21_users_me_progress/validate.py; apps/study-server/app/modules/student/api_21_users_me_progress/query.py; apps/study-server/app/modules/student/api_21_users_me_progress/view.py; apps/study-server/tests/modules/student/api_21_users_me_progress/test_users_me_progress.py"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-08-YC-001",
+      "description": "Chỉ hiển thị ST-08 trong ngữ cảnh học viên đã đăng nhập theo AC-13.",
+      "group": "Phiên học viên",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/00-overview.md; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/layouts/student/student-layout.html",
+      "notes": "Tuyến con thuộc StudentLayout; hành vi khi chạy chưa xác minh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-002",
+      "description": "Khi vào trang hoặc tải lại, yêu cầu danh sách khóa học bằng API #20 cho trang hiện chọn.",
+      "group": "Tải danh sách",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-01; apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts; apps/study-server/app/modules/student/api_20_users_me_courses/view.py",
+      "notes": "Mã nguồn gửi `page` và `status` nếu bộ lọc Đang học được chọn.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-003",
+      "description": "Chỉ hiển thị dữ liệu #20 sau khi kiểm tra phong bì phản hồi, mã nghiệp vụ và trang data.",
+      "group": "Kiểm tra phản hồi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts",
+      "notes": "Kiểm tra `page`, kích thước 20, số trang, trường khóa học, mã dương an toàn và thứ tự thời gian ghi danh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-004",
+      "description": "Giữ riêng bộ lọc Tất cả/Đang học hiện có với bộ lọc trạng thái dự kiến trong DD.",
+      "group": "Bộ lọc",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-03; apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-server/app/modules/student/api_20_users_me_courses/validate.py",
+      "notes": "Giao diện hiện gửi `ACTIVE` hoặc bỏ `status`; quy tắc đầy đủ cho `status` vẫn chưa được duyệt.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-005",
+      "description": "Hiển thị và xử lý riêng trạng thái đang tải, lỗi có thể thử lại, dữ liệu rỗng và dữ liệu đã tải.",
+      "group": "Trạng thái giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+      "notes": "Không coi ảnh Stitch tĩnh là trạng thái do API trả về.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-006",
+      "description": "Khi số lượng đếm và số dòng trả về lệch, giữ dòng đã nhận và ẩn tổng số/phân trang có thể sai.",
+      "group": "Lệch số lượng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts",
+      "notes": "Hiện trang báo dữ liệu chưa đồng nhất và cho tải lại.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-007",
+      "description": "Khi trang yêu cầu vượt tổng số trang hiện có, chuyển đến trang cuối hoặc trang 1 nếu danh sách rỗng rồi tải lại.",
+      "group": "Khôi phục trang",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-server/app/modules/student/api_20_users_me_courses/view.py",
+      "notes": "Số đếm và danh sách là hai truy vấn riêng; khi chạy chưa xác minh.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-008",
+      "description": "Trong thẻ khóa học, chỉ trình bày các trường hiện có và dùng nhãn tiếng Việt cho trạng thái đã biết.",
+      "group": "Thẻ khóa học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": "Mã nguồn chỉ dịch `ACTIVE`/`PUBLISHED`; trạng thái khác dùng thông báo chung.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-009",
+      "description": "Chỉ cho tiếp tục đến ST-09 khi ghi danh `ACTIVE` và mã khóa học an toàn.",
+      "group": "Điều hướng khóa học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-07; apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+      "notes": "Thẻ khóa học không có trong ảnh Stitch; đây là giao diện chỉ thấy trong mã hiện tại.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-010",
+      "description": "Phân trang giữ bộ lọc hiện hành và không cho đi ra ngoài giới hạn được xác nhận.",
+      "group": "Phân trang",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-server/app/modules/student/api_20_users_me_courses/validate.py; apps/study-server/app/modules/student/api_20_users_me_courses/view.py",
+      "notes": "Mã nguồn hiện dùng `page` bắt đầu từ 1 và kích thước trang 20.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-011",
+      "description": "Không hiển thị tiến độ tổng hợp từ API #21 cho đến khi có phản hồi tiến độ và quy tắc ghép được duyệt.",
+      "group": "Tiến độ tổng hợp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-02; apps/study-server/app/modules/student/api_21_users_me_progress/models.py; apps/study-server/app/modules/student/api_21_users_me_progress/view.py",
+      "notes": "Mã nguồn #21 hiện trả hồ sơ người dùng; ST-08 không gọi API này.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-012",
+      "description": "Đối chiếu đúng đích điều hướng của đầu trang, chân trang và nút hành động với DD và Angular hiện tại.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/06-navigation.md; apps/study-client/src/app/shared/ui/student-public-frame.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+      "notes": "Liên kết mẫu thiết kế và liên kết Angular khác nhau ở thương hiệu, danh sách đích và nút hành động.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-013",
+      "description": "Không gửi mã học viên do trình duyệt tự nhập; kiểm tra danh sách thuộc người dùng hiện tại theo phiên học viên.",
+      "group": "Quyền riêng tư",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py; apps/study-server/app/modules/student/api_20_users_me_courses/query.py; apps/study-client/src/app/core/http/student-api.service.ts",
+      "notes": "Nguồn #20 lấy `user_id` từ token; không khẳng định quyền truy cập của môi trường triển khai.",
+      "priority": "Cao"
+    },
+    {
+      "id": "ST-08-YC-014",
+      "description": "Đối chiếu khả năng đọc, bàn phím và bố cục hẹp theo mã Angular hiện tại và hướng dẫn Study Web.",
+      "group": "Trợ năng và bố cục",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.css; apps/study-client/src/app/shared/ui/student-public-frame.css; .agents/web-study/design.md",
+      "notes": "Chưa có ảnh trình duyệt hoặc xác minh khi chạy ở các kích thước.",
+      "priority": "Cao"
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-08-EL-001",
+      "marker": "ST08-EL-01",
+      "name": "Thương hiệu đầu trang",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên trái",
+      "properties": "Mẫu thiết kế dẫn tới /student; StudentPublicFrame hiện dẫn tới /. Có biểu tượng nhà, tên Study2Work và nhãn trợ năng.",
+      "event_ids": [
+        "ST-08-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #1; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-08-EL-002",
+      "marker": "ST08-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm điều hướng",
+      "position": "Đầu trang",
+      "properties": "Mẫu thiết kế có Tổng quan /student, Khóa học của tôi /student/courses và Tiến độ /student/progress. Angular hiện có Trang chủ /, Khóa học /courses, Khóa học của tôi /student/courses và Tiến độ /student/progress.",
+      "event_ids": [
+        "ST-08-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #2; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-08-EL-003",
+      "marker": "ST08-EL-03",
+      "name": "Tiêu đề Khóa học của tôi",
+      "type": "Tiêu đề",
+      "position": "Đầu vùng nội dung",
+      "properties": "H1 tiếng Việt cố định; Angular thêm dòng KHÔNG GIAN HỌC TẬP và câu Tiếp tục học các khóa đã đăng ký.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #3; apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST-08-EL-004",
+      "marker": "ST08-EL-04",
+      "name": "Thẻ rỗng và hình minh họa",
+      "type": "Vùng trạng thái",
+      "position": "Giữa vùng nội dung",
+      "properties": "Ảnh dùng hình quyển sách và trạng thái rỗng tĩnh. Angular chỉ hiện thẻ khi tải thành công và danh sách rỗng; dùng SVG trang trí, `role`=`status` và `aria-labelledby`.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #4; apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST-08-EL-005",
+      "marker": "ST08-EL-05",
+      "name": "Tiêu đề của trạng thái rỗng",
+      "type": "Tiêu đề trạng thái",
+      "position": "Trong thẻ rỗng",
+      "properties": "Mẫu thiết kế ghi Chưa có khóa học để hiển thị. Angular đổi nội dung theo bộ lọc: Bạn chưa đăng ký khóa học nào hoặc Chưa có khóa học đang học.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #5; apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST-08-EL-006",
+      "marker": "ST08-EL-06",
+      "name": "Nội dung giải thích trạng thái rỗng",
+      "type": "Nội dung hướng dẫn",
+      "position": "Trong thẻ rỗng",
+      "properties": "Mẫu thiết kế gộp không có khóa học và dữ liệu chưa cập nhật. Angular ghi Các khóa học của bạn sẽ xuất hiện tại đây; không suy ra nguyên nhân thực tế từ câu chữ.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #6; apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST-08-EL-007",
+      "marker": "ST08-EL-07",
+      "name": "Nút hành động trong trạng thái rỗng",
+      "type": "Liên kết dạng nút",
+      "position": "Cuối thẻ rỗng",
+      "properties": "Mẫu thiết kế ghi Xem tiến độ học tập và dẫn tới /student/progress. Angular hiện ghi Khám phá khóa học và dẫn tới /courses.",
+      "event_ids": [
+        "ST-08-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #7; apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST-08-EL-008",
+      "marker": "ST08-EL-08",
+      "name": "Thương hiệu chân trang",
+      "type": "Liên kết",
+      "position": "Chân trang, bên trái",
+      "properties": "Mẫu thiết kế mô tả chữ tĩnh. Angular hiện dùng liên kết `routerLink`=/ với nhãn trợ năng Study2Work — trang chủ.",
+      "event_ids": [
+        "ST-08-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #8; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-08-EL-009",
+      "marker": "ST08-EL-09",
+      "name": "Nhóm điều hướng chân trang",
+      "type": "Nhóm điều hướng",
+      "position": "Chân trang",
+      "properties": "Mẫu thiết kế có Tổng quan, Khóa học của tôi và Tiến độ. Angular hiện có Trang chủ, Khóa học, Đăng nhập và Đăng ký.",
+      "event_ids": [
+        "ST-08-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md — marker #9; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST08-SRC-EL-001",
+      "marker": "Không có marker DD",
+      "name": "Dòng giới thiệu trang",
+      "type": "Nội dung văn bản",
+      "position": "Phía trên H1",
+      "properties": "Chỉ có trong Angular: nhãn KHÔNG GIAN HỌC TẬP và câu Tiếp tục học các khóa đã đăng ký. Chưa có marker hoặc thiết kế DD tương ứng.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST08-SRC-EL-002",
+      "marker": "Không có marker DD",
+      "name": "Nút hành động khám phá khóa học",
+      "type": "Liên kết dạng nút",
+      "position": "Cạnh tiêu đề trang",
+      "properties": "Angular dẫn tới /courses; không có trong ảnh Stitch. Không truyền mã khóa học.",
+      "event_ids": [
+        "ST-08-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST08-SRC-EL-003",
+      "marker": "Không có marker DD",
+      "name": "Liên kết tài khoản và danh mục ở đầu trang",
+      "type": "Nhóm điều hướng",
+      "position": "Đầu trang",
+      "properties": "StudentPublicFrame thêm Khóa học, Đăng nhập và Đăng ký ngoài nhóm ba liên kết được đánh dấu trong mẫu thiết kế.",
+      "event_ids": [
+        "ST-08-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST08-SRC-EL-004",
+      "marker": "Không có marker DD",
+      "name": "Bộ lọc Tất cả và Đang học",
+      "type": "Nhóm điều khiển",
+      "position": "Dưới tiêu đề trang",
+      "properties": "Hai nút có `aria-pressed`; lựa chọn Đang học gửi `status` `ACTIVE`, Tất cả bỏ `status`. Đây là bộ lọc trong mã hiện tại, chưa có marker DD.",
+      "event_ids": [
+        "ST-08-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+    },
+    {
+      "id": "ST08-SRC-EL-005",
+      "marker": "Không có marker DD",
+      "name": "Thông báo đang tải",
+      "type": "Vùng trạng thái",
+      "position": "Dưới bộ lọc",
+      "properties": "Khi đang tải là true, hiển thị Đang tải khóa học… với `role`=`status`.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+    },
+    {
+      "id": "ST08-SRC-EL-006",
+      "marker": "Không có marker DD",
+      "name": "Thông báo lỗi và nút thử lại",
+      "type": "Vùng cảnh báo và nút",
+      "position": "Vùng nội dung",
+      "properties": "Hiển thị khi lỗi; có `role`=alert và nút Thử tải lại gọi cùng trang/bộ lọc hiện tại.",
+      "event_ids": [
+        "ST-08-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts"
+    },
+    {
+      "id": "ST08-SRC-EL-007",
+      "marker": "Không có marker DD",
+      "name": "Thông báo dữ liệu đếm và danh sách chưa đồng nhất",
+      "type": "Vùng trạng thái và nút",
+      "position": "Trước danh sách khóa học",
+      "properties": "Khi số dòng khác số dòng suy ra từ `total`/`page`/`size`, giữ dòng đã nhận, ẩn tổng số và phân trang, rồi đưa nút Tải lại khóa học.",
+      "event_ids": [
+        "ST-08-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts"
+    },
+    {
+      "id": "ST08-SRC-EL-008",
+      "marker": "Không có marker DD",
+      "name": "Tổng số khóa học",
+      "type": "Nhãn số lượng",
+      "position": "Trên lưới thẻ",
+      "properties": "Chỉ hiển thị `pagination`.`total` khi không có số lượng và danh sách lệch số liệu; ẩn nhãn này khi tổng có thể cũ.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+    },
+    {
+      "id": "ST08-SRC-EL-009",
+      "marker": "Không có marker DD",
+      "name": "Lưới thẻ khóa học",
+      "type": "Danh sách",
+      "position": "Vùng kết quả",
+      "properties": "Hiển thị các dòng trong `items` theo thứ tự API; mỗi thẻ có tên, mô tả tùy chọn và dữ liệu ghi danh. Không có thanh tiến độ.",
+      "event_ids": [
+        "ST-08-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-server/app/modules/student/api_20_users_me_courses/models.py"
+    },
+    {
+      "id": "ST08-SRC-EL-010",
+      "marker": "Không có marker DD",
+      "name": "Nhãn trạng thái ghi danh",
+      "type": "Nhãn trạng thái",
+      "position": "Đầu mỗi thẻ",
+      "properties": "`ACTIVE` được hiển thị là Đang học; giá trị khác hiển thị Trạng thái đang được xác nhận, không lộ mã thô.",
+      "event_ids": [
+        "ST-08-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+    },
+    {
+      "id": "ST08-SRC-EL-011",
+      "marker": "Không có marker DD",
+      "name": "Trạng thái khóa học và ngày ghi danh",
+      "type": "Thông tin mô tả",
+      "position": "Trong mỗi thẻ",
+      "properties": "`PUBLISHED` được ghi Đã xuất bản; giá trị trống ghi Chưa có dữ liệu; giá trị khác ghi Chưa hỗ trợ trạng thái này. Ngày dùng DatePipe `mediumDate`.",
+      "event_ids": [
+        "ST-08-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+    },
+    {
+      "id": "ST08-SRC-EL-012",
+      "marker": "Không có marker DD",
+      "name": "Liên kết tiếp tục hoặc nhãn chưa thể tiếp tục",
+      "type": "Liên kết và văn bản",
+      "position": "Cuối mỗi thẻ",
+      "properties": "Chỉ ghi danh `ACTIVE` có liên kết /student/courses/:courseId nếu mã dương an toàn; trường hợp khác ghi Chưa thể tiếp tục khóa học này.",
+      "event_ids": [
+        "ST-08-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+    },
+    {
+      "id": "ST08-SRC-EL-013",
+      "marker": "Không có marker DD",
+      "name": "Điều khiển phân trang",
+      "type": "Nhóm nút",
+      "position": "Dưới lưới thẻ",
+      "properties": "Chỉ hiện khi `total_pages` lớn hơn 1 và số lượng và danh sách đồng nhất; nút Trang trước/Trang sau bị khóa ở biên hoặc khi đang tải.",
+      "event_ids": [
+        "ST-08-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-08-EV-001",
+      "name": "Vào trang và nạp danh sách khóa học",
+      "trigger": "Khởi tạo ST-08 hoặc tải lại trang.",
+      "element_ids": [],
+      "api_ids": [
+        "#20"
+      ],
+      "processing": "Mã hiện tại gọi #20 với `page` hiện chọn và `status` `ACTIVE` nếu bộ lọc Đang học. Kiểm tra phản hồi rồi mới hiển thị trạng thái; tuyến siêu dữ liệu #21 không phải lời gọi API.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-01; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts"
+    },
+    {
+      "id": "ST-08-EV-002",
+      "name": "Nạp tiến độ tổng hợp theo thiết kế nhưng không gọi #21 từ ST-08 hiện tại",
+      "trigger": "Sau khi có danh sách khóa học theo luồng AC-13.",
+      "element_ids": [],
+      "api_ids": [
+        "#20",
+        "#21"
+      ],
+      "processing": "DD dự kiến gọi #21 hoặc gọi có điều kiện rồi ghép theo `course_id`. Mã hiện tại không gọi #21 vì API trả UserProfile, không có dữ liệu tiến độ. Không hiển thị phần trăm hoặc khẳng định hoàn thành.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-02; apps/study-server/app/modules/student/api_21_users_me_progress/models.py; apps/study-server/app/modules/student/api_21_users_me_progress/view.py; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+    },
+    {
+      "id": "ST-08-EV-003",
+      "name": "Thay đổi bộ lọc khóa học",
+      "trigger": "Bấm Tất cả hoặc Đang học.",
+      "element_ids": [
+        "ST08-SRC-EL-004"
+      ],
+      "api_ids": [
+        "#20"
+      ],
+      "processing": "Angular đổi bộ lọc, đặt `page` về 1 và nạp lại. Tất cả bỏ `status`; Đang học gửi `ACTIVE`. Các giá trị trạng thái đầy đủ và ý nghĩa danh mục API vẫn cần người phụ trách duyệt.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-03; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts"
+    },
+    {
+      "id": "ST-08-EV-004",
+      "name": "Đi tới danh sách khóa học hoặc trang tiến độ",
+      "trigger": "Bấm nút hành động trong vùng đầu trang hoặc trạng thái rỗng.",
+      "element_ids": [
+        "ST-08-EL-007",
+        "ST08-SRC-EL-002"
+      ],
+      "api_ids": [],
+      "processing": "Mẫu thiết kế đặt nút hành động rỗng tới /student/progress. Angular hiện có nút hành động rỗng và nút hành động đầu trang tới /courses. Không có mã khóa học hay tiến độ dữ liệu được bàn giao.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-04; apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html"
+    },
+    {
+      "id": "ST-08-EV-005",
+      "name": "Điều hướng từ đầu trang",
+      "trigger": "Bấm thương hiệu hoặc liên kết trong thanh điều hướng.",
+      "element_ids": [
+        "ST-08-EL-001",
+        "ST-08-EL-002",
+        "ST08-SRC-EL-003"
+      ],
+      "api_ids": [],
+      "processing": "Mẫu thiết kế và StudentPublicFrame hiện có bộ nhãn/đích khác nhau. Ghi nhận `routerLink` hiện tại; đích khi chạy và xác thực phiên chưa kiểm chứng.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-05; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-08-EV-006",
+      "name": "Điều hướng từ chân trang",
+      "trigger": "Bấm thương hiệu hoặc liên kết trong chân trang.",
+      "element_ids": [
+        "ST-08-EL-008",
+        "ST-08-EL-009"
+      ],
+      "api_ids": [],
+      "processing": "Mẫu thiết kế có nhãn tĩnh và ba đích học viên; Angular có thương hiệu là liên kết và các đích Trang chủ, Khóa học, Đăng nhập, Đăng ký.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-06; apps/study-client/src/app/shared/ui/student-public-frame.html"
+    },
+    {
+      "id": "ST-08-EV-007",
+      "name": "Mở tổng quan khóa học từ thẻ đang học",
+      "trigger": "Bấm liên kết tiếp tục trên thẻ khóa học.",
+      "element_ids": [
+        "ST08-SRC-EL-009",
+        "ST08-SRC-EL-010",
+        "ST08-SRC-EL-012"
+      ],
+      "api_ids": [
+        "#20"
+      ],
+      "processing": "Chỉ trạng thái `ACTIVE` cùng mã khóa học an toàn tạo liên kết /student/courses/:courseId. Ghi danh trạng thái khác không có liên kết. Thẻ chưa tồn tại trong tài liệu thiết kế Stitch; quyền ở ST-09 cần xác nhận riêng.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md — ST08-EV-07; apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+    },
+    {
+      "id": "ST-08-EV-008",
+      "name": "Chuyển trang danh sách",
+      "trigger": "Bấm Trang trước hoặc Trang sau khi có nhiều trang.",
+      "element_ids": [
+        "ST08-SRC-EL-013"
+      ],
+      "api_ids": [
+        "#20"
+      ],
+      "processing": "Giữ bộ lọc hiện tại, chỉ chuyển khi trang kế tiếp nằm trong giới hạn và không có lệch số liệu; sau đó gọi lại #20.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts"
+    },
+    {
+      "id": "ST-08-EV-009",
+      "name": "Thử lại lỗi và khôi phục sai khác phân trang",
+      "trigger": "Bấm Thử tải lại/Tải lại khóa học hoặc nhận trang đã vượt giới hạn mới.",
+      "element_ids": [
+        "ST08-SRC-EL-006",
+        "ST08-SRC-EL-007"
+      ],
+      "api_ids": [
+        "#20"
+      ],
+      "processing": "Nút thử lại gọi lại trang/bộ lọc hiện hành. Khi `total_pages` giảm dưới `page` yêu cầu, mã đặt về trang cuối (hoặc 1 nếu rỗng) rồi gọi lại. Khi số lượng và danh sách lệch, giữ các dòng, ẩn tổng/phân trang và chờ tải lại.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-server/app/modules/student/api_20_users_me_courses/view.py"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-08-BL-01",
+      "description": "Danh mục API/DD #20 khai báo UserProfile nhưng mã hiện tại trả CourseSummaryPage với danh sách ghi danh/khóa học.",
+      "impact": "Không thể xem dữ liệu hiện tại là hợp đồng được người phụ trách duyệt hoặc triển khai dùng đúng lược đồ truyền data.",
+      "decision": "Chốt phản hồi, trường định danh/dữ liệu khóa học, kiểu rỗng và cập nhật danh mục API, DD, máy chủ, phía ứng dụng đồng bộ.",
+      "source_ref": "docs/lists/list_api.md — API #20; apps/study-server/docs/dd/20_users_me_courses/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_20_users_me_courses/models.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-02",
+      "description": "Quy tắc `status`, giá trị hợp lệ và mặc định trong DD #20 chưa chốt; mã nguồn cắt khoảng trắng nhưng không kiểm enum, còn giao diện chỉ gửi `ACTIVE` hoặc không gửi `status`.",
+      "impact": "Chưa thể xác nhận bộ lọc hiện tại phù hợp với nghĩa nghiệp vụ và trạng thái trong dữ liệu triển khai.",
+      "decision": "Duyệt cột lọc, enum, chữ hoa/thường, mặc định và cách biểu diễn Tất cả/Đang học; cập nhật điều khiển và API contract.",
+      "source_ref": "apps/study-server/docs/dd/20_users_me_courses/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_20_users_me_courses/validate.py; apps/study-server/app/modules/student/api_20_users_me_courses/query.py; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-03",
+      "description": "DD chưa quy định thống nhất `page` base/`size`/max/order/siêu dữ liệu; mã hiện tại dùng `page` từ 1, `size` 20 và số lượng và danh sách riêng.",
+      "impact": "Mã phía ứng dụng đang bảo vệ một cấu trúc dữ liệu cụ thể nhưng chưa có phê duyệt đầy đủ về tương tranh, tổng số và danh sách.",
+      "decision": "Duyệt quy ước phân trang, thứ tự ổn định, phản hồi khi rỗng, thay đổi giữa số lượng và danh sách và xử lý vượt phạm vi.",
+      "source_ref": "apps/study-server/docs/dd/20_users_me_courses/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_20_users_me_courses/validate.py; apps/study-server/app/modules/student/api_20_users_me_courses/query.py; apps/study-server/app/modules/student/api_20_users_me_courses/view.py; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-04",
+      "description": "API #21 hiện trả UserProfile và không tính tiến độ; tham số truy vấn `course_id`/`aggregate` được nhận nhưng không được dùng trong phép truy vấn hồ sơ.",
+      "impact": "Không có dữ liệu để ghép theo `course_id`, tính tỷ lệ, xử lý thiếu tiến độ hoặc phân biệt rỗng/lỗi.",
+      "decision": "Duyệt tham số truy vấn, phản hồi, danh tính scope, công thức, mẫu số, trạng thái hoàn tất, làm tròn và trường hợp không có tiến độ; cập nhật API #21.",
+      "source_ref": "apps/study-server/docs/dd/21_users_me_progress/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_21_users_me_progress/models.py; apps/study-server/app/modules/student/api_21_users_me_progress/view.py; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/03-data-flow.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-05",
+      "description": "AC-13 và inventory chưa thống nhất gọi #21 luôn hay chỉ khi #20 thiếu tiến độ; nhánh rỗng và HAS DATA trong sơ đồ đều đến cùng node hiển thị khóa học.",
+      "impact": "Không thể chốt thứ tự gọi, trạng thái rỗng, dữ liệu dở dang hay hành vi khi một API lỗi.",
+      "decision": "Sửa sơ đồ và duyệt thứ tự/điều kiện gọi, xử lý lỗi một phần, dữ liệu rỗng và ánh xạ trạng thái.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/03-data-flow.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/04-api-integration.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/05-business-rules.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-06",
+      "description": "Ảnh Stitch chỉ có trạng thái rỗng; không định nghĩa bộ lọc, thẻ khóa học, tiến độ, phân trang, tải, lỗi hay bản ghi đã tải. Mã Angular hiện đã có các phần tử này.",
+      "impact": "Phần đang triển khai chưa có thiết kế/duyệt tương ứng; không thể coi giao diện mã nguồn là thiết kế nghiệp vụ đã xác nhận.",
+      "decision": "Duyệt đầy đủ trạng thái tải/rỗng/lỗi/danh sách, bộ lọc, thẻ, tiến độ, phân trang và hành vi phục hồi.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md; apps/study-client/src/app/features/student/ST08/pages/st08-page.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.ts; apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-07",
+      "description": "Điều hướng và khung giao diện khác giữa mẫu thiết kế và Angular: nút hành động rỗng, thương hiệu, liên kết đầu/cuối trang và liên kết tài khoản/danh mục.",
+      "impact": "Đích điều hướng và trải nghiệm hiện tại chưa phản ánh thống nhất nguồn thiết kế; liên kết ST-09 chỉ xuất hiện trong thẻ Angular.",
+      "decision": "Duyệt nhãn/đích của từng liên kết, điều kiện mở ST-09, xử lý ghi danh không còn hợp lệ, phiên đăng nhập và quay lại trang trước.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/06-navigation.md; apps/study-client/src/app/shared/ui/student-public-frame.html; apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-08",
+      "description": "DDL legacy dùng BIGINT các khóa học/các lượt ghi danh/lesson_progress; DDL V1-PILOT dùng UUID course_enrollments/lesson_progress_facts/progress_snapshots.",
+      "impact": "Không thể suy ra kiểu ID, phép ghép và nguồn phần trăm từ DDL; lược đồ đang triển khai chưa được xác minh.",
+      "decision": "Chọn mô hình lược đồ và xác nhận API #20/#21 truy vấn đúng lược đồ đang triển khai trước khi duyệt data.",
+      "source_ref": "infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql; apps/study-server/app/modules/student/api_20_users_me_courses/query.py; apps/study-server/app/modules/student/api_21_users_me_progress/query.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-09",
+      "description": "Chủ sở hữu DD chưa xác định; #20 không có tệp kiểm thử máy chủ tập trung trong inventory đã rà soát, #21 có tệp kiểm thử nhưng chưa chạy; môi trường thật chưa xác minh.",
+      "impact": "Chưa có bằng chứng phê duyệt kỳ vọng và chưa thể khẳng định hành vi trình duyệt/API/cơ sở dữ liệu khi triển khai.",
+      "decision": "Chỉ định người phụ trách/rà soát/phê duyệt; giải quyết các câu hỏi mở, xác nhận kiểm thử và môi trường trước khi mở gate.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/00-overview.md; apps/study-server/tests/modules/student/api_21_users_me_progress/test_users_me_progress.py; apps/study-server/app/modules/student/api_20_users_me_courses/view.py; apps/study-server/app/modules/student/api_21_users_me_progress/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-08-BL-10",
+      "description": "HTML Stitch dùng phông/tailwind từ xa, chiều rộng 1440px và bảng màu khác hướng dẫn Study Web; Angular hiện dùng CSS/tokens riêng và khung giao diện rộng 1280px.",
+      "impact": "Mẫu thiết kế và giao diện hiện tại chưa có phê duyệt về ngoại lệ thiết kế; chưa có ảnh chạy ở kích thước hẹp để xác minh.",
+      "decision": "Duyệt chuẩn giao diện cuối, phạm vi khung giao diện/nội dung, phông, màu, khả năng co lại, tương phản và trạng thái tiêu điểm.",
+      "source_ref": "apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html; .agents/web-study/design.md; apps/study-client/src/app/shared/ui/student-public-frame.css; apps/study-client/src/app/features/student/ST08/pages/st08-page.css",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST08-MH-001",
+        "requirement_ids": [
+          "ST-08-YC-001",
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến ST-08 trong phiên học viên",
+        "precondition": "Bố cục StudentLayout được nạp; thử cả có và không có phiên.",
+        "data": "Tuyến /student/courses.",
+        "steps": [
+          "Mở tuyến khi chưa đăng nhập.",
+          "Ghi lại nội dung do bố cục cha hiển thị.",
+          "Mở lại trong phiên học viên."
+        ],
+        "expected": "Tuyến con được đăng ký dưới StudentLayout. Khi thiếu phiên, cách bố cục cha xử lý cần đối chiếu riêng; khi có phiên, `page` component được mount theo mã nguồn. Khi chạy chưa được kiểm chứng. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-002",
+        "requirement_ids": [
+          "ST-08-YC-002",
+          "ST-08-YC-013"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Tải trang đầu tiên bằng API #20",
+        "precondition": "Có phiên học viên hợp lệ trong mã giả lập; chỉ rà soát mã nguồn, không gọi môi trường.",
+        "data": "Trang 1, bộ lọc Tất cả.",
+        "steps": [
+          "Đối chiếu `ngOnInit` và load().",
+          "Đối chiếu tham số được gửi qua ST08CoursesService.",
+          "Xác nhận trang không tự gửi `user_id`."
+        ],
+        "expected": "Mã hiện tại gọi #20 với `page`=1 và bỏ `status`; StudentApiService thêm Bearer token, còn máy chủ lấy `user_id` từ danh tính phiên. Không kết luận API triển khai đã chạy. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-003",
+        "requirement_ids": [
+          "ST-08-YC-005"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị dấu hiệu đang tải trước phản hồi",
+        "precondition": "Yêu cầu #20 đang chờ.",
+        "data": "Giá trị ban đầu loading=true.",
+        "steps": [
+          "Đối chiếu trạng thái đầu của component.",
+          "Đối chiếu nhánh @if đang tải trong mẫu giao diện."
+        ],
+        "expected": "Mẫu giao diện hiện thông báo Đang tải khóa học… với `role`=`status`; chưa có bằng chứng hiển thị ở trình duyệt thật. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-004",
+        "requirement_ids": [
+          "ST-08-YC-003",
+          "ST-08-YC-005",
+          "ST-08-YC-006"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị danh sách rỗng sau phản hồi hợp lệ",
+        "precondition": "API giả lập trả phong bì thành công, mã DESIGN_RESOURCE_RETRIEVED, `items` rỗng và `pagination` hợp lệ.",
+        "data": "Bộ lọc Tất cả; `page` 1; `total`=0.",
+        "steps": [
+          "Đối chiếu kiểm tra phong bì và `page`.",
+          "Đọc điều kiện hiện thẻ rỗng.",
+          "Đối chiếu tiêu đề, nội dung và nút hành động Angular với Stitch."
+        ],
+        "expected": "Angular hiển thị Bạn chưa đăng ký khóa học nào, câu Các khóa học của bạn sẽ xuất hiện tại đây và nút hành động Khám phá khóa học tới /courses. Không suy ra lý do từ câu chữ; nội dung này khác mẫu thiết kế. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-005",
+        "requirement_ids": [
+          "ST-08-YC-004",
+          "ST-08-YC-006"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị nội dung rỗng riêng cho bộ lọc Đang học",
+        "precondition": "Bộ lọc Đang học được chọn; #20 trả `items` rỗng hợp lệ.",
+        "data": "`status`=`ACTIVE`; `page` 1; `total`=0.",
+        "steps": [
+          "Chọn Đang học.",
+          "Đối chiếu yêu cầu #20.",
+          "Đọc tiêu đề trạng thái rỗng."
+        ],
+        "expected": "Angular đổi tiêu đề thành Chưa có khóa học đang học. Không coi đây là quy tắc trạng thái đầy đủ đã được người phụ trách duyệt. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-006",
+        "requirement_ids": [
+          "ST-08-YC-003",
+          "ST-08-YC-008",
+          "ST-08-YC-011"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị danh sách thẻ từ các dòng hợp lệ",
+        "precondition": "Phản hồi có ít nhất một dòng và qua kiểm tra cấu trúc data.",
+        "data": "`items` có khóa học `ACTIVE` và một trạng thái ghi danh khác.",
+        "steps": [
+          "Đối chiếu trường bắt buộc/tùy chọn trong bộ kiểm tra.",
+          "Đọc các nhánh mẫu giao diện cho danh sách.",
+          "Xác nhận không có thanh tiến độ hoặc lời gọi #21."
+        ],
+        "expected": "Angular hiển thị tên, mô tả nếu có, nhãn trạng thái, trạng thái khóa và ngày ghi danh. Không hiển thị phần trăm; #21 không được gọi và danh mục API phản hồi vẫn khác mã nguồn phản hồi. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20",
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/models.py",
+          "apps/study-server/app/modules/student/api_21_users_me_progress/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-007",
+        "requirement_ids": [
+          "ST-08-YC-004",
+          "ST-08-YC-010"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Chuyển sang bộ lọc Đang học và đặt lại trang",
+        "precondition": "Đang ở `page` lớn hơn 1 và có data.",
+        "data": "Bấm nút Đang học.",
+        "steps": [
+          "Bấm bộ lọc Đang học.",
+          "Đối chiếu giá trị `page` trước và sau.",
+          "Kiểm tra tham số lần tải kế tiếp."
+        ],
+        "expected": "`changeFilter` đặt `page` về 1, gửi `status`=`ACTIVE` và gọi #20 lại. Cách lọc này có trong mã hiện tại; enum/`status` nghiệp vụ còn chờ xác nhận. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-008",
+        "requirement_ids": [
+          "ST-08-YC-004"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Quay về bộ lọc Tất cả và bỏ tham số `status`",
+        "precondition": "Bộ lọc Đang học đang hoạt động.",
+        "data": "Bấm nút Tất cả.",
+        "steps": [
+          "Bấm Tất cả.",
+          "Đối chiếu tham số API.",
+          "Đối chiếu lại tiêu đề trạng thái rỗng nếu phản hồi rỗng."
+        ],
+        "expected": "`changeFilter` đặt `page` về 1; dịch vụ không thêm tham số truy vấn `status` khi chọn Tất cả. Không suy ra các trạng thái ghi danh khác ngoài mã đang có. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-009",
+        "requirement_ids": [
+          "ST-08-YC-005"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị lỗi tải và thử lại cùng bộ lọc",
+        "precondition": "Phản hồi #20 phát sinh lỗi mạng hoặc HTTP.",
+        "data": "Lỗi mạng/401/403/422/500 theo dữ liệu giả lập.",
+        "steps": [
+          "Đối chiếu `studentApiErrorMessage`.",
+          "Đối chiếu vùng `role`=alert.",
+          "Bấm Thử tải lại và xác nhận load giữ `page`/bộ lọc."
+        ],
+        "expected": "Mẫu giao diện hiện lỗi tiếng Việt và nút Thử tải lại gọi load(). Ánh xạ lỗi cụ thể có trong mã nguồn; cách bố cục cha xử lý hết phiên cần kiểm chứng riêng. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-010",
+        "requirement_ids": [
+          "ST-08-YC-003",
+          "ST-08-YC-005"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị phản hồi sai cấu trúc hoặc mã nghiệp vụ",
+        "precondition": "Dùng phản hồi giả lập có `success` sai kiểu, thiếu trường, `success=false` hoặc `businessCode` khác.",
+        "data": "Phong bì không hợp lệ hoặc không phải DESIGN_RESOURCE_RETRIEVED.",
+        "steps": [
+          "Đối chiếu `envelopeIssue`.",
+          "Đối chiếu nhánh kiểm `businessCode`.",
+          "Xác nhận danh sách không hiển thị dữ liệu chưa được chấp nhận."
+        ],
+        "expected": "Trang báo lỗi chung hoặc yêu cầu thử lại; không hiển thị thẻ từ phản hồi không hợp lệ. Ca là kế hoạch đọc mã nguồn, chưa chạy. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-011",
+        "requirement_ids": [
+          "ST-08-YC-003"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Từ chối cấu trúc dữ liệu sai trang, kiểu hoặc thứ tự",
+        "precondition": "Dùng phản hồi giả lập sai `page`/`size`/`total_pages`, `course_id`, trường bắt buộc, ngày hoặc thứ tự `enrolled_at`.",
+        "data": "Kích thước chuẩn phía ứng dụng=20; `enrolled_at` giảm dần.",
+        "steps": [
+          "Đối chiếu `isStudentCoursePage`.",
+          "Thay đổi từng trường bắt buộc trong fixture dự kiến.",
+          "Quan sát nhánh lỗi mẫu giao diện."
+        ],
+        "expected": "Bộ kiểm tra yêu cầu đúng trang, `size`=20, siêu dữ liệu nhất quán, mã dương an toàn, trường cần thiết và thời gian ghi danh giảm dần. Phản hồi sai không được hiển thị thành danh sách. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-012",
+        "requirement_ids": [
+          "ST-08-YC-007",
+          "ST-08-YC-010"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Khôi phục khi trang yêu cầu đã vượt tổng số trang",
+        "precondition": "Bắt đầu ở trang đã hợp lệ; số lượng bản ghi thay đổi trước khi danh sách được đọc.",
+        "data": "`total_pages` nhỏ hơn `page` yêu cầu; thử cả `total_pages=0`.",
+        "steps": [
+          "Đối chiếu `lastAvailablePage`.",
+          "Xác nhận `page` đổi về trang cuối hoặc 1.",
+          "Xác nhận một yêu cầu mới được lên lịch."
+        ],
+        "expected": "Mã đặt `page` về max(`total_pages`,1) rồi gọi lại; chỉ hiển thị trạng thái rỗng sau phản hồi trang mới. Chưa xác nhận hai truy vấn đếm và liệt kê dùng cùng một ảnh chụp data. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/view.py",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-013",
+        "requirement_ids": [
+          "ST-08-YC-006",
+          "ST-08-YC-010"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Giữ các dòng đã nhận, ẩn tổng số khi hai truy vấn cho kết quả lệch nhau",
+        "precondition": "Phản hồi qua bộ kiểm tra nhưng số dòng `items` khác số dòng suy ra từ `total`, `page` và `size`.",
+        "data": "Ví dụ trang 1, mỗi trang 20 dòng, tổng 25 dòng nhưng `items` có 3 dòng.",
+        "steps": [
+          "Đối chiếu `hasStudentCoursePageCountMismatch`.",
+          "Đối chiếu nhánh `snapshotMismatch` trong mẫu giao diện.",
+          "Kiểm tra các dòng vẫn hiển thị, tổng số và phân trang bị ẩn, nút tải lại xuất hiện."
+        ],
+        "expected": "Mã giữ các dòng trả về, ẩn tổng số và phân trang có thể đã cũ, báo dữ liệu chưa đồng nhất và cho tải lại. Chưa xác minh khi chạy ứng dụng. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-014",
+        "requirement_ids": [
+          "ST-08-YC-010"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Phân trang giữ bộ lọc và khóa nút ở giới hạn",
+        "precondition": "Phản hồi hợp lệ có `total_pages` lớn hơn 1, số lượng và danh sách đồng nhất.",
+        "data": "Kiểm tra `page` đầu, giữa, cuối và lúc đang tải.",
+        "steps": [
+          "Đối chiếu điều kiện hiện nav.",
+          "Kiểm tra disabled ở trang đầu/cuối/đang tải.",
+          "Chọn Trang sau và Trang trước; xác nhận `page` và bộ lọc được giữ."
+        ],
+        "expected": "Nút chỉ đổi trang trong giới hạn và gọi lại #20 với cùng bộ lọc. Không hiển thị phân trang khi chỉ có một trang hoặc có lệch số liệu. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-015",
+        "requirement_ids": [
+          "ST-08-YC-008"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Ánh xạ trạng thái khóa học và ghi danh thành nhãn dễ hiểu",
+        "precondition": "Có thẻ với các trạng thái hiện trong mã nguồn và giá trị khác để kiểm tra dự phòng.",
+        "data": "`enrollment_status` `ACTIVE`/`COMPLETED`/khác; `course_status` `PUBLISHED`/null/khác.",
+        "steps": [
+          "Đối chiếu `enrollmentStatusLabel` và `courseStatusLabel`.",
+          "Xác nhận mã chưa biết không bị lộ nguyên dạng.",
+          "Kiểm tra ngày ghi danh dùng DatePipe."
+        ],
+        "expected": "`ACTIVE` được ghi Đang học; `PUBLISHED` được ghi Đã xuất bản; trạng thái khác dùng nhãn chung hiện có. Định dạng ngày cụ thể còn phụ thuộc thiết lập ngôn ngữ chưa xác minh. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-016",
+        "requirement_ids": [
+          "ST-08-YC-009"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Chỉ mở ST-09 từ ghi danh `ACTIVE` có mã hợp lệ",
+        "precondition": "Có một dòng `ACTIVE` và một dòng trạng thái khác.",
+        "data": "`ACTIVE` với `course_id` dương an toàn; dòng còn lại `COMPLETED`.",
+        "steps": [
+          "Đối chiếu điều kiện liên kết Angular.",
+          "Xác nhận tuyến có mã `course_id` đã làm sạch.",
+          "Xác nhận trạng thái khác chỉ hiện câu Chưa thể tiếp tục khóa học này."
+        ],
+        "expected": "Chỉ dòng `ACTIVE` có mã an toàn nhận liên kết /student/courses/:courseId; dòng khác không thể điều hướng. Chưa xác minh quyền truy cập ST-09 và quyền sở hữu khóa học. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-017",
+        "requirement_ids": [
+          "ST-08-YC-011"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Giữ màn hình không có phần trăm tiến độ khi #21 chưa cung cấp tiến độ",
+        "precondition": "Có phản hồi #20 hợp lệ; không cấu hình phản hồi #21.",
+        "data": "Tuyến siêu dữ liệu có `apiIds` 20/21.",
+        "steps": [
+          "Theo dõi mã nguồn dịch vụ và `page` imports.",
+          "Đọc trình xử lý #21 hiện tại.",
+          "Kiểm tra mẫu giao diện không có tiến độ bar."
+        ],
+        "expected": "Trang chỉ gọi #20; #21 trả UserProfile và không được gọi từ ST-08. Không suy ra 0% hoặc phần trăm từ hồ sơ/ngày ghi danh. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20",
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-server/app/modules/student/api_21_users_me_progress/view.py",
+          "apps/study-server/app/modules/student/api_21_users_me_progress/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-018",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu đích nút hành động và điều hướng với mẫu thiết kế",
+        "precondition": "So sánh DD/ảnh Stitch với mẫu giao diện Angular.",
+        "data": "Mẫu thiết kế nút hành động /student/progress; Angular nút hành động /courses.",
+        "steps": [
+          "Đối chiếu nhãn nút hành động.",
+          "Đối chiếu href/`routerLink` thương hiệu, đầu trang, chân trang và liên kết tài khoản.",
+          "Ghi lại khác biệt theo nguồn."
+        ],
+        "expected": "Các `routeLink` hiện tại được ghi đúng theo StudentPublicFrame và ST08 mẫu giao diện; chúng khác một số nhãn/đích mẫu thiết kế. Không kết luận destination đã chạy khi chưa xác minh khi chạy. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html",
+          "apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-MH-019",
+        "requirement_ids": [
+          "ST-08-YC-014"
+        ],
+        "target_id": "ST-08",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra thứ tự bàn phím và bố cục ở kích thước hẹp",
+        "precondition": "Khi có ứng dụng trình duyệt thử nghiệm được duyệt.",
+        "data": "375px, 600px, 768px, 980px và 1280px; bàn phím; viền khi nhận tiêu điểm.",
+        "steps": [
+          "Kiểm tra không tràn ngang vùng chính.",
+          "Kiểm tra bộ lọc, thẻ và phân trang co lại.",
+          "Kiểm tra tiêu điểm trên liên kết/nút và thông báo trạng thái."
+        ],
+        "expected": "CSS hiện khai báo breakpoint 600px cho tiêu đề/nút hành động và shared frame có breakpoint 980px; kết quả hiển thị và tương phản cần được xác minh khi khi chạy sẵn sàng. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.css",
+          "apps/study-client/src/app/features/student/shared/ui/student-api-page.css",
+          "apps/study-client/src/app/shared/ui/student-public-frame.css",
+          ".agents/web-study/design.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST08-TP-001",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu thương hiệu đầu trang",
+        "precondition": "Khung StudentPublicFrame hiển thị.",
+        "data": "Mẫu thiết kế /student; Angular /.",
+        "steps": [
+          "Đọc nhãn trợ năng và `routerLink`.",
+          "So sánh marker #1 với khung dùng chung."
+        ],
+        "expected": "Angular hiện dẫn về / và có nhãn trợ năng; mẫu thiết kế dẫn về /student. Đích được ghi nhận từ mã nguồn, khi chạy còn chờ xác nhận. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-002",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu nhóm điều hướng đầu trang",
+        "precondition": "Khung đầu trang được hiển thị.",
+        "data": "Mẫu thiết kế có ba liên kết học viên; Angular có bốn liên kết chính.",
+        "steps": [
+          "So sánh tên và đích từng liên kết.",
+          "Ghi riêng liên kết Trang chủ, Khóa học, Khóa học của tôi, Tiến độ."
+        ],
+        "expected": "Angular liên kết tới /, /courses, /student/courses và /student/progress; không xem cấu hình tuyến là bằng chứng tất cả trang đích chạy được. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-003",
+        "requirement_ids": [
+          "ST-08-YC-012",
+          "ST-08-YC-014"
+        ],
+        "target_id": "ST-08-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu tiêu đề và dòng giới thiệu",
+        "precondition": "Trang con đã được mount.",
+        "data": "H1 Khóa học của tôi; eyebrow và câu giới thiệu có trong Angular.",
+        "steps": [
+          "Đọc thứ bậc heading.",
+          "Đối chiếu eyebrow, H1 và câu giới thiệu."
+        ],
+        "expected": "Angular giữ H1 tiếng Việt và thêm hai dòng chưa có trong marker Stitch. Cấu trúc và bố cục hẹp cần xác minh trực quan ở khi chạy. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-004",
+        "requirement_ids": [
+          "ST-08-YC-005",
+          "ST-08-YC-006"
+        ],
+        "target_id": "ST-08-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu bề mặt rỗng và hình minh họa",
+        "precondition": "Phản hồi #20 hợp lệ có `items` rỗng.",
+        "data": "`role`=`status`, `aria-labelledby`, SVG aria-hidden.",
+        "steps": [
+          "Đối chiếu điều kiện hiển thị thẻ.",
+          "Kiểm tra thuộc tính hỗ trợ tiếp cận trong mẫu giao diện."
+        ],
+        "expected": "Angular dùng thẻ trạng thái với hình SVG trang trí; chỉ hiển thị khi hết tải, không lỗi, không lệch số liệu và danh sách rỗng. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-005",
+        "requirement_ids": [
+          "ST-08-YC-004",
+          "ST-08-YC-006"
+        ],
+        "target_id": "ST-08-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu tiêu đề trạng thái rỗng theo bộ lọc",
+        "precondition": "Có phản hồi rỗng hợp lệ.",
+        "data": "Bộ lọc Tất cả hoặc Đang học.",
+        "steps": [
+          "Đọc biểu thức tiêu đề trong mẫu giao diện.",
+          "Kiểm tra hai nhánh bộ lọc."
+        ],
+        "expected": "Angular hiển thị hai câu khác nhau theo bộ lọc; nội dung mẫu thiết kế tĩnh không phải trạng thái đã được API phân biệt. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-006",
+        "requirement_ids": [
+          "ST-08-YC-005",
+          "ST-08-YC-006"
+        ],
+        "target_id": "ST-08-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu nội dung giải thích trạng thái rỗng",
+        "precondition": "Trạng thái rỗng đã được chọn.",
+        "data": "Nội dung mẫu thiết kế và Angular.",
+        "steps": [
+          "Đọc câu giải thích ở hai nguồn.",
+          "Xác nhận câu chữ không được hiểu là lý do API."
+        ],
+        "expected": "Angular ghi Các khóa học của bạn sẽ xuất hiện tại đây; không suy luận tài khoản rỗng hay đồng bộ chậm từ câu này. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-007",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu nút hành động trong thẻ rỗng",
+        "precondition": "Trạng thái rỗng đang hiển thị.",
+        "data": "Mẫu thiết kế dẫn /student/progress; Angular dẫn /courses.",
+        "steps": [
+          "Đọc nhãn và đích mỗi nguồn.",
+          "Xác nhận không truyền `course_id`."
+        ],
+        "expected": "Angular hiện nút Khám phá khóa học tới /courses; mẫu thiết kế là Xem tiến độ học tập tới /student/progress. Giữ sai khác, chờ quyết định thiết kế. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-008",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu thương hiệu chân trang",
+        "precondition": "Chân trang StudentPublicFrame được hiển thị.",
+        "data": "Mẫu thiết kế chữ tĩnh; Angular `routerLink`=/.",
+        "steps": [
+          "Kiểm tra loại phần tử và nhãn trợ năng.",
+          "Đọc `routerLink` thực tế."
+        ],
+        "expected": "Angular hiện dùng liên kết tới /; ảnh Stitch mô tả chữ tĩnh. Đích trang chủ khi chạy chưa xác minh. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-009",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu nhóm liên kết chân trang",
+        "precondition": "Chân trang hiển thị.",
+        "data": "Mẫu thiết kế và Angular có nhóm liên kết khác nhau.",
+        "steps": [
+          "Ghi nhãn và đích từng liên kết.",
+          "So sánh với marker #9."
+        ],
+        "expected": "Angular hiện có Trang chủ, Khóa học, Đăng nhập và Đăng ký; mẫu thiết kế có Tổng quan, Khóa học của tôi và Tiến độ. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/src/app/shared/ui/student-public-frame.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-010",
+        "requirement_ids": [
+          "ST-08-YC-014"
+        ],
+        "target_id": "ST08-SRC-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu dòng giới thiệu chỉ có trong Angular",
+        "precondition": "Trang con được mount.",
+        "data": "Nhãn KHÔNG GIAN HỌC TẬP và câu giới thiệu.",
+        "steps": [
+          "Đối chiếu nội dung và thứ bậc với H1.",
+          "Ghi nhận không có marker trong DD."
+        ],
+        "expected": "Đây là nội dung hiện có trong mẫu giao diện Angular, chưa có marker/duyệt trong DD. Giữ nó ở mục hành vi mã nguồn hiện tại. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-011",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST08-SRC-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu nút hành động khám phá khóa học cạnh tiêu đề",
+        "precondition": "Trang con đã mount.",
+        "data": "Khám phá khóa học, `routerLink`=/courses.",
+        "steps": [
+          "Đọc nhãn và đích.",
+          "Xác nhận đây không phải nút hành động tiến độ của mẫu thiết kế."
+        ],
+        "expected": "Angular hiện mở /courses; chưa có phần tử tương ứng trong marker DD. Destination khi chạy cần xác minh. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-012",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST08-SRC-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu liên kết tài khoản/danh mục bổ sung trên đầu trang",
+        "precondition": "Khung đầu trang đã mount.",
+        "data": "Liên kết Khóa học, Đăng nhập, Đăng ký.",
+        "steps": [
+          "Đọc nhãn và `routerLink` trong khung giao diện.",
+          "So sánh với nhóm marker #2."
+        ],
+        "expected": "Các liên kết hiện tại thuộc StudentPublicFrame và không nằm đủ trong marker mẫu thiết kế; không suy ra quyền truy cập từ việc ẩn/hiện điều hướng. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/shared/ui/student-public-frame.html",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-013",
+        "requirement_ids": [
+          "ST-08-YC-004"
+        ],
+        "target_id": "ST08-SRC-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu hai nút bộ lọc và trạng thái được chọn",
+        "precondition": "Trang đã được gắn vào khung giao diện.",
+        "data": "Hai lựa chọn: Tất cả và Đang học; thuộc tính `aria-pressed`.",
+        "steps": [
+          "Kiểm tra nút có `type=button`.",
+          "Đọc `aria-pressed` và trình xử lý bấm.",
+          "Đối chiếu tham số truy vấn `status`."
+        ],
+        "expected": "Angular có hai nút; Đang học gửi `ACTIVE`, Tất cả bỏ `status` và đặt lại `page` về 1. Danh sách đầy đủ các trạng thái chưa được duyệt. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-014",
+        "requirement_ids": [
+          "ST-08-YC-005"
+        ],
+        "target_id": "ST08-SRC-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu thông báo đang tải",
+        "precondition": "Yêu cầu đang chờ.",
+        "data": "loading=true.",
+        "steps": [
+          "Kiểm tra nội dung và `role`=`status`."
+        ],
+        "expected": "Hiển thị Đang tải khóa học… trong nhánh đang tải; không khẳng định timing thực tế khi chưa chạy. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-015",
+        "requirement_ids": [
+          "ST-08-YC-005"
+        ],
+        "target_id": "ST08-SRC-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu cảnh báo lỗi và nút thử lại",
+        "precondition": "Yêu cầu lỗi.",
+        "data": "`role`=alert; nút Thử tải lại.",
+        "steps": [
+          "Kiểm tra nội dung lỗi.",
+          "Kiểm tra nút gọi load().",
+          "Đối chiếu ánh xạ mã HTTP."
+        ],
+        "expected": "Cảnh báo và nút tồn tại trong Angular; thông báo lỗi được ánh xạ trong helper. Chưa kiểm tra với trình duyệt/API. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-016",
+        "requirement_ids": [
+          "ST-08-YC-006",
+          "ST-08-YC-007"
+        ],
+        "target_id": "ST08-SRC-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu cảnh báo khi kết quả đếm và liệt kê chưa đồng nhất",
+        "precondition": "Bộ kiểm tra chấp nhận trang nhưng số dòng khác tổng số.",
+        "data": "`snapshotMismatch=true`.",
+        "steps": [
+          "Đối chiếu nội dung cảnh báo.",
+          "Kiểm tra các nút tải lại.",
+          "Xác nhận tổng số và phân trang bị ẩn."
+        ],
+        "expected": "Mã hiện giữ các dòng và ẩn thông tin đếm/phân trang có thể đã cũ; chưa xác nhận hai truy vấn dùng cùng một ảnh chụp data. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-017",
+        "requirement_ids": [
+          "ST-08-YC-006"
+        ],
+        "target_id": "ST08-SRC-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu nhãn tổng số khóa học",
+        "precondition": "Có danh sách hợp lệ và không có lệch số liệu.",
+        "data": "`pagination`.`total`.",
+        "steps": [
+          "Kiểm tra nội dung nhãn.",
+          "Tạo điều kiện lệch số liệu để xác nhận nhãn bị ẩn."
+        ],
+        "expected": "Tổng số chỉ hiển thị khi số lượng và danh sách đồng nhất; không coi đây là số liệu khi chạy đã xác minh. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-018",
+        "requirement_ids": [
+          "ST-08-YC-008"
+        ],
+        "target_id": "ST08-SRC-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu danh sách và nội dung thẻ khóa học",
+        "precondition": "Có `items` hợp lệ.",
+        "data": "`course_id`, `name`, `description`.",
+        "steps": [
+          "Kiểm tra danh sách có nhãn.",
+          "Đối chiếu trường hiển thị và trường tùy chọn.",
+          "Xác nhận không có tiến độ bar."
+        ],
+        "expected": "Các thẻ được tạo từ `items`; mô tả chỉ hiện khi có giá trị. Không thêm tiến độ từ trường chưa có trong cấu trúc data. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/models.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-019",
+        "requirement_ids": [
+          "ST-08-YC-008"
+        ],
+        "target_id": "ST08-SRC-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu nhãn trạng thái ghi danh",
+        "precondition": "Có thẻ với `enrollment_status`.",
+        "data": "`ACTIVE` và giá trị khác.",
+        "steps": [
+          "Đối chiếu hàm `enrollmentStatusLabel`.",
+          "Kiểm tra mã lạ không hiển thị nguyên dạng."
+        ],
+        "expected": "`ACTIVE` hiện thành Đang học; giá trị khác thành Trạng thái đang được xác nhận. Bộ enum vẫn chưa được duyệt. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-020",
+        "requirement_ids": [
+          "ST-08-YC-008"
+        ],
+        "target_id": "ST08-SRC-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu trạng thái khóa và ngày ghi danh",
+        "precondition": "Có thẻ khóa hợp lệ.",
+        "data": "`PUBLISHED`, null và giá trị khác; `enrolled_at`.",
+        "steps": [
+          "Đối chiếu nhãn `courseStatusLabel`.",
+          "Kiểm tra DatePipe `mediumDate`."
+        ],
+        "expected": "Chỉ `PUBLISHED` được đổi thành Đã xuất bản; ngày dùng `mediumDate`. Thiết lập ngôn ngữ hiển thị chưa được xác minh. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-021",
+        "requirement_ids": [
+          "ST-08-YC-009"
+        ],
+        "target_id": "ST08-SRC-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu liên kết tiếp tục và trạng thái không thể tiếp tục",
+        "precondition": "Có thẻ `ACTIVE` và thẻ trạng thái khác.",
+        "data": "`course_id` an toàn và không an toàn.",
+        "steps": [
+          "Kiểm tra điều kiện `ACTIVE`.",
+          "Đối chiếu `toSafeStudyId`.",
+          "Xác nhận đích có `courseId` đã kiểm tra."
+        ],
+        "expected": "Chỉ `ACTIVE` và mã an toàn tạo liên kết; trường hợp khác hiển thị câu chưa thể tiếp tục. Mã nguồn loại mã không an toàn trước khi hiển thị. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-course-page.guard.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-TP-022",
+        "requirement_ids": [
+          "ST-08-YC-010"
+        ],
+        "target_id": "ST08-SRC-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu nút phân trang",
+        "precondition": "Có nhiều trang, dữ liệu hợp lệ.",
+        "data": "Trang đầu, trang cuối, đang tải, lệch số liệu.",
+        "steps": [
+          "Kiểm tra điều kiện hiện nav.",
+          "Kiểm tra nhãn/nút bị khóa ở biên.",
+          "Đối chiếu `changePage`."
+        ],
+        "expected": "Phân trang chỉ hiện khi phù hợp; không cho đổi trang khi sai giới hạn, lệch số liệu hoặc nút đang bị khóa khi tải. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST08-SK-001",
+        "requirement_ids": [
+          "ST-08-YC-001",
+          "ST-08-YC-002",
+          "ST-08-YC-013"
+        ],
+        "target_id": "ST-08-EV-001",
+        "group": "Sự kiện",
+        "title": "Vào trang và gửi yêu cầu #20 theo trang/bộ lọc",
+        "precondition": "StudentApiService có phiên; không gọi môi trường thật.",
+        "data": "Khởi tạo `page`=1, bộ lọc=all.",
+        "steps": [
+          "Đối chiếu `ngOnInit` → load.",
+          "Đối chiếu dịch vụ và API constant #20.",
+          "Kiểm tra không có `user_id` do phía ứng dụng truyền."
+        ],
+        "expected": "Mã gọi #20 với `page`=1; người dùng danh tính lấy từ Bearer token. Tuyến siêu dữ liệu #21 không chứng minh API call. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-client/src/app/core/constant/api.constants.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-002",
+        "requirement_ids": [
+          "ST-08-YC-011"
+        ],
+        "target_id": "ST-08-EV-002",
+        "group": "Sự kiện",
+        "title": "Không gọi #21 hoặc ghép tiến độ từ hồ sơ người dùng",
+        "precondition": "Đối chiếu code và tuyến siêu data.",
+        "data": "API #21 có tham số truy vấn `course_id`/`aggregate` nhưng hiện tại trình xử lý trả UserProfile.",
+        "steps": [
+          "Tìm caller #21 trong component/dịch vụ.",
+          "Đọc model/tham số truy vấn/view của #21.",
+          "Đối chiếu với AC-13."
+        ],
+        "expected": "ST-08 không gọi #21; trình xử lý hiện chỉ đọc hồ sơ người dùng. Không thể kiểm thử phần trăm/merge cho đến khi phản hồi và công thức được duyệt. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#21"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-server/app/modules/student/api_21_users_me_progress/models.py",
+          "apps/study-server/app/modules/student/api_21_users_me_progress/query.py",
+          "apps/study-server/app/modules/student/api_21_users_me_progress/view.py",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-003",
+        "requirement_ids": [
+          "ST-08-YC-004",
+          "ST-08-YC-010"
+        ],
+        "target_id": "ST-08-EV-003",
+        "group": "Sự kiện",
+        "title": "Đổi bộ lọc và tải lại từ trang đầu",
+        "precondition": "Danh sách đã tải ở `page` khác 1.",
+        "data": "Chuyển Tất cả ↔ Đang học.",
+        "steps": [
+          "Chọn bộ lọc mới.",
+          "Đối chiếu `page`=1.",
+          "Đối chiếu `status` bị bỏ hoặc gửi `ACTIVE`."
+        ],
+        "expected": "Bộ lọc đặt trang về 1 và gửi #20 bằng tham số truy vấn hiện tại; `status` ý nghĩa đầy đủ vẫn chờ quyết định. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/validate.py",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-004",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EV-004",
+        "group": "Sự kiện",
+        "title": "Điều hướng nút hành động theo đích hiện tại và ghi nhận sai khác",
+        "precondition": "Tiêu đề trang hoặc trạng thái rỗng đang hiển thị.",
+        "data": "Nút hành động đầu trang /courses; nút hành động rỗng /courses; Stitch nút hành động /student/progress.",
+        "steps": [
+          "Đọc từng `routerLink`.",
+          "So sánh nhãn và đích mẫu thiết kế.",
+          "Không gọi API từ bấm."
+        ],
+        "expected": "Angular hiện dẫn tới /courses ở cả hai nút hành động; DD đánh dấu nút hành động tiến độ tới /student/progress. Sai khác chờ người phụ trách duyệt. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/docs/screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/code.html",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-005",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EV-005",
+        "group": "Sự kiện",
+        "title": "Điều hướng từ đầu trang",
+        "precondition": "StudentPublicFrame hiển thị.",
+        "data": "Thương hiệu và các liên kết đầu trang.",
+        "steps": [
+          "Đọc `routerLink` của brand/nav/account.",
+          "So sánh với marker DD."
+        ],
+        "expected": "Đích mã nguồn hiện là /, /courses, /student/courses, /student/progress, /login, /register; chưa chứng minh tuyến/xác thực khi chạy. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/shared/ui/student-public-frame.html",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-006",
+        "requirement_ids": [
+          "ST-08-YC-012"
+        ],
+        "target_id": "ST-08-EV-006",
+        "group": "Sự kiện",
+        "title": "Điều hướng từ chân trang",
+        "precondition": "StudentPublicFrame hiển thị.",
+        "data": "Liên kết cuối trang.",
+        "steps": [
+          "Đọc các `routerLink` chân trang.",
+          "So sánh với marker #8/#9."
+        ],
+        "expected": "Chân trang hiện có thương hiệu tới / và các đích /, /courses, /login, /register; khác mẫu thiết kế, chưa xác minh đích khi chạy. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/shared/ui/student-public-frame.html",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-007",
+        "requirement_ids": [
+          "ST-08-YC-009"
+        ],
+        "target_id": "ST-08-EV-007",
+        "group": "Sự kiện",
+        "title": "Mở ST-09 chỉ với ghi danh `ACTIVE`",
+        "precondition": "Có thẻ khóa học đã qua bộ kiểm tra.",
+        "data": "`ACTIVE` và mã dương an toàn; trạng thái khác.",
+        "steps": [
+          "Kiểm tra liên kết được hiển thị cho `ACTIVE`.",
+          "Kiểm tra liên kết không có cho trạng thái khác.",
+          "Đối chiếu tuyến nhận `courseId`."
+        ],
+        "expected": "Chỉ `ACTIVE` có liên kết tới /student/courses/:courseId. Quyền truy cập ST-09 và trạng thái bị thu hồi chưa được xác minh từ sự kiện bấm này. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/docs/dd_screens/ST-08-KhoaHocCuaToi/02-events.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-008",
+        "requirement_ids": [
+          "ST-08-YC-010"
+        ],
+        "target_id": "ST-08-EV-008",
+        "group": "Sự kiện",
+        "title": "Chuyển trang nhưng giữ bộ lọc",
+        "precondition": "Phân trang hiện và không có lệch số liệu.",
+        "data": "Trang trước/sau trong giới hạn.",
+        "steps": [
+          "Bấm trang kế tiếp/trước.",
+          "Đối chiếu bộ lọc giữ nguyên.",
+          "Kiểm tra #20 nhận `page` mới."
+        ],
+        "expected": "`changePage` chặn giới hạn/lệch số liệu, cập nhật `page` và load lại với bộ lọc hiện hành. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST08-SK-009",
+        "requirement_ids": [
+          "ST-08-YC-005",
+          "ST-08-YC-006",
+          "ST-08-YC-007"
+        ],
+        "target_id": "ST-08-EV-009",
+        "group": "Sự kiện",
+        "title": "Thử lại yêu cầu lỗi hoặc dữ liệu đếm chưa đồng nhất",
+        "precondition": "Có lỗi hoặc `snapshotMismatch`.",
+        "data": "Nút Thử tải lại/Tải lại khóa học; hoặc `total_pages` giảm.",
+        "steps": [
+          "Bấm nút tải lại.",
+          "Đối chiếu `page`/bộ lọc không đổi.",
+          "Đối chiếu nhánh vượt phạm vi reset và yêu cầu lại."
+        ],
+        "expected": "Nút gọi lại #20 theo trạng thái hiện tại; `page` ngoài phạm vi được chuyển về trang hợp lệ. Không gửi yêu cầu #21 để bù tiến độ. Kỳ vọng này phản ánh mã nguồn hiện tại; phần thiết kế/nghiệp vụ còn chờ xác nhận theo DD.",
+        "api_ids": [
+          "#20"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.ts",
+          "apps/study-client/src/app/features/student/ST08/pages/st08-page.html",
+          "apps/study-client/src/app/features/student/ST08/data-access/st08-courses.service.ts",
+          "apps/study-server/app/modules/student/api_20_users_me_courses/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

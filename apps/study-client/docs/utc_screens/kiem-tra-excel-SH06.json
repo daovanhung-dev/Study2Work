@@ -1,0 +1,28 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_SH-06_TrangKhongTonTaiTaiNguyenKhongCon.xlsx",
+  "hop_le": true,
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 577,
+  "crc_zip_hop_le": true,
+  "ma_ca_json": 67,
+  "ma_ca_excel": 67,
+  "ma_ca_khop_va_dung_thu_tu": true,
+  "ma_ca_duy_nhat": true,
+  "trang_thai_thuc_thi_chua_chay": 67,
+  "so_o_thuc_te_bang_chung_loi_nguoi_ngay_da_dien": 0,
+  "o_trung_dia_chi": [],
+  "gia_tri_tinh_san_tren_bia": {
+    "D22": "28",
+    "D23": "27",
+    "D24": "12",
+    "D25": "67"
+  },
+  "gia_tri_bia_khop_so_ca": true,
+  "nhan_nguon_bia": "Nguồn chuẩn: DD SH-06 và mã nguồn Study Web/Study Server",
+  "loi": []
+}

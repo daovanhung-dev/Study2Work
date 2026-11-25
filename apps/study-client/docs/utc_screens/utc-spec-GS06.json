@@ -1,0 +1,3610 @@
+{
+  "metadata": {
+    "screen_id": "GS-06",
+    "screen_name": "Tài nguyên khóa học",
+    "dd_status": "Repo DD BLOCKED/Draft; người dùng xác nhận đây là tài liệu chuẩn cho UTC. API #11 vẫn Draft theo repo.",
+    "source_name": "DD GS-06 + Stitch hand-off + Study Client/Study Server source",
+    "version": "0.1 — BẢN KẾ HOẠCH UTC",
+    "created_at": "2026-11-24",
+    "baseline_authorization": "Người dùng xác nhận các DD đã được duyệt và yêu cầu dùng DD BLOCKED trong repo làm tài liệu chuẩn; trạng thái và discrepancy trong nguồn vẫn được ghi lại.",
+    "environment": "Rà soát tĩnh; test cases chưa chạy; không xác minh browser/API/database/deployment live.",
+    "release_readiness": "Chưa đủ điều kiện phát hành: còn blocker trong DD/API/schema/access và chưa có runtime verification."
+  },
+  "overall": {
+    "objective": "Lập UTC cho GS-06, gồm cổng #08, yêu cầu/bộ sưu tập #11, kiểm tra phép chiếu/trạng thái/danh sách, thử lại và bàn giao GS-07; tách bản mẫu tĩnh khỏi hành vi hiện tại khi chạy.",
+    "inputs": "CourseId chuỗi từ GS03; response #08 gate; envelope/list #11; dữ liệu giả lập. #12 chỉ là downstream của GS07.",
+    "scope": "GS06 mã nguồn hiện tại và prototype marker; không kiểm thử chi tiết GS07 hoặc live environment.",
+    "expected_vs_current": "Giữ riêng DD/Stitch expected, mã nguồn cục bộ hiện tại, API contract và test source. Không đóng discrepancy bằng suy đoán.",
+    "summary": {
+      "requirements": 35,
+      "elements": 33,
+      "events": 11,
+      "apis": 3,
+      "blockers": 8,
+      "test_cases": {
+        "screen": 35,
+        "elements": 33,
+        "events": 17,
+        "total": 85
+      }
+    }
+  },
+  "apis": [
+    {
+      "id": "API-08",
+      "catalog_ref": "#08",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}",
+      "request": "Cổng do GS03 gọi; public, không body/query/Bearer theo client source.",
+      "response": "GS03 mở tab GS06 khi response xác nhận course PUBLISHED.",
+      "errors": "Gate thất bại thì GS03 không mount GS06 và không gọi #11.",
+      "auth": "GET công khai trong client hiện hành.",
+      "design_status": "Phụ thuộc của GS03; không thuộc API do GS06 gọi trực tiếp.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "event_ids": [
+        "GS-06-EV-002"
+      ]
+    },
+    {
+      "id": "API-11",
+      "catalog_ref": "#11",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}/resources",
+      "request": "GET theo courseId hợp lệ; không body/query/Bearer trong service hiện hành.",
+      "response": "Mã nguồn cục bộ hiện tại trả envelope DESIGN_RESOURCE_RETRIEVED với data là collection đã lọc PUBLIC, sắp id tăng. API DD/Catalog còn ghi ApiEnvelope<Resource> đơn và chưa chốt list/empty; giữ discrepancy.",
+      "errors": "Hàm xử lý trong mã nguồn hiện tại trả 404 khi khóa học không tồn tại/chưa xuất bản và 500 khi truy vấn/ánh xạ lỗi; bộ sưu tập rỗng theo đường đi hiện tại của máy khách trả 200 với `[]`. Môi trường triển khai trực tiếp chưa xác minh.",
+      "auth": "Public/no Bearer ở client hiện hành; không suy ra policy private access.",
+      "design_status": "DD API #11 ghi Draft/Needs Confirmation; giữ blocker nguồn.",
+      "source_ref": "apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/docs/dd/11_courses_resources/04_Response.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; apps/study-server/app/modules/guest/api_11_courses_resources/view.py; apps/study-client/src/app/features/guest/GS06/data-access/gs06-resources.service.ts",
+      "event_ids": [
+        "GS-06-EV-002",
+        "GS-06-EV-013"
+      ]
+    },
+    {
+      "id": "API-12",
+      "catalog_ref": "#12",
+      "method": "GET",
+      "path": "/api/v1/resources/{resource_id}",
+      "request": "Chỉ được GS07 gọi sau khi chuyển route; GS06 không gửi request này.",
+      "response": "Current local #12 source trả detail resource; URL/signing/access policy khác AC-06, cần giữ blocker.",
+      "errors": "Không kiểm thử API #12 qua GS06; status/error belongs GS07 contract.",
+      "auth": "Route source hiện tại public/no Authorization check; không khẳng định quyền/signed URL.",
+      "design_status": "API downstream của GS07; access policy còn discrepancy với AC-06.",
+      "source_ref": "apps/study-server/docs/dd/12_resources_detail/00_Cover.md; apps/study-server/docs/dd/12_resources_detail/04_Response.md; apps/study-server/app/modules/guest/api_12_resources_detail/view.py; apps/study-client/src/app/features/guest/GS07/pages/gs07-page.ts",
+      "event_ids": [
+        "GS-06-EV-004"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "GS-06-YC-001",
+      "group": "Tuyến và phạm vi",
+      "description": "GS-06 là nội dung con của GS03 tại /courses/:courseId?tab=resources; GS-06 không đăng ký route Angular độc lập.",
+      "source_ref": "apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-002",
+      "group": "Tuyến và phạm vi",
+      "description": "GS03 chỉ gắn GS06 sau khi API #08 trả khóa học PUBLISHED; khi cổng chưa qua, không yêu cầu API #11.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-003",
+      "group": "Định danh",
+      "description": "GS06 nhận courseId dưới dạng chuỗi và chỉ chấp nhận chữ số thập phân biểu diễn số nguyên dương trong miền signed int64.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-004",
+      "group": "Định danh",
+      "description": "CourseId sai định dạng, bằng 0 hoặc vượt int64 chuyển sang invalid-course và không gọi #11.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-005",
+      "group": "API #11",
+      "description": "Khi courseId hợp lệ và GS06 được gắn, client gửi GET /api/v1/courses/{course_id}/resources.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS06/data-access/gs06-resources.service.ts; apps/study-client/src/app/core/constant/api.constants.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-006",
+      "group": "API #11",
+      "description": "Request #11 hiện không truyền body, query parameter hoặc Bearer header.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/data-access/gs06-resources.service.ts; apps/study-client/src/app/core/http/study-api.service.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-007",
+      "group": "API #11",
+      "description": "Client chỉ nhận success envelope có businessCode DESIGN_RESOURCE_RETRIEVED; envelope sai chuyển thành error.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/shared/models/guest-course.models.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-008",
+      "group": "API #11",
+      "description": "Mã nguồn Study Server hiện trả collection resource theo thứ tự tăng dần; API DD/catalog còn mô tả Resource đơn — giữ nguyên discrepancy này trong UTC.",
+      "source_ref": "apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/docs/dd/11_courses_resources/04_Response.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; apps/study-server/app/modules/guest/api_11_courses_resources/view.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-009",
+      "group": "Dữ liệu #11",
+      "description": "Mỗi resource phải có id là số nguyên dương an toàn trong JavaScript; ID trùng hoặc không tăng dần làm toàn response chuyển error.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-010",
+      "group": "Dữ liệu #11",
+      "description": "Mỗi item phải có name, type và url là chuỗi không rỗng sau trim.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-011",
+      "group": "Quyền hiển thị",
+      "description": "Client hiện chỉ nhận visibility=PUBLIC; visibility khác hoặc thiếu làm response không hợp lệ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-server/app/modules/guest/api_11_courses_resources/query.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-012",
+      "group": "Dữ liệu #11",
+      "description": "Lesson_id được nhận nếu null hoặc số nguyên dương; dữ liệu ngoài miền này bị từ chối.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-013",
+      "group": "Bảo vệ URL",
+      "description": "GS06 không render hoặc mở trực tiếp resource.url; người dùng đi qua route GS07 bằng resource ID.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-014",
+      "group": "Trạng thái",
+      "description": "Request đang chạy hiển thị thông báo loading có role=status và aria-live=polite.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-015",
+      "group": "Lỗi định danh",
+      "description": "CourseId không hợp lệ hoặc API #11 trả 404 hiển thị trạng thái invalid-course với role=alert.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-016",
+      "group": "Lỗi dữ liệu",
+      "description": "Envelope sai, businessCode sai hoặc item không đạt validator hiển thị lỗi an toàn; không đưa chi tiết server vào nội dung.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-017",
+      "group": "Lỗi tạm thời",
+      "description": "Lỗi khác 404 hiển thị thông báo role=alert và nút Thử tải lại.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-018",
+      "group": "Lỗi tạm thời",
+      "description": "Thử tải lại gọi lại API #11 với cùng courseId hợp lệ; request trước được hủy khi thay request hoặc hủy component.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-019",
+      "group": "Danh sách rỗng",
+      "description": "Collection [] chuyển sang empty; không hiển thị list item hoặc count của dữ liệu giả.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-020",
+      "group": "Danh sách",
+      "description": "Collection hợp lệ không rỗng hiển thị số lượng item và tên/loại resource.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-021",
+      "group": "Danh sách",
+      "description": "Thứ tự hiển thị giữ ID tăng dần như API; client từ chối thứ tự sai thay vì tự sắp xếp lại.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-server/app/modules/guest/api_11_courses_resources/query.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-022",
+      "group": "Điều hướng",
+      "description": "Mỗi row điều hướng tới /resources/:id qua RouterLink; không dùng URL resource làm href.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/app.routes.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-023",
+      "group": "Điều hướng",
+      "description": "Link GS07 giữ query from=course và courseId hiện tại.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-024",
+      "group": "Ranh giới API",
+      "description": "GS06 không gọi API #12; lấy chi tiết/mở resource là trách nhiệm screen GS07.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS07/pages/gs07-page.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-025",
+      "group": "Thiết kế tĩnh",
+      "description": "23 marker Stitch là hand-off prototype; nội dung mock, trạng thái và controls trong prototype không được xem là dữ liệu runtime.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-026",
+      "group": "Thiết kế tĩnh",
+      "description": "Link header/footer/tab trong prototype dùng href=# và chưa chứng minh route binding hoặc đăng nhập.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/code.html; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-027",
+      "group": "Thiết kế tĩnh",
+      "description": "Nút tải trong prototype bị disabled; không phát sinh download hoặc API action.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-028",
+      "group": "Quyền và liên kết",
+      "description": "Các trạng thái 403/410, signed URL, TTL và yêu cầu Mentor xuất hiện trong prototype/AC-06 nhưng chưa có contract khớp ở API source; không assert chúng như runtime behavior.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/12_resources_detail/06_Error.md; apps/study-server/app/modules/guest/api_12_resources_detail/view.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-029",
+      "group": "API #11",
+      "description": "Prototype card mô tả response đơn và path rút gọn; endpoint hiện hành có prefix /api/v1 và hành vi theo mã nguồn collection.",
+      "source_ref": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html; apps/study-server/docs/dd/11_courses_resources/04_Response.md; apps/study-server/app/modules/guest/api_11_courses_resources/view.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-030",
+      "group": "Schema",
+      "description": "Mã query hiện dùng resources.visibility; legacy DDL không có cột này và V1-PILOT không khai báo bảng resources.",
+      "source_ref": "apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-031",
+      "group": "Dữ liệu",
+      "description": "Chưa tìm được writer xác nhận cho bảng resources; schema/deployment/data live chưa được xác minh.",
+      "source_ref": ".agents/server-study/database.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-032",
+      "group": "Định danh",
+      "description": "API dùng signed int64, trong khi trường item id ở client là number và Number.isSafeInteger; giá trị lớn hơn JS safe integer cần được chặn.",
+      "source_ref": "apps/study-server/docs/dd/11_courses_resources/04_Response.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    },
+    {
+      "id": "GS-06-YC-033",
+      "group": "Trợ năng",
+      "description": "Bảng điều khiển có aria-labelledby; trạng thái đang tải dùng status/vùng live, lỗi dùng alert, danh sách dùng ul/li, liên kết có aria-label; trạng thái trống không khai báo role riêng.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-034",
+      "group": "Responsive",
+      "description": "Link có min-height 44px/focus-visible; breakpoint 600px căn chỉnh lại và tên dài được wrap theo CSS hiện hành.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "notes": ""
+    },
+    {
+      "id": "GS-06-YC-035",
+      "group": "Bằng chứng",
+      "description": "Source test assertions đã đọc nhưng không chạy; ghi chú T041 cho rằng spec cũ/stale không khớp các assertion hiện có.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": "Giữ discrepancy/điểm chặn nguồn; không xem như kết quả runtime."
+    }
+  ],
+  "elements": [
+    {
+      "id": "GS-06-EL-001",
+      "marker": "#1",
+      "source_element_id": "GS06-EL-01",
+      "name": "Nhóm thương hiệu và điều hướng đầu trang",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=420, y=38 px",
+      "properties": "Prototype tĩnh; href #; header runtime do GuestSiteLayout quản lý.",
+      "event_ids": [
+        "GS-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-001",
+        "GS-06-YC-025",
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EL-002",
+      "marker": "#2",
+      "source_element_id": "GS06-EL-02",
+      "name": "Nhóm đăng nhập, đăng ký và biểu tượng hồ sơ",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1316, y=38 px",
+      "properties": "Prototype href #; không có session; avatar trang trí, không là control.",
+      "event_ids": [
+        "GS-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-001",
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EL-003",
+      "marker": "#3",
+      "source_element_id": "GS06-EL-03",
+      "name": "Các nhãn tuyến khóa học, dữ liệu giả và trạng thái hợp đồng",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=492, y=115 px",
+      "properties": "Text mock viết cứng; không phản ánh router hoặc trạng thái runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-025",
+        "GS-06-YC-026",
+        "GS-06-YC-035"
+      ]
+    },
+    {
+      "id": "GS-06-EL-004",
+      "marker": "#4",
+      "source_element_id": "GS06-EL-04",
+      "name": "Tiêu đề khóa học và phụ đề mã khóa học/mentor",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=500, y=178 px",
+      "properties": "Course/mock text viết cứng; không dùng làm dữ liệu khóa học thật.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-001",
+        "GS-06-YC-025"
+      ]
+    },
+    {
+      "id": "GS-06-EL-005",
+      "marker": "#5",
+      "source_element_id": "GS06-EL-05",
+      "name": "Nhãn bảo mật V1 gated",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1306, y=157 px",
+      "properties": "Nhãn tĩnh; không phải kết quả authorization/certification.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-026",
+        "GS-06-YC-028"
+      ]
+    },
+    {
+      "id": "GS-06-EL-006",
+      "marker": "#6",
+      "source_element_id": "GS06-EL-06",
+      "name": "Nhóm điều hướng tab khóa học",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=742, y=270 px",
+      "properties": "Prototype dùng href #; runtime tab do GS03/router quản lý.",
+      "event_ids": [
+        "GS-06-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-001",
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EL-007",
+      "marker": "#7",
+      "source_element_id": "GS06-EL-07",
+      "name": "Panel trạng thái tài nguyên bị chặn/rỗng trong prototype",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=500, y=602 px",
+      "properties": "Gated/empty copy không chứng minh API trả [] hoặc contract state.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-025",
+        "GS-06-YC-019",
+        "GS-06-YC-028"
+      ]
+    },
+    {
+      "id": "GS-06-EL-008",
+      "marker": "#8",
+      "source_element_id": "GS06-EL-08",
+      "name": "Tiêu đề, số lượng và hướng dẫn inventory",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1227, y=438 px",
+      "properties": "Inventory tĩnh; không phải count runtime.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-020",
+        "GS-06-YC-019"
+      ]
+    },
+    {
+      "id": "GS-06-EL-009",
+      "marker": "#9",
+      "source_element_id": "GS06-EL-09",
+      "name": "Thẻ inventory trạng thái rỗng",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1228, y=569 px",
+      "properties": "Thẻ trạng thái mẫu; runtime empty được điều khiển bởi #11 trả [].",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-019"
+      ]
+    },
+    {
+      "id": "GS-06-EL-010",
+      "marker": "#10",
+      "source_element_id": "GS06-EL-10",
+      "name": "Thẻ inventory trạng thái danh sách",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1228, y=702 px",
+      "properties": "Thẻ mẫu tĩnh; runtime list được kiểm tra từ response #11.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-020",
+        "GS-06-YC-021"
+      ]
+    },
+    {
+      "id": "GS-06-EL-011",
+      "marker": "#11",
+      "source_element_id": "GS06-EL-11",
+      "name": "Nút tải xuống bị vô hiệu hóa",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=501, y=728 px",
+      "properties": "Disabled trong prototype; không có hành động tải trong HTML.",
+      "event_ids": [
+        "GS-06-EV-005",
+        "GS-06-EV-011"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-027"
+      ]
+    },
+    {
+      "id": "GS-06-EL-012",
+      "marker": "#12",
+      "source_element_id": "GS06-EL-12",
+      "name": "Nút xem tài liệu tích hợp API",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=501, y=797 px",
+      "properties": "Anchor fragment nội trang, không gọi API.",
+      "event_ids": [
+        "GS-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-024"
+      ]
+    },
+    {
+      "id": "GS-06-EL-013",
+      "marker": "#13",
+      "source_element_id": "GS06-EL-13",
+      "name": "Thẻ inventory trạng thái forbidden",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1227, y=846 px",
+      "properties": "403/flow xin quyền chưa có contract runtime thống nhất.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-028"
+      ]
+    },
+    {
+      "id": "GS-06-EL-014",
+      "marker": "#14",
+      "source_element_id": "GS06-EL-14",
+      "name": "Callout không dùng dữ liệu giả",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=500, y=921 px",
+      "properties": "Chỉ dẫn thiết kế; không phải response/data.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-025"
+      ]
+    },
+    {
+      "id": "GS-06-EL-015",
+      "marker": "#15",
+      "source_element_id": "GS06-EL-15",
+      "name": "Thẻ inventory liên kết hết hạn",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1227, y=989 px",
+      "properties": "410/TTL proposal; không phải behavior API đã chốt.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-028"
+      ]
+    },
+    {
+      "id": "GS-06-EL-016",
+      "marker": "#16",
+      "source_element_id": "GS06-EL-16",
+      "name": "Tiêu đề khu vực technical contract và nhãn phiên bản",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=500, y=1097 px",
+      "properties": "Heading/nhãn phiên bản prototype.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-024",
+        "GS-06-YC-029"
+      ]
+    },
+    {
+      "id": "GS-06-EL-017",
+      "marker": "#17",
+      "source_element_id": "GS06-EL-17",
+      "name": "Thẻ tiêu chuẩn hand-off",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1228, y=1186 px",
+      "properties": "Claims WCAG/contrast trong hình chưa được đo.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-033",
+        "GS-06-YC-034"
+      ]
+    },
+    {
+      "id": "GS-06-EL-018",
+      "marker": "#18",
+      "source_element_id": "GS06-EL-18",
+      "name": "Thẻ tham chiếu API #11",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=282, y=1233 px",
+      "properties": "Nội dung/path/cardinality tĩnh khác API contract/source hiện hành.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-008",
+        "GS-06-YC-029"
+      ]
+    },
+    {
+      "id": "GS-06-EL-019",
+      "marker": "#19",
+      "source_element_id": "GS06-EL-19",
+      "name": "Thẻ tham chiếu API #12",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=720, y=1233 px",
+      "properties": "Không khẳng định signed URL hoặc private access.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-024",
+        "GS-06-YC-028"
+      ]
+    },
+    {
+      "id": "GS-06-EL-020",
+      "marker": "#20",
+      "source_element_id": "GS06-EL-20",
+      "name": "Panel điều kiện mở khóa UI",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=501, y=1411 px",
+      "properties": "Proposal khác envelope hiện hành; không dùng làm contract.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-029"
+      ]
+    },
+    {
+      "id": "GS-06-EL-021",
+      "marker": "#21",
+      "source_element_id": "GS06-EL-21",
+      "name": "Nhóm thương hiệu và mô tả chân trang",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=278, y=1563 px",
+      "properties": "Nội dung brand tĩnh của prototype.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-025"
+      ]
+    },
+    {
+      "id": "GS-06-EL-022",
+      "marker": "#22",
+      "source_element_id": "GS06-EL-22",
+      "name": "Các liên kết điều hướng chân trang",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=773, y=1563 px",
+      "properties": "Href #; chưa có route mapping.",
+      "event_ids": [
+        "GS-06-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EL-023",
+      "marker": "#23",
+      "source_element_id": "GS06-EL-23",
+      "name": "Dòng bản quyền chân trang",
+      "type": "Nhóm/khối tĩnh trong prototype",
+      "position": "Ảnh screen.png; tâm target x=1315, y=1563 px",
+      "properties": "Text copyright tĩnh, không phải build date.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "requirement_ids": [
+        "GS-06-YC-025"
+      ]
+    },
+    {
+      "id": "GS-06-EL-024",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-01",
+      "name": "Cổng mount resource tab",
+      "type": "Điều phối tab con",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "GS03 gắn GS06 sau #08 PUBLISHED; #11 chỉ được gọi sau gate.",
+      "event_ids": [
+        "GS-06-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts",
+      "requirement_ids": [
+        "GS-06-YC-002",
+        "GS-06-YC-005"
+      ]
+    },
+    {
+      "id": "GS-06-EL-025",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-02",
+      "name": "CourseId ô nhập ranh giới",
+      "type": "Ô nhập route",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "Nhận courseId dạng chuỗi; validate positive signed int64, không tự đổi chuỗi thành Number.",
+      "event_ids": [
+        "GS-06-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts",
+      "requirement_ids": [
+        "GS-06-YC-003",
+        "GS-06-YC-004",
+        "GS-06-YC-032"
+      ]
+    },
+    {
+      "id": "GS-06-EL-026",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-03",
+      "name": "Panel heading và count",
+      "type": "Tiêu đề/trạng thái",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "Aria-labelledby gs06-resources-heading; count chỉ có ở trạng thái ready.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "requirement_ids": [
+        "GS-06-YC-020",
+        "GS-06-YC-033"
+      ]
+    },
+    {
+      "id": "GS-06-EL-027",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-04",
+      "name": "Thông báo loading",
+      "type": "Trạng thái thông báo",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "Role=status, aria-live=polite; spinner aria-hidden.",
+      "event_ids": [
+        "GS-06-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "requirement_ids": [
+        "GS-06-YC-014",
+        "GS-06-YC-033"
+      ]
+    },
+    {
+      "id": "GS-06-EL-028",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-05",
+      "name": "Trạng thái invalid-course",
+      "type": "Alert",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "CourseId sai hoặc #11 404 hiển thị role=alert.",
+      "event_ids": [
+        "GS-06-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "requirement_ids": [
+        "GS-06-YC-004",
+        "GS-06-YC-015"
+      ]
+    },
+    {
+      "id": "GS-06-EL-029",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-06",
+      "name": "Lỗi API/response và retry",
+      "type": "Cảnh báo + nút",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "Lỗi an toàn role=alert; retry phát sự kiện để tải lại cùng courseId.",
+      "event_ids": [
+        "GS-06-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "requirement_ids": [
+        "GS-06-YC-007",
+        "GS-06-YC-016",
+        "GS-06-YC-017",
+        "GS-06-YC-018"
+      ]
+    },
+    {
+      "id": "GS-06-EL-030",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-07",
+      "name": "Trạng thái empty",
+      "type": "Thông báo trạng thái rỗng",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "[] hiển thị copy không có tài liệu công khai; empty container không có role riêng.",
+      "event_ids": [
+        "GS-06-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "requirement_ids": [
+        "GS-06-YC-019",
+        "GS-06-YC-033"
+      ]
+    },
+    {
+      "id": "GS-06-EL-031",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-08",
+      "name": "Danh sách resource",
+      "type": "Ul/li",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "Ready render danh sách theo thứ tự ID; không render url trực tiếp.",
+      "event_ids": [
+        "GS-06-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "requirement_ids": [
+        "GS-06-YC-009",
+        "GS-06-YC-010",
+        "GS-06-YC-011",
+        "GS-06-YC-012",
+        "GS-06-YC-013",
+        "GS-06-YC-020",
+        "GS-06-YC-021"
+      ]
+    },
+    {
+      "id": "GS-06-EL-032",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-09",
+      "name": "Nội dung row",
+      "type": "Tên và loại",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "Mỗi row render resource.name và resource.type.",
+      "event_ids": [
+        "GS-06-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "requirement_ids": [
+        "GS-06-YC-010",
+        "GS-06-YC-020"
+      ]
+    },
+    {
+      "id": "GS-06-EL-033",
+      "marker": "—",
+      "source_element_id": "GS06-SRC-10",
+      "name": "Liên kết sang GS07",
+      "type": "RouterLink/button-like liên kết",
+      "position": "Thành phần/bảng GS06 trong môi trường chạy",
+      "properties": "Route /resources/:id, query from=course và courseId; aria-label nêu tên resource.",
+      "event_ids": [
+        "GS-06-EV-003",
+        "GS-06-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css",
+      "requirement_ids": [
+        "GS-06-YC-013",
+        "GS-06-YC-022",
+        "GS-06-YC-023",
+        "GS-06-YC-024",
+        "GS-06-YC-033",
+        "GS-06-YC-034"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "GS-06-EV-002",
+      "source_event_id": "GS06-EV-01",
+      "name": "Mở tab tài nguyên và tải collection",
+      "trigger": "GS03 gắn tab resources sau khi #08 trả PUBLISHED.",
+      "processing": "Kiểm tra courseId; gửi #11; parse envelope và danh sách; chuyển loading sang ready/empty/error.",
+      "element_ids": [
+        "GS-06-EL-024",
+        "GS-06-EL-025",
+        "GS-06-EL-027",
+        "GS-06-EL-030",
+        "GS-06-EL-031"
+      ],
+      "api_ids": [
+        "API-08",
+        "API-11"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-06-YC-002",
+        "GS-06-YC-005",
+        "GS-06-YC-007",
+        "GS-06-YC-008",
+        "GS-06-YC-014",
+        "GS-06-YC-019",
+        "GS-06-YC-020",
+        "GS-06-YC-021",
+        "GS-06-YC-025",
+        "GS-06-YC-032"
+      ]
+    },
+    {
+      "id": "GS-06-EV-003",
+      "source_event_id": "GS06-EV-02",
+      "name": "Chọn một tài nguyên",
+      "trigger": "Người dùng kích hoạt liên kết trên một row ready.",
+      "processing": "Điều hướng qua RouterLink bằng resource.id; giữ from=course và courseId.",
+      "element_ids": [
+        "GS-06-EL-031",
+        "GS-06-EL-032",
+        "GS-06-EL-033"
+      ],
+      "api_ids": [
+        "API-11"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-06-YC-013",
+        "GS-06-YC-022",
+        "GS-06-YC-023",
+        "GS-06-YC-024"
+      ]
+    },
+    {
+      "id": "GS-06-EV-004",
+      "source_event_id": "GS06-EV-03",
+      "name": "Mở tài nguyên đã chọn",
+      "trigger": "GS07 nhận resourceId sau khi chọn row.",
+      "processing": "GS07 sở hữu GET #12; GS06 không tự mở raw URL hay gọi #12.",
+      "element_ids": [
+        "GS-06-EL-032",
+        "GS-06-EL-033"
+      ],
+      "api_ids": [
+        "API-12"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-06-YC-013",
+        "GS-06-YC-024"
+      ]
+    },
+    {
+      "id": "GS-06-EV-005",
+      "source_event_id": "GS06-EV-04",
+      "name": "Thử bấm nút tải prototype",
+      "trigger": "Prototype hiển thị nút disabled.",
+      "processing": "Không phát click/download/request; đây không phải runtime action hiện hành.",
+      "element_ids": [
+        "GS-06-EL-011"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-06-YC-027"
+      ]
+    },
+    {
+      "id": "GS-06-EV-006",
+      "source_event_id": "GS06-EV-05",
+      "name": "Xem chi tiết tham chiếu API",
+      "trigger": "Người dùng kích hoạt anchor tài liệu prototype.",
+      "processing": "Đi tới fragment technical-contract-block; không gọi API.",
+      "element_ids": [
+        "GS-06-EL-012",
+        "GS-06-EL-016",
+        "GS-06-EL-018"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-06-YC-024",
+        "GS-06-YC-029"
+      ]
+    },
+    {
+      "id": "GS-06-EV-007",
+      "source_event_id": "GS06-EV-06",
+      "name": "Điều hướng đầu trang prototype",
+      "trigger": "Người dùng kích hoạt brand hoặc nav liên kết.",
+      "processing": "HTML tĩnh dùng href=#; không có router binding.",
+      "element_ids": [
+        "GS-06-EL-001"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-06-YC-025",
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EV-008",
+      "source_event_id": "GS06-EV-07",
+      "name": "Mở login/register prototype",
+      "trigger": "Người dùng kích hoạt auth anchor.",
+      "processing": "HTML tĩnh dùng href=#; avatar trang trí không có handler.",
+      "element_ids": [
+        "GS-06-EL-002"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EV-009",
+      "source_event_id": "GS06-EV-08",
+      "name": "Đổi course tab prototype",
+      "trigger": "Người dùng kích hoạt một trong bốn anchor tab.",
+      "processing": "HTML prototype dùng href=#; không cập nhật router/query qua binding.",
+      "element_ids": [
+        "GS-06-EL-006"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-06-YC-001",
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EV-010",
+      "source_event_id": "GS06-EV-09",
+      "name": "Điều hướng chân trang prototype",
+      "trigger": "Người dùng kích hoạt một chân trang liên kết.",
+      "processing": "HTML tĩnh dùng href=#; chưa có destination router.",
+      "element_ids": [
+        "GS-06-EL-022"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-06-YC-026"
+      ]
+    },
+    {
+      "id": "GS-06-EV-011",
+      "source_event_id": "GS06-EV-10",
+      "name": "Hiện giải thích nút tải disabled",
+      "trigger": "Pointer hover hoặc focus-within wrapper prototype.",
+      "processing": "CSS có thể hiện tooltip; button disabled không tạo keyboard-focus path được xác nhận.",
+      "element_ids": [
+        "GS-06-EL-011"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-06-YC-027",
+        "GS-06-YC-033"
+      ]
+    },
+    {
+      "id": "GS-06-EV-013",
+      "source_event_id": "Runtime retry",
+      "name": "Tải lại sau lỗi",
+      "trigger": "GS06 đang error và người dùng bấm Thử tải lại.",
+      "processing": "Component tải lại #11 cùng courseId; hiển thị loading rồi xử lý response mới. Event này lấy từ mã nguồn hiện tại; không có trong event matrix cũ.",
+      "element_ids": [
+        "GS-06-EL-029"
+      ],
+      "api_ids": [
+        "API-11"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-06-YC-017",
+        "GS-06-YC-018",
+        "GS-06-YC-035"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "GS06-B01",
+      "description": "DD GS-06 overview ghi Draft/blocked và các control/list/error UI còn thiếu thiết kế được chốt; người dùng xác nhận dùng chính DD này làm chuẩn nhưng trạng thái nguồn vẫn được giữ.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Chốt API #11 response cardinality, visibility, sort/empty contract và cập nhật DD/catalog.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS06-B02",
+      "description": "API #11 DD/Catalog mô tả Resource đơn; mã nguồn cục bộ hiện tại/client dùng collection. Cardinality và empty semantics còn discrepancy giữa tài liệu.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Xác minh schema/migration/writer và môi trường dữ liệu trước khi gọi kết quả live.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS06-B03",
+      "description": "Query hiện yêu cầu resources.visibility; legacy DDL không có cột này, V1-PILOT không có bảng resources.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Chốt private-resource authorization, signed URL, 403/404/410 và TTL giữa AC-06, #11 và #12.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS06-B04",
+      "description": "Chưa có writer nguồn được xác nhận cho bảng resources; schema, dữ liệu và endpoint triển khai live chưa kiểm chứng.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Quyết định biểu diễn ID nhất quán giữa signed int64 server và JavaScript safe integer.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS06-B05",
+      "description": "AC-06/Stitch nêu 403, 410, signed URL/TTL và private access; API #11/#12 source/catalog không có contract khớp.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Duyệt lại loaded/empty/error UI và mapping của các marker Stitch.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS06-B06",
+      "description": "Server/API ID miền signed-int64; FE resource id dùng JS number và Number.isSafeInteger, nên ID lớn hơn giới hạn an toàn bị từ chối.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Đối chiếu test note T041 với source spec và cập nhật nguồn nếu cần.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS06-B07",
+      "description": "Stitch tĩnh có 23 marker và mock data/status; runtime Angular hiện là state/list panel, khác nhiều nội dung trong hand-off.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Đối chiếu test note T041 với source spec và cập nhật nguồn nếu cần.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS06-B08",
+      "description": "T041 ghi source specs cũ/stale, trong khi test source hiện có assertions cho #11/list/empty/retry; source tests đã đọc nhưng không chạy.",
+      "impact": "Không đánh dấu ready/verified bằng kế hoạch UTC hoặc static source audit.",
+      "decision": "Đối chiếu test note T041 với source spec và cập nhật nguồn nếu cần.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "GS06-screen-001",
+        "requirement_ids": [
+          "GS-06-YC-001"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Tuyến và phạm vi — YC-001",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: GS-06 là nội dung con của GS03 tại /courses/:courseId?tab=resources; GS-06 không đăng ký route Angular độc lập.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "GS-06 là nội dung con của GS03 tại /courses/:courseId?tab=resources; GS-06 không đăng ký route Angular độc lập. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-002",
+        "requirement_ids": [
+          "GS-06-YC-002"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Tuyến và phạm vi — YC-002",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: GS03 chỉ gắn GS06 sau khi API #08 trả khóa học PUBLISHED; khi cổng chưa qua, không yêu cầu API #11.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "GS03 chỉ gắn GS06 sau khi API #08 trả khóa học PUBLISHED; khi cổng chưa qua, không yêu cầu API #11. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-003",
+        "requirement_ids": [
+          "GS-06-YC-003"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Định danh — YC-003",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: GS06 nhận courseId dưới dạng chuỗi và chỉ chấp nhận chữ số thập phân biểu diễn số nguyên dương trong miền signed int64.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "GS06 nhận courseId dưới dạng chuỗi và chỉ chấp nhận chữ số thập phân biểu diễn số nguyên dương trong miền signed int64. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-004",
+        "requirement_ids": [
+          "GS-06-YC-004"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Định danh — YC-004",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: CourseId sai định dạng, bằng 0 hoặc vượt int64 chuyển sang invalid-course và không gọi #11.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "CourseId sai định dạng, bằng 0 hoặc vượt int64 chuyển sang invalid-course và không gọi #11. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-005",
+        "requirement_ids": [
+          "GS-06-YC-005"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: API #11 — YC-005",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Khi courseId hợp lệ và GS06 được gắn, client gửi GET /api/v1/courses/{course_id}/resources.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Khi courseId hợp lệ và GS06 được gắn, client gửi GET /api/v1/courses/{course_id}/resources. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS06/data-access/gs06-resources.service.ts; apps/study-client/src/app/core/constant/api.constants.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-006",
+        "requirement_ids": [
+          "GS-06-YC-006"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: API #11 — YC-006",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Request #11 hiện không truyền body, query parameter hoặc Bearer header.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Request #11 hiện không truyền body, query parameter hoặc Bearer header. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/data-access/gs06-resources.service.ts; apps/study-client/src/app/core/http/study-api.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-007",
+        "requirement_ids": [
+          "GS-06-YC-007"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: API #11 — YC-007",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Client chỉ nhận success envelope có businessCode DESIGN_RESOURCE_RETRIEVED; envelope sai chuyển thành error.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Client chỉ nhận success envelope có businessCode DESIGN_RESOURCE_RETRIEVED; envelope sai chuyển thành error. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/shared/models/guest-course.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-008",
+        "requirement_ids": [
+          "GS-06-YC-008"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: API #11 — YC-008",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Mã nguồn Study Server hiện trả collection resource theo thứ tự tăng dần; API DD/catalog còn mô tả Resource đơn — giữ nguyên discrepancy này trong UTC.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Mã nguồn Study Server hiện trả collection resource theo thứ tự tăng dần; API DD/catalog còn mô tả Resource đơn — giữ nguyên discrepancy này trong UTC. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-server/docs/dd/11_courses_resources/00_Cover.md; apps/study-server/docs/dd/11_courses_resources/04_Response.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py; apps/study-server/app/modules/guest/api_11_courses_resources/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-009",
+        "requirement_ids": [
+          "GS-06-YC-009"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Dữ liệu #11 — YC-009",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Mỗi resource phải có id là số nguyên dương an toàn trong JavaScript; ID trùng hoặc không tăng dần làm toàn response chuyển error.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Mỗi resource phải có id là số nguyên dương an toàn trong JavaScript; ID trùng hoặc không tăng dần làm toàn response chuyển error. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-010",
+        "requirement_ids": [
+          "GS-06-YC-010"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Dữ liệu #11 — YC-010",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Mỗi item phải có name, type và url là chuỗi không rỗng sau trim.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Mỗi item phải có name, type và url là chuỗi không rỗng sau trim. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-011",
+        "requirement_ids": [
+          "GS-06-YC-011"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Quyền hiển thị — YC-011",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Client hiện chỉ nhận visibility=PUBLIC; visibility khác hoặc thiếu làm response không hợp lệ.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Client hiện chỉ nhận visibility=PUBLIC; visibility khác hoặc thiếu làm response không hợp lệ. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-server/app/modules/guest/api_11_courses_resources/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-012",
+        "requirement_ids": [
+          "GS-06-YC-012"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Dữ liệu #11 — YC-012",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: lesson_id được nhận nếu null hoặc số nguyên dương; dữ liệu ngoài miền này bị từ chối.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Lesson_id được nhận nếu null hoặc số nguyên dương; dữ liệu ngoài miền này bị từ chối. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-013",
+        "requirement_ids": [
+          "GS-06-YC-013"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Bảo vệ URL — YC-013",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: GS06 không render hoặc mở trực tiếp resource.url; người dùng đi qua route GS07 bằng resource ID.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "GS06 không render hoặc mở trực tiếp resource.url; người dùng đi qua route GS07 bằng resource ID. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-014",
+        "requirement_ids": [
+          "GS-06-YC-014"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Trạng thái — YC-014",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Request đang chạy hiển thị thông báo loading có role=status và aria-live=polite.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Request đang chạy hiển thị thông báo loading có role=status và aria-live=polite. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-015",
+        "requirement_ids": [
+          "GS-06-YC-015"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Lỗi định danh — YC-015",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: CourseId không hợp lệ hoặc API #11 trả 404 hiển thị trạng thái invalid-course với role=alert.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "CourseId không hợp lệ hoặc API #11 trả 404 hiển thị trạng thái invalid-course với role=alert. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-016",
+        "requirement_ids": [
+          "GS-06-YC-016"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Lỗi dữ liệu — YC-016",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Envelope sai, businessCode sai hoặc item không đạt validator hiển thị lỗi an toàn; không đưa chi tiết server vào nội dung.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Envelope sai, businessCode sai hoặc item không đạt validator hiển thị lỗi an toàn; không đưa chi tiết server vào nội dung. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-017",
+        "requirement_ids": [
+          "GS-06-YC-017"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Lỗi tạm thời — YC-017",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Lỗi khác 404 hiển thị thông báo role=alert và nút Thử tải lại.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Lỗi khác 404 hiển thị thông báo role=alert và nút Thử tải lại. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-018",
+        "requirement_ids": [
+          "GS-06-YC-018"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Lỗi tạm thời — YC-018",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Thử tải lại gọi lại API #11 với cùng courseId hợp lệ; request trước được hủy khi thay request hoặc hủy component.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Thử tải lại gọi lại API #11 với cùng courseId hợp lệ; request trước được hủy khi thay request hoặc hủy component. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-019",
+        "requirement_ids": [
+          "GS-06-YC-019"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Danh sách rỗng — YC-019",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Collection [] chuyển sang empty; không hiển thị list item hoặc count của dữ liệu giả.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Collection [] chuyển sang empty; không hiển thị list item hoặc count của dữ liệu giả. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-020",
+        "requirement_ids": [
+          "GS-06-YC-020"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Danh sách — YC-020",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Collection hợp lệ không rỗng hiển thị số lượng item và tên/loại resource.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Collection hợp lệ không rỗng hiển thị số lượng item và tên/loại resource. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-021",
+        "requirement_ids": [
+          "GS-06-YC-021"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Danh sách — YC-021",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Thứ tự hiển thị giữ ID tăng dần như API; client từ chối thứ tự sai thay vì tự sắp xếp lại.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Thứ tự hiển thị giữ ID tăng dần như API; client từ chối thứ tự sai thay vì tự sắp xếp lại. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-server/app/modules/guest/api_11_courses_resources/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-022",
+        "requirement_ids": [
+          "GS-06-YC-022"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Điều hướng — YC-022",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Mỗi row điều hướng tới /resources/:id qua RouterLink; không dùng URL resource làm href.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Mỗi row điều hướng tới /resources/:id qua RouterLink; không dùng URL resource làm href. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/app.routes.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-023",
+        "requirement_ids": [
+          "GS-06-YC-023"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Điều hướng — YC-023",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Link GS07 giữ query from=course và courseId hiện tại.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Link GS07 giữ query from=course và courseId hiện tại. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/06-navigation.md; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-024",
+        "requirement_ids": [
+          "GS-06-YC-024"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Ranh giới API — YC-024",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: GS06 không gọi API #12; lấy chi tiết/mở resource là trách nhiệm screen GS07.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "GS06 không gọi API #12; lấy chi tiết/mở resource là trách nhiệm screen GS07. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS07/pages/gs07-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-025",
+        "requirement_ids": [
+          "GS-06-YC-025"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Thiết kế tĩnh — YC-025",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: 23 marker Stitch là hand-off prototype; nội dung mock, trạng thái và controls trong prototype không được xem là dữ liệu runtime.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "23 marker Stitch là hand-off prototype; nội dung mock, trạng thái và controls trong prototype không được xem là dữ liệu runtime. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-026",
+        "requirement_ids": [
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Thiết kế tĩnh — YC-026",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Link header/footer/tab trong prototype dùng href=# và chưa chứng minh route binding hoặc đăng nhập.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Link header/footer/tab trong prototype dùng href=# và chưa chứng minh route binding hoặc đăng nhập. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/code.html; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-027",
+        "requirement_ids": [
+          "GS-06-YC-027"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Thiết kế tĩnh — YC-027",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Nút tải trong prototype bị disabled; không phát sinh download hoặc API action.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Nút tải trong prototype bị disabled; không phát sinh download hoặc API action. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-028",
+        "requirement_ids": [
+          "GS-06-YC-028"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Quyền và liên kết — YC-028",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Các trạng thái 403/410, signed URL, TTL và yêu cầu Mentor xuất hiện trong prototype/AC-06 nhưng chưa có contract khớp ở API source; không assert chúng như runtime behavior.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Các trạng thái 403/410, signed URL, TTL và yêu cầu Mentor xuất hiện trong prototype/AC-06 nhưng chưa có contract khớp ở API source; không assert chúng như runtime behavior. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md; apps/study-server/docs/dd/12_resources_detail/06_Error.md; apps/study-server/app/modules/guest/api_12_resources_detail/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-029",
+        "requirement_ids": [
+          "GS-06-YC-029"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: API #11 — YC-029",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Prototype card mô tả response đơn và path rút gọn; endpoint hiện hành có prefix /api/v1 và source behavior collection.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Prototype card mô tả response đơn và path rút gọn; endpoint hiện hành có prefix /api/v1 và hành vi theo mã nguồn collection. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html; apps/study-server/docs/dd/11_courses_resources/04_Response.md; apps/study-server/app/modules/guest/api_11_courses_resources/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-030",
+        "requirement_ids": [
+          "GS-06-YC-030"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Schema — YC-030",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Mã query hiện dùng resources.visibility; legacy DDL không có cột này và V1-PILOT không khai báo bảng resources.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Mã query hiện dùng resources.visibility; legacy DDL không có cột này và V1-PILOT không khai báo bảng resources. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-server/app/modules/guest/api_11_courses_resources/query.py; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-031",
+        "requirement_ids": [
+          "GS-06-YC-031"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Dữ liệu — YC-031",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Chưa tìm được writer xác nhận cho bảng resources; schema/deployment/data live chưa được xác minh.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Chưa tìm được writer xác nhận cho bảng resources; schema/deployment/data live chưa được xác minh. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          ".agents/server-study/database.md; apps/study-server/app/modules/guest/api_11_courses_resources/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-032",
+        "requirement_ids": [
+          "GS-06-YC-032"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Định danh — YC-032",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: API dùng signed int64, trong khi trường item id ở client là number và Number.isSafeInteger; giá trị lớn hơn JS safe integer cần được chặn.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "API dùng signed int64, trong khi trường item id ở client là number và Number.isSafeInteger; giá trị lớn hơn JS safe integer cần được chặn. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-server/docs/dd/11_courses_resources/04_Response.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-screen-033",
+        "requirement_ids": [
+          "GS-06-YC-033"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Trợ năng — YC-033",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: bảng điều khiển có aria-labelledby; trạng thái đang tải dùng status/vùng live, lỗi dùng alert, danh sách dùng ul/li, liên kết có aria-label; trạng thái trống không khai báo role riêng.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Bảng điều khiển có aria-labelledby; trạng thái đang tải dùng status/vùng live, lỗi dùng alert, danh sách dùng ul/li, liên kết có aria-label; trạng thái rỗng không khai báo role riêng. Đã đối chiếu với mã nguồn; ca kiểm thử chưa chạy nên không ghi Đạt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-034",
+        "requirement_ids": [
+          "GS-06-YC-034"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Responsive — YC-034",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Link có min-height 44px/focus-visible; breakpoint 600px căn chỉnh lại và tên dài được wrap theo CSS hiện hành.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Link có min-height 44px/focus-visible; breakpoint 600px căn chỉnh lại và tên dài được wrap theo CSS hiện hành. Đối chiếu với source đã khai báo; ca chưa chạy nên không ghi Pass.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-screen-035",
+        "requirement_ids": [
+          "GS-06-YC-035"
+        ],
+        "target_id": "GS-06",
+        "group": "Toàn màn hình",
+        "title": "Toàn màn hình: Bằng chứng — YC-035",
+        "precondition": "Rà soát UTC GS-06 bằng source fixture giả lập; ca chưa chạy. Không dùng tài khoản, link ký hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; áp dụng riêng tình huống: Source test assertions đã đọc nhưng không chạy; ghi chú T041 cho rằng spec cũ/stale không khớp các assertion hiện có.",
+        "steps": [
+          "Chuẩn bị route /courses/42?tab=resources và fixture/mock tương ứng; không gọi môi trường live.",
+          "Quan sát yêu cầu, trạng thái, DOM hoặc tuyến trong phạm vi yêu cầu; ghi lại bằng chứng cần có.",
+          "Đối chiếu riêng DD và mã nguồn hiện tại; ghi discrepancy, không tự kết luận contract chưa chốt."
+        ],
+        "expected": "Source test assertions đã đọc nhưng không chạy; ghi chú T041 cho rằng spec cũ/stale không khớp các assertion hiện có. Nội dung còn chờ xác nhận theo blocker nguồn; không đánh dấu là behavior đã phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "GS06-elements-001",
+        "requirement_ids": [
+          "GS-06-YC-001",
+          "GS-06-YC-025",
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EL-001",
+        "group": "Thành phần",
+        "title": "Thành phần: Nhóm thương hiệu và điều hướng đầu trang",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#1; sourceElement=GS06-EL-01; Prototype tĩnh; href #; header runtime do GuestSiteLayout quản lý.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Prototype tĩnh; href #; header runtime do GuestSiteLayout quản lý. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-002",
+        "requirement_ids": [
+          "GS-06-YC-001",
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EL-002",
+        "group": "Thành phần",
+        "title": "Thành phần: Nhóm đăng nhập, đăng ký và biểu tượng hồ sơ",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#2; sourceElement=GS06-EL-02; Prototype href #; không có session; avatar trang trí, không là control.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Prototype href #; không có session; avatar trang trí, không là control. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-003",
+        "requirement_ids": [
+          "GS-06-YC-025",
+          "GS-06-YC-026",
+          "GS-06-YC-035"
+        ],
+        "target_id": "GS-06-EL-003",
+        "group": "Thành phần",
+        "title": "Thành phần: Các nhãn tuyến khóa học, dữ liệu giả và trạng thái hợp đồng",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#3; sourceElement=GS06-EL-03; Text mock viết cứng; không phản ánh router hoặc trạng thái runtime.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Text mock viết cứng; không phản ánh router hoặc trạng thái runtime. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-004",
+        "requirement_ids": [
+          "GS-06-YC-001",
+          "GS-06-YC-025"
+        ],
+        "target_id": "GS-06-EL-004",
+        "group": "Thành phần",
+        "title": "Thành phần: Tiêu đề khóa học và phụ đề mã khóa học/mentor",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#4; sourceElement=GS06-EL-04; Course/mock text viết cứng; không dùng làm dữ liệu khóa học thật.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Course/mock text viết cứng; không dùng làm dữ liệu khóa học thật. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-005",
+        "requirement_ids": [
+          "GS-06-YC-026",
+          "GS-06-YC-028"
+        ],
+        "target_id": "GS-06-EL-005",
+        "group": "Thành phần",
+        "title": "Thành phần: Nhãn bảo mật V1 gated",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#5; sourceElement=GS06-EL-05; Nhãn tĩnh; không phải kết quả authorization/certification.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Nhãn tĩnh; không phải kết quả authorization/certification. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-006",
+        "requirement_ids": [
+          "GS-06-YC-001",
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EL-006",
+        "group": "Thành phần",
+        "title": "Thành phần: Nhóm điều hướng tab khóa học",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#6; sourceElement=GS06-EL-06; Prototype dùng href #; runtime tab do GS03/router quản lý.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Prototype dùng href #; runtime tab do GS03/router quản lý. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-007",
+        "requirement_ids": [
+          "GS-06-YC-025",
+          "GS-06-YC-019",
+          "GS-06-YC-028"
+        ],
+        "target_id": "GS-06-EL-007",
+        "group": "Thành phần",
+        "title": "Thành phần: Panel trạng thái tài nguyên bị chặn/rỗng trong prototype",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#7; sourceElement=GS06-EL-07; Gated/empty copy không chứng minh API trả [] hoặc contract state.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Gated/empty copy không chứng minh API trả [] hoặc contract state. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-008",
+        "requirement_ids": [
+          "GS-06-YC-020",
+          "GS-06-YC-019"
+        ],
+        "target_id": "GS-06-EL-008",
+        "group": "Thành phần",
+        "title": "Thành phần: Tiêu đề, số lượng và hướng dẫn inventory",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#8; sourceElement=GS06-EL-08; Inventory tĩnh; không phải count runtime.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Inventory tĩnh; không phải count runtime. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-009",
+        "requirement_ids": [
+          "GS-06-YC-019"
+        ],
+        "target_id": "GS-06-EL-009",
+        "group": "Thành phần",
+        "title": "Thành phần: Thẻ inventory trạng thái rỗng",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#9; sourceElement=GS06-EL-09; Thẻ trạng thái mẫu; runtime empty được điều khiển bởi #11 trả [].",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Thẻ trạng thái mẫu; runtime empty được điều khiển bởi #11 trả []. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-010",
+        "requirement_ids": [
+          "GS-06-YC-020",
+          "GS-06-YC-021"
+        ],
+        "target_id": "GS-06-EL-010",
+        "group": "Thành phần",
+        "title": "Thành phần: Thẻ inventory trạng thái danh sách",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#10; sourceElement=GS06-EL-10; Thẻ mẫu tĩnh; runtime list được kiểm tra từ response #11.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Thẻ mẫu tĩnh; runtime list được kiểm tra từ response #11. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-011",
+        "requirement_ids": [
+          "GS-06-YC-027"
+        ],
+        "target_id": "GS-06-EL-011",
+        "group": "Thành phần",
+        "title": "Thành phần: Nút tải xuống bị vô hiệu hóa",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#11; sourceElement=GS06-EL-11; Disabled trong prototype; không có hành động tải trong HTML.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Disabled trong prototype; không có hành động tải trong HTML. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-012",
+        "requirement_ids": [
+          "GS-06-YC-024"
+        ],
+        "target_id": "GS-06-EL-012",
+        "group": "Thành phần",
+        "title": "Thành phần: Nút xem tài liệu tích hợp API",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#12; sourceElement=GS06-EL-12; Anchor fragment nội trang, không gọi API.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Anchor fragment nội trang, không gọi API. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-013",
+        "requirement_ids": [
+          "GS-06-YC-028"
+        ],
+        "target_id": "GS-06-EL-013",
+        "group": "Thành phần",
+        "title": "Thành phần: Thẻ inventory trạng thái forbidden",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#13; sourceElement=GS06-EL-13; 403/flow xin quyền chưa có contract runtime thống nhất.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "403/flow xin quyền chưa có contract runtime thống nhất. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-014",
+        "requirement_ids": [
+          "GS-06-YC-025"
+        ],
+        "target_id": "GS-06-EL-014",
+        "group": "Thành phần",
+        "title": "Thành phần: Callout không dùng dữ liệu giả",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#14; sourceElement=GS06-EL-14; Chỉ dẫn thiết kế; không phải response/data.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Chỉ dẫn thiết kế; không phải response/data. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-015",
+        "requirement_ids": [
+          "GS-06-YC-028"
+        ],
+        "target_id": "GS-06-EL-015",
+        "group": "Thành phần",
+        "title": "Thành phần: Thẻ inventory liên kết hết hạn",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#15; sourceElement=GS06-EL-15; 410/TTL proposal; không phải behavior API đã chốt.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "410/TTL proposal; không phải behavior API đã chốt. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-016",
+        "requirement_ids": [
+          "GS-06-YC-024",
+          "GS-06-YC-029"
+        ],
+        "target_id": "GS-06-EL-016",
+        "group": "Thành phần",
+        "title": "Thành phần: Tiêu đề khu vực technical contract và nhãn phiên bản",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#16; sourceElement=GS06-EL-16; Heading/nhãn phiên bản prototype.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Heading/nhãn phiên bản prototype. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-017",
+        "requirement_ids": [
+          "GS-06-YC-033",
+          "GS-06-YC-034"
+        ],
+        "target_id": "GS-06-EL-017",
+        "group": "Thành phần",
+        "title": "Thành phần: Thẻ tiêu chuẩn hand-off",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#17; sourceElement=GS06-EL-17; Claims WCAG/contrast trong hình chưa được đo.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Claims WCAG/contrast trong hình chưa được đo. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-018",
+        "requirement_ids": [
+          "GS-06-YC-008",
+          "GS-06-YC-029"
+        ],
+        "target_id": "GS-06-EL-018",
+        "group": "Thành phần",
+        "title": "Thành phần: Thẻ tham chiếu API #11",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#18; sourceElement=GS06-EL-18; Nội dung/path/cardinality tĩnh khác API contract/source hiện hành.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Nội dung/path/cardinality tĩnh khác API contract/source hiện hành. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-019",
+        "requirement_ids": [
+          "GS-06-YC-024",
+          "GS-06-YC-028"
+        ],
+        "target_id": "GS-06-EL-019",
+        "group": "Thành phần",
+        "title": "Thành phần: Thẻ tham chiếu API #12",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#19; sourceElement=GS06-EL-19; Không khẳng định signed URL hoặc private access.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Không khẳng định signed URL hoặc private access. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-020",
+        "requirement_ids": [
+          "GS-06-YC-029"
+        ],
+        "target_id": "GS-06-EL-020",
+        "group": "Thành phần",
+        "title": "Thành phần: Panel điều kiện mở khóa UI",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#20; sourceElement=GS06-EL-20; Proposal khác envelope hiện hành; không dùng làm contract.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Proposal khác envelope hiện hành; không dùng làm contract. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-021",
+        "requirement_ids": [
+          "GS-06-YC-025"
+        ],
+        "target_id": "GS-06-EL-021",
+        "group": "Thành phần",
+        "title": "Thành phần: Nhóm thương hiệu và mô tả chân trang",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#21; sourceElement=GS06-EL-21; Nội dung brand tĩnh của prototype.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Nội dung brand tĩnh của prototype. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-022",
+        "requirement_ids": [
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EL-022",
+        "group": "Thành phần",
+        "title": "Thành phần: Các liên kết điều hướng chân trang",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#22; sourceElement=GS06-EL-22; href #; chưa có route mapping.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Href #; chưa có route mapping. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-023",
+        "requirement_ids": [
+          "GS-06-YC-025"
+        ],
+        "target_id": "GS-06-EL-023",
+        "group": "Thành phần",
+        "title": "Thành phần: Dòng bản quyền chân trang",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=#23; sourceElement=GS06-EL-23; Text copyright tĩnh, không phải build date.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Text copyright tĩnh, không phải build date. Chờ xác nhận theo trạng thái DD/prototype.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-elements-024",
+        "requirement_ids": [
+          "GS-06-YC-002",
+          "GS-06-YC-005"
+        ],
+        "target_id": "GS-06-EL-024",
+        "group": "Thành phần",
+        "title": "Thành phần: Cổng mount resource tab",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-01; GS03 gắn GS06 sau #08 PUBLISHED; #11 chỉ được gọi sau gate.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "GS03 gắn GS06 sau #08 PUBLISHED; #11 chỉ được gọi sau gate. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-025",
+        "requirement_ids": [
+          "GS-06-YC-003",
+          "GS-06-YC-004",
+          "GS-06-YC-032"
+        ],
+        "target_id": "GS-06-EL-025",
+        "group": "Thành phần",
+        "title": "Thành phần: CourseId input boundary",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-02; Nhận courseId dạng chuỗi; validate positive signed int64, không tự đổi chuỗi thành Number.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Nhận courseId dạng chuỗi; validate positive signed int64, không tự đổi chuỗi thành Number. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-026",
+        "requirement_ids": [
+          "GS-06-YC-020",
+          "GS-06-YC-033"
+        ],
+        "target_id": "GS-06-EL-026",
+        "group": "Thành phần",
+        "title": "Thành phần: Panel heading và count",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-03; aria-labelledby gs06-resources-heading; count chỉ có ở trạng thái ready.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Aria-labelledby gs06-resources-heading; count chỉ có ở trạng thái ready. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-027",
+        "requirement_ids": [
+          "GS-06-YC-014",
+          "GS-06-YC-033"
+        ],
+        "target_id": "GS-06-EL-027",
+        "group": "Thành phần",
+        "title": "Thành phần: Thông báo loading",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-04; role=status, aria-live=polite; biểu tượng đang tải aria-hidden.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Role=status, aria-live=polite; spinner aria-hidden. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-028",
+        "requirement_ids": [
+          "GS-06-YC-004",
+          "GS-06-YC-015"
+        ],
+        "target_id": "GS-06-EL-028",
+        "group": "Thành phần",
+        "title": "Thành phần: Trạng thái invalid-course",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-05; CourseId sai hoặc #11 404 hiển thị role=alert.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "CourseId sai hoặc #11 404 hiển thị role=alert. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-029",
+        "requirement_ids": [
+          "GS-06-YC-007",
+          "GS-06-YC-016",
+          "GS-06-YC-017",
+          "GS-06-YC-018"
+        ],
+        "target_id": "GS-06-EL-029",
+        "group": "Thành phần",
+        "title": "Thành phần: Lỗi API/response và retry",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-06; Lỗi an toàn role=alert; retry phát sự kiện để tải lại cùng courseId.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Lỗi an toàn role=alert; retry phát sự kiện để tải lại cùng courseId. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-030",
+        "requirement_ids": [
+          "GS-06-YC-019",
+          "GS-06-YC-033"
+        ],
+        "target_id": "GS-06-EL-030",
+        "group": "Thành phần",
+        "title": "Thành phần: Trạng thái empty",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-07; [] hiển thị copy không có tài liệu công khai; empty container không có role riêng.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "[] hiển thị copy không có tài liệu công khai; empty container không có role riêng. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-031",
+        "requirement_ids": [
+          "GS-06-YC-009",
+          "GS-06-YC-010",
+          "GS-06-YC-011",
+          "GS-06-YC-012",
+          "GS-06-YC-013",
+          "GS-06-YC-020",
+          "GS-06-YC-021"
+        ],
+        "target_id": "GS-06-EL-031",
+        "group": "Thành phần",
+        "title": "Thành phần: Danh sách resource",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-08; Ready render danh sách theo thứ tự ID; không render url trực tiếp.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Ở trạng thái sẵn sàng, hiển thị danh sách theo thứ tự ID; không hiển thị url trực tiếp. Khẳng định theo mã nguồn chưa được kiểm thử.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-032",
+        "requirement_ids": [
+          "GS-06-YC-010",
+          "GS-06-YC-020"
+        ],
+        "target_id": "GS-06-EL-032",
+        "group": "Thành phần",
+        "title": "Thành phần: Nội dung row",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-09; Mỗi row render resource.name và resource.type.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Mỗi row render resource.name và resource.type. Source assertion chưa được chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-elements-033",
+        "requirement_ids": [
+          "GS-06-YC-013",
+          "GS-06-YC-022",
+          "GS-06-YC-023",
+          "GS-06-YC-024",
+          "GS-06-YC-033",
+          "GS-06-YC-034"
+        ],
+        "target_id": "GS-06-EL-033",
+        "group": "Thành phần",
+        "title": "Thành phần: liên kết sang GS07",
+        "precondition": "Ca kiểm tra cấu trúc/nguồn tĩnh; chưa chạy app hoặc browser. Dữ liệu chỉ là fixture tổng hợp.",
+        "data": "Marker=—; sourceElement=GS06-SRC-10; Route /resources/:id, query from=course và courseId; aria-label nêu tên resource.",
+        "steps": [
+          "Tìm đúng marker/runtime selector trong source đã khai báo.",
+          "So sánh nhãn, vai trò, state, event, điều hướng và nguồn của thành phần.",
+          "Nếu là marker prototype, xác nhận không coi text tĩnh là runtime behavior."
+        ],
+        "expected": "Tuyến /resources/:id, truy vấn from=course và courseId; aria-label nêu tên tài nguyên. Khẳng định theo mã nguồn chưa được chạy kiểm thử.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "GS06-events-001",
+        "requirement_ids": [
+          "GS-06-YC-002",
+          "GS-06-YC-005",
+          "GS-06-YC-007",
+          "GS-06-YC-008",
+          "GS-06-YC-014",
+          "GS-06-YC-020",
+          "GS-06-YC-021"
+        ],
+        "target_id": "GS-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Gắn tab sau cổng PUBLISHED và tải danh sách",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "courseId=42; #08=PUBLISHED; #11 trả 2 item id tăng dần.",
+        "steps": [
+          "Chọn tab resources; ghi request #11 và state sau response.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Chỉ sau #08 PUBLISHED mới gọi GET #11; request không body/query/Bearer; danh sách hiện hai item theo ID tăng dần.",
+        "api_ids": [
+          "API-08",
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-002",
+        "requirement_ids": [
+          "GS-06-YC-002",
+          "GS-06-YC-004",
+          "GS-06-YC-005"
+        ],
+        "target_id": "GS-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Không tải danh sách khi gate #08 chưa qua",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "#08 pending, 404 hoặc course không PUBLISHED.",
+        "steps": [
+          "Quan sát request và mount GS06 sau từng response gate.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "GS06 không mount và không phát request #11 trước khi gate #08 xác nhận PUBLISHED.",
+        "api_ids": [
+          "API-08",
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-003",
+        "requirement_ids": [
+          "GS-06-YC-003",
+          "GS-06-YC-004",
+          "GS-06-YC-015"
+        ],
+        "target_id": "GS-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Chặn courseId sai trước request",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "courseId='0', 'abc', hoặc '9223372036854775808'.",
+        "steps": [
+          "Mở/đưa input vào component; quan sát service call và alert.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Hiển thị invalid-course; không gọi #11; không chuyển ID thành Number.",
+        "api_ids": [
+          "API-08",
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-004",
+        "requirement_ids": [
+          "GS-06-YC-015"
+        ],
+        "target_id": "GS-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Phân loại #11 404",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "#08 đã qua; #11 trả HTTP 404.",
+        "steps": [
+          "Quan sát status panel.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Hiển thị invalid-course với role=alert; không biến thành empty và không tự retry.",
+        "api_ids": [
+          "API-08",
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-005",
+        "requirement_ids": [
+          "GS-06-YC-007",
+          "GS-06-YC-008",
+          "GS-06-YC-009",
+          "GS-06-YC-010",
+          "GS-06-YC-011",
+          "GS-06-YC-012",
+          "GS-06-YC-016"
+        ],
+        "target_id": "GS-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Từ chối envelope/item không hợp lệ",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Sai success/businessCode; data không phải array; duplicate/out-of-order ID; thiếu name/type/url; visibility PRIVATE.",
+        "steps": [
+          "Trả từng fixture lỗi qua mock #11; quan sát state.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Mỗi fixture sai chuyển error; không hiển thị một phần list; nguyên nhân không bị trình bày thành dữ liệu giả.",
+        "api_ids": [
+          "API-08",
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-006",
+        "requirement_ids": [
+          "GS-06-YC-019"
+        ],
+        "target_id": "GS-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Hiển thị collection rỗng",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "#11 trả success envelope hợp lệ với data=[].",
+        "steps": [
+          "Quan sát nội dung và danh sách.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Hiển thị trạng thái empty; không có list item; không coi [] là 404 hoặc lỗi.",
+        "api_ids": [
+          "API-08",
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-007",
+        "requirement_ids": [
+          "GS-06-YC-009",
+          "GS-06-YC-010",
+          "GS-06-YC-011",
+          "GS-06-YC-012",
+          "GS-06-YC-013",
+          "GS-06-YC-020",
+          "GS-06-YC-021"
+        ],
+        "target_id": "GS-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Render nhiều tài nguyên hợp lệ",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "#11 data gồm id=12,13; PUBLIC; name/type/url non-empty; lesson_id null/positive.",
+        "steps": [
+          "Quan sát count, thứ tự, tên/loại và liên kết row.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Count là 2; thứ tự 12 rồi 13; row chỉ hiện name/type và link route bằng ID; raw url không render.",
+        "api_ids": [
+          "API-08",
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-008",
+        "requirement_ids": [
+          "GS-06-YC-017",
+          "GS-06-YC-018"
+        ],
+        "target_id": "GS-06-EV-013",
+        "group": "Sự kiện",
+        "title": "Thử lại sau lỗi tạm thời",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Lần đầu #11 trả 500; lần sau trả []; courseId=42.",
+        "steps": [
+          "Quan sát alert; activate Thử tải lại; ghi số request và trạng thái.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Thử lại gửi GET #11 với courseId=42; hiển thị đang tải rồi trạng thái trống sau phản hồi []; thông báo lỗi không để lộ chi tiết máy chủ.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md; apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts; apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS06-events-009",
+        "requirement_ids": [
+          "GS-06-YC-013",
+          "GS-06-YC-022",
+          "GS-06-YC-023",
+          "GS-06-YC-024"
+        ],
+        "target_id": "GS-06-EV-003",
+        "group": "Sự kiện",
+        "title": "Điều hướng row sang GS07",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Danh sách ready có resource id=12; courseId=42.",
+        "steps": [
+          "Activate link của row id=12; ghi route/query.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Route là /resources/12; query có from=course và courseId=42; GS06 không gọi API #12. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [
+          "API-11"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-010",
+        "requirement_ids": [
+          "GS-06-YC-013",
+          "GS-06-YC-024"
+        ],
+        "target_id": "GS-06-EV-004",
+        "group": "Sự kiện",
+        "title": "Mở chi tiết resource tại ranh giới GS07",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "GS06 đã điều hướng resource id=12 sang GS07; courseId=42.",
+        "steps": [
+          "Quan sát ranh giới component/request sau khi mở route GS07; tách request thuộc GS07 khỏi thao tác trong GS06.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "GS06 chỉ bàn giao resourceId; GET #12 thuộc GS07 sau khi screen đó được mount. Không suy ra signed URL hoặc quyền private từ handoff. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [
+          "API-12"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-011",
+        "requirement_ids": [
+          "GS-06-YC-027"
+        ],
+        "target_id": "GS-06-EV-005",
+        "group": "Sự kiện",
+        "title": "Không kích hoạt tải ở nút prototype disabled",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Chỉ đọc HTML prototype có button disabled; không dùng runtime app.",
+        "steps": [
+          "Kiểm tra attribute/button state và event wiring tĩnh.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Button disabled; không có action tải/request được khẳng định trong prototype. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-012",
+        "requirement_ids": [
+          "GS-06-YC-024",
+          "GS-06-YC-029"
+        ],
+        "target_id": "GS-06-EV-006",
+        "group": "Sự kiện",
+        "title": "Anchor tới khu vực technical contract",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Prototype có #12 href fragment và target technical-contract-block.",
+        "steps": [
+          "Đọc href/target literal; không điều hướng tới API.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Anchor fragment nhắm technical-contract-block; không có API request. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-013",
+        "requirement_ids": [
+          "GS-06-YC-025",
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EV-007",
+        "group": "Sự kiện",
+        "title": "Đầu trang liên kết prototype không có router binding",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Các liên kết đầu trang trong bản mẫu có href=#.",
+        "steps": [
+          "Đọc HTML anchor và data-path.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Ghi nhận href=#; không khẳng định route/login thành công. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-014",
+        "requirement_ids": [
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EV-008",
+        "group": "Sự kiện",
+        "title": "Login/register prototype không có session flow",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Prototype login/register anchors href=#; profile icon là div.",
+        "steps": [
+          "Đọc HTML và event binding.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Không có session, callback hoặc route handler trong prototype source. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-015",
+        "requirement_ids": [
+          "GS-06-YC-001",
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EV-009",
+        "group": "Sự kiện",
+        "title": "Tab anchor prototype không cập nhật query",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Prototype có bốn anchors href=#.",
+        "steps": [
+          "Đọc href và so sánh với current GS03 router.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Prototype không tự chứng minh query/tab navigation; current runtime do GS03 quản lý. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-016",
+        "requirement_ids": [
+          "GS-06-YC-026"
+        ],
+        "target_id": "GS-06-EV-010",
+        "group": "Sự kiện",
+        "title": "Chân trang các liên kết prototype chưa có route",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Prototype footer có bốn anchors href=#.",
+        "steps": [
+          "Đọc literal href/data-path.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Không khẳng định footer destination; chỉ ghi nhận anchor tĩnh. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS06-events-017",
+        "requirement_ids": [
+          "GS-06-YC-027",
+          "GS-06-YC-033"
+        ],
+        "target_id": "GS-06-EV-011",
+        "group": "Sự kiện",
+        "title": "Kiểm tra giới hạn tooltip trên nút disabled",
+        "precondition": "Kế hoạch kiểm thử với fake/mock response; ca chưa chạy và không kết nối API/DB thật.",
+        "data": "Prototype wrapper có CSS hover/focus-within; button disabled.",
+        "steps": [
+          "Đối chiếu CSS và focusable element tĩnh; không chạy browser.",
+          "Ghi nhận request/DOM/route/attribute theo source; không đánh dấu Pass khi chưa thực thi."
+        ],
+        "expected": "Tooltip CSS có thể phụ thuộc wrapper; keyboard focus path chưa được xác nhận vì button disabled. Cần giữ blocker nếu DD/API nguồn còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md; apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  },
+  "source_hashes": [
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/00-overview.md",
+      "sha256": "2553ca5c9c4a590cd9b9afd3151f16e37f811f6eba982b557573942de683a4db"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/01-ui-elements.md",
+      "sha256": "cd9a11d2ccbeb4435d8140464c407b93da1fcea9f471569e5da2acad189da667"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/02-events.md",
+      "sha256": "b6f354a9c38a9402fa07d7996c5f9ee38b7cf1e955c99dcd19f0c0e49fd8be3d"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/03-data-flow.md",
+      "sha256": "e122231a2f3a80178f70bf9aa7f2c340405e4b30b3be8d928f2d1ab81869e8e0"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/04-api-integration.md",
+      "sha256": "a04ad539e0814f169d40f7c5e2e0242f27b425076dbe50b81d791110af52f69d"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/05-business-rules.md",
+      "sha256": "628f50a94c9174293c50253f5695aa399beb02d70924c33f9f630f2cb9740d6e"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/06-navigation.md",
+      "sha256": "8387380e374e37f97ab5cb0cf7ef5a4033c303a5cee0fdb587eac17e4a8b2bc6"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/07-test-cases.md",
+      "sha256": "e672eaea4844d6051821167a6a22f7509d6ef00a78b3a28dbcb85ffb2113b400"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/images/README.md",
+      "sha256": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/images/screen-clean.png",
+      "sha256": "b90795438d5369466bb101e8f6730265667f8ecc45c0d047d66495410da87dcd"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/images/screen-numbered.png",
+      "sha256": "5af595cad1a6d7140844ea7ff62b9cc926c40af60b8f836b8f9d620da5f2c3b9"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-06-TaiNguyenKhoaHoc/code.html",
+      "sha256": "6843e2cc0f01a24e1db8100b8fec49d88e1f3fe39859b102bb9828d4905a8c31"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06.md",
+      "sha256": "1830e724477573f81e34ca18aed754186fc42ec8b5ba78b4d7994e0da8417347"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_PLAN.md",
+      "sha256": "5a641cca574457c445aa10c8516d2f348dbf9844ac6ecbbe45ee44b0a5727e27"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers.json",
+      "sha256": "2cd2d613725e13c03627e020a2e4ce31efd5084920d313f97085d0d41353d2d9"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/screen.png",
+      "sha256": "b90795438d5369466bb101e8f6730265667f8ecc45c0d047d66495410da87dcd"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/screen_annotated.png",
+      "sha256": "5af595cad1a6d7140844ea7ff62b9cc926c40af60b8f836b8f9d620da5f2c3b9"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/code.html",
+      "sha256": "6843e2cc0f01a24e1db8100b8fec49d88e1f3fe39859b102bb9828d4905a8c31"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/GS-06_markers_overlay.svg",
+      "sha256": "d5f819febb74e6c9d691a39e0fa75acb4690b6f37670814118664fac9d350893"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.ts",
+      "sha256": "545b9a772bfd3e7f32e3ee3b6e8a1cae5cf9b6b088958189fb7b9d42b6f2449a"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.html",
+      "sha256": "1a4317f428c5ec0f79bdc13f9c4f14dc7867c2a4d4e43b6a621ce70f16cd8b67"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.css",
+      "sha256": "5c257152d1ec9c49a8a24c44b99c3468f390d5b5cd8ccd420db1dd39706a82eb"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/pages/gs06-page.spec.ts",
+      "sha256": "b3d40b3c1a60f91edbdffe625233d4c98db9469c1813625a21c75a6f43a954e3"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/data-access/README.md",
+      "sha256": "18c9ee93c174eba7896937593e39ff1c2c2eac8c9de933db6e2a6e7b79e5f592"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/data-access/gs06-resources.service.ts",
+      "sha256": "ee38d84299401c9612cbc3c7618c1757c8d150599d409027cf31288e8f0e44ee"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/models/gs06-resource-screen-state.model.ts",
+      "sha256": "0b4c998b776915c9a44bc5e9a258fc041abf8822a79a3d3422b7aaf8778d0407"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.ts",
+      "sha256": "54a091c17a98ab0781facebba92fce70a071a8f0692a3b3fb7115039914e6e48"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.html",
+      "sha256": "5a638e1b97fa740879463e99ef64180fde0dbb84e20e7eff4aab21eac5ccdba7"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS06/ui/gs06-resource-panel.css",
+      "sha256": "8fb409c2324483a7df04ffd78a253cd76c5d116c746bda7ab98dc0065c225ee3"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "sha256": "04372e79a2380e282726e9bbaa6771a66c2ae09981fae4b7ae0e080fe405e5da"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "sha256": "9de65c84b254242648f8ffbed0f366479d285b77edbde0de50054e5f999e6407"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "sha256": "3d4d3f10a528333f102e19b972716b9ac1e80be2012ff2e9670e7f98b1e8e4df"
+    },
+    {
+      "path": "apps/study-client/src/app/app.routes.ts",
+      "sha256": "b0569672d1722393a95314564b97883f578c4ca51ef6212d0f8afb73fca21fa4"
+    },
+    {
+      "path": "apps/study-client/src/app/core/constant/api.constants.ts",
+      "sha256": "9594a140cda48618388cd22e0c3e6cd1d07467e7c610bfa3748fb370fc508170"
+    },
+    {
+      "path": "apps/study-client/src/app/core/http/study-api.service.ts",
+      "sha256": "df69f5c5c6ffd146cdacb2422f2fdde54f97e42c44415526375c0c94659d41fb"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/shared/models/guest-course.models.ts",
+      "sha256": "53823664a6aa665f21f8890a0da071a73ae1692499ad880008487b8f1320c6ef"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS07/pages/gs07-page.ts",
+      "sha256": "c1334625d67493f0635b76323c0838033eb90a91dd08c30433ae995bf177a5d1"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/00_Cover.md",
+      "sha256": "89af71d146dd8395bfbbc600dfaf579992ef7af6a853d5ac2a4c9b2b33d479d9"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/01_Lich_su.md",
+      "sha256": "0a89d9fffabb50c8d861290f524b0d5d441c8f96107d35509a45cbafa278ffad"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/02_Overview.md",
+      "sha256": "a728e7b8010b826040c92d4697eee328fd7678353a369db62fc0cbbb83b27361"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/03_Request.md",
+      "sha256": "33d1b7daf814efc131e9b15683061c150b045482048314f7e9ed54213bcd5a5e"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/04_Response.md",
+      "sha256": "e199e271c95845ced5a0136664b6b918709533de34191893809e2e41c346071e"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/05_Data_Mapping.md",
+      "sha256": "55f5368bf3ad8bb1cf42f84f138aa3cadcc51b26650cf3e9c140a98c99d5133b"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/06_Error.md",
+      "sha256": "9ac09965e558edf9fe35820c72881e99d67fb8b9f7ea74a0f513613d01a7ac0b"
+    },
+    {
+      "path": "apps/study-server/docs/dd/11_courses_resources/07_table.md",
+      "sha256": "c129a6e9438b234da0ca4dcbb72d252a3dfa55461a088010e4ae330e28bbb53b"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/00_Cover.md",
+      "sha256": "4bac88b171b46e89d76326dbbaa288996d30cb3f32574c3898bdb9274ae82c06"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/01_Lich_su.md",
+      "sha256": "672701b76ac3f6ee7b51f43926f3e17f91a7eef04753703c02da8d457cc76bb1"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/02_Overview.md",
+      "sha256": "5420a9a283a75cddd514ed4549d44ccb182e4e9d4760f7e0904da455352a1700"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/03_Request.md",
+      "sha256": "04316597de89e71eff1b65d811c60db0b0c903229b8b619992b33bf329950388"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/04_Response.md",
+      "sha256": "f0a3db21699ccc7df099894226b4e1649b5f048199f6a72b310d403f53799f7c"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/05_Data_Mapping.md",
+      "sha256": "ba9e26971452c03175753aabe1a9c9b3801f008e47f18c2a092389f8945367d4"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/06_Error.md",
+      "sha256": "e8c4d068d8c9410717f8a55a58d30d44aec328a5aff3b4b1ee237d297a887dc2"
+    },
+    {
+      "path": "apps/study-server/docs/dd/12_resources_detail/07_table.md",
+      "sha256": "fa9e579094dcdc15254cc094f1b3774d52d396b4c67c7c94917ea70e7cad98bc"
+    },
+    {
+      "path": "apps/study-server/app/api/v1.py",
+      "sha256": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_11_courses_resources/__init__.py",
+      "sha256": "7905a10201658bedc677e0300aa171428b387848e80a98f9a67021b41e74f0a3"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_11_courses_resources/validate.py",
+      "sha256": "c10a64a16dc344e8d181dc23bd88f005c5be38f4ba5e7f91648ec70ef5309b93"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_11_courses_resources/models.py",
+      "sha256": "29a02308391b3b25bcaf12a7f878d2c30363fc9ef015c7b2f088e91c76c5b97f"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_11_courses_resources/query.py",
+      "sha256": "b8f8390617fb3bc7962de328efc9e45abcb92a6526b33fbda0aa301852e383b6"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_11_courses_resources/view.py",
+      "sha256": "b59e885ef50af7342659d0f6bc9ecd6e3f749913115470c1dc853e1233dd0df1"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_12_resources_detail/__init__.py",
+      "sha256": "abbe6a5c4ed97b0b1b073050e16d14a31c7895e69f8dfc970bf9dc766b961cf9"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_12_resources_detail/validate.py",
+      "sha256": "5c6a4706252a01db12ce8414ab25826167c783e168ba557cd7ca95408a1815a4"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_12_resources_detail/models.py",
+      "sha256": "bae5e2d970185494e0b623309c9eba72f96b33c7bd7845f99b4f478bf82076db"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_12_resources_detail/query.py",
+      "sha256": "8973c0c00faf73d333d4b09db2c34def6bac566040aec26a57306f9d678b9cc3"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_12_resources_detail/view.py",
+      "sha256": "9591138ef8110f0d6b4d5a64a81804475a4d6a3e4e18f320b580f871ff8e752c"
+    },
+    {
+      "path": "apps/study-server/tests/modules/guest/api_11_courses_resources/test_courses_resources.py",
+      "sha256": "c6414674245ef09ddf6727258d9de868d54a2eb920a62b92e4fc5594f21569df"
+    },
+    {
+      "path": "apps/study-server/tests/modules/guest/api_12_resources_detail/test_resources_detail.py",
+      "sha256": "8afdcb758a37a9b5834153bbe45f6db98dbe7092786d810fbcb232c59f081650"
+    },
+    {
+      "path": "infra/postgres/study-server/DB.sql",
+      "sha256": "8beedb93d0eae21a2cc4d9851c48382dc9dd68a9cfecdf213ceba9bbf279cba2"
+    },
+    {
+      "path": "infra/postgres/02_study_db.sql",
+      "sha256": "2ff0e3c5c0b9c22d1da6e3853fc48333b16588a8a2854547949a7c830637809c"
+    },
+    {
+      "path": ".agents/server-study/database.md",
+      "sha256": "241ffa6650395ecbefc8b23bf9c1fa51873db46c9c314fef015dddc008278e3e"
+    },
+    {
+      "path": "apps/study-client/docs/list_screen.md",
+      "sha256": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40"
+    },
+    {
+      "path": "apps/study-client/docs/list_endpoint.md",
+      "sha256": "e617e863960e5f0a1cdfb797e4222ca5cf7503992183b831ae6ac3f084036058"
+    },
+    {
+      "path": "apps/study-client/docs/utc_screens/utc-spec-GS05.json",
+      "sha256": "8ad486f5bc5217ce106ae7ae018884eca9106f7a422ce46098e2627239c6c337"
+    },
+    {
+      "path": "apps/study-client/docs/utc_screens/UTC_GS-05_DanhGiaVaThaoLuanCongKhai.xlsx",
+      "sha256": "a0f795c393e6cfa81b3b1be49aafe0511e8138027848c9d9be5d97f79884c6c6"
+    }
+  ]
+}

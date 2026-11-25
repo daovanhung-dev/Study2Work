@@ -1,0 +1,42 @@
+{
+  "hop_le_ve_cau_truc": true,
+  "du_dieu_kien_phe_duyet": false,
+  "thong_tin": [
+    "36 yêu cầu, 41 thành phần, 14 sự kiện, 3 API",
+    "36 ca toàn màn hình, 41 ca thành phần, 14 ca sự kiện",
+    "Tổng ca: 91; yêu cầu được truy vết: 36/36"
+  ],
+  "loi": [],
+  "canh_bao": [
+    "ME01-TS-006: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-014: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-025: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-026: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-027: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-028: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-029: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-030: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-031: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TS-036: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-003: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-004: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-006: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-007: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-008: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-009: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-010: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-011: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-019: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-020: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-021: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TC-022: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TE-004: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TE-006: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TE-008: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TE-009: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TE-010: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TE-011: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "ME01-TE-012: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+  ]
+}

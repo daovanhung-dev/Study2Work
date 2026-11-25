@@ -1,0 +1,2424 @@
+{
+  "metadata": {
+    "screen_id": "SH-03",
+    "screen_name": "Đăng ký học viên",
+    "module": "Study Web — Phần dùng chung",
+    "route": "/register",
+    "actor": "Khách chưa đăng nhập",
+    "version": "1.0 — Bộ UTC theo DD chuẩn hiện có; ca chưa chạy",
+    "dd_version": "SH-03 DD 0.3; đối chiếu mã nguồn đến 2026-11-24",
+    "dd_status": "DD READY theo nguồn; vẫn giữ các điểm cần quyết định và sai khác API/AC. Người dùng xác nhận DD đang bị chặn vẫn là tài liệu chuẩn.",
+    "runtime_status": "Mã nguồn nối /register, API #01 và cơ chế bàn giao tạm SH-04 dùng một lần trong bộ nhớ. Ca UTC này chưa chạy; API trực tiếp, CSDL đang chạy và bản triển khai chưa được xác minh.",
+    "author": "Chưa được xác định trong DD",
+    "reviewer": "Chưa được xác định trong DD",
+    "approver": "Chưa được xác định trong DD",
+    "date": "2026-11-24",
+    "source_name": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien và mã nguồn Study Web/Study Server",
+    "baseline_authorization": "Người dùng xác nhận tài liệu DD hiện có là tài liệu chuẩn kể cả khi trạng thái ghi bị chặn. Giữ nguyên câu hỏi mở và sai khác; không tự phê duyệt.",
+    "release_readiness": "Có thể dùng làm bộ UTC chính thức để đối chiếu DD và mã nguồn; chưa nghiệm thu/phát hành vì ca chưa chạy và blocker còn mở.",
+    "discrepancy_note": "AC-01 để ngỏ điều khoản nếu có hợp đồng; HTML mẫu nêu mật khẩu tối thiểu 8 ký tự nhưng API/giao diện hiện không thực thi; API #01 không gọi #02; trạng thái tài khoản chưa được xác minh bằng CSDL đang chạy; API #02 mặc định dùng bộ gửi giả lập; cơ chế bàn giao tạm trong bộ nhớ đã được nối trong mã nguồn nhưng chưa được DD phê duyệt."
+  },
+  "overall": {
+    "objective": "Cho khách nhập họ tên, email và mật khẩu để tạo tài khoản học viên, xử lý phản hồi API #01 và chỉ chuyển sang SH-04 sau thao tác tiếp tục rõ ràng.",
+    "inputs": "Họ tên, email, mật khẩu; phản hồi API #01; thao tác người dùng để tiếp tục sang SH-04.",
+    "outputs": "Lỗi cục bộ hoặc API; trạng thái tài khoản đã tạo; dữ liệu ID/email để bàn giao SH-04; hoặc điều hướng tới SH-02.",
+    "main_flow": "Khách mở /register → nhập ba trường → giao diện kiểm tra dữ liệu → POST #01 → lỗi an toàn hoặc 201 hợp lệ → trạng thái tài khoản đã tạo → người dùng bấm tiếp tục → bàn giao tạm hiện hành tới SH-04.",
+    "preconditions": "Tuyến /register công khai đã đăng ký. Thực thi cần môi trường kiểm thử/mô phỏng API; không dùng thông tin thật. API trực tiếp, CSDL đang chạy và triển khai chưa xác minh trong lượt này.",
+    "states": [
+      "Ban đầu",
+      "Đang kiểm tra",
+      "Đang gửi",
+      "Lỗi cục bộ",
+      "Email đã tồn tại 409",
+      "Dữ liệu bị từ chối 422",
+      "Lỗi máy chủ 500",
+      "Kết quả mạng chưa rõ",
+      "Tài khoản đã tạo",
+      "Đang tiếp tục SH-04"
+    ],
+    "security": "Không gửi tiêu đề Authorization: Bearer; không gửi các trường role, status, password_hash hoặc trường ngoài hợp đồng. Mật khẩu chỉ nằm trong biểu mẫu và thân yêu cầu POST; không đưa vào URL hoặc dữ liệu bàn giao tạm. Không hiển thị lỗi nội bộ; không dùng tài khoản hoặc email thật.",
+    "out_of_scope": "Không kết luận quy tắc mật khẩu 8 ký tự, trạng thái xác minh tài khoản, việc gửi email thật, chính sách lưu/hết hạn bàn giao tạm, trạng thái DB đang chạy, triển khai hoặc kết quả chạy của các ca UTC."
+  },
+  "apis": [
+    {
+      "id": "API-001",
+      "number": "01",
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "request": "Không công khai; không có tiêu đề Authorization: Bearer. Application/json: {email:string, password:string, full_name:string}. Giao diện loại khoảng trắng đầu/cuối của email và full_name; giữ nguyên password. Không gửi các trường role, status, password_hash.",
+      "response": "HTTP 201, success=true, businessCode=DESIGN_RESOURCE_CREATED; API hiện trả hồ sơ gồm id, full_name, email, role, avatar_url, phone, status và dấu thời gian. Giao diện chỉ tiếp nhận khi id là số nguyên dương an toàn theo JavaScript và email không rỗng.",
+      "errors": "409 DESIGN_STATE_CONFLICT khi email trùng; 422 DESIGN_VALIDATION_ERROR với meta.fieldErrors; 500 DESIGN_INTERNAL_ERROR; lỗi mạng có thể không có phản hồi. Giao diện không tự gửi lại.",
+      "auth": "Không yêu cầu đăng nhập; không gửi Authorization.",
+      "design_status": "Chờ xác nhận",
+      "event_ids": [
+        "SH-03-EV-003",
+        "SH-03-EV-004",
+        "SH-03-EV-005",
+        "SH-03-EV-006",
+        "SH-03-EV-007"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md; docs/lists/list_api.md #01; apps/study-server/app/modules/guest/api_01_auth_register/; apps/study-client/src/app/features/shared/SH03/data-access/sh03-registration.service.ts"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SH-03-YC-001",
+      "description": "Mở được tuyến công khai /register dành cho khách, không cần phiên đăng nhập.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-002",
+      "description": "Thu thập họ tên, email và mật khẩu để tạo tài khoản học viên theo AC-01.",
+      "group": "Mục tiêu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-003",
+      "description": "Hiển thị ba trường họ tên, email, mật khẩu cùng nút tạo tài khoản và liên kết đăng nhập.",
+      "group": "Giao diện",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-004",
+      "description": "Yêu cầu họ tên không rỗng sau khi bỏ khoảng trắng đầu/cuối; độ dài sau chuẩn hóa từ 1 đến 150 ký tự.",
+      "group": "Họ tên",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-005",
+      "description": "Yêu cầu email không rỗng, đúng định dạng sau khi bỏ khoảng trắng đầu/cuối và không quá 255 ký tự.",
+      "group": "Email",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-006",
+      "description": "Yêu cầu mật khẩu không rỗng/toàn khoảng trắng; giữ nguyên giá trị người dùng nhập khi gửi.",
+      "group": "Mật khẩu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-007",
+      "description": "Không áp đặt giới hạn mật khẩu tối thiểu 8 ký tự chỉ dựa trên dòng trợ giúp trong HTML mẫu.",
+      "group": "Quy tắc chưa chốt",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-008",
+      "description": "Không tự thêm ô điều khoản, CAPTCHA, OTP, đăng nhập mạng xã hội hoặc trường ngoài hợp đồng.",
+      "group": "Phạm vi giao diện",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-009",
+      "description": "Dữ liệu không hợp lệ được báo tại trường, không gửi yêu cầu tạo tài khoản.",
+      "group": "Kiểm tra cục bộ",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-010",
+      "description": "Gửi đúng một POST API #01 tới /api/v1/auth/register với email, password, full_name.",
+      "group": "Gửi yêu cầu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-011",
+      "description": "Yêu cầu công khai không có tiêu đề Bearer; giao diện không gửi các trường role, status, password_hash hoặc trường ngoài hợp đồng.",
+      "group": "Bảo mật yêu cầu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-012",
+      "description": "Trong lúc yêu cầu chờ xử lý, chặn gửi lặp; sau khi tạo thành công không gửi tạo tài khoản lần nữa từ trạng thái thành công.",
+      "group": "Chống gửi lặp",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-013",
+      "description": "Chỉ chấp nhận HTTP 201, success=true và businessCode=DESIGN_RESOURCE_CREATED khi dữ liệu đủ điều kiện.",
+      "group": "Phản hồi thành công",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-014",
+      "description": "ID trong phản hồi phải là số nguyên dương an toàn theo JavaScript mới đủ điều kiện dùng trong bàn giao tạm.",
+      "group": "ID bàn giao",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-015",
+      "description": "Email phản hồi phải có nội dung sau khi bỏ khoảng trắng mới đủ điều kiện dùng trong bàn giao tạm.",
+      "group": "Email bàn giao",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-016",
+      "description": "Sau phản hồi hợp lệ, hiển thị trạng thái tài khoản đã tạo và xóa mật khẩu khỏi biểu mẫu.",
+      "group": "Trạng thái thành công",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-017",
+      "description": "Không khẳng định email đã được gửi hoặc địa chỉ đã được xác minh chỉ từ phản hồi API #01.",
+      "group": "Thông tin email",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-018",
+      "description": "Chỉ thao tác rõ ràng của người dùng trên nút tiếp tục mới chuyển từ SH-03 sang SH-04.",
+      "group": "Chuyển tiếp có chủ ý",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-019",
+      "description": "Chuyển sang SH-04 chỉ mã người dùng (ID) và email; không chuyển mật khẩu, role hoặc token.",
+      "group": "Dữ liệu bàn giao",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-020",
+      "description": "Mã nguồn hiện chuyển ID/email qua bộ nhớ tạm dùng một lần; không đặt dữ liệu vào URL hay lưu bền vững. Chính sách này chưa được DD phê duyệt.",
+      "group": "Phạm vi lưu trữ",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/05-business-rules.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-021",
+      "description": "SH-03 không gọi API #02; bước xử lý xác minh thuộc SH-04 và cần một thao tác riêng.",
+      "group": "API xác minh",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-022",
+      "description": "HTTP 409 DESIGN_STATE_CONFLICT hiển thị thông báo an toàn tại email, giữ biểu mẫu và không tự điều hướng.",
+      "group": "Email trùng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-023",
+      "description": "HTTP 422 DESIGN_VALIDATION_ERROR ánh xạ lỗi trường được hỗ trợ; trường không nhận diện được dùng thông báo chung.",
+      "group": "Dữ liệu bị từ chối",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-024",
+      "description": "HTTP 500 hiển thị thông báo an toàn, không lộ chi tiết nội bộ và không tự gửi lại.",
+      "group": "Lỗi máy chủ",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-025",
+      "description": "Lỗi kết nối/trạng thái 0 thể hiện kết quả chưa xác định; giữ biểu mẫu và không tự gửi lại.",
+      "group": "Mất phản hồi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-026",
+      "description": "Phản hồi thành công nhưng sai HTTP/code/cấu trúc hoặc thiếu ID/email không được bàn giao; giữ người dùng ở SH-03.",
+      "group": "Phản hồi sai định dạng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-027",
+      "description": "Liên kết đăng nhập mở /login mà không gửi API và không chuyển giá trị biểu mẫu.",
+      "group": "Điều hướng đăng nhập",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-028",
+      "description": "Giao diện không gửi các trường role/status; nguồn API #01 tự gán STUDENT ở phía máy chủ. Trạng thái lưu thực tế còn chưa xác minh.",
+      "group": "Vai trò tài khoản",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/05-business-rules.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-03-YC-029",
+      "description": "Tài liệu ca kiểm thử không tuyên bố đã chạy trình duyệt, API trực tiếp, cơ sở dữ liệu đang chạy hoặc bản triển khai.",
+      "group": "Môi trường xác minh",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/05-business-rules.md",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "SH-03-EL-001",
+      "marker": "#1",
+      "source_element_id": "SH03-EL-01",
+      "name": "Nhận diện S2W và Study2Work",
+      "type": "Nhận diện tĩnh",
+      "position": "Phía trên thẻ đăng ký.",
+      "properties": "Biểu tượng S2W và tên Study2Work; nội dung tĩnh, không có liên kết trong HTML mẫu.",
+      "event_ids": [
+        "SH-03-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.html"
+    },
+    {
+      "id": "SH-03-EL-002",
+      "marker": "#2",
+      "source_element_id": "SH03-EL-02",
+      "name": "Tiêu đề và câu giới thiệu",
+      "type": "Nội dung tĩnh",
+      "position": "Đầu thẻ đăng ký.",
+      "properties": "Tiêu đề đăng ký học viên và câu giới thiệu theo nội dung thiết kế.",
+      "event_ids": [
+        "SH-03-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.html"
+    },
+    {
+      "id": "SH-03-EL-003",
+      "marker": "#3",
+      "source_element_id": "SH03-EL-03",
+      "name": "Trường họ và tên",
+      "type": "Ô nhập văn bản",
+      "position": "Trong biểu mẫu, phía trên trường email.",
+      "properties": "HTML dùng fullname; mã nguồn kiểm tra sau loại khoảng trắng đầu/cuối 1–150 ký tự và gửi thành full_name.",
+      "event_ids": [
+        "SH-03-EV-002",
+        "SH-03-EV-003",
+        "SH-03-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.html"
+    },
+    {
+      "id": "SH-03-EL-004",
+      "marker": "#4",
+      "source_element_id": "SH03-EL-04",
+      "name": "Trường email",
+      "type": "Ô nhập email",
+      "position": "Trong biểu mẫu, giữa họ tên và mật khẩu.",
+      "properties": "Mã nguồn loại khoảng trắng đầu/cuối rồi kiểm tra định dạng; API giới hạn tối đa 255 ký tự.",
+      "event_ids": [
+        "SH-03-EV-002",
+        "SH-03-EV-003",
+        "SH-03-EV-005",
+        "SH-03-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.html"
+    },
+    {
+      "id": "SH-03-EL-005",
+      "marker": "#5",
+      "source_element_id": "SH03-EL-05",
+      "name": "Trường mật khẩu",
+      "type": "Ô nhập mật khẩu",
+      "position": "Trong biểu mẫu, dưới trường email.",
+      "properties": "Giữ nguyên giá trị khi gửi; che ký tự. Không có nút hiện/ẩn. Giới hạn tối thiểu 8 ký tự trong HTML mẫu chưa được thực thi.",
+      "event_ids": [
+        "SH-03-EV-002",
+        "SH-03-EV-003",
+        "SH-03-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.html"
+    },
+    {
+      "id": "SH-03-EL-006",
+      "marker": "#6",
+      "source_element_id": "SH03-EL-06",
+      "name": "Nút tạo tài khoản",
+      "type": "Nút gửi biểu mẫu",
+      "position": "Cuối biểu mẫu.",
+      "properties": "Gửi biểu mẫu; nguồn Angular chặn gửi lặp khi đang chờ và sau khi thành công.",
+      "event_ids": [
+        "SH-03-EV-003",
+        "SH-03-EV-004",
+        "SH-03-EV-005",
+        "SH-03-EV-006",
+        "SH-03-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.html"
+    },
+    {
+      "id": "SH-03-EL-007",
+      "marker": "#7",
+      "source_element_id": "SH03-EL-07",
+      "name": "Liên kết đăng nhập",
+      "type": "Liên kết điều hướng",
+      "position": "Cuối thẻ đăng ký.",
+      "properties": "Mở /login; không mang theo dữ liệu biểu mẫu.",
+      "event_ids": [
+        "SH-03-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.html"
+    },
+    {
+      "id": "SH-03-SRC-01",
+      "marker": "Nguồn 01",
+      "source_element_id": "SH03-SRC-01",
+      "name": "Biểu mẫu đăng ký",
+      "type": "Nhóm biểu mẫu",
+      "position": "Bao quanh ba trường và nút gửi.",
+      "properties": "Biểu mẫu phản ứng hiện tại chứa fullName, email, password; không có điều khiển điều khoản trong HTML đang chạy.",
+      "event_ids": [
+        "SH-03-EV-002",
+        "SH-03-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-02",
+      "marker": "Nguồn 02",
+      "source_element_id": "SH03-SRC-02",
+      "name": "Lỗi họ và tên",
+      "type": "Thông báo lỗi trường",
+      "position": "Cạnh/dưới trường họ và tên khi không hợp lệ.",
+      "properties": "Nguồn hiển thị thông báo do bộ kiểm tra cục bộ hoặc phản hồi 422 ánh xạ.",
+      "event_ids": [
+        "SH-03-EV-003",
+        "SH-03-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-03",
+      "marker": "Nguồn 03",
+      "source_element_id": "SH03-SRC-03",
+      "name": "Lỗi email",
+      "type": "Thông báo lỗi trường",
+      "position": "Cạnh/dưới trường email khi không hợp lệ hoặc trùng.",
+      "properties": "Lỗi định dạng/422 và email trùng 409 được trình bày an toàn; nhánh 409 đưa tiêu điểm tới trường email.",
+      "event_ids": [
+        "SH-03-EV-005",
+        "SH-03-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-04",
+      "marker": "Nguồn 04",
+      "source_element_id": "SH03-SRC-04",
+      "name": "Lỗi mật khẩu",
+      "type": "Thông báo lỗi trường",
+      "position": "Cạnh/dưới trường mật khẩu khi không hợp lệ.",
+      "properties": "Không tự thêm điều kiện tối thiểu 8 ký tự chưa có trong API.",
+      "event_ids": [
+        "SH-03-EV-003",
+        "SH-03-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-05",
+      "marker": "Nguồn 05",
+      "source_element_id": "SH03-SRC-05",
+      "name": "Thông báo kết quả chung",
+      "type": "Vùng thông báo",
+      "position": "Trong biểu mẫu khi có lỗi không gắn được với trường hoặc lỗi máy chủ/mạng.",
+      "properties": "Hiển thị thông báo chung; không phơi bày nội dung ngoại lệ từ máy chủ.",
+      "event_ids": [
+        "SH-03-EV-006",
+        "SH-03-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-06",
+      "marker": "Nguồn 06",
+      "source_element_id": "SH03-SRC-06",
+      "name": "Trạng thái tạo tài khoản",
+      "type": "Vùng trạng thái thành công",
+      "position": "Thay nội dung biểu mẫu sau phản hồi hợp lệ.",
+      "properties": "Nguồn chỉ báo tài khoản đã tạo; không tuyên bố email đã gửi/xác minh.",
+      "event_ids": [
+        "SH-03-EV-004"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-07",
+      "marker": "Nguồn 07",
+      "source_element_id": "SH03-SRC-07",
+      "name": "Nút tiếp tục sang SH-04",
+      "type": "Nút hành động tiếp",
+      "position": "Hiện sau trạng thái tạo tài khoản.",
+      "properties": "Thao tác người dùng ghi ID/email hợp lệ vào bàn giao tạm một lần rồi điều hướng SH-04. Hành vi được nối trong nguồn nhưng chính sách bàn giao tạm còn mở.",
+      "event_ids": [
+        "SH-03-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-08",
+      "marker": "Nguồn 08",
+      "source_element_id": "SH03-SRC-08",
+      "name": "Trạng thái đang gửi",
+      "type": "Trạng thái biểu mẫu",
+      "position": "Trong khi POST API #01 đang chờ.",
+      "properties": "Nút gửi bị khóa/chuyển nhãn; các trường hiện vẫn bật trong nguồn dù DD nói biểu mẫu ổn định. Đây là sai khác cần đối chiếu.",
+      "event_ids": [
+        "SH-03-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    },
+    {
+      "id": "SH-03-SRC-09",
+      "marker": "Nguồn 09",
+      "source_element_id": "SH03-SRC-09",
+      "name": "Thông báo lỗi kết quả chưa rõ",
+      "type": "Vùng cảnh báo",
+      "position": "Sau lỗi mạng hoặc phản hồi thành công sai cấu trúc.",
+      "properties": "Giữ người dùng ở SH-03 và không tự gửi lại; không bàn giao ID/email nếu chưa hợp lệ.",
+      "event_ids": [
+        "SH-03-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md; apps/study-client/src/app/features/shared/SH03/pages/sh03-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "SH-03-EV-001",
+      "source_event_id": "SH03-EV-01",
+      "name": "Mở trang đăng ký",
+      "trigger": "Khách mở /register.",
+      "processing": "Tuyến công khai được đăng ký; không cần phiên và không gọi API chỉ để dựng biểu mẫu.",
+      "element_ids": [
+        "SH-03-EL-001",
+        "SH-03-EL-002",
+        "SH-03-SRC-01"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md"
+    },
+    {
+      "id": "SH-03-EV-002",
+      "source_event_id": "SH03-EV-02",
+      "name": "Nhập ba trường",
+      "trigger": "Người dùng thay đổi họ tên, email hoặc mật khẩu.",
+      "processing": "Lưu trong biểu mẫu; loại khoảng trắng đầu/cuối họ tên/email khi kiểm tra/gửi, giữ nguyên mật khẩu. Email sai định dạng bị chặn trước POST.",
+      "element_ids": [
+        "SH-03-EL-003",
+        "SH-03-EL-004",
+        "SH-03-EL-005",
+        "SH-03-SRC-01"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md"
+    },
+    {
+      "id": "SH-03-EV-003",
+      "source_event_id": "SH03-EV-03",
+      "name": "Gửi yêu cầu tạo tài khoản",
+      "trigger": "Người dùng gửi biểu mẫu hợp lệ.",
+      "processing": "Chặn nếu đang chờ/đã thành công; gửi POST #01 đúng thân JSON và không Bearer. Nguồn khóa nút gửi nhưng vẫn để các trường bật, khác mô tả biểu mẫu ổn định trong DD.",
+      "element_ids": [
+        "SH-03-EL-003",
+        "SH-03-EL-004",
+        "SH-03-EL-005",
+        "SH-03-EL-006",
+        "SH-03-SRC-08"
+      ],
+      "api_ids": [
+        "API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md"
+    },
+    {
+      "id": "SH-03-EV-004",
+      "source_event_id": "SH03-EV-04",
+      "name": "Tạo tài khoản thành công",
+      "trigger": "API #01 trả HTTP 201, thành công, DESIGN_RESOURCE_CREATED và data.id/email hợp lệ.",
+      "processing": "Hiện trạng thái tạo tài khoản, xóa mật khẩu; chỉ sau khi người dùng bấm tiếp tục mới đặt ID/email vào bộ nhớ tạm một lần và chuyển SH-04. Không gọi #02 và không khẳng định email đã gửi.",
+      "element_ids": [
+        "SH-03-EL-006",
+        "SH-03-SRC-06",
+        "SH-03-SRC-07"
+      ],
+      "api_ids": [
+        "API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md"
+    },
+    {
+      "id": "SH-03-EV-005",
+      "source_event_id": "SH03-EV-05",
+      "name": "Email đã tồn tại",
+      "trigger": "API #01 trả HTTP 409 DESIGN_STATE_CONFLICT.",
+      "processing": "Hiện thông báo an toàn ở email, giữ biểu mẫu, đưa tiêu điểm tới trường email; không tự chuyển trang.",
+      "element_ids": [
+        "SH-03-EL-004",
+        "SH-03-EL-006"
+      ],
+      "api_ids": [
+        "API-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md"
+    },
+    {
+      "id": "SH-03-EV-006",
+      "source_event_id": "SH03-EV-06",
+      "name": "Dữ liệu bị từ chối",
+      "trigger": "API #01 trả HTTP 422 DESIGN_VALIDATION_ERROR.",
+      "processing": "Ánh xạ full_name/fullname, email, password; hiển thị lỗi an toàn; trường không nhận diện được dùng lỗi chung. Không thực thi quy tắc mật khẩu 8 ký tự chưa được xác nhận.",
+      "element_ids": [
+        "SH-03-EL-003",
+        "SH-03-EL-004",
+        "SH-03-EL-005",
+        "SH-03-SRC-02",
+        "SH-03-SRC-03",
+        "SH-03-SRC-04"
+      ],
+      "api_ids": [
+        "API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md"
+    },
+    {
+      "id": "SH-03-EV-007",
+      "source_event_id": "SH03-EV-07",
+      "name": "Lỗi máy chủ, kết nối hoặc phản hồi không dùng được",
+      "trigger": "API trả 500, mất kết nối/trạng thái 0 hoặc phản hồi thành công thiếu/sai dữ liệu bàn giao.",
+      "processing": "Hiện thông báo an toàn; trạng thái 0 nêu kết quả chưa xác định; giữ biểu mẫu, không tự gửi lại và không chuyển SH-04 khi dữ liệu không hợp lệ.",
+      "element_ids": [
+        "SH-03-EL-006",
+        "SH-03-SRC-04",
+        "SH-03-SRC-09"
+      ],
+      "api_ids": [
+        "API-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/04-api-integration.md"
+    },
+    {
+      "id": "SH-03-EV-008",
+      "source_event_id": "SH03-EV-08",
+      "name": "Mở SH-02",
+      "trigger": "Người dùng kích hoạt liên kết đăng nhập.",
+      "processing": "Điều hướng nội bộ tới /login, không gọi API và không chuyển dữ liệu biểu mẫu.",
+      "element_ids": [
+        "SH-03-EL-007"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B-01",
+      "description": "AC-01 và điều khoản: AC-01 ghi xác nhận điều khoản “nếu có contract”, nhưng không tìm thấy hợp đồng/điều khiển xác nhận trong màn hiện tại.",
+      "impact": "Không thể kết luận có cần ô điều khoản; không tự thêm hoặc bỏ yêu cầu sản phẩm.",
+      "decision": "Giữ câu hỏi mở; ghi nhận giao diện hiện chỉ có ba trường.",
+      "source_ref": "00-overview.md §2; 01-ui-elements.md; SH-03_PLAN.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-02",
+      "description": "Mật khẩu tối thiểu 8 ký tự: HTML mẫu có dòng tối thiểu 8 ký tự nhưng API #01 và kiểm tra giao diện hiện không áp dụng mức tối thiểu này.",
+      "impact": "Ca kiểm thử theo dòng trợ giúp sẽ không khớp hành vi máy chủ hiện tại.",
+      "decision": "Không coi 8 ký tự là quy tắc được duyệt; chờ quyết định và cập nhật đồng bộ nếu cần.",
+      "source_ref": "01-ui-elements.md; 04-api-integration.md; 05-business-rules.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-03",
+      "description": "Trạng thái tài khoản mới: API #01 không gán trạng thái khi chèn; DB.sql ghi mặc định ACTIVE nhưng chưa phải bằng chứng lược đồ đang chạy.",
+      "impact": "Không xác định được tài khoản mới có thể đăng nhập trước khi xác minh email hay không.",
+      "decision": "Không kết luận trạng thái thực tế từ DDL tham khảo; cần xác nhận schema và chính sách vòng đời.",
+      "source_ref": "04-api-integration.md; 05-business-rules.md; infra/postgres/study-server/DB.sql",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-04",
+      "description": "API #01 và #02: Luồng thiết kế có nhắc bước yêu cầu gửi thư, nhưng handler #01 chỉ ghi verification_dispatch_pending sau commit và không gọi #02.",
+      "impact": "Kỳ vọng sau đăng ký và hành vi đang chạy khác nhau; không được xem tài khoản là đã xác minh.",
+      "decision": "Ghi ca phân biệt; #02 chỉ được gọi từ SH-04 theo mã nguồn hiện tại.",
+      "source_ref": "00-overview.md; 02-events.md; 04-api-integration.md; API #01 view.py",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-05",
+      "description": "Bộ gửi thư SH-04: Bộ gửi thư mặc định của #02 là bộ giả lập; phản hồi accepted không chứng minh thư đã được gửi hay người dùng đã xác minh email.",
+      "impact": "Không thể nghiệm thu việc giao thư/xác minh bằng phản hồi API hiện có.",
+      "decision": "Không diễn giải trạng thái tiếp nhận thành gửi thành công hoặc xác minh.",
+      "source_ref": "SH-04/00-overview.md; SH-04/04-api-integration.md; 05-business-rules.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-06",
+      "description": "Cơ chế bàn giao tạm: DD nêu cách chuyển ID/email và tải lại trực tiếp SH-04 là câu hỏi mở; mã hiện tại dùng bàn giao tạm trong bộ nhớ một lần, không lưu URL/bền vững.",
+      "impact": "Hành vi truy cập trực tiếp/tải lại và chính sách hết hạn chưa có quyết định sản phẩm; mã nguồn đã nối không đồng nghĩa đã duyệt.",
+      "decision": "Kiểm tra đúng hành vi mã nguồn hiện tại, đồng thời giữ blocker chính sách; không tự khẳng định đây là lựa chọn đã phê duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/05-business-rules.md; apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/06-navigation.md; apps/study-client/src/app/features/shared/SH04/data-access/sh04-registration-handoff.service.ts",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-07",
+      "description": "Contract và hồ sơ API #01: Tài liệu API #01 còn Draft/Needs Confirmation và mở câu hỏi về chính sách mật khẩu, trạng thái và bio; catalog có bio? Nhưng phản hồi nguồn INSERT không trả bio.",
+      "impact": "Chưa có hợp đồng phát hành hoàn chỉnh; không suy diễn trường không cần cho màn.",
+      "decision": "Dùng nguồn hiện tại để mô tả ca; giữ nguyên trạng thái tài liệu/chênh lệch, không tự sửa contract.",
+      "source_ref": "apps/study-server/docs/dd/01_auth_register/00_Cover.md; apps/study-server/docs/dd/01_auth_register/OPEN_QUESTIONS.md; docs/lists/list_api.md #01",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-08",
+      "description": "Môi trường và người chịu trách nhiệm: Owner/reviewer/approver chưa được xác định; chưa xác minh API trực tiếp, DB đang chạy hoặc triển khai trong lượt này.",
+      "impact": "Không thể ghi nhận chạy nghiệm thu hoặc phê duyệt phát hành.",
+      "decision": "Để trống danh tính; phân biệt ca được lập với ca đã chạy và môi trường chưa xác minh.",
+      "source_ref": "00-overview.md; 07-test-cases.md; API #01 DD",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "SH-03-TC-MH-001",
+        "requirement_ids": [
+          "SH-03-YC-001",
+          "SH-03-YC-002",
+          "SH-03-YC-003"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến /register khi chưa có phiên",
+        "precondition": "Chưa đăng nhập.",
+        "data": "Mở trực tiếp /register.",
+        "steps": [
+          "Mở /register.",
+          "Ghi nhận tuyến, tác nhân và trạng thái ban đầu."
+        ],
+        "expected": "SH03Page hiển thị cho khách; không yêu cầu phiên và không gọi API chỉ để dựng trang.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-002",
+        "requirement_ids": [
+          "SH-03-YC-002",
+          "SH-03-YC-003",
+          "SH-03-YC-008"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu đúng phạm vi biểu mẫu",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Ảnh sạch, mốc đánh số và giao diện hiện tại.",
+        "steps": [
+          "Đối chiếu ba trường, nút và liên kết với ảnh/DD.",
+          "Tìm điều khiển điều khoản, CAPTCHA, OTP và đăng nhập mạng xã hội."
+        ],
+        "expected": "Có ba trường họ tên/email/mật khẩu, nút tạo tài khoản, liên kết đăng nhập; không tự bổ sung điều khiển chưa có contract.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-003",
+        "requirement_ids": [
+          "SH-03-YC-003",
+          "SH-03-YC-004",
+          "SH-03-YC-005",
+          "SH-03-YC-006"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị trạng thái ban đầu",
+        "precondition": "Mở trang mới.",
+        "data": "Biểu mẫu chưa nhập.",
+        "steps": [
+          "Quan sát ba trường và nút gửi."
+        ],
+        "expected": "Các trường rỗng; nút tạo tài khoản khả dụng theo thiết kế hiện có.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-004",
+        "requirement_ids": [
+          "SH-03-YC-004",
+          "SH-03-YC-005",
+          "SH-03-YC-006",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Chặn khi cả ba trường để trống",
+        "precondition": "Biểu mẫu ban đầu.",
+        "data": "Tên, email, mật khẩu rỗng.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Quan sát thông báo và số yêu cầu mạng."
+        ],
+        "expected": "Báo lỗi cục bộ, đánh dấu trường cần sửa, không gọi API #01.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-005",
+        "requirement_ids": [
+          "SH-03-YC-004",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Chặn họ tên chỉ có khoảng trắng",
+        "precondition": "Biểu mẫu đã mở.",
+        "data": "fullName gồm dấu cách.",
+        "steps": [
+          "Nhập dấu cách vào họ tên và dữ liệu hợp lệ khác.",
+          "Gửi biểu mẫu."
+        ],
+        "expected": "Họ tên không hợp lệ sau loại khoảng trắng đầu/cuối; không gọi API #01.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-006",
+        "requirement_ids": [
+          "SH-03-YC-004",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Chấp nhận độ dài họ tên biên hợp lệ",
+        "precondition": "Biểu mẫu đã mở.",
+        "data": "Họ tên sau loại khoảng trắng đầu/cuối dài 1 rồi 150 ký tự.",
+        "steps": [
+          "Thử riêng giá trị 1 ký tự và 150 ký tự.",
+          "Gửi với email/mật khẩu hợp lệ trong môi trường giả lập."
+        ],
+        "expected": "Bộ kiểm tra cục bộ chấp nhận hai giá trị biên theo mã nguồn; không dùng dữ liệu cá nhân thật.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-007",
+        "requirement_ids": [
+          "SH-03-YC-004",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Chặn họ tên vượt giới hạn",
+        "precondition": "Biểu mẫu đã mở.",
+        "data": "Họ tên sau loại khoảng trắng đầu/cuối dài 151 ký tự.",
+        "steps": [
+          "Nhập tên 151 ký tự.",
+          "Gửi biểu mẫu."
+        ],
+        "expected": "Báo lỗi cục bộ; không gửi POST.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-008",
+        "requirement_ids": [
+          "SH-03-YC-005",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Chặn email sai định dạng trước khi gửi",
+        "precondition": "Biểu mẫu đã mở.",
+        "data": "email=khong-phai-email.",
+        "steps": [
+          "Nhập tên và mật khẩu hợp lệ cùng email sai.",
+          "Gửi biểu mẫu."
+        ],
+        "expected": "Email được báo lỗi sau chuẩn hóa; không gọi API #01.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-009",
+        "requirement_ids": [
+          "SH-03-YC-005",
+          "SH-03-YC-009",
+          "SH-03-YC-010"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Loại khoảng trắng đầu/cuối email và họ tên trong thân yêu cầu",
+        "precondition": "Biểu mẫu đã mở; bộ giả lập HTTP sẵn sàng.",
+        "data": "Giá trị tên/email có khoảng trắng ở hai đầu.",
+        "steps": [
+          "Nhập tên/email có khoảng trắng và mật khẩu có ký tự đầu/cuối.",
+          "Gửi và xem yêu cầu giả lập."
+        ],
+        "expected": "Thân chỉ có email, password, full_name; email/tên đã loại khoảng trắng đầu/cuối, mật khẩu giữ nguyên.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-010",
+        "requirement_ids": [
+          "SH-03-YC-005",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra độ dài email tối đa",
+        "precondition": "Biểu mẫu đã mở.",
+        "data": "Email hợp lệ sát giới hạn 255 và vượt 255 ký tự.",
+        "steps": [
+          "Thử riêng email biên và email vượt giới hạn.",
+          "Ghi nhận kiểm tra giao diện và phản hồi giả lập."
+        ],
+        "expected": "Phân biệt kiểm tra định dạng phía giao diện với giới hạn API 255; không kết luận về máy chủ trực tiếp.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-011",
+        "requirement_ids": [
+          "SH-03-YC-006",
+          "SH-03-YC-012"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Khóa gửi lặp khi yêu cầu đang chờ",
+        "precondition": "Biểu mẫu hợp lệ; phản hồi HTTP bị giữ.",
+        "data": "Một lần gửi rồi nhấp nhanh nhiều lần.",
+        "steps": [
+          "Gửi một lần.",
+          "Trong lúc chờ nhấp nút gửi nhiều lần và thử Enter."
+        ],
+        "expected": "Chỉ một POST được phát; nút gửi bị khóa. Trường còn bật trong nguồn hiện tại, đây là sai khác DD cần ghi nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-012",
+        "requirement_ids": [
+          "SH-03-YC-006",
+          "SH-03-YC-012",
+          "SH-03-YC-015",
+          "SH-03-YC-016",
+          "SH-03-YC-017"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị tạo tài khoản sau phản hồi hợp lệ",
+        "precondition": "Bộ giả lập trả 201 đúng envelope và dữ liệu bàn giao.",
+        "data": "id nguyên dương an toàn; email không rỗng.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Kiểm tra trạng thái kết quả và trường mật khẩu."
+        ],
+        "expected": "Hiển thị tài khoản đã tạo, xóa mật khẩu; không nói email đã gửi/xác minh; chưa điều hướng nếu chưa bấm tiếp tục.",
+        "api_ids": [
+          "API-001",
+          "API-001",
+          "API-001",
+          "API-001",
+          "API-001",
+          "API-001",
+          "API-001",
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-013",
+        "requirement_ids": [
+          "SH-03-YC-013",
+          "SH-03-YC-014",
+          "SH-03-YC-015",
+          "SH-03-YC-018",
+          "SH-03-YC-019",
+          "SH-03-YC-020"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Không chuyển tiếp trước thao tác người dùng",
+        "precondition": "Đã nhận phản hồi thành công hợp lệ.",
+        "data": "Không bấm nút tiếp tục.",
+        "steps": [
+          "Quan sát URL và trạng thái sau phản hồi."
+        ],
+        "expected": "Vẫn ở trạng thái kết quả SH-03; không gọi API #02 và không điều hướng tự động.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-014",
+        "requirement_ids": [
+          "SH-03-YC-018",
+          "SH-03-YC-019",
+          "SH-03-YC-020",
+          "SH-03-YC-021"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Bàn giao an toàn khi tiếp tục SH-04",
+        "precondition": "Trạng thái tạo tài khoản hợp lệ đang hiển thị.",
+        "data": "ID và email giả lập; mật khẩu đã xóa.",
+        "steps": [
+          "Bấm nút tiếp tục.",
+          "Kiểm tra tuyến và bàn giao tạm tạm."
+        ],
+        "expected": "Chỉ ID/email được chuyển qua bàn giao tạm dùng một lần trong bộ nhớ; không đặt vào URL/lưu trữ bền vững; chuyển SH-04. Chính sách cơ chế chuyển dữ liệu còn chờ duyệt.",
+        "api_ids": [
+          "API-001",
+          "API-001",
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-015",
+        "requirement_ids": [
+          "SH-03-YC-021",
+          "SH-03-YC-022",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Không gọi #02 từ SH-03",
+        "precondition": "Biểu mẫu đăng ký sẵn sàng.",
+        "data": "Theo dõi mọi yêu cầu khi mở, submit, success và continue.",
+        "steps": [
+          "Thực hiện luồng đăng ký giả lập.",
+          "Kiểm tra danh sách yêu cầu."
+        ],
+        "expected": "SH-03 chỉ gọi #01; #02 không được gọi ở màn này; không suy ra thư đã gửi.",
+        "api_ids": [
+          "API-001",
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-016",
+        "requirement_ids": [
+          "SH-03-YC-022",
+          "SH-03-YC-023"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Giữ biểu mẫu khi email trùng",
+        "precondition": "Bộ giả lập trả 409 DESIGN_STATE_CONFLICT.",
+        "data": "Thông tin giả lập đã nhập.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Quan sát thông báo, các trường và URL."
+        ],
+        "expected": "Thông báo an toàn gắn email; giữ dữ liệu, không tự điều hướng.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-017",
+        "requirement_ids": [
+          "SH-03-YC-023",
+          "SH-03-YC-025"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Ánh xạ lỗi 422 theo trường",
+        "precondition": "Bộ giả lập trả 422 với meta.fieldErrors.",
+        "data": "Lỗi full_name, email, password trong lần thử riêng.",
+        "steps": [
+          "Gửi từng phản hồi giả lập.",
+          "Kiểm tra lỗi ở đúng điều khiển."
+        ],
+        "expected": "Lỗi được ánh xạ an toàn; không hiển thị thô nội dung tùy ý từ máy chủ; không áp điều kiện mật khẩu 8 ký tự.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-018",
+        "requirement_ids": [
+          "SH-03-YC-023",
+          "SH-03-YC-025"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Dùng lỗi chung khi trường 422 không được nhận diện",
+        "precondition": "Bộ giả lập trả 422 với trường không được ánh xạ.",
+        "data": "meta.fieldErrors có khóa lạ.",
+        "steps": [
+          "Phát phản hồi giả lập.",
+          "Quan sát vùng thông báo."
+        ],
+        "expected": "Có thông báo chung; không mất kiểm soát biểu mẫu và không gửi yêu cầu phụ.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-019",
+        "requirement_ids": [
+          "SH-03-YC-024",
+          "SH-03-YC-029"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý lỗi 500 an toàn",
+        "precondition": "Bộ giả lập trả 500 DESIGN_INTERNAL_ERROR.",
+        "data": "Lỗi giả lập không chứa dữ liệu thật.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Quan sát thông báo và số lần POST."
+        ],
+        "expected": "Thông báo chung; không lộ lỗi DB/stack trace và không tự gửi lại.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-020",
+        "requirement_ids": [
+          "SH-03-YC-025",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Xử lý mất kết nối với kết quả chưa rõ",
+        "precondition": "Bộ giả lập làm yêu cầu thất bại dạng trạng thái 0.",
+        "data": "Ngắt kết nối giả lập sau khi gửi.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Quan sát cảnh báo và yêu cầu phát sinh."
+        ],
+        "expected": "Báo kết quả chưa xác định, giữ dữ liệu, không tự gửi lại hoặc chuyển SH-04.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-021",
+        "requirement_ids": [
+          "SH-03-YC-013",
+          "SH-03-YC-014",
+          "SH-03-YC-015",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phản hồi thành công sai cấu trúc",
+        "precondition": "Bộ giả lập trả HTTP 201 nhưng sai businessCode hoặc thiếu id/email.",
+        "data": "Thử từng biến thể thiếu data.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Quan sát trạng thái và bàn giao tạm."
+        ],
+        "expected": "Không coi là thành công đủ điều kiện; giữ người dùng ở SH-03, không bàn giao tạm, thông báo kết quả chưa rõ.",
+        "api_ids": [
+          "API-001",
+          "API-001",
+          "API-001",
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-022",
+        "requirement_ids": [
+          "SH-03-YC-026",
+          "SH-03-YC-027"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phản hồi có thân dữ liệu giống thành công trên HTTP 200",
+        "precondition": "Bộ giả lập trả HTTP 200 với cấu trúc phản hồi giống thành công.",
+        "data": "HTTP 200; thân yêu cầu giống thành công nhưng không đúng trạng thái mong đợi.",
+        "steps": [
+          "Gửi biểu mẫu.",
+          "Quan sát trạng thái."
+        ],
+        "expected": "Nguồn chỉ chấp nhận HTTP 201; không bàn giao tạm với HTTP 200.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-MH-023",
+        "requirement_ids": [
+          "SH-03-YC-026",
+          "SH-03-YC-027"
+        ],
+        "target_id": "SH-03",
+        "group": "Toàn màn hình",
+        "title": "Mở đăng nhập mà không chuyển dữ liệu",
+        "precondition": "Trang đăng ký đang hiển thị.",
+        "data": "Một số giá trị giả lập trong biểu mẫu.",
+        "steps": [
+          "Bấm liên kết đăng nhập.",
+          "Kiểm tra URL, trạng thái tuyến và yêu cầu."
+        ],
+        "expected": "Đi tới /login; không có API đăng ký/xác minh và không mang giá trị trường vào URL hoặc bàn giao tạm.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "SH-03-TC-TP-001",
+        "requirement_ids": [
+          "SH-03-YC-003"
+        ],
+        "target_id": "SH-03-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu nhận diện Study2Work",
+        "precondition": "Trang đã hiển thị.",
+        "data": "mốc đánh số #1 và ảnh sạch.",
+        "steps": [
+          "Rà soát vùng marker #1."
+        ],
+        "expected": "Có biểu tượng/nhận diện theo ảnh; không coi đây là liên kết tương tác.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-002",
+        "requirement_ids": [
+          "SH-03-YC-003"
+        ],
+        "target_id": "SH-03-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu tiêu đề và câu giới thiệu",
+        "precondition": "Trang đã hiển thị.",
+        "data": "mốc đánh số #2 và nội dung tĩnh.",
+        "steps": [
+          "Rà soát vùng marker #2."
+        ],
+        "expected": "Tiêu đề/mô tả xuất hiện đúng vai trò; không phụ thuộc dữ liệu API.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-003",
+        "requirement_ids": [
+          "SH-03-YC-003",
+          "SH-03-YC-004",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra điều khiển họ và tên",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Giá trị có khoảng trắng, rỗng, 150 và 151 ký tự.",
+        "steps": [
+          "Nhập các bộ dữ liệu biên.",
+          "Gửi hoặc blur theo trường hợp."
+        ],
+        "expected": "Điều khiển nhận văn bản; kiểm tra sau loại khoảng trắng đầu/cuối theo 1–150 ký tự; trường giao diện fullname ánh xạ full_name.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-004",
+        "requirement_ids": [
+          "SH-03-YC-003",
+          "SH-03-YC-005",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra điều khiển email",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Email sai, hợp lệ, có khoảng trắng, sát và vượt 255.",
+        "steps": [
+          "Nhập lần lượt các mẫu giả lập.",
+          "Quan sát lỗi và yêu cầu."
+        ],
+        "expected": "Email loại khoảng trắng đầu/cuối/kiểm tra sớm ở giao diện; API có giới hạn 255; 409 được hiển thị gắn với email.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-005",
+        "requirement_ids": [
+          "SH-03-YC-003",
+          "SH-03-YC-006",
+          "SH-03-YC-007"
+        ],
+        "target_id": "SH-03-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra trường mật khẩu và sai khác độ dài",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Mật khẩu rỗng, toàn khoảng trắng, ngắn hơn 8, đủ 8 ký tự.",
+        "steps": [
+          "Nhập giá trị mẫu không nhạy cảm.",
+          "Quan sát cách che và thông báo."
+        ],
+        "expected": "Ký tự bị che; mã nguồn chỉ yêu cầu không rỗng/toàn khoảng trắng, giữ nguyên giá trị; không kết luận mức tối thiểu 8 đã được duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-006",
+        "requirement_ids": [
+          "SH-03-YC-003",
+          "SH-03-YC-006",
+          "SH-03-YC-012"
+        ],
+        "target_id": "SH-03-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra nút tạo tài khoản",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Trạng thái ban đầu, đang gửi, thành công.",
+        "steps": [
+          "Quan sát nhãn/khả dụng ở từng trạng thái."
+        ],
+        "expected": "Nút gửi biểu mẫu; bị chặn khi yêu cầu đang chờ và không tạo lại từ trạng thái thành công.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-007",
+        "requirement_ids": [
+          "SH-03-YC-003",
+          "SH-03-YC-026",
+          "SH-03-YC-027"
+        ],
+        "target_id": "SH-03-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra liên kết đăng nhập",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Liên kết /login.",
+        "steps": [
+          "Kích hoạt liên kết."
+        ],
+        "expected": "Đích là /login; không gửi API và không chuyển dữ liệu biểu mẫu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-008",
+        "requirement_ids": [
+          "SH-03-YC-003",
+          "SH-03-YC-008",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-SRC-01",
+        "group": "Thành phần",
+        "title": "Kiểm tra biểu mẫu hiện hành",
+        "precondition": "Trang đã hiển thị.",
+        "data": "DOM của SH03Page.",
+        "steps": [
+          "Đối chiếu các điều khiển trong biểu mẫu hiện hành."
+        ],
+        "expected": "Có fullName, email, password; không có điều khiển điều khoản/CAPTCHA/OTP trong mã nguồn.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-009",
+        "requirement_ids": [
+          "SH-03-YC-009",
+          "SH-03-YC-023"
+        ],
+        "target_id": "SH-03-SRC-02",
+        "group": "Thành phần",
+        "title": "Kiểm tra lỗi họ và tên",
+        "precondition": "Biểu mẫu hiển thị lỗi cục bộ hoặc 422.",
+        "data": "Lỗi giả lập họ tên.",
+        "steps": [
+          "Kích hoạt lỗi.",
+          "Kiểm tra văn bản và liên kết trợ năng với trường."
+        ],
+        "expected": "Lỗi được gắn với họ tên; không dùng HTML tùy ý từ máy chủ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-010",
+        "requirement_ids": [
+          "SH-03-YC-005",
+          "SH-03-YC-022",
+          "SH-03-YC-023"
+        ],
+        "target_id": "SH-03-SRC-03",
+        "group": "Thành phần",
+        "title": "Kiểm tra lỗi email và 409",
+        "precondition": "Biểu mẫu nhận 409 hoặc email sai.",
+        "data": "Lỗi email giả lập.",
+        "steps": [
+          "Kích hoạt lỗi email và 409.",
+          "Kiểm tra thông báo/tiêu điểm."
+        ],
+        "expected": "Thông báo dễ hiểu cạnh email; 409 giữ biểu mẫu và đưa tiêu điểm tới trường email.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-011",
+        "requirement_ids": [
+          "SH-03-YC-006",
+          "SH-03-YC-007",
+          "SH-03-YC-023"
+        ],
+        "target_id": "SH-03-SRC-04",
+        "group": "Thành phần",
+        "title": "Kiểm tra lỗi mật khẩu",
+        "precondition": "Biểu mẫu hiển thị lỗi trường password.",
+        "data": "Lỗi rỗng/toàn trắng hoặc 422 giả lập.",
+        "steps": [
+          "Kích hoạt lỗi.",
+          "Kiểm tra nội dung."
+        ],
+        "expected": "Hiển thị lỗi mật khẩu an toàn; không tự áp quy tắc 8 ký tự chưa được xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-012",
+        "requirement_ids": [
+          "SH-03-YC-023",
+          "SH-03-YC-024",
+          "SH-03-YC-025",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-SRC-05",
+        "group": "Thành phần",
+        "title": "Kiểm tra vùng thông báo chung",
+        "precondition": "Có lỗi không ánh xạ hoặc lỗi máy chủ/mạng.",
+        "data": "422 trường lạ, 500 hoặc trạng thái 0 giả lập.",
+        "steps": [
+          "Phát từng loại lỗi.",
+          "Đọc nội dung cảnh báo."
+        ],
+        "expected": "Có thông báo tiếng Việt phù hợp; không lộ thông tin nội bộ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-013",
+        "requirement_ids": [
+          "SH-03-YC-016",
+          "SH-03-YC-017"
+        ],
+        "target_id": "SH-03-SRC-06",
+        "group": "Thành phần",
+        "title": "Kiểm tra trạng thái tài khoản đã tạo",
+        "precondition": "Phản hồi thành công hợp lệ.",
+        "data": "201 đúng định dạng.",
+        "steps": [
+          "Gửi biểu mẫu giả lập.",
+          "Quan sát màn hình kết quả."
+        ],
+        "expected": "Báo tài khoản đã tạo; không khẳng định email đã gửi/đã xác minh; mật khẩu được xóa.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-014",
+        "requirement_ids": [
+          "SH-03-YC-018",
+          "SH-03-YC-019",
+          "SH-03-YC-020",
+          "SH-03-YC-021"
+        ],
+        "target_id": "SH-03-SRC-07",
+        "group": "Thành phần",
+        "title": "Kiểm tra nút tiếp tục sang SH-04",
+        "precondition": "Trạng thái tạo tài khoản hợp lệ.",
+        "data": "ID/email giả lập.",
+        "steps": [
+          "Không bấm rồi kiểm tra; sau đó bấm.",
+          "Kiểm tra dữ liệu bàn giao tạm."
+        ],
+        "expected": "Chuyển chỉ sau thao tác; chỉ ID/email hợp lệ được đặt vào bàn giao tạm một lần. Chính sách còn mở.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-015",
+        "requirement_ids": [
+          "SH-03-YC-012",
+          "SH-03-YC-029"
+        ],
+        "target_id": "SH-03-SRC-08",
+        "group": "Thành phần",
+        "title": "Kiểm tra trạng thái đang gửi",
+        "precondition": "POST giả lập bị giữ.",
+        "data": "Biểu mẫu hợp lệ.",
+        "steps": [
+          "Gửi một lần và quan sát nút/các trường."
+        ],
+        "expected": "Nút gửi được khóa; các trường vẫn bật trong mã nguồn hiện tại, khác câu “biểu mẫu ổn định” của DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-TP-016",
+        "requirement_ids": [
+          "SH-03-YC-025",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-SRC-09",
+        "group": "Thành phần",
+        "title": "Kiểm tra cảnh báo kết quả chưa rõ",
+        "precondition": "Lỗi trạng thái 0 hoặc phản hồi sai cấu trúc.",
+        "data": "Phản hồi giả lập bất định.",
+        "steps": [
+          "Phát lỗi.",
+          "Kiểm tra URL và nút tiếp tục."
+        ],
+        "expected": "Thông báo kết quả chưa rõ; không chuyển tiếp và không tự POST lại.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "SH-03-TC-SK-001",
+        "requirement_ids": [
+          "SH-03-YC-001",
+          "SH-03-YC-002",
+          "SH-03-YC-003"
+        ],
+        "target_id": "SH-03-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở màn hình công khai",
+        "precondition": "Chưa có phiên.",
+        "data": "Điều hướng /register.",
+        "steps": [
+          "Mở tuyến.",
+          "Theo dõi yêu cầu."
+        ],
+        "expected": "Hiển thị biểu mẫu; không có API khởi tạo.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-002",
+        "requirement_ids": [
+          "SH-03-YC-002",
+          "SH-03-YC-003",
+          "SH-03-YC-004",
+          "SH-03-YC-005",
+          "SH-03-YC-006",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-EV-002",
+        "group": "Sự kiện",
+        "title": "Nhập và chuẩn hóa trường",
+        "precondition": "Biểu mẫu hiển thị.",
+        "data": "Tên/email có khoảng trắng; mật khẩu có khoảng trắng đầu/cuối.",
+        "steps": [
+          "Nhập data.",
+          "Gửi với phản hồi giả lập."
+        ],
+        "expected": "Tên/email được loại khoảng trắng đầu/cuối theo nguồn; mật khẩu được giữ nguyên.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-003",
+        "requirement_ids": [
+          "SH-03-YC-004",
+          "SH-03-YC-005",
+          "SH-03-YC-006",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-EV-003",
+        "group": "Sự kiện",
+        "title": "Không gửi khi dữ liệu cục bộ sai",
+        "precondition": "Biểu mẫu hiển thị.",
+        "data": "Tên/email/mật khẩu rỗng hoặc email sai định dạng.",
+        "steps": [
+          "Gửi biểu mẫu sai.",
+          "Theo dõi HTTP."
+        ],
+        "expected": "Lỗi cục bộ; không POST API #01.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-004",
+        "requirement_ids": [
+          "SH-03-YC-010",
+          "SH-03-YC-011",
+          "SH-03-YC-012",
+          "SH-03-YC-028"
+        ],
+        "target_id": "SH-03-EV-003",
+        "group": "Sự kiện",
+        "title": "Gửi thân yêu cầu đăng ký đúng hợp đồng nguồn",
+        "precondition": "Biểu mẫu hợp lệ; HTTP giả lập.",
+        "data": "Họ tên, email, mật khẩu mẫu.",
+        "steps": [
+          "Gửi một lần.",
+          "Kiểm tra method, path, tiêu đề HTTP và thân yêu cầu."
+        ],
+        "expected": "POST /api/v1/auth/register; thân yêu cầu có đúng ba khóa email, password, full_name; không có Authorization: Bearer và không gửi role/status; chỉ có một yêu cầu.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-005",
+        "requirement_ids": [
+          "SH-03-YC-012",
+          "SH-03-YC-029"
+        ],
+        "target_id": "SH-03-EV-003",
+        "group": "Sự kiện",
+        "title": "Chặn gửi lặp trong lúc chờ",
+        "precondition": "Yêu cầu đầu chưa hoàn tất.",
+        "data": "Nhấp nhiều lần/Enter khi chờ.",
+        "steps": [
+          "Gửi lần đầu.",
+          "Thử gửi tiếp."
+        ],
+        "expected": "Không có yêu cầu thứ hai; ghi nhận trường đang bật là sai khác DD.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-006",
+        "requirement_ids": [
+          "SH-03-YC-013",
+          "SH-03-YC-014",
+          "SH-03-YC-015",
+          "SH-03-YC-016",
+          "SH-03-YC-017",
+          "SH-03-YC-018",
+          "SH-03-YC-019",
+          "SH-03-YC-020",
+          "SH-03-YC-021"
+        ],
+        "target_id": "SH-03-EV-004",
+        "group": "Sự kiện",
+        "title": "Nhận 201 hợp lệ nhưng chờ thao tác tiếp",
+        "precondition": "Phản hồi giả lập đạt mã HTTP/mã nghiệp vụ/ID/email.",
+        "data": "ID an toàn và email không rỗng.",
+        "steps": [
+          "Gửi.",
+          "Chưa bấm nút tiếp tục."
+        ],
+        "expected": "Hiển thị trạng thái đã tạo và xóa mật khẩu; chưa chuyển SH-04; không tuyên bố email đã gửi/xác minh.",
+        "api_ids": [
+          "API-001",
+          "API-001",
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-007",
+        "requirement_ids": [
+          "SH-03-YC-014",
+          "SH-03-YC-015",
+          "SH-03-YC-018",
+          "SH-03-YC-019",
+          "SH-03-YC-020",
+          "SH-03-YC-021"
+        ],
+        "target_id": "SH-03-EV-004",
+        "group": "Sự kiện",
+        "title": "Bàn giao ID/email một lần",
+        "precondition": "Đã có kết quả tạo tài khoản hợp lệ.",
+        "data": "ID/email giả lập; không dùng mật khẩu thật.",
+        "steps": [
+          "Bấm tiếp tục.",
+          "Kiểm tra trạng thái bàn giao tạm và tuyến."
+        ],
+        "expected": "Bàn giao tạm một lần chỉ chứa ID/email; tới SH-04; không qua URL/lưu bền vững. Đây là hành vi mã nguồn, chính sách chưa được duyệt.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-008",
+        "requirement_ids": [
+          "SH-03-YC-017",
+          "SH-03-YC-020",
+          "SH-03-YC-021"
+        ],
+        "target_id": "SH-03-EV-004",
+        "group": "Sự kiện",
+        "title": "Phân biệt #01 và yêu cầu gửi thư",
+        "precondition": "Đã tạo tài khoản bằng phản hồi giả lập.",
+        "data": "Theo dõi API #01 và #02.",
+        "steps": [
+          "Gửi rồi tiếp tục tới SH-04.",
+          "Kiểm tra #02 chỉ sau thao tác riêng tại SH-04."
+        ],
+        "expected": "SH-03 không gọi #02; không tuyên bố thư đã gửi/xác minh; #01 nguồn chỉ ghi verification_dispatch_pending.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-009",
+        "requirement_ids": [
+          "SH-03-YC-022",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-EV-005",
+        "group": "Sự kiện",
+        "title": "Ánh xạ email trùng HTTP 409",
+        "precondition": "API giả lập trả 409 DESIGN_STATE_CONFLICT.",
+        "data": "Email đã dùng giả lập.",
+        "steps": [
+          "Gửi.",
+          "Quan sát lỗi, dữ liệu và tuyến."
+        ],
+        "expected": "Thông báo an toàn tại email; giữ các trường; không chuyển trang.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-010",
+        "requirement_ids": [
+          "SH-03-YC-023",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-EV-006",
+        "group": "Sự kiện",
+        "title": "Ánh xạ 422 vào full_name",
+        "precondition": "API giả lập trả lỗi trường full_name.",
+        "data": "meta.trườnglỗis cho full_name.",
+        "steps": [
+          "Gửi.",
+          "Quan sát họ tên."
+        ],
+        "expected": "Lỗi ở đúng trường giao diện fullname; văn bản không lấy trực tiếp tùy tiện từ máy chủ.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-011",
+        "requirement_ids": [
+          "SH-03-YC-023",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-EV-006",
+        "group": "Sự kiện",
+        "title": "Hỗ trợ bí danh fullname trong 422",
+        "precondition": "API giả lập trả lỗi trường fullname.",
+        "data": "meta.trườnglỗis cho fullname.",
+        "steps": [
+          "Gửi.",
+          "Quan sát họ tên."
+        ],
+        "expected": "Bí danh fullname được ánh xạ về điều khiển họ tên.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-012",
+        "requirement_ids": [
+          "SH-03-YC-023",
+          "SH-03-YC-009"
+        ],
+        "target_id": "SH-03-EV-006",
+        "group": "Sự kiện",
+        "title": "Ánh xạ 422 email và mật khẩu",
+        "precondition": "API giả lập trả từng lỗi email/mật khẩu.",
+        "data": "Mỗi trường trong phản hồi giả lập.",
+        "steps": [
+          "Lặp lại từng trường.",
+          "Quan sát thông báo."
+        ],
+        "expected": "Lỗi gắn đúng điều khiển; không phát yêu cầu phụ; không thêm giới hạn 8 ký tự.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-013",
+        "requirement_ids": [
+          "SH-03-YC-023",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-EV-006",
+        "group": "Sự kiện",
+        "title": "Dùng thông báo chung cho trường không hỗ trợ",
+        "precondition": "API giả lập trả HTTP 422 với trường lạ.",
+        "data": "Khóa lỗi không nhận diện.",
+        "steps": [
+          "Phát phản hồi.",
+          "Quan sát vùng lỗi chung."
+        ],
+        "expected": "Hiển thị thông báo chung, không rò rỉ chi tiết ngoại lệ.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-014",
+        "requirement_ids": [
+          "SH-03-YC-024",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-EV-007",
+        "group": "Sự kiện",
+        "title": "Xử lý HTTP 500",
+        "precondition": "API giả lập trả DESIGN_INTERNAL_ERROR.",
+        "data": "Trace ID giả lập nếu có.",
+        "steps": [
+          "Gửi.",
+          "Kiểm tra nội dung hiển thị và số yêu cầu."
+        ],
+        "expected": "Báo lỗi an toàn; không lộ DB/stack trace; không tự retry.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-015",
+        "requirement_ids": [
+          "SH-03-YC-025",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-EV-007",
+        "group": "Sự kiện",
+        "title": "Xử lý lỗi mạng trạng thái 0",
+        "precondition": "Mô phỏng mất kết nối sau khi gửi.",
+        "data": "Không có HTTP phản hồi.",
+        "steps": [
+          "Gửi.",
+          "Quan sát thông báo và yêu cầu."
+        ],
+        "expected": "Thông báo kết quả chưa xác định; giữ người dùng ở SH-03; không tự gửi lại.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-016",
+        "requirement_ids": [
+          "SH-03-YC-013",
+          "SH-03-YC-014",
+          "SH-03-YC-015",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-EV-007",
+        "group": "Sự kiện",
+        "title": "Không chấp nhận HTTP 201 thiếu dữ liệu bàn giao",
+        "precondition": "API giả lập trả thành công thiếu/sai id hoặc email.",
+        "data": "Từng phản hồi thiếu trường; ID 0/âm/quá ngưỡng an toàn/email trắng.",
+        "steps": [
+          "Thực hiện từng biến thể.",
+          "Quan sát trạng thái và bàn giao tạm."
+        ],
+        "expected": "Không có trạng thái thành công đủ điều kiện; không bàn giao tạm; kết quả chưa rõ được báo an toàn.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-017",
+        "requirement_ids": [
+          "SH-03-YC-013",
+          "SH-03-YC-026"
+        ],
+        "target_id": "SH-03-EV-007",
+        "group": "Sự kiện",
+        "title": "Không chấp nhận HTTP 200 dù thân yêu cầu giống dữ liệu thành công",
+        "precondition": "API giả lập trả HTTP 200 với cấu trúc phản hồi giống thành công.",
+        "data": "Mã HTTP 200 và thân yêu cầu giống 201.",
+        "steps": [
+          "Gửi.",
+          "Kiểm tra trạng thái."
+        ],
+        "expected": "Không coi HTTP 200 là kết quả hợp lệ theo hàm gọi hiện tại hiện tại; không bàn giao tạm.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-018",
+        "requirement_ids": [
+          "SH-03-YC-026",
+          "SH-03-YC-027"
+        ],
+        "target_id": "SH-03-EV-008",
+        "group": "Sự kiện",
+        "title": "Đi tới đăng nhập không kèm dữ liệu",
+        "precondition": "Trang đang có dữ liệu giả lập.",
+        "data": "Nhấn liên kết đăng nhập.",
+        "steps": [
+          "Kích hoạt liên kết.",
+          "Theo dõi tuyến/yêu cầu/bàn giao tạm."
+        ],
+        "expected": "Mở /login; không gọi API, không chuyển trường hoặc dữ liệu bàn giao tạm.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-019",
+        "requirement_ids": [
+          "SH-03-YC-028",
+          "SH-03-YC-029"
+        ],
+        "target_id": "SH-03-EV-003",
+        "group": "Sự kiện",
+        "title": "Không tự đặt vai trò/trạng thái và ghi nhận CSDL chưa rõ",
+        "precondition": "Yêu cầu giả lập được gửi.",
+        "data": "Kiểm tra thân yêu cầu; không kết nối DB thật.",
+        "steps": [
+          "Kiểm tra thân yêu cầu.",
+          "Đối chiếu nguồn API #01 và nguồn DDL tham khảo."
+        ],
+        "expected": "Giao diện không gửi các trường role/status; truy vấn API gán STUDENT nhưng không chỉ định status; giá trị ACTIVE mặc định trong DDL chưa được xác nhận bằng CSDL đang chạy.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-03-TC-SK-020",
+        "requirement_ids": [
+          "SH-03-YC-007",
+          "SH-03-YC-016",
+          "SH-03-YC-017",
+          "SH-03-YC-020"
+        ],
+        "target_id": "SH-03-EV-004",
+        "group": "Sự kiện",
+        "title": "Giữ riêng chính sách mở và trạng thái đã xác minh",
+        "precondition": "Phản hồi hợp lệ và SH-04 bàn giao tạm hiện hành.",
+        "data": "Không thực gửi email và không dùng tài khoản thật.",
+        "steps": [
+          "Đối chiếu thông báo SH-03 với phản hồi #01.",
+          "Ghi nhận bộ gửi thư #02 mặc định là giả lập."
+        ],
+        "expected": "Tài liệu/kiểm tra không kết luận tài khoản đã xác minh hoặc email đã được gửi; quyết định vòng đời vẫn mở.",
+        "api_ids": [
+          "API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-03-DangKyHocVien/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

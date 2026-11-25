@@ -1,0 +1,2765 @@
+{
+  "metadata": {
+    "screen_id": "SH-04",
+    "screen_name": "Bàn giao xác minh email",
+    "module": "Study Web — Phần dùng chung",
+    "route": "/register/verification",
+    "actor": "Khách chưa đăng nhập",
+    "version": "1.0 — Bộ UTC theo DD chuẩn hiện có; ca chưa chạy",
+    "dd_version": "SH-04 DD 0.3; đối chiếu mã nguồn đến 2026-11-24",
+    "dd_status": "Tổng quan SH-04 ghi hoàn tất trong phạm vi tiêu chí tĩnh; kế hoạch màn hình và DD API #02 vẫn ghi đang bị chặn/bản nháp với câu hỏi còn mở. Dùng DD hiện có làm chuẩn không đồng nghĩa đã đóng điểm chặn.",
+    "runtime_status": "Mã nguồn có tuyến, dữ liệu bàn giao một lần và lời gọi #02 sau thao tác nhấp. Ca UTC chưa chạy; trình duyệt, API trực tiếp, email thật, DB đang chạy và bản triển khai chưa được xác minh.",
+    "author": "Chưa được xác định trong DD",
+    "reviewer": "Chưa được xác định trong DD",
+    "approver": "Chưa được xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "Tài liệu SH-04 trong thư mục apps/study-client/docs/dd_screens và mã nguồn Study Web/Study Server",
+    "baseline_authorization": "Người dùng xác nhận DD hiện có vẫn là tài liệu chuẩn để lập UTC, kể cả khi trạng thái ghi đang bị chặn. Giữ nguyên câu hỏi mở và sai khác; không tự phê duyệt sản phẩm.",
+    "release_readiness": "Bộ UTC chính thức để đối chiếu DD và mã nguồn; chưa đủ căn cứ nghiệm thu/phê duyệt vì DD API còn ở trạng thái bản nháp, điểm chặn còn mở và ca chưa chạy.",
+    "discrepancy_note": "Tổng quan SH-04 ghi hoàn tất tiêu chí tĩnh, còn kế hoạch và DD API #02 ghi đang bị chặn/bản nháp. Mã nguồn đã nối tuyến, dữ liệu bàn giao và gọi #02 sau thao tác nhấp; một số đoạn lịch sử vẫn ghi chưa có tuyến, điều kiện kích hoạt hoặc cách kết nối. Nhà cung cấp dịch vụ giả lập; email, OTP/liên kết, quyền sở hữu tài khoản, trạng thái tài khoản và môi trường lúc chạy chưa xác minh. Ảnh/HTML mẫu có tương tác giả lập 200/503, hàng đợi, lệnh cURL và tuyên bố WCAG không khớp bằng chứng hiện hành."
+  },
+  "overall": {
+    "objective": "Cho Khách biết nhà cung cấp dịch vụ thử nghiệm có tiếp nhận yêu cầu hay không, nêu rõ giới hạn và cho phép quay lại đăng nhập.",
+    "inputs": "UserId/email từ dữ liệu bàn giao một lần của SH-03; thao tác gửi; phản hồi API #02.",
+    "outputs": "Thiếu dữ liệu, sẵn sàng, đang gửi, được bộ thử nghiệm tiếp nhận, lỗi dữ liệu, lỗi xử lý, nhà cung cấp dịch vụ chưa ánh xạ, kết quả chưa rõ; điều hướng /login.",
+    "main_flow": "SH-03 tạo tài khoản → chuyển ID/email qua bộ nhớ tạm → SH-04 tiêu thụ dữ liệu → Khách bấm gửi → POST #02 → ánh xạ phản hồi → hiển thị trạng thái chính xác; Khách có thể quay lại /login.",
+    "preconditions": "Tuyến hiện đã đăng ký. Trạng thái sẵn sàng (ready) yêu cầu userId là số nguyên dương an toàn và email không rỗng. Dùng dữ liệu giả; không gọi API trực tiếp khi lập tài liệu.",
+    "states": [
+      "Thiếu dữ liệu bàn giao",
+      "Sẵn sàng gửi",
+      "Đang gửi",
+      "Bộ thử nghiệm đã tiếp nhận",
+      "Dữ liệu không hợp lệ",
+      "Lỗi xử lý",
+      "Nhà cung cấp dịch vụ chưa ánh xạ",
+      "Kết quả chưa rõ"
+    ],
+    "security": "API công khai. Phía gọi API gửi JSON {user_id,email}, không truyền tiêu đề HTTP; không đưa ID/email vào URL hoặc bộ nhớ lưu bền. Không hiển thị lý do tùy ý hoặc chi tiết nhà cung cấp dịch vụ. Nhà cung cấp giả lập mặc định không gửi thư/tạo token.",
+    "out_of_scope": "Email thật, hàng đợi/gửi lại, OTP/liên kết/đường dẫn API xác nhận, kiểm tra quyền sở hữu tài khoản, cập nhật trạng thái tài khoản, giới hạn tần suất, danh sách giá trị status/reason, lược đồ DB đang chạy và triển khai."
+  },
+  "apis": [
+    {
+      "id": "API-002",
+      "number": "02",
+      "method": "POST",
+      "path": "/api/v1/auth/verify-email/send",
+      "request": "Công khai; tiêu đề Content-Type là application/json; thân JSON đúng dạng {user_id: integer, email: string}. Phía gọi API gửi {user_id,email}, không truyền tiêu đề HTTP. Danh mục ghi user_id:int64; mô hình Python dùng int và hàm kiểm tra xác nhận kiểu số nguyên trong JSON gốc nhưng không kiểm tra giới hạn. Email được chuẩn hóa/kiểm tra bởi hàm dùng chung.",
+      "response": "HTTP 202, success=true, businessCode=DESIGN_OPERATION_ACCEPTED, data={status:\"accepted\"}, meta={}, traceId. Nhà cung cấp dịch vụ mặc định chỉ trả `accepted`; trường reason tùy chọn có thể được phần xử lý ánh xạ. Giao diện chỉ báo tiếp nhận khi mã trạng thái và thân phản hồi khớp.",
+      "errors": "422 DESIGN_VALIDATION_ERROR khi dữ liệu đầu vào sai; 500 DESIGN_INTERNAL_ERROR khi nhà cung cấp dịch vụ phát sinh lỗi; mã trạng thái HTTP 0 khi mất kết nối. Giao diện phân biệt lỗi dữ liệu, lỗi khác, mã trạng thái chưa ánh xạ và phản hồi không hợp lệ.",
+      "auth": "API công khai; không yêu cầu Bearer token và không mở phiên DB. Phía gọi API không truyền tiêu đề HTTP.",
+      "design_status": "Chờ xác nhận",
+      "event_ids": [
+        "SH-04-EV-002",
+        "SH-04-EV-003",
+        "SH-04-EV-004",
+        "SH-04-EV-005",
+        "SH-04-EV-006",
+        "SH-04-EV-009"
+      ],
+      "source_ref": "docs/lists/list_api.md #02; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_02_auth_verify_email_send/models.py; apps/study-server/app/modules/guest/api_02_auth_verify_email_send/validate.py; apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py; apps/study-server/app/service/email/provider.py"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SH-04-YC-001",
+      "description": "Tuyến /register/verification hiện được khai báo trong bộ định tuyến dùng chung và hiển thị thành phần SH04Page.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-002",
+      "description": "Trang dành cho Khách; API #02 công khai và không yêu cầu token Bearer.",
+      "group": "Quyền truy cập",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-003",
+      "description": "Khi có dữ liệu hợp lệ, trang dùng userId/email từ bộ nhớ tạm một lần của SH-03.",
+      "group": "Bàn giao",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-004",
+      "description": "Khi thiếu dữ liệu bàn giao, hiển thị trạng thái tương ứng và không gọi API #02.",
+      "group": "Thiếu dữ liệu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-005",
+      "description": "Mã nguồn chỉ chấp nhận userId là số nguyên dương an toàn theo JavaScript; giới hạn này chặt hơn kiểu int64 trong danh mục.",
+      "group": "Giới hạn ID",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-006",
+      "description": "Dữ liệu bàn giao chỉ nằm trong bộ nhớ một lần; ID/email không xuất hiện trong URL hoặc bộ nhớ lưu bền vững. Chính sách này chưa được duyệt.",
+      "group": "Lưu trữ",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-007",
+      "description": "API #02 chỉ được gọi sau khi người dùng chủ động bấm nút gửi trong trạng thái sẵn sàng (ready).",
+      "group": "Thời điểm gửi",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-008",
+      "description": "Mỗi lượt trang chỉ gửi một lần; không tự gửi lại sau lỗi hoặc khi chưa rõ kết quả mạng.",
+      "group": "Chống gửi lặp",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-009",
+      "description": "Gửi POST tới /api/v1/auth/verify-email/send.",
+      "group": "API #02",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-010",
+      "description": "Thân JSON chỉ có user_id và email lấy từ dữ liệu bàn giao; trang không có ô nhập hai giá trị này.",
+      "group": "Thân yêu cầu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-011",
+      "description": "Phía gọi API không truyền Authorization; API công khai, không cần token Bearer.",
+      "group": "Tiêu đề HTTP",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-012",
+      "description": "Chỉ báo đã tiếp nhận khi HTTP 202, success=true, businessCode=DESIGN_OPERATION_ACCEPTED và data.status=accepted.",
+      "group": "Được bộ thử nghiệm tiếp nhận",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-013",
+      "description": "Nếu mã trạng thái không rỗng nhưng khác `accepted`, hiển thị trạng thái chưa ánh xạ; không khẳng định email đã gửi hoặc tài khoản đã xác minh.",
+      "group": "Mã trạng thái chưa ánh xạ",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-014",
+      "description": "Nếu data.status bị thiếu hoặc sai kiểu, hay phong bì phản hồi không hợp lệ, hiển thị kết quả chưa rõ; không coi là đã tiếp nhận.",
+      "group": "Mã trạng thái thiếu/sai",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-015",
+      "description": "HTTP 422 hiển thị yêu cầu không hợp lệ; không ghi nhận yêu cầu đã được tiếp nhận.",
+      "group": "Lỗi dữ liệu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-016",
+      "description": "HTTP 500 hiển thị lỗi chung; không để lộ chi tiết từ nhà cung cấp dịch vụ hoặc máy chủ.",
+      "group": "Lỗi nhà cung cấp dịch vụ",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-017",
+      "description": "Mã trạng thái HTTP 0 được xem là kết quả chưa rõ; không tự gửi lại.",
+      "group": "Lỗi kết nối",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-018",
+      "description": "Mọi mã HTTP ngoài 202/422 và mã trạng thái 0 đều không được coi là thành công; hiển thị thông báo lỗi chung.",
+      "group": "HTTP khác",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-019",
+      "description": "Email từ dữ liệu bàn giao hiển thị trong các trạng thái sẵn sàng (ready), đang gửi (submitting) và được tiếp nhận (accepted); không dùng địa chỉ mẫu cố định.",
+      "group": "Email hiển thị",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-020",
+      "description": "SH-04 không có ô nhập user_id/email, ô OTP, liên kết xác minh hoặc bộ đếm lùi.",
+      "group": "Câu chữ về tiếp nhận",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-021",
+      "description": "Mã HTTP 202 chỉ xác nhận nhà cung cấp dịch vụ giả lập đã tiếp nhận lời gọi; không khẳng định email được gửi thật, đưa vào hàng đợi hoặc tài khoản đã xác minh.",
+      "group": "Câu chữ về tiếp nhận",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-022",
+      "description": "API #02 không đọc DB hoặc kiểm tra user_id có khớp với email; giao diện không tuyên bố đã xác minh quyền sở hữu tài khoản.",
+      "group": "Không kiểm tra quyền sở hữu",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-023",
+      "description": "Liên kết quay lại mở /login; không gọi API #02 và không đưa ID/email vào URL.",
+      "group": "Quay lại đăng nhập",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-024",
+      "description": "Quay lại SH-02 không đồng nghĩa đăng nhập thành công; chưa đủ căn cứ kết luận tài khoản đang ở trạng thái ACTIVE hoặc đã xác minh email.",
+      "group": "Trạng thái đăng nhập",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-025",
+      "description": "Nút đổi trạng thái, lệnh cURL và JSON trong HTML mẫu không phải điều khiển hay phản hồi thật của trang sản phẩm.",
+      "group": "Tương tác giả lập trong HTML",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/code.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-026",
+      "description": "Nhãn đạt WCAG AA trên ảnh không phải bằng chứng kiểm định; không tuyên bố đạt khi chưa có kiểm tra.",
+      "group": "Nhãn WCAG",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/code.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-027",
+      "description": "Liên kết Study2Work hiện đi tới /; không gắn chức năng xác minh vào liên kết này.",
+      "group": "Liên kết thương hiệu",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-028",
+      "description": "Không hiển thị data.reason cho Khách vì ý nghĩa và giá trị của trường này chưa được chốt trong API.",
+      "group": "Lý do do nhà cung cấp dịch vụ trả về",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-029",
+      "description": "Ca UTC chưa chạy; không tuyên bố đã xác minh trên trình duyệt, API trực tiếp, email thật, DB đang chạy hoặc bản triển khai.",
+      "group": "Trạng thái kiểm chứng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-030",
+      "description": "Danh mục yêu cầu int64, nhưng mô hình dữ liệu và hàm kiểm tra API chỉ xác nhận JSON là số nguyên, không kiểm tra giới hạn int64.",
+      "group": "Miền user_id",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-031",
+      "description": "API hiện dùng hàm kiểm tra dữ liệu chung để chuẩn hóa email; chính sách chuẩn hóa thống nhất vẫn còn mở trong DD.",
+      "group": "Chuẩn hóa email",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-04-YC-032",
+      "description": "Chủ sở hữu, cờ bật tính năng và điều kiện kích hoạt vẫn chưa chốt; thao tác nhấp riêng hiện có trong mã nguồn chưa được coi là quyết định sản phẩm đã duyệt.",
+      "group": "Chủ thể quyết định thời điểm gửi",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/06-navigation.md",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "SH-04-EL-001",
+      "marker": "#1",
+      "source_element_id": "SH04-EL-01",
+      "name": "Mã SH-04 và đường dẫn đề xuất",
+      "type": "Nhãn trang",
+      "position": "Thanh đầu ảnh.",
+      "properties": "Ảnh ghi SH-04 và /register/verification. Trang hiện hiển thị “SH-04 · Xác minh email” nhưng không in đường dẫn.",
+      "event_ids": [
+        "SH-04-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-002",
+      "marker": "#2",
+      "source_element_id": "SH04-EL-02",
+      "name": "Bộ chọn trạng thái trong mẫu",
+      "type": "Điều khiển chỉ có trong mẫu",
+      "position": "Thanh đầu ảnh.",
+      "properties": "Các lựa chọn “Đã tiếp nhận” (Accepted), “Bản giả lập” (Stub), “Chưa gửi” (No-Delivery) và “Lỗi” (Error) chỉ đổi nội dung cục bộ trong HTML; không có trên trang Angular.",
+      "event_ids": [
+        "SH-04-EV-008"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-003",
+      "marker": "#3",
+      "source_element_id": "SH04-EL-03",
+      "name": "Biểu tượng và nhãn phản hồi",
+      "type": "Trạng thái",
+      "position": "Thẻ thông báo chính.",
+      "properties": "Nhãn thay đổi theo phản hồi. Chỉ hiện “Đã tiếp nhận” (accepted) khi phản hồi HTTP 202 hợp lệ; mã 202 không chứng minh thư đã gửi hoặc email đã xác minh.",
+      "event_ids": [
+        "SH-04-EV-001",
+        "SH-04-EV-003",
+        "SH-04-EV-004",
+        "SH-04-EV-005",
+        "SH-04-EV-006",
+        "SH-04-EV-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-004",
+      "marker": "#4",
+      "source_element_id": "SH04-EL-04",
+      "name": "Tiêu đề và giải thích kết quả",
+      "type": "Tiêu đề/nội dung",
+      "position": "Dưới trạng thái trong thẻ chính.",
+      "properties": "Nội dung thay đổi theo trạng thái; không nói yêu cầu đã vào hàng đợi. Ở trạng thái tiếp nhận, trang nói rõ thư chưa được gửi thật và email chưa xác minh.",
+      "event_ids": [
+        "SH-04-EV-003",
+        "SH-04-EV-004",
+        "SH-04-EV-005",
+        "SH-04-EV-006",
+        "SH-04-EV-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-005",
+      "marker": "#5",
+      "source_element_id": "SH04-EL-05",
+      "name": "Giới hạn xác minh email",
+      "type": "Thông tin tĩnh",
+      "position": "Khung giới hạn ở thẻ chính.",
+      "properties": "Nêu rõ chưa có OTP, liên kết hoặc API xác nhận; không tạo trường hay bộ đếm lùi giả.",
+      "event_ids": [
+        "SH-04-EV-001",
+        "SH-04-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-006",
+      "marker": "#6",
+      "source_element_id": "SH04-EL-06",
+      "name": "Quay lại đăng nhập",
+      "type": "Liên kết",
+      "position": "Cuối thẻ chính.",
+      "properties": "Mã nguồn hiện có routerLink=/login; liên kết không gọi API và không bảo đảm đăng nhập thành công.",
+      "event_ids": [
+        "SH-04-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-007",
+      "marker": "#7",
+      "source_element_id": "SH04-EL-07",
+      "name": "Nút sao chép lệnh cURL",
+      "type": "Điều khiển chỉ trong mẫu",
+      "position": "Cạnh liên kết đăng nhập trong ảnh.",
+      "properties": "Lệnh mẫu thiếu /api/v1 và user_id; nút này không có trên trang hiện hành.",
+      "event_ids": [
+        "SH-04-EV-008"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-008",
+      "marker": "#8",
+      "source_element_id": "SH04-EL-08",
+      "name": "Thẻ tham chiếu API #02",
+      "type": "Tiêu đề thẻ",
+      "position": "Đầu cột API.",
+      "properties": "Thẻ cung cấp thông tin API #02, không phải công cụ giám sát hay kiểm tra dịch vụ trực tiếp.",
+      "event_ids": [
+        "SH-04-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-009",
+      "marker": "#9",
+      "source_element_id": "SH04-EL-09",
+      "name": "Các hàng thông tin giao thức và xác minh",
+      "type": "Danh sách thông tin",
+      "position": "Trong thẻ API #02.",
+      "properties": "Trang hiện nêu đường dẫn API, mã 202 từ bộ thử nghiệm, chưa gửi thư thật và chưa có OTP/liên kết/API xác nhận; không hiển thị phản hồi giả lập 200/503.",
+      "event_ids": [
+        "SH-04-EV-001",
+        "SH-04-EV-003",
+        "SH-04-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-010",
+      "marker": "#10",
+      "source_element_id": "SH04-EL-10",
+      "name": "Khung JSON minh họa",
+      "type": "Khối JSON chỉ trong mẫu",
+      "position": "Cột API phía dưới.",
+      "properties": "Các trường delivery/artifacts/otp_generated/confirm_url trong JSON minh họa không thuộc phản hồi API và không có trên trang hiện hành.",
+      "event_ids": [
+        "SH-04-EV-008"
+      ],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-011",
+      "marker": "#11",
+      "source_element_id": "SH04-EL-11",
+      "name": "Thẻ quy tắc/nhãn WCAG",
+      "type": "Ghi chú mẫu",
+      "position": "Dưới thẻ API.",
+      "properties": "Ảnh có nhãn đạt WCAG AA nhưng không có báo cáo kiểm tra; trang hiện hành không hiển thị nhãn này.",
+      "event_ids": [
+        "SH-04-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-EL-012",
+      "marker": "#12",
+      "source_element_id": "SH04-EL-12",
+      "name": "Chân trang phiên bản/tuyến",
+      "type": "Chân trang mẫu",
+      "position": "Cuối ảnh.",
+      "properties": "Chân trang giao thức/bản giả lập S-02 chỉ có trong ảnh; không có trong trang Angular.",
+      "event_ids": [
+        "SH-04-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+    },
+    {
+      "id": "SH-04-SRC-01",
+      "marker": "Mã nguồn 01",
+      "source_element_id": "SH04-SRC-01 (bí danh UTC)",
+      "name": "Nhãn trang hiện hành",
+      "type": "Nhãn trang",
+      "position": "Đầu vùng nội dung.",
+      "properties": "Hiển thị “SH-04 · Xác minh email”; thuộc tính data-screen-id không thay thế nhãn đường dẫn.",
+      "event_ids": [
+        "SH-04-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-SRC-02",
+      "marker": "Mã nguồn 02",
+      "source_element_id": "SH04-SRC-02 (bí danh UTC)",
+      "name": "Liên kết thương hiệu",
+      "type": "Điều hướng về trang chủ",
+      "position": "Đầu trang.",
+      "properties": "Thương hiệu Study2Work có routerLink=/; liên kết không gọi API #02.",
+      "event_ids": [
+        "SH-04-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-SRC-03",
+      "marker": "Mã nguồn 03",
+      "source_element_id": "SH04-SRC-03 (bí danh UTC)",
+      "name": "Nhãn phụ xác minh",
+      "type": "Nhãn phụ",
+      "position": "Trên thẻ trạng thái.",
+      "properties": "Văn bản tĩnh, không khẳng định email đã gửi.",
+      "event_ids": [
+        "SH-04-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-SRC-04",
+      "marker": "Mã nguồn 04",
+      "source_element_id": "SH04-SRC-04 (bí danh UTC)",
+      "name": "Nút gửi yêu cầu xác minh",
+      "type": "Nút hành động",
+      "position": "Chỉ hiển thị ở trạng thái sẵn sàng (ready).",
+      "properties": "Chỉ thao tác này gọi API #02; trang chuyển sang submitting (đang gửi) để chặn gọi lặp.",
+      "event_ids": [
+        "SH-04-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-SRC-05",
+      "marker": "Mã nguồn 05",
+      "source_element_id": "SH04-SRC-05 (bí danh UTC)",
+      "name": "Địa chỉ email bàn giao",
+      "type": "Văn bản dữ liệu",
+      "position": "Ở trạng thái ready/submitting/accepted.",
+      "properties": "Hiển thị email từ dữ liệu bàn giao; không có ô chỉnh sửa.",
+      "event_ids": [
+        "SH-04-EV-001",
+        "SH-04-EV-002",
+        "SH-04-EV-003"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-SRC-06",
+      "marker": "Mã nguồn 06",
+      "source_element_id": "SH04-SRC-06 (bí danh UTC)",
+      "name": "Vùng trạng thái và thông báo",
+      "type": "Vùng thông báo trợ năng",
+      "position": "Trong thẻ chính.",
+      "properties": "Một số trạng thái dùng role=status/aria-live; nhánh lỗi dùng role=alert. Khả năng tiếp cận tổng thể chưa được xác minh.",
+      "event_ids": [
+        "SH-04-EV-003",
+        "SH-04-EV-004",
+        "SH-04-EV-005",
+        "SH-04-EV-006",
+        "SH-04-EV-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-SRC-07",
+      "marker": "Mã nguồn 07",
+      "source_element_id": "SH04-SRC-07 (bí danh UTC)",
+      "name": "Ghi chú lưu trữ dữ liệu",
+      "type": "Nội dung quyền riêng tư",
+      "position": "Cuối thẻ API.",
+      "properties": "Nêu ID/email chỉ nằm trong bộ nhớ ứng dụng từ SH-03, không nằm trong URL/bộ nhớ bền vững; đây là mô tả mã nguồn, chưa xác minh khi chạy.",
+      "event_ids": [
+        "SH-04-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-SRC-08",
+      "marker": "Mã nguồn 08",
+      "source_element_id": "SH04-SRC-08 (bí danh UTC)",
+      "name": "Thẻ nội dung hiển thị theo trạng thái",
+      "type": "Nhóm trạng thái",
+      "position": "Thẻ chính bên trái.",
+      "properties": "Các mã trạng thái trong mã nguồn: missing-handoff (thiếu dữ liệu bàn giao), ready (sẵn sàng), submitting (đang gửi), accepted (được tiếp nhận), provider-status-unknown (mã phản hồi chưa ánh xạ), invalid-request (yêu cầu không hợp lệ), lỗi yêu cầu (lỗi yêu cầu), outcome-unknown (kết quả chưa rõ).",
+      "event_ids": [
+        "SH-04-EV-001",
+        "SH-04-EV-003",
+        "SH-04-EV-004",
+        "SH-04-EV-005",
+        "SH-04-EV-006",
+        "SH-04-EV-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "SH-04-EV-001",
+      "source_event_id": "SH04-EV-01",
+      "name": "Mở trang và tiêu thụ dữ liệu bàn giao",
+      "trigger": "Tải /register/verification.",
+      "processing": "Hàm khởi tạo tiêu thụ dữ liệu một lần. Có dữ liệu bàn giao thì trang vào ready (sẵn sàng); thiếu dữ liệu thì vào missing-handoff (thiếu dữ liệu bàn giao). Không gọi API khi tải trang.",
+      "element_ids": [
+        "SH-04-EL-001",
+        "SH-04-EL-003",
+        "SH-04-EL-004",
+        "SH-04-EL-005",
+        "SH-04-EL-008",
+        "SH-04-EL-009",
+        "SH-04-SRC-01",
+        "SH-04-SRC-03",
+        "SH-04-SRC-05",
+        "SH-04-SRC-07",
+        "SH-04-SRC-08"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-002",
+      "source_event_id": "SH04-EV-02",
+      "name": "Gửi yêu cầu xác minh",
+      "trigger": "Người dùng bấm nút khi trang ở ready (sẵn sàng).",
+      "processing": "Gửi POST #02 với {user_id,email}; dịch vụ chỉ truyền thân dữ liệu, không truyền tiêu đề HTTP. Trang chuyển sang submitting (đang gửi) và chặn gọi lặp.",
+      "element_ids": [
+        "SH-04-SRC-04",
+        "SH-04-SRC-05",
+        "SH-04-SRC-06",
+        "SH-04-SRC-08"
+      ],
+      "api_ids": [
+        "API-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-003",
+      "source_event_id": "SH04-EV-03",
+      "name": "API xác nhận đã tiếp nhận",
+      "trigger": "HTTP 202, success, businessCode và mã trạng thái khớp.",
+      "processing": "Hiển thị rằng bộ thử nghiệm đã tiếp nhận; không nói email đã gửi thật, vào hàng đợi hoặc đã xác minh; bỏ qua trường lý do.",
+      "element_ids": [
+        "SH-04-EL-003",
+        "SH-04-EL-004",
+        "SH-04-EL-009",
+        "SH-04-SRC-05",
+        "SH-04-SRC-06"
+      ],
+      "api_ids": [
+        "API-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-004",
+      "source_event_id": "SH04-EV-04",
+      "name": "API trả lỗi dữ liệu 422",
+      "trigger": "HttpErrorResponse có mã trạng thái 422.",
+      "processing": "Hiển thị invalid-request (yêu cầu không hợp lệ); không ghi nhận đã tiếp nhận và không tạo ô sửa dữ liệu trên SH-04.",
+      "element_ids": [
+        "SH-04-EL-003",
+        "SH-04-EL-004",
+        "SH-04-SRC-06",
+        "SH-04-SRC-08"
+      ],
+      "api_ids": [
+        "API-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-005",
+      "source_event_id": "SH04-EV-05",
+      "name": "Nhà cung cấp dịch vụ/API trả lỗi 500",
+      "trigger": "HTTP lỗi ngoài mã trạng thái 0/422.",
+      "processing": "Hiển thị lỗi chung; không để lộ chi tiết và không tự gọi lại.",
+      "element_ids": [
+        "SH-04-EL-003",
+        "SH-04-EL-004",
+        "SH-04-SRC-06",
+        "SH-04-SRC-08"
+      ],
+      "api_ids": [
+        "API-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-006",
+      "source_event_id": "SH04-EV-06",
+      "name": "Mất kết nối/phản hồi không hợp lệ",
+      "trigger": "Mã trạng thái 0 hoặc phong bì phản hồi/thân dữ liệu không dùng được.",
+      "processing": "Hiển thị outcome-unknown (kết quả chưa rõ); không gán trạng thái accepted và không gửi lại.",
+      "element_ids": [
+        "SH-04-EL-003",
+        "SH-04-EL-004",
+        "SH-04-SRC-06",
+        "SH-04-SRC-08"
+      ],
+      "api_ids": [
+        "API-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-007",
+      "source_event_id": "SH04-EV-07",
+      "name": "Quay lại SH-02",
+      "trigger": "Người dùng mở routerLink=/login.",
+      "processing": "Điều hướng tới đăng nhập; không gọi API #02/đưa ID-email vào URL và không khẳng định đăng nhập thành công.",
+      "element_ids": [
+        "SH-04-EL-006",
+        "SH-04-SRC-02"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-008",
+      "source_event_id": "SH04-EV-08",
+      "name": "Tương tác giả lập trong HTML",
+      "trigger": "Người xem bấm bộ chọn/cURL trong HTML thiết kế.",
+      "processing": "Chỉ thay đổi giao diện hoặc tạo lệnh sai; các thành phần này không có trong trang Angular và không phải yêu cầu thật.",
+      "element_ids": [
+        "SH-04-EL-002",
+        "SH-04-EL-007",
+        "SH-04-EL-010",
+        "SH-04-EL-011",
+        "SH-04-EL-012"
+      ],
+      "api_ids": [],
+      "design_status": "Không áp dụng",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    },
+    {
+      "id": "SH-04-EV-009",
+      "source_event_id": "SH04-EV-09",
+      "name": "Nhà cung cấp dịch vụ trả mã trạng thái chưa ánh xạ",
+      "trigger": "Phong bì phản hồi accepted nhưng data.status khác accepted.",
+      "processing": "Hiển thị provider-status-unknown (mã trạng thái chưa ánh xạ); không hiện lý do và không khẳng định đã giao thư/xác minh. Danh sách giá trị chưa được duyệt.",
+      "element_ids": [
+        "SH-04-EL-003",
+        "SH-04-EL-004",
+        "SH-04-EL-009",
+        "SH-04-SRC-06",
+        "SH-04-SRC-08"
+      ],
+      "api_ids": [
+        "API-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md; apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B-01",
+      "description": "Danh mục ghi “nếu bật xác minh”; AC-01 đặt gửi sau đăng ký nhưng API #01 không gọi #02; mã nguồn trang gọi API sau thao tác nhấp riêng.",
+      "impact": "Chưa thống nhất chủ sở hữu, cờ bật tính năng và thời điểm gửi.",
+      "decision": "Giữ thao tác nhấp hiện có trong mã nguồn nhưng không coi đó là quyết định sản phẩm đã duyệt.",
+      "source_ref": "apps/study-server/docs/dd/02_auth_verify_email_send/OPEN_QUESTIONS.md Q-02-01",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-02",
+      "description": "DD dự kiến ghi nhật ký/gửi lại sau khi tiếp nhận; mã nguồn gọi nhà cung cấp dịch vụ đồng bộ, không có hàng đợi/tác vụ nền/gửi lại/tính an toàn khi lặp.",
+      "impact": "Ý nghĩa của HTTP 202 chưa thống nhất và không chứng minh email đã giao.",
+      "decision": "Chỉ kiểm tra phản hồi accepted của bản giả lập; giữ gửi lại/hàng đợi ngoài hiện trạng.",
+      "source_ref": "apps/study-server/docs/dd/02_auth_verify_email_send/OPEN_QUESTIONS.md Q-02-02",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-03",
+      "description": "Bản giả lập bỏ qua dữ liệu đầu vào, không gửi thư/tạo token/liên kết; chưa có API OTP/liên kết xác nhận.",
+      "impact": "Không thể nghiệm thu giao thư hoặc xác minh tài khoản từ đầu đến cuối.",
+      "decision": "Không suy ra thư đã giao, OTP/liên kết hoặc tài khoản đã xác minh từ mã 202.",
+      "source_ref": "apps/study-server/docs/dd/02_auth_verify_email_send/OPEN_QUESTIONS.md Q-02-03",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-04",
+      "description": "API công khai, không Bearer/DB; view chuyển user_id/email thẳng cho nhà cung cấp dịch vụ, không kiểm tra người dùng tồn tại/email khớp/giới hạn tần suất.",
+      "impact": "Ranh giới tin cậy và biện pháp chống lạm dụng chưa được chốt.",
+      "decision": "Không tự thêm xác thực, truy vấn DB, mã lỗi hoặc giới hạn.",
+      "source_ref": "apps/study-server/docs/dd/02_auth_verify_email_send/OPEN_QUESTIONS.md Q-02-04",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-05",
+      "description": "Hợp đồng giao tiếp chỉ ghi status:string và reason tùy chọn; bản giả lập chỉ có accepted; giao diện chưa ánh xạ giá trị khác và bỏ qua lý do.",
+      "impact": "Chưa có danh sách giá trị hoặc câu chữ được duyệt cho trạng thái khác.",
+      "decision": "Giữ nhánh chưa ánh xạ; không tự diễn giải mã trạng thái/lý do.",
+      "source_ref": "apps/study-server/docs/dd/02_auth_verify_email_send/OPEN_QUESTIONS.md Q-02-05",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-06",
+      "description": "Danh mục ghi int64; mô hình dữ liệu int và hàm kiểm tra không giới hạn biên; dữ liệu bàn giao chỉ nhận số nguyên dương an toàn của JavaScript; chính sách email còn mở.",
+      "impact": "Kiểm tra ở hai phía và cách chuẩn hóa email chưa đồng bộ.",
+      "decision": "Ghi rõ sai khác; không tự thêm giới hạn máy chủ hoặc quy tắc chuẩn hóa.",
+      "source_ref": "apps/study-server/docs/dd/02_auth_verify_email_send/OPEN_QUESTIONS.md Q-02-06",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-07",
+      "description": "Mã nguồn dùng bộ nhớ một lần, mất khi tải lại; DD/kế hoạch cũ vẫn ghi cách chuyển chưa quyết định; trình duyệt chưa được kiểm tra.",
+      "impact": "Hành vi mã nguồn và quyết định DD chưa thống nhất; tải lại/mở URL trực tiếp không khôi phục data.",
+      "decision": "Kiểm tra mã nguồn hiện có và giữ chính sách ở trạng thái chờ xác nhận.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md; apps/study-client/src/app/features/shared/SH04/data-access/sh04-registration-handoff.service.ts",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-08",
+      "description": "API #01 không gán trạng thái; DDL ACTIVE chưa phải lược đồ DB đang chạy; API #03 yêu cầu ACTIVE; không có API xác minh cập nhật trạng thái. Chủ sở hữu/người rà soát/người phê duyệt và trình duyệt chưa được xác minh.",
+      "impact": "Không kết luận về đăng nhập trước xác minh; chưa có bằng chứng chạy trên trình duyệt/môi trường thật.",
+      "decision": "Giữ tình trạng tài khoản/đăng nhập/môi trường chưa xác minh; không tự ghi danh tính người duyệt.",
+      "source_ref": "apps/study-server/docs/dd/01_auth_register/OPEN_QUESTIONS.md; apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "SH-04-TC-MH-001",
+        "requirement_ids": [
+          "SH-04-YC-001",
+          "SH-04-YC-002",
+          "SH-04-YC-004"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến xác minh email",
+        "precondition": "Study Web có tuyến hiện hành.",
+        "data": "Mở /register/verification trực tiếp.",
+        "steps": [
+          "Mở tuyến.",
+          "Theo dõi nội dung và yêu cầu."
+        ],
+        "expected": "SH04Page hiện ra; khi thiếu dữ liệu bàn giao, trang không gọi API #02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-002",
+        "requirement_ids": [
+          "SH-04-YC-003",
+          "SH-04-YC-004",
+          "SH-04-YC-020"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Thiếu dữ liệu bàn giao khi vào trực tiếp",
+        "precondition": "Không có dữ liệu bàn giao trong bộ nhớ.",
+        "data": "Mở URL trực tiếp hoặc tải lại sau khi đã tiêu thụ dữ liệu bàn giao.",
+        "steps": [
+          "Tải trang.",
+          "Đọc thông báo và kiểm tra yêu cầu."
+        ],
+        "expected": "Hiện trạng thái thiếu dữ liệu; nói chưa gửi yêu cầu; không POST #02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-003",
+        "requirement_ids": [
+          "SH-04-YC-003",
+          "SH-04-YC-005",
+          "SH-04-YC-019"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Dữ liệu bàn giao hợp lệ tạo trạng thái sẵn sàng",
+        "precondition": "Có dữ liệu bàn giao hợp lệ từ SH-03.",
+        "data": "ID dương/an toàn và email giả lập không rỗng.",
+        "steps": [
+          "Đi từ SH-03 sau tạo tài khoản.",
+          "Quan sát email và nút gửi."
+        ],
+        "expected": "Hiện email bàn giao và nút Gửi yêu cầu xác minh; chưa có yêu cầu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-004",
+        "requirement_ids": [
+          "SH-04-YC-003",
+          "SH-04-YC-006"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Dữ liệu bàn giao chỉ dùng một lần",
+        "precondition": "Trang vừa tiêu thụ dữ liệu bàn giao.",
+        "data": "Tải lại cùng tuyến.",
+        "steps": [
+          "Tải lại trang.",
+          "Quan sát trạng thái."
+        ],
+        "expected": "Dữ liệu bàn giao bị xóa sau lần tiêu thụ; trang trở về trạng thái thiếu dữ liệu (missing-handoff) và không khôi phục từ URL/bộ nhớ lưu bền.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-005",
+        "requirement_ids": [
+          "SH-04-YC-007",
+          "SH-04-YC-008"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Không tự gửi khi mở trang",
+        "precondition": "Trang đang ở trạng thái sẵn sàng (ready).",
+        "data": "Không bấm nút gửi.",
+        "steps": [
+          "Mở trang.",
+          "Theo dõi mạng."
+        ],
+        "expected": "API #02 không được gọi trước thao tác chủ động của người dùng.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-006",
+        "requirement_ids": [
+          "SH-04-YC-008",
+          "SH-04-YC-009",
+          "SH-04-YC-010",
+          "SH-04-YC-011"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Gửi đúng đường dẫn API và thân dữ liệu",
+        "precondition": "Trạng thái sẵn sàng (ready) và HTTP giả lập.",
+        "data": "Dữ liệu bàn giao có ID/email giả lập.",
+        "steps": [
+          "Bấm nút gửi.",
+          "Kiểm tra method, path, tiêu đề HTTP, thân dữ liệu, tham số truy vấn."
+        ],
+        "expected": "Một POST tới /api/v1/auth/verify-email/send; thân JSON chỉ có user_id/email; dịch vụ không truyền Authorization hoặc tham số truy vấn.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-007",
+        "requirement_ids": [
+          "SH-04-YC-008"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Chặn gửi lặp trong khi đang chờ",
+        "precondition": "Lời gọi API đầu tiên đang chờ phản hồi.",
+        "data": "Người dùng nhấp nút nhiều lần liên tiếp.",
+        "steps": [
+          "Bấm nút một lần.",
+          "Thử bấm thêm khi trạng thái đang gửi (submitting)."
+        ],
+        "expected": "Chỉ có một lời gọi dịch vụ; trạng thái chuyển sang đang gửi (submitting) và nút không còn khả dụng.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-008",
+        "requirement_ids": [
+          "SH-04-YC-012",
+          "SH-04-YC-021",
+          "SH-04-YC-028"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Chấp nhận đúng phản hồi 202",
+        "precondition": "API giả lập trả phản hồi chuẩn.",
+        "data": "HTTP 202; success=true; businessCode=DESIGN_OPERATION_ACCEPTED; data.status=accepted; không có trường reason.",
+        "steps": [
+          "Gửi yêu cầu.",
+          "Đọc nhãn trạng thái, câu giải thích và contract card."
+        ],
+        "expected": "Chỉ thông báo bộ thử nghiệm đã tiếp nhận yêu cầu; nói rõ email chưa gửi thật và chưa xác minh; không nói đã vào hàng đợi hoặc hiển thị reason.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-009",
+        "requirement_ids": [
+          "SH-04-YC-013",
+          "SH-04-YC-021",
+          "SH-04-YC-028"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Mã trạng thái do nhà cung cấp dịch vụ trả về khác với accepted",
+        "precondition": "HTTP 202, success=true và businessCode đúng; data.status khác accepted nhưng không rỗng.",
+        "data": "data.status=queued; trường reason giả lập.",
+        "steps": [
+          "Gửi.",
+          "Đọc trạng thái và thông báo."
+        ],
+        "expected": "Hiển thị trạng thái chưa ánh xạ; không khẳng định đã gửi/xác minh và không tự gửi lại.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-010",
+        "requirement_ids": [
+          "SH-04-YC-014"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Thiếu mã trạng thái hoặc thân dữ liệu sai",
+        "precondition": "HTTP 202 nhưng thân dữ liệu thiếu mã trạng thái hoặc sai kiểu.",
+        "data": "thân dữ liệu null, data thiếu, mã trạng thái rỗng hoặc không phải chuỗi.",
+        "steps": [
+          "Gửi từng biến thể.",
+          "Quan sát trạng thái."
+        ],
+        "expected": "Hiển thị kết quả chưa rõ; không thông báo đã tiếp nhận yêu cầu.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-011",
+        "requirement_ids": [
+          "SH-04-YC-012",
+          "SH-04-YC-014"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Không coi HTTP 200 là đã tiếp nhận",
+        "precondition": "API giả lập trả HTTP 200 với thân dữ liệu giống thành công.",
+        "data": "HTTP 200, businessCode/mã trạng thái giống accepted.",
+        "steps": [
+          "Gửi.",
+          "Đọc trạng thái."
+        ],
+        "expected": "Không báo đã tiếp nhận vì giao diện chỉ chấp nhận HTTP 202.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-012",
+        "requirement_ids": [
+          "SH-04-YC-015"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Ánh xạ HTTP 422",
+        "precondition": "API giả lập từ chối data.",
+        "data": "HTTP 422 DESIGN_VALIDATION_ERROR.",
+        "steps": [
+          "Gửi.",
+          "Đọc thông báo."
+        ],
+        "expected": "Hiển thị lỗi dữ liệu; không ghi nhận đã tiếp nhận, không tạo biểu mẫu sửa user_id/email trên SH-04 và không gửi lại.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-013",
+        "requirement_ids": [
+          "SH-04-YC-016"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Ánh xạ HTTP 500 an toàn",
+        "precondition": "Nhà cung cấp dịch vụ giả lập phát sinh lỗi.",
+        "data": "HTTP 500 DESIGN_INTERNAL_ERROR với chi tiết nội bộ giả.",
+        "steps": [
+          "Gửi.",
+          "Đọc thông báo và kiểm tra số yêu cầu."
+        ],
+        "expected": "Hiển thị lỗi chung; không để lộ chi tiết nội bộ và không tự gửi lại.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-014",
+        "requirement_ids": [
+          "SH-04-YC-017",
+          "SH-04-YC-018"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Mất kết nối cho kết quả chưa rõ",
+        "precondition": "Kết nối giả lập bị ngắt trước khi nhận phản hồi.",
+        "data": "HttpErrorResponse mã trạng thái 0.",
+        "steps": [
+          "Gửi một lần.",
+          "Theo dõi trạng thái/yêu cầu sau hết thời gian chờ."
+        ],
+        "expected": "Hiển thị kết quả chưa rõ; không tự gửi lại hoặc khẳng định nhà cung cấp đã tiếp nhận.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-015",
+        "requirement_ids": [
+          "SH-04-YC-018"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "HTTP lỗi khác dùng trạng thái lỗi chung",
+        "precondition": "Thử các mã trạng thái không có nhánh riêng.",
+        "data": "400, 401, 403, 404, 503.",
+        "steps": [
+          "Gửi lần lượt từng phản hồi.",
+          "Quan sát thông báo."
+        ],
+        "expected": "Hiển thị lỗi yêu cầu (lỗi yêu cầu); không báo đã tiếp nhận, không để lộ thân dữ liệu và không tự gửi lại.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-016",
+        "requirement_ids": [
+          "SH-04-YC-005",
+          "SH-04-YC-010",
+          "SH-04-YC-019"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Chặn ID/email dữ liệu bàn giao không hợp lệ",
+        "precondition": "Hàm thiết lập dữ liệu bàn giao kiểm tra ID/email.",
+        "data": "ID 0/âm/quá miền số nguyên an toàn theo JavaScript; email rỗng/toàn trắng.",
+        "steps": [
+          "Thử từng giá trị.",
+          "Mở tuyến và theo dõi yêu cầu."
+        ],
+        "expected": "Hàm từ chối/xóa dữ liệu bàn giao không hợp lệ; trang không gọi API. Giới hạn phía giao diện chặt hơn int64 trong danh mục.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-017",
+        "requirement_ids": [
+          "SH-04-YC-005",
+          "SH-04-YC-030"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu giới hạn số nguyên an toàn của JavaScript với int64",
+        "precondition": "Danh mục/API/máy chủ mã nguồn đã đọc.",
+        "data": "ID bằng Number.MAX_SAFE_INTEGER và lớn hơn.",
+        "steps": [
+          "Kiểm tra dữ liệu bàn giao hàm thiết lập.",
+          "Đối chiếu máy chủ hàm kiểm tra data."
+        ],
+        "expected": "Phía giao diện từ chối ID vượt Number.MAX_SAFE_INTEGER; mã nguồn máy chủ không kiểm tra giới hạn int64. Không kết luận rằng mọi ID lớn đều được chấp nhận.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-018",
+        "requirement_ids": [
+          "SH-04-YC-021",
+          "SH-04-YC-022",
+          "SH-04-YC-024"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Không suy luận quyền sở hữu tài khoản hoặc cập nhật tài khoản",
+        "precondition": "Nhà cung cấp dịch vụ mặc định trả accepted.",
+        "data": "Không kết nối DB thật.",
+        "steps": [
+          "Đối chiếu view/nhà cung cấp dịch vụ mã nguồn.",
+          "Kiểm tra câu chữ UI."
+        ],
+        "expected": "Không kết luận ID tồn tại hoặc khớp email; không khẳng định trạng thái tài khoản đã đổi, thư đã gửi hoặc email đã xác minh.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-019",
+        "requirement_ids": [
+          "SH-04-YC-021",
+          "SH-04-YC-028"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Câu chữ về việc tiếp nhận phải trung thực",
+        "precondition": "Trạng thái được tiếp nhận (accepted).",
+        "data": "HTTP 202 chuẩn.",
+        "steps": [
+          "Đọc thông báo và thẻ API."
+        ],
+        "expected": "Chỉ nói bộ thử nghiệm đã tiếp nhận; không nói yêu cầu đã vào hàng đợi, email đã gửi thật hoặc tài khoản đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-020",
+        "requirement_ids": [
+          "SH-04-YC-023",
+          "SH-04-YC-024"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Quay lại đăng nhập không kèm dữ liệu bàn giao",
+        "precondition": "SH-04 đang hiển thị ở bất kỳ trạng thái nào.",
+        "data": "Bấm liên kết Quay lại đăng nhập.",
+        "steps": [
+          "Bấm Quay lại đăng nhập.",
+          "Theo dõi URL và mạng."
+        ],
+        "expected": "Mở /login; không gọi API #02, không đưa ID/email vào URL và không bảo đảm đăng nhập thành công.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-021",
+        "requirement_ids": [
+          "SH-04-YC-020",
+          "SH-04-YC-021"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Không có nhập OTP/liên kết/bộ đếm lùi",
+        "precondition": "Trang mở ở nhiều trạng thái.",
+        "data": "Kiểm tra biểu mẫu, ô OTP, liên kết xác minh và bộ đếm lùi trong cây giao diện (DOM).",
+        "steps": [
+          "Kiểm tra dữ liệu đầu vào, biểu mẫu, OTP, link xác nhận, bộ đếm lùi."
+        ],
+        "expected": "Không có điều khiển xác minh giả; không có trạng thái đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-022",
+        "requirement_ids": [
+          "SH-04-YC-025"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị điều khiển giả lập",
+        "precondition": "So sánh trang Angular với mẫu HTML thiết kế.",
+        "data": "Tìm bộ chọn trạng thái, nút cURL và khung JSON trong trang Angular.",
+        "steps": [
+          "Kiểm tra DOM trang Angular.",
+          "Đọc HTML mẫu tĩnh nhưng không thực thi."
+        ],
+        "expected": "Trang sản phẩm không hiển thị bộ chọn, nút cURL hoặc khung JSON giả lập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-023",
+        "requirement_ids": [
+          "SH-04-YC-026"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Không tuyên bố đạt WCAG từ ảnh",
+        "precondition": "Không có báo cáo khả năng tiếp cận.",
+        "data": "Ảnh mẫu có nhãn đạt WCAG AA; không có báo cáo kiểm tra.",
+        "steps": [
+          "Đọc trang và evidence."
+        ],
+        "expected": "Không tuyên bố đạt WCAG; khả năng tiếp cận tổng thể chưa được xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-024",
+        "requirement_ids": [
+          "SH-04-YC-027"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Liên kết thương hiệu về /",
+        "precondition": "Trang hiển thị.",
+        "data": "Study2Work LMS.",
+        "steps": [
+          "Bấm liên kết thương hiệu."
+        ],
+        "expected": "RouterLink mở trang chủ /; không gọi API #02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-MH-025",
+        "requirement_ids": [
+          "SH-04-YC-029",
+          "SH-04-YC-031",
+          "SH-04-YC-032"
+        ],
+        "target_id": "SH-04",
+        "group": "Toàn màn hình",
+        "title": "Giữ câu hỏi DD/API và trạng thái kiểm chứng",
+        "precondition": "DD/API còn câu hỏi mở; chủ sở hữu, người rà soát và người phê duyệt chưa được nêu.",
+        "data": "chủ sở hữu/người rà soát/người phê duyệt chưa có; chưa chạy ca.",
+        "steps": [
+          "Đối chiếu mã trạng thái trong tổng quan/kế hoạch/API DD.",
+          "Đọc metadata UTC."
+        ],
+        "expected": "Giữ nguyên điểm chặn/bản nháp/câu hỏi mở; không ghi ca đã chạy hoặc tự điền danh tính phê duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "SH-04-TC-TP-001",
+        "requirement_ids": [
+          "SH-04-YC-001"
+        ],
+        "target_id": "SH-04-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 01: Mã SH-04 và đường dẫn đề xuất",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #1, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Ảnh ghi tuyến đề xuất; mã nguồn hiển thị nhãn SH-04 nhưng không in đường dẫn.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-002",
+        "requirement_ids": [
+          "SH-04-YC-025"
+        ],
+        "target_id": "SH-04-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 02: Bộ chọn trạng thái mô phỏng",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #2, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Không có bộ chọn trạng thái giả lập trong trang Angular.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-04-TC-TP-003",
+        "requirement_ids": [
+          "SH-04-YC-012",
+          "SH-04-YC-013",
+          "SH-04-YC-014"
+        ],
+        "target_id": "SH-04-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 03: Biểu tượng và nhãn phản hồi",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #3, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Nhãn trạng thái phù hợp trạng thái; chỉ phản hồi accepted đầy đủ mới cho nhãn accepted.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-004",
+        "requirement_ids": [
+          "SH-04-YC-021"
+        ],
+        "target_id": "SH-04-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 04: Tiêu đề và giải thích kết quả",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #4, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Thông báo theo trạng thái; không phóng đại việc đã gửi hoặc vào hàng đợi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-005",
+        "requirement_ids": [
+          "SH-04-YC-020"
+        ],
+        "target_id": "SH-04-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 05: Giới hạn xác minh email",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #5, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Nêu chưa có OTP/link/API xác nhận; không có trường giả.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-006",
+        "requirement_ids": [
+          "SH-04-YC-023",
+          "SH-04-YC-024"
+        ],
+        "target_id": "SH-04-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 06: Quay lại đăng nhập",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #6, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "RouterLink tới /login; không gọi API và không truyền dữ liệu qua URL.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-007",
+        "requirement_ids": [
+          "SH-04-YC-025"
+        ],
+        "target_id": "SH-04-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 07: Nút sao chép lệnh cURL",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #7, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Nút cURL không xuất hiện; không tạo lệnh sai đường dẫn API/thân data.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-04-TC-TP-008",
+        "requirement_ids": [
+          "SH-04-YC-009"
+        ],
+        "target_id": "SH-04-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 08: Thẻ tham chiếu API #02",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #8, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Thẻ nêu API #02, không phải giám sát trực tiếp.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-009",
+        "requirement_ids": [
+          "SH-04-YC-009",
+          "SH-04-YC-012",
+          "SH-04-YC-021"
+        ],
+        "target_id": "SH-04-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 09: Các hàng trạng thái giao thức/xác minh",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #9, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Các dòng đúng giới hạn: 202 bản giả lập, chưa gửi thật, chưa OTP/link/API xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-010",
+        "requirement_ids": [
+          "SH-04-YC-025"
+        ],
+        "target_id": "SH-04-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 10: Khung JSON mô phỏng",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #10, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "JSON giả lập không xuất hiện như phản hồi thật.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Không áp dụng"
+      },
+      {
+        "id": "SH-04-TC-TP-011",
+        "requirement_ids": [
+          "SH-04-YC-026"
+        ],
+        "target_id": "SH-04-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 11: Thẻ quy tắc/nhãn WCAG",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #11, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Không tuyên bố đạt WCAG nếu thiếu bằng chứng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-012",
+        "requirement_ids": [
+          "SH-04-YC-001"
+        ],
+        "target_id": "SH-04-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 12: Chân trang phiên bản/tuyến",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu mốc #12, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Chân trang mẫu không có trong trang Angular; không coi giao thức nhãn là môi trường lúc chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-013",
+        "requirement_ids": [
+          "SH-04-YC-001"
+        ],
+        "target_id": "SH-04-SRC-01",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 13: Nhãn trang hiện hành",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 01, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Nhãn trang hiện hành phân biệt với thuộc tính data-screen-id.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-014",
+        "requirement_ids": [
+          "SH-04-YC-027"
+        ],
+        "target_id": "SH-04-SRC-02",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 14: Liên kết thương hiệu",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 02, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Liên kết thương hiệu mở / và không gửi #02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-015",
+        "requirement_ids": [
+          "SH-04-YC-007"
+        ],
+        "target_id": "SH-04-SRC-03",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 15: Nhãn bàn giao xác minh",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 03, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Nhãn phụ không khẳng định thư gửi thật.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-016",
+        "requirement_ids": [
+          "SH-04-YC-007",
+          "SH-04-YC-008"
+        ],
+        "target_id": "SH-04-SRC-04",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 16: Nút gửi yêu cầu xác minh",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 04, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Nút chỉ có khi ready; trạng thái đang gửi (submitting) chặn gọi tiếp.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-017",
+        "requirement_ids": [
+          "SH-04-YC-019"
+        ],
+        "target_id": "SH-04-SRC-05",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 17: Địa chỉ email bàn giao",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 05, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Email hiển thị lấy từ dữ liệu bàn giao; không có ô nhập.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-018",
+        "requirement_ids": [
+          "SH-04-YC-012",
+          "SH-04-YC-015",
+          "SH-04-YC-016",
+          "SH-04-YC-017"
+        ],
+        "target_id": "SH-04-SRC-06",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 18: Vùng trạng thái/thông báo",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 06, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Vùng mã trạng thái/alert được gắn theo nhánh; khả năng tiếp cận tổng thể chưa xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-019",
+        "requirement_ids": [
+          "SH-04-YC-006"
+        ],
+        "target_id": "SH-04-SRC-07",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 19: Ghi chú lưu trữ dữ liệu",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 07, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Ghi chú mô tả lưu tạm; không chứng minh môi trường lúc chạy đã được kiểm tra.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-TP-020",
+        "requirement_ids": [
+          "SH-04-YC-004",
+          "SH-04-YC-013",
+          "SH-04-YC-014"
+        ],
+        "target_id": "SH-04-SRC-08",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần 20: Thẻ nội dung có điều kiện",
+        "precondition": "Trang và trạng thái tương ứng đã hiển thị.",
+        "data": "Đối chiếu Mã nguồn 08, cây giao diện (DOM) hoặc trạng thái nêu trong đặc tả.",
+        "steps": [
+          "Quan sát đúng thành phần.",
+          "Đối chiếu nhãn, nội dung, điều kiện xuất hiện và trạng thái."
+        ],
+        "expected": "Các trạng thái có nội dung riêng; không có trạng thái đã xác minh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/01-ui-elements.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.html",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "SH-04-TC-SK-001",
+        "requirement_ids": [
+          "SH-04-YC-001",
+          "SH-04-YC-004",
+          "SH-04-YC-020"
+        ],
+        "target_id": "SH-04-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở trang khi thiếu dữ liệu bàn giao",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Mở trực tiếp /register/verification khi không có data.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị trạng thái thiếu dữ liệu (missing-handoff); không gọi API #02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-002",
+        "requirement_ids": [
+          "SH-04-YC-003",
+          "SH-04-YC-005",
+          "SH-04-YC-019"
+        ],
+        "target_id": "SH-04-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở trang với dữ liệu bàn giao hợp lệ",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Dữ liệu bàn giao một lần có ID an toàn và email không rỗng.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Dữ liệu bàn giao được tiêu thụ; trang vào trạng thái sẵn sàng (ready); chưa gửi yêu cầu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-003",
+        "requirement_ids": [
+          "SH-04-YC-007",
+          "SH-04-YC-008",
+          "SH-04-YC-009",
+          "SH-04-YC-010",
+          "SH-04-YC-011"
+        ],
+        "target_id": "SH-04-EV-002",
+        "group": "Sự kiện",
+        "title": "Gửi sau thao tác rõ ràng",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Trạng thái sẵn sàng (ready) và thao tác nhấp gửi.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Một POST đúng đường dẫn và thân dữ liệu; không gửi tiêu đề Authorization.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-004",
+        "requirement_ids": [
+          "SH-04-YC-012",
+          "SH-04-YC-021",
+          "SH-04-YC-028"
+        ],
+        "target_id": "SH-04-EV-003",
+        "group": "Sự kiện",
+        "title": "Phản hồi được tiếp nhận (accepted)",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Phản hồi HTTP 202; success=true; businessCode=DESIGN_OPERATION_ACCEPTED; data.status=accepted.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị bộ thử nghiệm đã tiếp nhận; không khẳng định đã gửi thư hoặc xác minh email.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-005",
+        "requirement_ids": [
+          "SH-04-YC-015"
+        ],
+        "target_id": "SH-04-EV-004",
+        "group": "Sự kiện",
+        "title": "Lỗi dữ liệu 422",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "HTTP 422 DESIGN_VALIDATION_ERROR.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị yêu cầu không hợp lệ (invalid-request); không báo đã tiếp nhận.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-006",
+        "requirement_ids": [
+          "SH-04-YC-016",
+          "SH-04-YC-018"
+        ],
+        "target_id": "SH-04-EV-005",
+        "group": "Sự kiện",
+        "title": "Lỗi nhà cung cấp dịch vụ 500",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "HTTP 500 với chi tiết nội bộ giả.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị lỗi yêu cầu (lỗi yêu cầu) an toàn; không tự gửi lại.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-007",
+        "requirement_ids": [
+          "SH-04-YC-014",
+          "SH-04-YC-017",
+          "SH-04-YC-018"
+        ],
+        "target_id": "SH-04-EV-006",
+        "group": "Sự kiện",
+        "title": "Mất mạng/thân dữ liệu lỗi",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Mã trạng thái 0 hoặc 202 thiếu mã trạng thái.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị kết quả chưa rõ (outcome-unknown); không tự gửi lại.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-008",
+        "requirement_ids": [
+          "SH-04-YC-023",
+          "SH-04-YC-024"
+        ],
+        "target_id": "SH-04-EV-007",
+        "group": "Sự kiện",
+        "title": "Quay lại SH-02",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Bấm liên kết routerLink=/login.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Mở trang đăng nhập; không gọi API #02 và không đưa ID/email vào URL.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-009",
+        "requirement_ids": [
+          "SH-04-YC-025",
+          "SH-04-YC-026"
+        ],
+        "target_id": "SH-04-EV-008",
+        "group": "Sự kiện",
+        "title": "Bỏ tương tác giả lập",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Đối chiếu cây giao diện (DOM) với HTML mẫu.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Bộ chọn, nút cURL, JSON và nhãn WCAG giả lập không trở thành tính năng hoặc bằng chứng của trang sản phẩm.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-010",
+        "requirement_ids": [
+          "SH-04-YC-013",
+          "SH-04-YC-028"
+        ],
+        "target_id": "SH-04-EV-009",
+        "group": "Sự kiện",
+        "title": "Mã trạng thái từ nhà cung cấp dịch vụ chưa ánh xạ",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "202 + data.status=queued + lý do giả.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị trạng thái chưa ánh xạ; không hiển thị reason và không khẳng định đã gửi thư/xác minh.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-011",
+        "requirement_ids": [
+          "SH-04-YC-008"
+        ],
+        "target_id": "SH-04-EV-002",
+        "group": "Sự kiện",
+        "title": "Không gửi hai lần khi đang chờ",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Yêu cầu chưa hoàn tất; nhấp lặp.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Chỉ có một lời gọi dịch vụ khi người dùng nhấp lặp trong lúc đang chờ.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-012",
+        "requirement_ids": [
+          "SH-04-YC-012",
+          "SH-04-YC-014"
+        ],
+        "target_id": "SH-04-EV-003",
+        "group": "Sự kiện",
+        "title": "Không chấp nhận HTTP 200",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "HTTP 200 với thân như accepted.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Không báo đã tiếp nhận vì mã HTTP phải là 202.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-013",
+        "requirement_ids": [
+          "SH-04-YC-014"
+        ],
+        "target_id": "SH-04-EV-006",
+        "group": "Sự kiện",
+        "title": "Mã trạng thái bị thiếu hoặc sai kiểu",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Thân dữ liệu thiếu mã trạng thái hoặc mã trạng thái sai kiểu/rỗng.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị kết quả chưa rõ; không báo đã tiếp nhận.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-014",
+        "requirement_ids": [
+          "SH-04-YC-018"
+        ],
+        "target_id": "SH-04-EV-005",
+        "group": "Sự kiện",
+        "title": "HTTP lỗi khác",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "400/401/403/404/503.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị lỗi chung; không báo đã tiếp nhận và không tự gửi lại.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-015",
+        "requirement_ids": [
+          "SH-04-YC-005",
+          "SH-04-YC-030"
+        ],
+        "target_id": "SH-04-EV-001",
+        "group": "Sự kiện",
+        "title": "Biên ID an toàn",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Thử Number.MAX_SAFE_INTEGER và lớn hơn.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Phía giao diện chỉ chấp nhận ID trong miền số nguyên an toàn; mã nguồn máy chủ không kiểm tra biên int64.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-016",
+        "requirement_ids": [
+          "SH-04-YC-003",
+          "SH-04-YC-006"
+        ],
+        "target_id": "SH-04-EV-001",
+        "group": "Sự kiện",
+        "title": "Tải lại làm mất dữ liệu bàn giao",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Tải lại sau khi dữ liệu bàn giao đã được tiêu thụ.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Hiển thị trạng thái thiếu dữ liệu; không tự khôi phục hoặc gửi yêu cầu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-017",
+        "requirement_ids": [
+          "SH-04-YC-021",
+          "SH-04-YC-022",
+          "SH-04-YC-024"
+        ],
+        "target_id": "SH-04-EV-002",
+        "group": "Sự kiện",
+        "title": "Không kiểm tra quyền sở hữu hoặc thay đổi tài khoản",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Nhà cung cấp dịch vụ bản giả lập accepted; không kết nối DB.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Không kiểm tra ID/email và không cập nhật trạng thái tài khoản; không khẳng định email đã xác minh.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-018",
+        "requirement_ids": [
+          "SH-04-YC-013",
+          "SH-04-YC-028"
+        ],
+        "target_id": "SH-04-EV-009",
+        "group": "Sự kiện",
+        "title": "Không hiển thị lý do tùy ý",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Phản hồi có lý do tự do.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Giao diện bỏ qua trường reason tùy ý.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-019",
+        "requirement_ids": [
+          "SH-04-YC-002",
+          "SH-04-YC-011"
+        ],
+        "target_id": "SH-04-EV-002",
+        "group": "Sự kiện",
+        "title": "API công khai, không yêu cầu token Bearer",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "Phía gọi API truyền thân dữ liệu, không truyền tiêu đề HTTP; kiểm thử máy chủ nhận yêu cầu công khai.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Không yêu cầu token; bằng chứng hiện có là mã nguồn và khẳng định trong kiểm thử đã đọc, không gọi API trực tiếp.",
+        "api_ids": [
+          "API-002"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-04-TC-SK-020",
+        "requirement_ids": [
+          "SH-04-YC-029",
+          "SH-04-YC-031",
+          "SH-04-YC-032"
+        ],
+        "target_id": "SH-04-EV-008",
+        "group": "Sự kiện",
+        "title": "Giữ biệt lập DD và môi trường lúc chạy",
+        "precondition": "Dùng tuyến/thành phần và phản hồi HTTP giả lập tương ứng.",
+        "data": "DD/API còn đang bị chặn/bản nháp; UTC chưa chạy.",
+        "steps": [
+          "Thiết lập trạng thái và phản hồi HTTP giả lập.",
+          "Thực hiện thao tác.",
+          "Đối chiếu trạng thái, nội dung và yêu cầu gửi đi."
+        ],
+        "expected": "Không đóng điểm chặn hoặc ghi nhận phê duyệt/đã chạy khi chưa có bằng chứng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-04-HandoffXacThucEmail/05-business-rules.md",
+          "apps/study-client/src/app/features/shared/SH04/pages/sh04-page.ts",
+          "apps/study-client/src/app/features/shared/SH04/data-access/sh04-verification.service.ts",
+          "apps/study-server/app/modules/guest/api_02_auth_verify_email_send/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ]
+  }
+}

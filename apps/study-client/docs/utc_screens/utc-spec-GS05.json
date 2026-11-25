@@ -1,0 +1,2727 @@
+{
+  "metadata": {
+    "screen_id": "GS-05",
+    "screen_name": "Đánh giá và thảo luận công khai",
+    "module": "Khách / Khám phá",
+    "route": "/courses/:courseId?tab=reviews",
+    "actor": "Khách theo DD; chính sách công khai cho đánh giá gốc/phản hồi còn cần xác nhận.",
+    "version": "0.1 — BẢN KẾ HOẠCH UTC",
+    "dd_version": "0.2 (2026-11-17); đối chiếu nguồn 2026-11-24",
+    "dd_status": "DISCREPANCY — người dùng xác nhận DD đã duyệt; GS-05 trong repo ghi BLOCKED và API #10 ghi Draft. Dùng DD làm chuẩn theo chỉ dẫn; giữ mở GS05-B01…B11.",
+    "runtime_status": "Rà soát tĩnh tài liệu/mã nguồn; không chạy ứng dụng, test, build, trình duyệt, API triển khai hoặc CSDL thật. Không nhận test/stub lịch sử trong DD là xác minh của tác vụ này.",
+    "author": "Chủ sở hữu chưa được xác định; kế hoạch do Codex biên soạn.",
+    "reviewer": "CẦN XÁC NHẬN",
+    "approver": "CẦN XÁC NHẬN",
+    "date": "2026-11-24",
+    "source_name": "DD GS-05, danh mục màn hình, bản mẫu Stitch, mã nguồn Web GS03/GS05 và API #10 Study Server."
+  },
+  "overall": {
+    "objective": "Lập kế hoạch kiểm thử toàn bộ thẻ Đánh giá và thảo luận công khai trong GS03; bao gồm cổng #08, API #10, đánh giá/phản hồi, phân trang, trạng thái, trợ năng, điều hướng và điểm chặn.",
+    "inputs": "CourseId dạng chuỗi từ GS03; query tab=reviews; response #10 có items và pagination; chỉ dùng dữ liệu giả lập.",
+    "outputs": "Các trạng thái hiện hành idle/loading/empty/ready/ngoài phạm vi/not-found/error; danh sách chỉ hiện tên tác giả và content. Giao diện khi có dữ liệu đã được lập trình nhưng chưa có thiết kế trực quan được duyệt.",
+    "main_flow": "GS03 xác nhận khóa học PUBLISHED bằng #08 rồi gắn GS05 theo tab reviews; GS05 gọi GET công khai #10 với course_id và page; kiểm tra envelope/review/author/reply/pagination; hiển thị nội dung, trạng thái rỗng, không tìm thấy, lỗi hoặc trang vượt phạm vi. Không tạo đánh giá hoặc rating.",
+    "preconditions": "Kế hoạch kiểm thử tĩnh; dùng dữ liệu giả lập sau khi chốt hợp đồng và thiết kế. Không kiểm thử trực tiếp môi trường triển khai hoặc cơ sở dữ liệu thật.",
+    "states": [
+      "Idle",
+      "Đang tải",
+      "Rỗng",
+      "Ready",
+      "Ngoài phạm vi",
+      "Không tìm thấy",
+      "Lỗi"
+    ],
+    "security": "Không Bearer; không hiển thị ID/status/timestamp/avatar/title/rating hoặc chi tiết lỗi server. Việc lọc ACTIVE là hành vi của mã nguồn hiện tại, chưa phải chính sách đã duyệt.",
+    "out_of_scope": "Không tự chốt title/rating/aggregate/rating filter, quyền xem công khai, bộ nhớ đệm/eager-lazy, thứ tự phản hồi, page sai định dạng/403/422, lược đồ đang chạy, thiết kế giao diện có dữ liệu, thao tác ghi hoặc route mới."
+  },
+  "apis": [
+    {
+      "id": "API-08",
+      "catalog_ref": "#08",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}",
+      "request": "API công khai, không body/query/Bearer. GS03Page giữ courseId dạng chuỗi và dùng response #08 để mở thẻ; đây là phụ thuộc của GS03.",
+      "response": "Hợp đồng theo mã nguồn: khóa học PUBLISHED được trả thành công; khóa học không tồn tại/chưa công khai được GS03 xử lý theo 404.",
+      "errors": "Không gọi lại #08 chỉ vì mount GS05. Lỗi cổng khóa học do GS03 xử lý.",
+      "auth": "GET công khai; không tự thêm xác thực.",
+      "design_status": "Phụ thuộc của GS03; GS05 không sở hữu yêu cầu này.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "event_ids": [
+        "GS-05-EV-001",
+        "GS-05-EV-005"
+      ]
+    },
+    {
+      "id": "API-10",
+      "catalog_ref": "#10",
+      "method": "GET",
+      "path": "/api/v1/courses/{course_id}/reviews",
+      "request": "Client hiện chỉ gửi page, mặc định 1; không Bearer, body, size hoặc rating. Route server còn khai báo rating tùy chọn nhưng mã nguồn không áp dụng.",
+      "response": "Mã nguồn hiện trả DESIGN_RESOURCE_RETRIEVED với items/pagination, page size 20, title:null, content đánh giá/phản hồi và các trường tác giả; không có rating/aggregate.",
+      "errors": "Mã nguồn hiện trả 404 khi không có khóa học PUBLISHED và 500 khi truy vấn/ánh xạ lỗi. Route/model xử lý đầu vào page; DD chưa chốt ý nghĩa page sai định dạng/vượt phạm vi. Không có hợp đồng 401/403/422 được khai báo.",
+      "auth": "GET công khai; client hiện không gửi Authorization header. Điều này không phê duyệt chính sách quyền xem/kiểm duyệt công khai.",
+      "design_status": "API #10 có căn cứ cục bộ từ mã nguồn; DD API vẫn ghi Draft — Needs Confirmation. Các câu hỏi title/rating/query-key/quyền xem công khai/lược đồ còn mở.",
+      "source_ref": "apps/study-server/docs/dd/10_courses_reviews/00_Cover.md; apps/study-server/docs/dd/10_courses_reviews/02_Overview.md; apps/study-server/docs/dd/10_courses_reviews/03_Request.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-server/docs/dd/10_courses_reviews/05_Data_Mapping.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-server/docs/dd/10_courses_reviews/07_table.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_10_courses_reviews/validate.py; apps/study-server/app/modules/guest/api_10_courses_reviews/models.py; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-server/tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-client/src/app/core/http/study-api.service.ts",
+      "event_ids": [
+        "GS-05-EV-002",
+        "GS-05-EV-003",
+        "GS-05-EV-004",
+        "GS-05-EV-005",
+        "GS-05-EV-006"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "GS-05-YC-001",
+      "group": "Tuyến và định danh",
+      "description": "GS-05 là thẻ đánh giá trên /courses/:courseId?tab=reviews do GS03Page quản lý; không có route Angular độc lập cho GS05.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/guest.route.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-002",
+      "group": "Tuyến và định danh",
+      "description": "GS03 giữ courseId dạng chuỗi và xác nhận khóa học bằng #08 trước khi gắn GS05; GS05 không tự phân tích hoặc chuẩn hóa ID.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-003",
+      "group": "Điều phối",
+      "description": "F02 và mã nguồn hiện tải #10 theo thẻ reviews đã chọn; AC-05 mô tả chuỗi #08→#09→#10 sớm hơn. Chênh lệch chưa được quyết định.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-004",
+      "group": "API",
+      "description": "GS05 gọi GET #10 công khai với course_id trên tuyến và page; không gửi Bearer, thân yêu cầu, size hoặc rating.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-client/src/app/core/http/study-api.service.ts; apps/study-server/app/api/v1.py; apps/study-server/docs/dd/10_courses_reviews/03_Request.md",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-005",
+      "group": "API",
+      "description": "Client chỉ nhận envelope DESIGN_RESOURCE_RETRIEVED và cấu trúc items/pagination đúng; page phải khớp yêu cầu, size=20, total_pages nhất quán.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-006",
+      "group": "Danh sách",
+      "description": "Client ánh xạ tên tác giả và content của đánh giá/phản hồi; thứ tự hiển thị giữ thứ tự do API trả về.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-007",
+      "group": "Danh sách",
+      "description": "Không hiển thị title, ID, status, thời gian, avatar hoặc trường tác giả khác trong card hiện hành.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-008",
+      "group": "Đánh giá",
+      "description": "Không hiển thị rating từng review, rating filter hoặc sao trung bình; API hiện không có dữ liệu rating/aggregate.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-009",
+      "group": "Quyền hiển thị",
+      "description": "API hiện lọc khóa học PUBLISHED và đánh giá/phản hồi ACTIVE; trạng thái ACTIVE là hành vi mã nguồn, chưa được duyệt thành chính sách công khai.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-010",
+      "group": "Sắp xếp",
+      "description": "API sắp đánh giá gốc theo created_at DESC rồi id DESC; truy vấn phản hồi không có ORDER BY, không tự thêm thứ tự phản hồi.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-011",
+      "group": "Phân trang",
+      "description": "API mặc định `page=1` và kích thước trang là 20; máy khách chỉ gửi `page`, giữ trang đã chọn ở trạng thái cục bộ và không ghi trang lên URL.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/03_Request.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-012",
+      "group": "Trạng thái",
+      "description": "Phản hồi hợp lệ items=[] và total=0 thành empty; không đồng nhất empty với course 404 hoặc lỗi dịch vụ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-013",
+      "group": "Trạng thái",
+      "description": "HTTP 404 từ #10 thành not-found; lỗi khác thành thông báo an toàn có nút thử lại trang hiện tại.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-014",
+      "group": "Phân trang",
+      "description": "Khi page vượt total_pages và API trả items rỗng, hiện ngoài phạm vi với thao tác tải lại trang đầu.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-015",
+      "group": "Dữ liệu phân trang",
+      "description": "Nếu số dòng trả về khác số dòng dự kiến từ total, giữ nội dung nhận được, cảnh báo sai lệch, ẩn phân trang và cho tải lại.",
+      "source_ref": "apps/study-client/docs/list_screen.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-016",
+      "group": "Query chưa chốt",
+      "description": "API nhận rating?:string nhưng mã nguồn không thêm điều kiện SQL; client không gửi rating và không dựng bộ lọc.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/03_Request.md; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-017",
+      "group": "Title chưa chốt",
+      "description": "API hiện trả title:null trong khi Draft DD yêu cầu Discussion.title; client không hiển thị title và không suy ra từ content.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-018",
+      "group": "Phản hồi không hợp lệ",
+      "description": "Envelope, item, author, reply hoặc pagination sai cấu trúc sẽ thành lỗi an toàn; không lộ dữ liệu lỗi máy chủ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-019",
+      "group": "Đổi thẻ và yêu cầu cũ",
+      "description": "GS03 giữ cùng courseId khi đổi query tab; component GS05 bị tháo khỏi DOM và yêu cầu con được dọn khi component bị hủy.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-020",
+      "group": "Trợ năng",
+      "description": "Loading dùng role=status, aria-live=polite, aria-busy=true; lỗi dùng role=alert; danh sách/replies có role=list và nhãn.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-021",
+      "group": "Điều khiển bàn phím",
+      "description": "Nút phân trang và tải lại có type=button, trạng thái disabled theo biên trang và focus-visible; chiều cao tối thiểu 44px.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-022",
+      "group": "Hiển thị thích ứng",
+      "description": "CSS co khoảng cách/margin dưới 768px; nội dung dài được xuống dòng và giữ white-space pre-line.",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.css; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-023",
+      "group": "Thiết kế tĩnh",
+      "description": "9 marker Stitch chỉ mô tả đầu trang, breadcrumb và thẻ giống trạng thái rỗng; ảnh/code.html tĩnh không chứng minh API trả rỗng hoặc giao diện đã tải danh sách.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/README.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/screen-clean.png; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/screen-numbered.png; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/screen_rendered.png",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-024",
+      "group": "Điều hướng",
+      "description": "Các anchor trong Stitch dùng href=\"#\"; CTA quay lại không chứa courseId và GS05 không có route/CTA rời parent trong mã nguồn.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-025",
+      "group": "Phạm vi thay đổi",
+      "description": "GS05 chỉ đọc đánh giá; không có thao tác tạo/sửa/xóa đánh giá, phản hồi, báo cáo hoặc bày tỏ cảm xúc.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-026",
+      "group": "Hợp đồng lỗi",
+      "description": "DD không khai báo 401/403/422 cho #10; chỉ ghi các nhánh có căn cứ từ mã nguồn, không tự tạo hành vi cho page/rating sai định dạng.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_10_courses_reviews/validate.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-027",
+      "group": "Lược đồ và phát hành",
+      "description": "Lược đồ discussions trong DDL cũ khác assessment_reviews V1-PILOT; chưa có bằng chứng về lược đồ đang chạy, người duyệt hoặc quyết định về khả năng xem công khai.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/07_table.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql; .agents/server-study/database.md",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "notes": ""
+    },
+    {
+      "id": "GS-05-YC-028",
+      "group": "Giới hạn xác minh",
+      "description": "Tác vụ này rà soát tĩnh tài liệu/mã nguồn và kiểm tra gói; không chạy ứng dụng, ca kiểm thử, build, browser, API triển khai hoặc cơ sở dữ liệu thật.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/07-test-cases.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts; apps/study-server/tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "GS-05-EL-001",
+      "marker": "#1",
+      "source_element_id": "GS05-EL-01",
+      "name": "Nhóm thương hiệu và điều hướng đầu trang",
+      "type": "Nhóm điều hướng",
+      "position": "Đầu trang, x=186/2880, y=32/1200",
+      "properties": "Bản mẫu tĩnh có Study2Work, Trang chủ, Khóa học; mọi href là #. Khung hiện hành do GuestSiteLayout quản lý.",
+      "event_ids": [
+        "GS-05-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "requirement_ids": [
+        "GS-05-YC-020",
+        "GS-05-YC-024",
+        "GS-05-YC-025"
+      ]
+    },
+    {
+      "id": "GS-05-EL-002",
+      "marker": "#2",
+      "source_element_id": "GS05-EL-02",
+      "name": "Liên kết đăng nhập và đăng ký",
+      "type": "Nhóm liên kết",
+      "position": "Góc phải đầu trang, x=3012/2880, y=32/1200",
+      "properties": "Nhãn Đăng nhập/Đăng ký; href=#; không có session, callback hay return URL.",
+      "event_ids": [
+        "GS-05-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html",
+      "requirement_ids": [
+        "GS-05-YC-020",
+        "GS-05-YC-024",
+        "GS-05-YC-025"
+      ]
+    },
+    {
+      "id": "GS-05-EL-003",
+      "marker": "#3",
+      "source_element_id": "GS05-EL-03",
+      "name": "Đường dẫn phân cấp tới đánh giá",
+      "type": "Điều hướng breadcrumb",
+      "position": "Dưới đầu trang, x=186/2880, y=88/1200",
+      "properties": "Home/course/detail dùng href=#; nhãn cuối là Đánh giá và thảo luận; không có courseId trong HTML.",
+      "event_ids": [
+        "GS-05-EV-007",
+        "GS-05-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "requirement_ids": [
+        "GS-05-YC-020",
+        "GS-05-YC-024",
+        "GS-05-YC-025"
+      ]
+    },
+    {
+      "id": "GS-05-EL-004",
+      "marker": "#4",
+      "source_element_id": "GS05-EL-04",
+      "name": "Biểu tượng thảo luận trong card rỗng",
+      "type": "Biểu tượng trang trí",
+      "position": "Trên card, x=720/2880, y=244/1200",
+      "properties": "Chat_bubble_outline là icon tĩnh; không biểu thị số review, rating hoặc API state.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html",
+      "requirement_ids": [
+        "GS-05-YC-023"
+      ]
+    },
+    {
+      "id": "GS-05-EL-005",
+      "marker": "#5",
+      "source_element_id": "GS05-EL-05",
+      "name": "Tiêu đề tĩnh của bản mẫu",
+      "type": "H1",
+      "position": "Giữa card, x=1650/2880, y=312/1200",
+      "properties": "Chữ Đánh giá và thảo luận; không gắn tên khóa học hoặc số review.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html",
+      "requirement_ids": [
+        "GS-05-YC-023"
+      ]
+    },
+    {
+      "id": "GS-05-EL-006",
+      "marker": "#6",
+      "source_element_id": "GS05-EL-06",
+      "name": "Nội dung tĩnh giống trạng thái rỗng",
+      "type": "Đoạn văn",
+      "position": "Dưới tiêu đề, x=186/2880, y=347/1200",
+      "properties": "Chữ Chưa có nội dung để hiển thị; không gắn data.items=[] nên không chứng minh API trả rỗng.",
+      "event_ids": [
+        "GS-05-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html",
+      "requirement_ids": [
+        "GS-05-YC-012",
+        "GS-05-YC-023"
+      ]
+    },
+    {
+      "id": "GS-05-EL-007",
+      "marker": "#7",
+      "source_element_id": "GS05-EL-07",
+      "name": "CTA quay lại chi tiết khóa học",
+      "type": "Liên kết kiểu nút",
+      "position": "Dưới empty copy, x=3012/2880, y=405/1200",
+      "properties": "Href=#; không mang courseId/history state. Mã nguồn GS05 child không có CTA quay lại.",
+      "event_ids": [
+        "GS-05-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html",
+      "requirement_ids": [
+        "GS-05-YC-024",
+        "GS-05-YC-025"
+      ]
+    },
+    {
+      "id": "GS-05-EL-008",
+      "marker": "#8",
+      "source_element_id": "GS05-EL-08",
+      "name": "Thương hiệu ở chân trang",
+      "type": "Liên kết",
+      "position": "Trái chân trang, x=186/2880, y=1014/1200",
+      "properties": "Study2Work có href=# trong bản mẫu; không phải route xác minh.",
+      "event_ids": [
+        "GS-05-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html",
+      "requirement_ids": [
+        "GS-05-YC-020",
+        "GS-05-YC-024",
+        "GS-05-YC-025"
+      ]
+    },
+    {
+      "id": "GS-05-EL-009",
+      "marker": "#9",
+      "source_element_id": "GS05-EL-09",
+      "name": "Nhóm liên kết chân trang",
+      "type": "Nhóm điều hướng",
+      "position": "Phải chân trang, x=3012/2880, y=1014/1200",
+      "properties": "Trang chủ/Khóa học/Đăng nhập/Đăng ký; mọi href là #, không có xử lý auth.",
+      "event_ids": [
+        "GS-05-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html",
+      "requirement_ids": [
+        "GS-05-YC-020",
+        "GS-05-YC-024",
+        "GS-05-YC-025"
+      ]
+    },
+    {
+      "id": "GS-05-EL-010",
+      "marker": "—",
+      "source_element_id": "GS03-SRC-REVIEWS-TAB",
+      "name": "Thẻ Đánh giá trong GS03Page",
+      "type": "Nút tab",
+      "position": "Thanh tab của GS03",
+      "properties": "Role=tab; aria-selected/aria-controls gắn với query tab=reviews; GS03 owns route và courseId.",
+      "event_ids": [
+        "GS-05-EV-001",
+        "GS-05-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-001",
+        "GS-05-YC-002",
+        "GS-05-YC-019",
+        "GS-05-YC-020"
+      ]
+    },
+    {
+      "id": "GS-05-EL-011",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-HEADING",
+      "name": "Tiêu đề khu vực đánh giá",
+      "type": "H2",
+      "position": "Đầu panel GS05",
+      "properties": "Đánh giá và thảo luận; aria-labelledby=gs05-heading.",
+      "event_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html",
+      "requirement_ids": [
+        "GS-05-YC-001",
+        "GS-05-YC-023"
+      ]
+    },
+    {
+      "id": "GS-05-EL-012",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-LOADING",
+      "name": "Trạng thái đang tải",
+      "type": "Thông báo trạng thái",
+      "position": "Bảng GS05",
+      "properties": "Role=status, aria-live=polite, aria-busy=true; không có khung xương chờ tải.",
+      "event_ids": [
+        "GS-05-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css",
+      "requirement_ids": [
+        "GS-05-YC-016",
+        "GS-05-YC-018",
+        "GS-05-YC-020"
+      ]
+    },
+    {
+      "id": "GS-05-EL-013",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-EMPTY",
+      "name": "Trạng thái danh sách rỗng",
+      "type": "Thẻ trạng thái",
+      "position": "Bảng GS05",
+      "properties": "Chỉ hiện khi items=[] hợp lệ và total=0; dùng role=status; nội dung khác thẻ tĩnh trong Stitch.",
+      "event_ids": [
+        "GS-05-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html",
+      "requirement_ids": [
+        "GS-05-YC-012",
+        "GS-05-YC-020",
+        "GS-05-YC-023"
+      ]
+    },
+    {
+      "id": "GS-05-EL-014",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-ERROR",
+      "name": "Trạng thái lỗi an toàn và nút thử lại",
+      "type": "Cảnh báo và nút",
+      "position": "Bảng GS05",
+      "properties": "Role=alert; không hiển thị lỗi server; nút thử lại gọi lại page đang yêu cầu.",
+      "event_ids": [
+        "GS-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-013",
+        "GS-05-YC-018",
+        "GS-05-YC-021",
+        "GS-05-YC-026"
+      ]
+    },
+    {
+      "id": "GS-05-EL-015",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-NOTFOUND",
+      "name": "Trạng thái không tìm thấy",
+      "type": "Thông báo trạng thái",
+      "position": "Bảng GS05",
+      "properties": "HTTP 404 thành not-found; trạng thái này không có nút thử lại.",
+      "event_ids": [
+        "GS-05-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-013"
+      ]
+    },
+    {
+      "id": "GS-05-EL-016",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-LIST",
+      "name": "Danh sách đánh giá gốc",
+      "type": "Danh sách/thẻ",
+      "position": "Bảng GS05",
+      "properties": "Role=list, aria-label=...; mỗi card role=listitem chỉ hiện authorName/content; không hiện title, ID, status, thời gian hay avatar.",
+      "event_ids": [
+        "GS-05-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-005",
+        "GS-05-YC-006",
+        "GS-05-YC-007",
+        "GS-05-YC-017",
+        "GS-05-YC-018"
+      ]
+    },
+    {
+      "id": "GS-05-EL-017",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-REPLIES",
+      "name": "Danh sách phản hồi",
+      "type": "Danh sách con/card",
+      "position": "Trong rà soát thẻ",
+      "properties": "Role=list với aria-label=Phản hồi; chỉ hiện authorName/content của reply; không có nút trả lời.",
+      "event_ids": [
+        "GS-05-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-006",
+        "GS-05-YC-007",
+        "GS-05-YC-026"
+      ]
+    },
+    {
+      "id": "GS-05-EL-018",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-PAGINATION",
+      "name": "Điều khiển phân trang",
+      "type": "Điều hướng và nút",
+      "position": "Cuối danh sách",
+      "properties": "Nút Trang trước/sau, page/totalPages lưu cục bộ; bị khóa ở biên; xuất hiện khi totalPages>1 và không có chênh lệch tổng/danh sách.",
+      "event_ids": [
+        "GS-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-011",
+        "GS-05-YC-014",
+        "GS-05-YC-015",
+        "GS-05-YC-021"
+      ]
+    },
+    {
+      "id": "GS-05-EL-019",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-MISMATCH",
+      "name": "Cảnh báo tổng và danh sách lệch nhau",
+      "type": "Cảnh báo",
+      "position": "Trên danh sách",
+      "properties": "Giữ các dòng nhận được, ẩn phân trang, có nút tải lại; đây là trạng thái suy ra từ mã nguồn, DD chưa có thiết kế trực quan.",
+      "event_ids": [
+        "GS-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-015",
+        "GS-05-YC-018"
+      ]
+    },
+    {
+      "id": "GS-05-EL-020",
+      "marker": "—",
+      "source_element_id": "GS05-SRC-OUT-OF-RANGE",
+      "name": "Trạng thái trang vượt phạm vi",
+      "type": "Thông báo và nút",
+      "position": "Bảng GS05",
+      "properties": "Hiện số trang không còn nội dung và nút Tải lại trang đầu; không sửa URL.",
+      "event_ids": [
+        "GS-05-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "requirement_ids": [
+        "GS-05-YC-014",
+        "GS-05-YC-015",
+        "GS-05-YC-017"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "GS-05-EV-001",
+      "source_event_id": "GS05-EV-01",
+      "name": "Mở thẻ đánh giá và xác định khóa học",
+      "trigger": "Chọn tab Đánh giá trong GS03 hoặc mở /courses/:courseId?tab=reviews.",
+      "processing": "GS03 gọi #08 và chỉ mount GS05 khi khóa học PUBLISHED; GS05 giữ courseId dạng chuỗi và bắt đầu page=1. Mã nguồn hiện tải lazy; chưa có cache phía client. AC-05 mô tả eager, còn mâu thuẫn.",
+      "element_ids": [
+        "GS-05-EL-010"
+      ],
+      "api_ids": [
+        "API-08"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-05-YC-001",
+        "GS-05-YC-002",
+        "GS-05-YC-003"
+      ]
+    },
+    {
+      "id": "GS-05-EV-002",
+      "source_event_id": "GS05-EV-02",
+      "name": "Tải trang đánh giá bằng API #10",
+      "trigger": "GS05 được gắn sau cổng #08; lần đầu page=1 hoặc người dùng chọn trang.",
+      "processing": "Gửi GET công khai /api/v1/courses/{course_id}/reviews?page=N; không Bearer/body/size/rating. SwitchMap hủy yêu cầu trang cũ khi có yêu cầu mới.",
+      "element_ids": [
+        "GS-05-EL-012",
+        "GS-05-EL-018"
+      ],
+      "api_ids": [
+        "API-10"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-server/app/api/v1.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-05-YC-004",
+        "GS-05-YC-005",
+        "GS-05-YC-016",
+        "GS-05-YC-026"
+      ]
+    },
+    {
+      "id": "GS-05-EV-003",
+      "source_event_id": "GS05-EV-03",
+      "name": "Hiển thị đánh giá gốc và phản hồi",
+      "trigger": "#10 trả 200 hợp lệ với items có phần tử.",
+      "processing": "Kiểm tra envelope, page/size/total/total_pages, review/author/comments; ánh xạ tên tác giả và content. Không hiển thị title, rating, ID, status, avatar hoặc thời gian; không thêm thao tác.",
+      "element_ids": [
+        "GS-05-EL-016",
+        "GS-05-EL-017"
+      ],
+      "api_ids": [
+        "API-10"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-05-YC-006",
+        "GS-05-YC-007",
+        "GS-05-YC-008",
+        "GS-05-YC-010",
+        "GS-05-YC-018",
+        "GS-05-YC-020"
+      ]
+    },
+    {
+      "id": "GS-05-EV-004",
+      "source_event_id": "GS05-EV-04",
+      "name": "Hiển thị danh sách rỗng",
+      "trigger": "#10 trả 200 hợp lệ với items=[] và total=0.",
+      "processing": "Chuyển sang trạng thái rỗng riêng; không coi thẻ giống trạng thái rỗng trong Stitch là kết quả API; không thêm nút thử lại ở trạng thái rỗng.",
+      "element_ids": [
+        "GS-05-EL-006",
+        "GS-05-EL-013"
+      ],
+      "api_ids": [
+        "API-10"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-05-YC-012",
+        "GS-05-YC-023"
+      ]
+    },
+    {
+      "id": "GS-05-EV-005",
+      "source_event_id": "GS05-EV-05",
+      "name": "Phân biệt khóa học không tồn tại và lỗi dịch vụ",
+      "trigger": "#08 hoặc #10 trả 404; #10 có lỗi 500/truy vấn/ánh xạ/mạng.",
+      "processing": "GS03 xử lý cổng #08 trước khi gắn GS05. GS05 ánh xạ #10 404 sang not-found; lỗi khác sang alert an toàn có nút thử lại. Không suy diễn 403/422.",
+      "element_ids": [
+        "GS-05-EL-014",
+        "GS-05-EL-015"
+      ],
+      "api_ids": [
+        "API-08",
+        "API-10"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-05-YC-013",
+        "GS-05-YC-018",
+        "GS-05-YC-026"
+      ]
+    },
+    {
+      "id": "GS-05-EV-006",
+      "source_event_id": "GS05-EV-06",
+      "name": "Đổi trang và xử lý metadata lệch",
+      "trigger": "Chọn Trang trước/Trang sau; response có chênh lệch tổng/danh sách hoặc page ngoài phạm vi.",
+      "processing": "Page lưu cục bộ; nút bị khóa ở biên; ngoài phạm vi có nút về trang đầu; khi số dòng không khớp tổng thì giữ dòng, ẩn phân trang và cho tải lại. Hợp đồng query/page sai định dạng còn mở.",
+      "element_ids": [
+        "GS-05-EL-018",
+        "GS-05-EL-019",
+        "GS-05-EL-020"
+      ],
+      "api_ids": [
+        "API-10"
+      ],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "requirement_ids": [
+        "GS-05-YC-011",
+        "GS-05-YC-014",
+        "GS-05-YC-015",
+        "GS-05-YC-021",
+        "GS-05-YC-026"
+      ]
+    },
+    {
+      "id": "GS-05-EV-007",
+      "source_event_id": "GS05-EV-07",
+      "name": "Trở về chi tiết cùng khóa học",
+      "trigger": "Đổi tab trong GS03 hoặc dùng breadcrumb/CTA tĩnh trong Stitch.",
+      "processing": "Việc đổi thẻ tại GS03 giữ courseId trên cùng route; GS05 không có liên kết quay lại. Không coi anchor Stitch href=# là route đã nối.",
+      "element_ids": [
+        "GS-05-EL-003",
+        "GS-05-EL-007",
+        "GS-05-EL-010"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-05-YC-001",
+        "GS-05-YC-002",
+        "GS-05-YC-019",
+        "GS-05-YC-024"
+      ]
+    },
+    {
+      "id": "GS-05-EV-008",
+      "source_event_id": "GS05-EV-08",
+      "name": "Điều hướng đầu trang và chân trang trong bản mẫu",
+      "trigger": "Chọn liên kết đầu trang/chân trang/breadcrumb trong code.html tĩnh.",
+      "processing": "Chỉ ghi nhận href literal #; không xác nhận router/session/return URL. GuestSiteLayout trong app là nguồn điều hướng riêng.",
+      "element_ids": [
+        "GS-05-EL-001",
+        "GS-05-EL-002",
+        "GS-05-EL-008",
+        "GS-05-EL-009"
+      ],
+      "api_ids": [],
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "requirement_ids": [
+        "GS-05-YC-020",
+        "GS-05-YC-024",
+        "GS-05-YC-025"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "GS05-B01",
+      "description": "DD GS-05 ghi BLOCKED; thẻ đánh giá và giao diện các trạng thái tải/lỗi/phân trang chưa có thiết kế được duyệt.",
+      "impact": "Không lấy giao diện hiện tại làm thiết kế trải nghiệm đã chốt.",
+      "decision": "Duyệt thiết kế danh sách/phản hồi/các trạng thái/phân trang và cập nhật DD.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_PLAN.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B02",
+      "description": "DD API #10 ghi Draft; Discussion.title được yêu cầu nhưng mã nguồn/lược đồ không có trường này.",
+      "impact": "Không tự tạo title từ content hoặc đổi hợp đồng phản hồi.",
+      "decision": "Chốt nguồn title hoặc sửa hợp đồng API/ánh xạ có phê duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-server/docs/dd/10_courses_reviews/05_Data_Mapping.md; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; infra/postgres/study-server/DB.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B03",
+      "description": "AC-05 nêu aggregate rating; response API #10/DDL không có rating hoặc aggregate.",
+      "impact": "Không tạo sao, điểm trung bình hoặc điểm tự suy ra từ nội dung/số lượng.",
+      "decision": "Chốt nguồn dữ liệu và hợp đồng rating/aggregate trước khi hiển thị.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-server/docs/dd/10_courses_reviews/07_table.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B04",
+      "description": "Tên tham số và ý nghĩa của bộ lọc rating chưa rõ; mã nguồn hiện nhận rating nhưng không thêm điều kiện SQL.",
+      "impact": "Không gửi bộ lọc hoặc khẳng định kết quả đã lọc rating.",
+      "decision": "Duyệt tên query key, giá trị hợp lệ và điều kiện lọc nếu cần.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-server/docs/dd/10_courses_reviews/03_Request.md; apps/study-server/app/modules/guest/api_10_courses_reviews/validate.py; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B05",
+      "description": "Status ACTIVE và parent_id là giả định về đánh giá gốc/phản hồi công khai và kiểm duyệt; chưa được duyệt.",
+      "impact": "Việc lọc trong mã nguồn không tự chứng minh quyền xem công khai hoặc chính sách kiểm duyệt.",
+      "decision": "Duyệt visibility/moderation, quan hệ gốc/phản hồi và thứ tự phản hồi.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B06",
+      "description": "AC-05 yêu cầu gọi sớm #08→#09→#10/aggregate, khác F02, inventory và mã nguồn tải theo thẻ; chưa có chính sách dùng lại data.",
+      "impact": "Không tự đổi thứ tự gọi, bộ nhớ đệm, phương án dự phòng hoặc độ mới của data.",
+      "decision": "Product/BE chốt orchestration, khóa/độ mới khi dùng lại dữ liệu và cập nhật tài liệu.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B07",
+      "description": "DDL legacy discussions thiếu title/rating; V1-PILOT assessment_reviews là dữ liệu chấm bài, không phải đánh giá khóa học. Chưa xác minh lược đồ đang chạy.",
+      "impact": "Không coi DDL hoặc kiểm thử với cơ sở dữ liệu giả là lược đồ/môi trường thật.",
+      "decision": "Xác minh lược đồ môi trường và chốt ánh xạ có căn cứ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/07_table.md; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql; .agents/server-study/database.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B08",
+      "description": "Chưa có hợp đồng cho page sai/âm/vượt phạm vi, thử lại/dữ liệu cũ/URL và 403/422.",
+      "impact": "Không tự thêm mã trạng thái, giới hạn/chỉnh page hoặc chính sách khôi phục.",
+      "decision": "Chốt hành vi query/lỗi/phân trang và đồng bộ danh mục/DD/mã nguồn.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-server/docs/dd/10_courses_reviews/03_Request.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_10_courses_reviews/validate.py; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B09",
+      "description": "Bản mẫu Stitch có 9 marker tĩnh và href=#; giao diện khi có dữ liệu/lỗi/thử lại/phân trang chưa có thiết kế trực quan.",
+      "impact": "Không coi CTA/đầu trang/chân trang tĩnh là điều hướng đã nối.",
+      "decision": "Duyệt điều hướng và bản vẽ trạng thái cần kiểm thử.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B10",
+      "description": "DD không nêu owner/reviewer/approver; người dùng nói DD đã duyệt nhưng repo ghi GS-05 BLOCKED/API #10 Draft.",
+      "impact": "Không thể gán người duyệt hoặc gỡ nhãn nguồn bằng suy đoán.",
+      "decision": "Xác nhận tên/chữ ký và cập nhật trạng thái nguồn khi có căn cứ.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-server/docs/dd/10_courses_reviews/00_Cover.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/07-test-cases.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "GS05-B11",
+      "description": "Tác vụ này không chạy ca kiểm thử/ứng dụng/browser/API/cơ sở dữ liệu thật; DD ghi lịch sử T021 dùng stub cục bộ/cơ sở dữ liệu giả.",
+      "impact": "Lịch sử đó không phải bằng chứng runtime của tác vụ này.",
+      "decision": "Chạy bộ ca đã duyệt trên môi trường được xác nhận và lưu bằng chứng.",
+      "source_ref": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/07-test-cases.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts; apps/study-server/tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "GS05-TS-001",
+        "requirement_ids": [
+          "GS-05-YC-001"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra route con GS-05",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "/courses/42?tab=reviews. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "GS05 là panel con do GS03Page mount; không khai báo route độc lập. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/guest.route.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-002",
+        "requirement_ids": [
+          "GS-05-YC-002"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Giữ nguyên courseId từ GS03",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=9223372036854775807. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "GS05 nhận cùng chuỗi từ GS03; không tự đổi ID qua Number hoặc tự xác thực lại.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-003",
+        "requirement_ids": [
+          "GS-05-YC-003"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Chờ cổng #08 trước khi gắn GS05",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "#08 đang chờ, trả 404/lỗi hoặc course PUBLISHED. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Chỉ gắn GS05/gọi #10 sau khi #08 xác nhận PUBLISHED; GS03 xử lý trạng thái cổng. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-004",
+        "requirement_ids": [
+          "GS-05-YC-004"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Gọi #10 với page đầu",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "courseId=42; page mặc định 1. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "GET #10 công khai với course_id=42&page=1; không Authorization/body/size/rating.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-client/src/app/core/http/study-api.service.ts; apps/study-server/app/api/v1.py; apps/study-server/docs/dd/10_courses_reviews/03_Request.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-005",
+        "requirement_ids": [
+          "GS-05-YC-005"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Từ chối envelope hoặc metadata sai",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Envelope sai businessCode; size khác 20; total_pages không khớp. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không dựng danh sách; chuyển sang lỗi an toàn và không lộ payload lỗi. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-006",
+        "requirement_ids": [
+          "GS-05-YC-006"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Ánh xạ đánh giá và phản hồi theo nguồn",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "20 đánh giá giả lập; đánh giá đầu có một phản hồi. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Chỉ thấy author.full_name/content và reply full_name/content; danh sách giữ thứ tự của response.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-007",
+        "requirement_ids": [
+          "GS-05-YC-007"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Ẩn dữ liệu chưa được duyệt",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Review giả lập có title, avatar, ID, status, created_at, rating. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không Hiển thị tiêu đề/ID/status/date/avatar/rating; không suy ra title từ content. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-008",
+        "requirement_ids": [
+          "GS-05-YC-008"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Không tạo rating",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "AC-05 nhắc aggregate; API #10 không trả rating. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không hiện số sao, điểm trung bình, bộ lọc hoặc điểm tự suy ra. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-009",
+        "requirement_ids": [
+          "GS-05-YC-009"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Ghi nhận ACTIVE là hành vi mã nguồn",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Mã nguồn đánh giá/phản hồi trả status ACTIVE. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Chỉ ghi lại dữ liệu mã nguồn hiện có; không xem đây là chính sách công khai/kiểm duyệt đã duyệt. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-010",
+        "requirement_ids": [
+          "GS-05-YC-010"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Giữ thứ tự API",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Response đánh giá gốc đã sắp created_at DESC,id DESC; phản hồi chưa có hợp đồng thứ tự. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Client không tự sắp lại đánh giá/phản hồi và không tuyên bố thứ tự phản hồi mới. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-011",
+        "requirement_ids": [
+          "GS-05-YC-011"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Phân trang fixed size",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "page=1,total_pages=2; size=20. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Chỉ gửi page; nút trước/sau đúng biên; không gửi size hay đồng bộ page lên URL.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/03_Request.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-012",
+        "requirement_ids": [
+          "GS-05-YC-012"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Tách API trả rỗng khỏi 404",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "items=[], page=1,size=20,total=0,total_pages=0. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Hiện trạng thái rỗng theo response; không hiện not-found/error hoặc nội dung giữ chỗ. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-013",
+        "requirement_ids": [
+          "GS-05-YC-013"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Tách lỗi 404 khỏi 500",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "#10 trả 404; #10 trả 500/mạng/lỗi ánh xạ. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "404 thành not-found; lỗi khác thành alert an toàn có nút thử lại. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-014",
+        "requirement_ids": [
+          "GS-05-YC-014"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Xử lý page vượt tổng",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Yêu cầu page=4; response có items=[],total_pages=2. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Hiện ngoài phạm vi và nút tải lại trang đầu; không tự đổi page. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-015",
+        "requirement_ids": [
+          "GS-05-YC-015"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Giữ dữ liệu khi số dòng lệch tổng",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "total=2 nhưng page=1 trả một dòng thay vì hai. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Giữ đánh giá nhận được, báo mismatch, ẩn phân trang và cho tải lại. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/list_screen.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-016",
+        "requirement_ids": [
+          "GS-05-YC-019"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Đổi trang khi yêu cầu cũ còn chạy",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "page=2 đang chờ, sau đó yêu cầu page=1. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "SwitchMap hủy yêu cầu cũ; chỉ kết quả yêu cầu mới cập nhật trạng thái.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-017",
+        "requirement_ids": [
+          "GS-05-YC-020"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra trạng thái và thông báo trợ năng",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Đang tải, lỗi, danh sách/phản hồi, phân trang. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Role=status/alert/list và aria-live đúng; vùng nội dung có nhãn; không chỉ dùng màu sắc để báo lỗi. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-018",
+        "requirement_ids": [
+          "GS-05-YC-021"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra thao tác nút phân trang",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "page=1/2 và page=2/2. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Trang trước/sau disabled đúng; focus-visible hiện; nút có vùng bấm tối thiểu 44px.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-019",
+        "requirement_ids": [
+          "GS-05-YC-022"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra màn hình hẹp và text dài",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Viewport 375px; content dài có dấu xuống dòng. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không tràn ngang; nội dung xuống dòng; reply/pagination giữ khoảng cách CSS mobile.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.css; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-020",
+        "requirement_ids": [
+          "GS-05-YC-023"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt bản mẫu rỗng với API trả rỗng",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Mở ảnh hoặc bản dựng tĩnh có nội dung “Chưa có nội dung…”. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Chỉ xác nhận đó là chữ tĩnh; không kết luận #10 trả items=[].",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/README.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/screen-clean.png; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/screen-numbered.png; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/screen_rendered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-021",
+        "requirement_ids": [
+          "GS-05-YC-024"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Không coi href # là điều hướng",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Header, breadcrumb, CTA, footer anchors href=#. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không ghi nhận route, đăng nhập hay back behavior từ anchor tĩnh. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-022",
+        "requirement_ids": [
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Không thêm mutation",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Không có endpoint/action create reply/report/reaction trong GS05. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "GS05 chỉ GET; không xuất hiện form/nút ghi dữ liệu hoặc side effect.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-023",
+        "requirement_ids": [
+          "GS-05-YC-017"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Giữ chênh lệch về title",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "API trả title=null; DD Draft yêu cầu title; model cho phép null. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không tạo title; giữ điểm chặn cho đến khi nguồn trường được duyệt. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-024",
+        "requirement_ids": [
+          "GS-05-YC-016"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Không gửi bộ lọc rating",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Route API nhận rating nhưng client không gửi; SQL không có điều kiện rating. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không gửi tham số rating và không hiện bộ lọc; tên tham số thực tế và ý nghĩa còn chờ chốt. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/03_Request.md; apps/study-server/app/modules/guest/api_10_courses_reviews/query.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-025",
+        "requirement_ids": [
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Không tự thêm 403/422",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "DD không khai báo các nhánh đó; route khai báo page có kiểu int. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Không coi 403/422 là hợp đồng; ngữ nghĩa page sai định dạng/âm còn cần xác nhận. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_10_courses_reviews/validate.py; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-026",
+        "requirement_ids": [
+          "GS-05-YC-027"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Không khẳng định lược đồ đang chạy hoặc phê duyệt",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "DDL legacy/V1-PILOT, người dùng xác nhận phê duyệt, DD ghi BLOCKED/Draft. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Ghi chênh lệch bằng chứng; không coi DDL/mã nguồn cục bộ là lược đồ đang chạy hoặc tự đóng điểm chặn. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/07_table.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; infra/postgres/study-server/DB.sql; infra/postgres/02_study_db.sql; .agents/server-study/database.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TS-027",
+        "requirement_ids": [
+          "GS-05-YC-028"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Không gán kết quả chạy cho tác vụ",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Có lịch sử test trong DD; tác vụ này chỉ rà soát tĩnh. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Tất cả ca giữ Chưa chạy; không nhận T021, browser stub hoặc test cũ làm kết quả của tác vụ này.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/07-test-cases.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts; apps/study-server/tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TS-028",
+        "requirement_ids": [
+          "GS-05-YC-018"
+        ],
+        "target_id": "GS-05",
+        "group": "Toàn màn hình",
+        "title": "Xử lý item/reply/pagination sai cấu trúc",
+        "precondition": "Dùng dữ liệu giả lập; ca chưa chạy trong tác vụ này. Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "data": "Phản hồi giả lập thiếu author/content/comments hoặc có page/total không hợp lệ. Chỉ dùng dữ liệu tổng hợp, không dùng dữ liệu thật.",
+        "steps": [
+          "Chuẩn bị yêu cầu/phản hồi giả lập theo dữ liệu ca.",
+          "Quan sát trạng thái, nội dung và yêu cầu liên quan.",
+          "Đối chiếu mã nguồn hiện tại với DD, ghi riêng chênh lệch và để trống kết quả trước khi thực thi."
+        ],
+        "expected": "Hiện lỗi an toàn; không hiển thị dữ liệu sai cấu trúc hoặc để lộ chi tiết lỗi máy chủ. Thiết kế/hợp đồng còn chờ xác nhận; chỉ ghi nhận bằng chứng từ mã nguồn, không xem như quyết định đã chốt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "GS05-TC-001",
+        "requirement_ids": [
+          "GS-05-YC-020",
+          "GS-05-YC-024",
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nhóm thương hiệu và điều hướng đầu trang",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Bản mẫu tĩnh có Study2Work, Trang chủ, Khóa học; mọi href là #. Khung hiện hành do GuestSiteLayout quản lý. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-002",
+        "requirement_ids": [
+          "GS-05-YC-020",
+          "GS-05-YC-024",
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Liên kết đăng nhập và đăng ký",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Nhãn Đăng nhập/Đăng ký; href=#; không có session, callback hay return URL. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-003",
+        "requirement_ids": [
+          "GS-05-YC-020",
+          "GS-05-YC-024",
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Đường dẫn phân cấp tới đánh giá",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Home/course/detail dùng href=#; nhãn cuối là Đánh giá và thảo luận; không có courseId trong HTML. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-004",
+        "requirement_ids": [
+          "GS-05-YC-023"
+        ],
+        "target_id": "GS-05-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Biểu tượng thảo luận trong card rỗng",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Chat_bubble_outline là icon tĩnh; không biểu thị số review, rating hoặc API state. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-005",
+        "requirement_ids": [
+          "GS-05-YC-023"
+        ],
+        "target_id": "GS-05-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Tiêu đề tĩnh của bản mẫu",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Chữ Đánh giá và thảo luận; không gắn tên khóa học hoặc số review. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-006",
+        "requirement_ids": [
+          "GS-05-YC-012",
+          "GS-05-YC-023"
+        ],
+        "target_id": "GS-05-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nội dung tĩnh giống trạng thái rỗng",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Chữ Chưa có nội dung để hiển thị; không gắn data.items=[] nên không chứng minh API trả rỗng. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-007",
+        "requirement_ids": [
+          "GS-05-YC-024",
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: CTA quay lại chi tiết khóa học",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Href=#; không mang courseId/history state. Mã nguồn GS05 child không có CTA quay lại. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-008",
+        "requirement_ids": [
+          "GS-05-YC-020",
+          "GS-05-YC-024",
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thương hiệu ở chân trang",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Study2Work có href=# trong bản mẫu; không phải route xác minh. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-009",
+        "requirement_ids": [
+          "GS-05-YC-020",
+          "GS-05-YC-024",
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Nhóm liên kết chân trang",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Trang chủ/Khóa học/Đăng nhập/Đăng ký; mọi href là #, không có xử lý auth. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-010",
+        "requirement_ids": [
+          "GS-05-YC-001",
+          "GS-05-YC-002",
+          "GS-05-YC-019",
+          "GS-05-YC-020"
+        ],
+        "target_id": "GS-05-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Thẻ Đánh giá trong GS03Page",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Role=tab; aria-selected/aria-controls gắn với query tab=reviews; GS03 owns route và courseId.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TC-011",
+        "requirement_ids": [
+          "GS-05-YC-001",
+          "GS-05-YC-023"
+        ],
+        "target_id": "GS-05-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Tiêu đề khu vực đánh giá",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Đánh giá và thảo luận; aria-labelledby=gs05-heading.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "GS05-TC-012",
+        "requirement_ids": [
+          "GS-05-YC-016",
+          "GS-05-YC-018",
+          "GS-05-YC-020"
+        ],
+        "target_id": "GS-05-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái đang tải",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Role=status, aria-live=polite, aria-busy=true; không có khung xương chờ tải. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-013",
+        "requirement_ids": [
+          "GS-05-YC-012",
+          "GS-05-YC-020",
+          "GS-05-YC-023"
+        ],
+        "target_id": "GS-05-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái danh sách rỗng",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Chỉ hiện khi items=[] hợp lệ và total=0; dùng role=status; nội dung khác thẻ tĩnh trong Stitch. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-014",
+        "requirement_ids": [
+          "GS-05-YC-013",
+          "GS-05-YC-018",
+          "GS-05-YC-021",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái lỗi an toàn và nút thử lại",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Role=alert; không hiển thị lỗi server; nút thử lại gọi lại page đang yêu cầu. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-015",
+        "requirement_ids": [
+          "GS-05-YC-013"
+        ],
+        "target_id": "GS-05-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái không tìm thấy",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "HTTP 404 thành not-found; trạng thái này không có nút thử lại. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-016",
+        "requirement_ids": [
+          "GS-05-YC-005",
+          "GS-05-YC-006",
+          "GS-05-YC-007",
+          "GS-05-YC-017",
+          "GS-05-YC-018"
+        ],
+        "target_id": "GS-05-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Danh sách đánh giá gốc",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Role=list, aria-label=...; mỗi card role=listitem chỉ hiện authorName/content; không hiện title, ID, status, thời gian hay avatar. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-017",
+        "requirement_ids": [
+          "GS-05-YC-006",
+          "GS-05-YC-007",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Danh sách phản hồi",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Role=list với aria-label=Phản hồi; chỉ hiện authorName/content của reply; không có nút trả lời. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-018",
+        "requirement_ids": [
+          "GS-05-YC-011",
+          "GS-05-YC-014",
+          "GS-05-YC-015",
+          "GS-05-YC-021"
+        ],
+        "target_id": "GS-05-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Điều khiển phân trang",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Nút Trang trước/sau, page/totalPages lưu cục bộ; bị khóa ở biên; xuất hiện khi totalPages>1 và không có chênh lệch tổng/danh sách. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-019",
+        "requirement_ids": [
+          "GS-05-YC-015",
+          "GS-05-YC-018"
+        ],
+        "target_id": "GS-05-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Cảnh báo tổng và danh sách lệch nhau",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Giữ các dòng nhận được, ẩn phân trang, có nút tải lại; đây là trạng thái suy ra từ mã nguồn, DD chưa có thiết kế trực quan. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TC-020",
+        "requirement_ids": [
+          "GS-05-YC-014",
+          "GS-05-YC-015",
+          "GS-05-YC-017"
+        ],
+        "target_id": "GS-05-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra thành phần: Trạng thái trang vượt phạm vi",
+        "precondition": "Rà soát tĩnh; ca chưa chạy. Chỉ dùng dữ liệu giả lập nếu cần dựng trạng thái.",
+        "data": "Không dùng tài khoản, mã xác thực hoặc dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm thành phần theo marker/source ID hoặc selector trong mã nguồn.",
+          "Đối chiếu thuộc tính, hành vi, trạng thái và trợ năng với nguồn được dẫn.",
+          "Ghi rõ phần hiện hành, phần chỉ có trong bản mẫu và quyết định đang chờ."
+        ],
+        "expected": "Hiện số trang không còn nội dung và nút Tải lại trang đầu; không sửa URL. Thiết kế/contract còn chờ xác nhận; chỉ đối chiếu evidence, không được xem như đã duyệt.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "GS05-TE-001",
+        "requirement_ids": [
+          "GS-05-YC-001",
+          "GS-05-YC-002",
+          "GS-05-YC-003"
+        ],
+        "target_id": "GS-05-EV-001",
+        "group": "Sự kiện",
+        "title": "Chờ #08",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "#08 chưa hoàn tất. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Mở route tab=reviews trực tiếp; kiểm tra GS05/#10 chưa được gắn.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Chờ parent xác nhận course PUBLISHED trước khi mount/call #10. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-002",
+        "requirement_ids": [
+          "GS-05-YC-001",
+          "GS-05-YC-002",
+          "GS-05-YC-003"
+        ],
+        "target_id": "GS-05-EV-001",
+        "group": "Sự kiện",
+        "title": "Gắn GS05 sau cổng",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "GS03 #08 trả PUBLISHED; tab=reviews. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Quan sát component và request đầu.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "GS05 được mount với cùng courseId; request đầu dùng page=1. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-08"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-003",
+        "requirement_ids": [
+          "GS-05-YC-004",
+          "GS-05-YC-005",
+          "GS-05-YC-016",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EV-002",
+        "group": "Sự kiện",
+        "title": "GET #10 không xác thực",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "courseId=42,page=1. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Quan sát method/path/query/headers/body.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "GET công khai với course_id=42,page=1; không Bearer/body/size/rating. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-server/app/api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-004",
+        "requirement_ids": [
+          "GS-05-YC-006",
+          "GS-05-YC-007",
+          "GS-05-YC-008",
+          "GS-05-YC-010",
+          "GS-05-YC-018",
+          "GS-05-YC-020"
+        ],
+        "target_id": "GS-05-EV-003",
+        "group": "Sự kiện",
+        "title": "Hiển thị 20 review và reply",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "20 review; một review có reply; payload có title/status/avatar/date. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Kiểm tra DOM, list roles, pagination và nội dung.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Chỉ render author name/content và reply name/content; title/status/avatar/date/rating không xuất hiện. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-005",
+        "requirement_ids": [
+          "GS-05-YC-012",
+          "GS-05-YC-023"
+        ],
+        "target_id": "GS-05-EV-004",
+        "group": "Sự kiện",
+        "title": "HTTP 200, danh sách rỗng",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "items=[],total=0,total_pages=0. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Trả envelope thành công hợp lệ.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Hiện trạng thái rỗng theo response; không biến thành not-found/error. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-server/docs/dd/10_courses_reviews/04_Response.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-006",
+        "requirement_ids": [
+          "GS-05-YC-013",
+          "GS-05-YC-018",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EV-005",
+        "group": "Sự kiện",
+        "title": "#10 404",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "Khóa học không tồn tại hoặc API trả 404. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Trả 404 giả lập cho #10 sau khi GS05 đã mount.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Hiện not-found; phân biệt với empty; không có retry tại trạng thái này. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-08",
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-007",
+        "requirement_ids": [
+          "GS-05-YC-013",
+          "GS-05-YC-018",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EV-005",
+        "group": "Sự kiện",
+        "title": "#10 500 và thử lại",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "#10 trả 500 hoặc lỗi transport. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Trả chi tiết lỗi giả; nhấn Thử lại.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Hiện thông báo an toàn; retry gửi cùng courseId/page; không lộ thân lỗi. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-08",
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-server/docs/dd/10_courses_reviews/06_Error.md; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-008",
+        "requirement_ids": [
+          "GS-05-YC-011",
+          "GS-05-YC-014",
+          "GS-05-YC-015",
+          "GS-05-YC-021",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Chuyển trang hợp lệ",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "page=1,total_pages=2; người dùng chọn Trang sau. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Nhấn Trang sau, sau đó Trang trước.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Gửi page=2 rồi page=1; nút disabled đúng biên; không ghi page lên URL. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-009",
+        "requirement_ids": [
+          "GS-05-YC-011",
+          "GS-05-YC-014",
+          "GS-05-YC-015",
+          "GS-05-YC-021",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Số dòng lệch tổng",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "total=2 nhưng chỉ có một item; page 1. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Quan sát cảnh báo, danh sách và phân trang.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Giữ item, cảnh báo chênh lệch, ẩn phân trang và cho tải lại. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-010",
+        "requirement_ids": [
+          "GS-05-YC-011",
+          "GS-05-YC-014",
+          "GS-05-YC-015",
+          "GS-05-YC-021",
+          "GS-05-YC-026"
+        ],
+        "target_id": "GS-05-EV-006",
+        "group": "Sự kiện",
+        "title": "Page ngoài phạm vi",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "items=[], requested page 4,total_pages=2. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Quan sát empty/ngoài phạm vi state; nhấn Tải lại trang đầu.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Hiện ngoài phạm vi; chỉ nút tải đầu mới gọi page=1. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [
+          "API-10"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts; apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html; apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts; apps/study-server/app/modules/guest/api_10_courses_reviews/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-011",
+        "requirement_ids": [
+          "GS-05-YC-001",
+          "GS-05-YC-002",
+          "GS-05-YC-019",
+          "GS-05-YC-024"
+        ],
+        "target_id": "GS-05-EV-007",
+        "group": "Sự kiện",
+        "title": "Đổi tab trong cùng khóa học",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "/courses/42?tab=reviews. Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Chọn Tổng quan trong parent GS03.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Giữ courseId trên route GS03; GS05 child không tự tạo CTA/back route. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html; apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "GS05-TE-012",
+        "requirement_ids": [
+          "GS-05-YC-020",
+          "GS-05-YC-024",
+          "GS-05-YC-025"
+        ],
+        "target_id": "GS-05-EV-008",
+        "group": "Sự kiện",
+        "title": "Đối chiếu anchor tĩnh",
+        "precondition": "Dùng môi trường giả lập; ca chưa chạy trong tác vụ này. Không dùng dữ liệu thật.",
+        "data": "code.html header/footer/breadcrumb có href=\"#\". Dữ liệu chỉ để lập kế hoạch.",
+        "steps": [
+          "Đọc href literal; không điều hướng browser.",
+          "Quan sát URL, request/response và trạng thái panel liên quan.",
+          "Đối chiếu kết quả mong đợi; để trống bằng chứng trước khi chạy."
+        ],
+        "expected": "Chỉ ghi nhận href=#; không xác nhận router/session/return URL. Thiết kế/hợp đồng còn chờ xác nhận; ghi rõ hành vi theo mã nguồn và không tự chốt điểm đang mở.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md; apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html; apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  },
+  "source_hashes": [
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/00-overview.md",
+      "sha256": "78403610bf8edfba332c0416523ec7b6ae9b5bbc2c7768c39734b7fce90fc4f8"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/01-ui-elements.md",
+      "sha256": "59d6469c06c257cc11b7da8ce771cb8b6cfdcc72c6325902bfbf194659e9f7d5"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/02-events.md",
+      "sha256": "9a89abf031718d50936cdfa7a31b10ea1f788c07f02bbc14454f67628f661b2f"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/03-data-flow.md",
+      "sha256": "cafdad67733097225650fb98b2183d789dc2e340b51e27f0fa0c17e430fd3414"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/04-api-integration.md",
+      "sha256": "8e5ac6f5a1b5260d0404dd9487cc7294cf36dfab44d3f286bf68b64495e2df55"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/05-business-rules.md",
+      "sha256": "d253e464ba0b77adbaaca41ff55b87a1be353edf71e07dcd7f7617e352d9d88f"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/06-navigation.md",
+      "sha256": "f59d9016f6dfcbecd60aa3d2bd598a519a3c2ffd537f7a13bd8a21bba26c9ad2"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/07-test-cases.md",
+      "sha256": "f5056779edeba138ca025b4b43f11e7f1d582b4500eeccaf2bb5ea7b0529fd66"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/README.md",
+      "sha256": "498ab634d678da8fffa8f53de0b759b75cd803630f2e8301e17c045227bab1a7"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/screen-clean.png",
+      "sha256": "f6e8edf78933bc5b54a20bb135ce11f3a7b5937c368dd6a583356c2aabc90538"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/images/screen-numbered.png",
+      "sha256": "fcc023839362007fff314001520cee9e0edb77b1defd29a6ec4f0b1d3c588938"
+    },
+    {
+      "path": "apps/study-client/docs/dd_screens/GS-05-DanhGiaVaThaoLuanCongKhai/code.html",
+      "sha256": "e7072487f43a4e19e5faf9593f633b7db3d05f98a6806f753feca1fb59b49512"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05.md",
+      "sha256": "995a7aa23d0f273c16c12bb89fc8d47e59b78decdfcaa750aa7c5311192b8a67"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_PLAN.md",
+      "sha256": "3effc95a069cbb6c365c2d9a198e31a7b74e1ba53e5335e1db5f6485b8b1d532"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json",
+      "sha256": "d1ed8b8f44d8c57061cdc76135b6ee31053571d899b00350a9f3247c43b49d50"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/screen.png",
+      "sha256": "f6e8edf78933bc5b54a20bb135ce11f3a7b5937c368dd6a583356c2aabc90538"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/screen_annotated.png",
+      "sha256": "fcc023839362007fff314001520cee9e0edb77b1defd29a6ec4f0b1d3c588938"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/screen_rendered.png",
+      "sha256": "4a8f444021e94971760b2904ae206083f20087b7819be5026b32b645f3682066"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers_overlay.svg",
+      "sha256": "384f250da9e864700e360977d38c373f429dc121c5bd206860425ea4333dfa35"
+    },
+    {
+      "path": "apps/study-client/docs/screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/code.html",
+      "sha256": "e7072487f43a4e19e5faf9593f633b7db3d05f98a6806f753feca1fb59b49512"
+    },
+    {
+      "path": "apps/study-client/docs/list_screen.md",
+      "sha256": "7157ce67b0fdc7813e53543261b10dd4474662b1fa23fc537cd0c9189fba7a40"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/guest.route.ts",
+      "sha256": "00a2182ee9148c3c88ab859c2581d7ba7f824918af0e1ef0369c6ff4a439e7c0"
+    },
+    {
+      "path": "apps/study-client/src/app/app.routes.ts",
+      "sha256": "b0569672d1722393a95314564b97883f578c4ca51ef6212d0f8afb73fca21fa4"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.ts",
+      "sha256": "04372e79a2380e282726e9bbaa6771a66c2ae09981fae4b7ae0e080fe405e5da"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.html",
+      "sha256": "9de65c84b254242648f8ffbed0f366479d285b77edbde0de50054e5f999e6407"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.css",
+      "sha256": "56fe040782ff41611241b855f86406cd56615f2584297db6deaf37d20f2858cb"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS03/pages/gs03-page.spec.ts",
+      "sha256": "3d4d3f10a528333f102e19b972716b9ac1e80be2012ff2e9670e7f98b1e8e4df"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.ts",
+      "sha256": "88b148e91cdcea1b11ec8999d29f356a687a1c1d0a48d50391601cbeef37cd79"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.html",
+      "sha256": "662ea560faab56bd36fbf457784931368581e414d35a5f27213659176914df5c"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.css",
+      "sha256": "5acc39a9c2c1308fd614bc490435123656dc7864afa414341c4e28583516db35"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/pages/gs05-page.spec.ts",
+      "sha256": "58322ff9be084a3741097a5e8c34662376b169e6323eeee8005dfc988f1c14e9"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/data-access/gs05-reviews.service.ts",
+      "sha256": "1218e5a15d6899b8cfa27e46a6612719375b8e0facf97cdb0f270eef463a3745"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/models/gs05-reviews.models.ts",
+      "sha256": "dd9715b000abb04bc4741808c90b5400529e06a894087258ec0cee9efc8f48ad"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.ts",
+      "sha256": "be77ab3e313c1754c0fb298043b285eb7488af4c6fb8551398773c441aea7767"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.html",
+      "sha256": "03b22475c742086b48efa5bcd41552712f95c06f338d24742b4ccc2d05b76f08"
+    },
+    {
+      "path": "apps/study-client/src/app/features/guest/GS05/ui/gs05-reviews-panel.css",
+      "sha256": "ab0ef45ad02247170c129db7fcf65888ccd911798c0040bc50d09469f7f0fd3d"
+    },
+    {
+      "path": "apps/study-client/src/app/core/constant/api.constants.ts",
+      "sha256": "9594a140cda48618388cd22e0c3e6cd1d07467e7c610bfa3748fb370fc508170"
+    },
+    {
+      "path": "apps/study-client/src/app/core/http/study-api.service.ts",
+      "sha256": "df69f5c5c6ffd146cdacb2422f2fdde54f97e42c44415526375c0c94659d41fb"
+    },
+    {
+      "path": "apps/study-server/docs/dd/10_courses_reviews/00_Cover.md",
+      "sha256": "4f9be0e48bc92bbe97bfbfa353be814ef6c7610fa3b2924a1898d8f817db3923"
+    },
+    {
+      "path": "apps/study-server/docs/dd/10_courses_reviews/02_Overview.md",
+      "sha256": "f316483e6ba7756e23752572be7076575b631f0a3cf736bd475eac270bfe4c27"
+    },
+    {
+      "path": "apps/study-server/docs/dd/10_courses_reviews/03_Request.md",
+      "sha256": "456f040c5e11a8aa7d6d974822fce8149ea6cb4973c688fcffc99aa1ee3eb8fc"
+    },
+    {
+      "path": "apps/study-server/docs/dd/10_courses_reviews/04_Response.md",
+      "sha256": "27a3874e47b00c9fb58bdfecba8f09a6aae798217075f4caa912637453210d9e"
+    },
+    {
+      "path": "apps/study-server/docs/dd/10_courses_reviews/05_Data_Mapping.md",
+      "sha256": "48d7a78b04ca6fd01b1448b21204d34586654db000a7c2ad36952fb4d2b5def6"
+    },
+    {
+      "path": "apps/study-server/docs/dd/10_courses_reviews/06_Error.md",
+      "sha256": "65a334447fb8a78f9103b80ef723d031d25fec6294de6b31bda16c491a950757"
+    },
+    {
+      "path": "apps/study-server/docs/dd/10_courses_reviews/07_table.md",
+      "sha256": "c0c20c9b9525cf6379198f6a16007c46637393c3827568aa0516f6a18094ea96"
+    },
+    {
+      "path": "apps/study-server/app/api/v1.py",
+      "sha256": "27260419325e640173a2b8038ec24afc1b1ff3a9e0b991b7c63fb9307e78abdf"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_10_courses_reviews/validate.py",
+      "sha256": "d83d85d3194d117293231fc148e8b50a7e50d4ca1537f872fda3371649f9d18d"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_10_courses_reviews/models.py",
+      "sha256": "f09b6908ead90b92931fcec1db13939de8dcbbb93ab20aba34b8cc011dd8c682"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_10_courses_reviews/query.py",
+      "sha256": "6ca2ab94b5ea8035de72ac6f85278e4505dd018e63cf692dbae3d0543e215044"
+    },
+    {
+      "path": "apps/study-server/app/modules/guest/api_10_courses_reviews/view.py",
+      "sha256": "ba670a7bdc5c797f56164f571b9de99e983efe4083f4cf39fca40afebc0973da"
+    },
+    {
+      "path": "apps/study-server/tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py",
+      "sha256": "f4874c7499c9d2a11aa834ae95c1bf36391355a339aca5e97cf324ca5ce938bd"
+    },
+    {
+      "path": "infra/postgres/study-server/DB.sql",
+      "sha256": "8beedb93d0eae21a2cc4d9851c48382dc9dd68a9cfecdf213ceba9bbf279cba2"
+    },
+    {
+      "path": "infra/postgres/02_study_db.sql",
+      "sha256": "2ff0e3c5c0b9c22d1da6e3853fc48333b16588a8a2854547949a7c830637809c"
+    },
+    {
+      "path": ".agents/server-study/database.md",
+      "sha256": "241ffa6650395ecbefc8b23bf9c1fa51873db46c9c314fef015dddc008278e3e"
+    }
+  ]
+}

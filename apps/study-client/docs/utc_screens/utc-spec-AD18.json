@@ -1,0 +1,2761 @@
+{
+  "metadata": {
+    "screen_id": "AD-18",
+    "screen_name": "Xác nhận xóa bài kiểm tra",
+    "module": "Quản trị (Admin)",
+    "route": "/admin/quizzes/:quizId/delete",
+    "actor": "Admin có quyền quản lý bài kiểm tra theo AC-35; API #90 cục bộ chỉ kiểm tra vai trò ADMIN, việc ánh xạ quyền vẫn chờ phê duyệt.",
+    "version": "0.1 — BẢN KẾ HOẠCH UTC",
+    "dd_version": "DD màn hình v0.3 (2026-11-20); trạng thái nguồn DD BLOCKED; API #90 Draft — Needs Confirmation.",
+    "dd_status": "DD BLOCKED: chưa chốt permission, dữ liệu target, attempt/answer/no-attempt policy, tombstone/retry, lifecycle #87/#89/#91 và schema/deployment. Gói này ghi cả expected lẫn mã nguồn hiện tại; không đóng blocker.",
+    "runtime_status": "Đã đối chiếu DD, 40 marker, Stitch và source Angular/API. Browser, deployed API, live database/schema và production runtime chưa xác minh.",
+    "author": "Lập kế hoạch UTC; cần người rà soát",
+    "reviewer": "Chưa được xác định",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-24",
+    "source_name": "DD AD-18 mục 00–07; AC-35; inventory row 76; 40 marker, ảnh và HTML Stitch; route/page Angular AD-18, caller AD-15; API catalog/DD/source/test #90 và lifecycle source #87/#89/#91.",
+    "approval_note": "Bản UTC kế hoạch cho screen trong DD chuẩn đang BLOCKED. Các ca destructive/API là chờ quyết định và chưa chạy; không được dùng làm bằng chứng nghiệm thu hoặc phê duyệt nghiệp vụ."
+  },
+  "overall": {
+    "objective": "Đặc tả ca kiểm thử AD-18 từ DD chuẩn và mã nguồn hiện tại, giữ riêng hành vi kỳ vọng, nhánh local DERIVED, trạng thái chỉ đọc đang có và các blocker.",
+    "inputs": "Route quizId; link AD-15; ảnh/mốc UI; API #90 path + Bearer token theo contract candidate. Không có detail payload hoặc audit reason được hỗ trợ.",
+    "outputs": "Hiện tại: ID route hợp lệ/alert lỗi cục bộ, placeholder target và các control destructive/audit bị khóa. Nếu được duyệt sau này: candidate DeleteResult; trạng thái tiếp theo/cache/navigation chưa chốt.",
+    "main_flow": "AD-15 → AD-18 nhận ID số an toàn; trang giữ ID dạng chuỗi, không tải detail và giữ action disabled. Chỉ sau khi policy, target, permission và contract được duyệt mới có thể xét DELETE #90; trình duyệt/môi trường chạy chưa xác minh.",
+    "states": [
+      "Chỉ đọc (mã nguồn hiện tại)",
+      "ID tuyến không hợp lệ (mã nguồn hiện tại)",
+      "Confirm (expected, gated)",
+      "Deleting (expected, chưa được kết nối)",
+      "Deleted (expected, chưa được kết nối)",
+      "Unauthenticated",
+      "Forbidden",
+      "Không tìm thấy",
+      "Validation-error",
+      "Service-error",
+      "Unknown-outcome (unresolved)",
+      "Conflict (inventory label unsupported by #90; discrepancy)"
+    ],
+    "preconditions": "Dùng môi trường kiểm thử được owner duyệt, dữ liệu tổng hợp, token giả; ca chưa chạy. Trước khi destructive-flow acceptance phải có quyết định chính thức cho các blocker trong DD/API #90.",
+    "security": "Không xem vai trò ADMIN là sự thay thế cho quyền quiz-management. Không gửi reason/body/query; không dùng tên/số đếm giả từ bản mẫu; không tự thử lại DELETE khi kết quả chưa rõ.",
+    "out_of_scope": "Không tự đặt API chi tiết, nội dung yêu cầu kiểm toán, mã 409, nội dung/thao tác điều hướng khi thành công, quy tắc thử lại, cơ chế bộ nhớ đệm, chính sách vòng đời, lược đồ đang chạy hoặc khẳng định tuân thủ."
+  },
+  "requirements": [
+    {
+      "id": "AD-18-YC-001",
+      "description": "Quyền truy cập AC-35: Actor cần quyền quiz-management theo AC-35; local #90 dùng shared ADMIN guard. Hai khái niệm chưa có bằng chứng ánh xạ.",
+      "group": "Điều kiện truy cập",
+      "source_ref": "AC-35; AD-18 00-overview.md; API #90 02_Overview.md/OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — khác biệt permission",
+      "notes": "Không coi badge RBAC hoặc role ADMIN là bằng chứng quyền nghiệp vụ."
+    },
+    {
+      "id": "AD-18-YC-002",
+      "description": "Route và ID target: Route candidate là /admin/quizzes/:quizId/delete; client giữ ID nguyên bản và kiểm tra chuỗi số dương trong miền signed-int64.",
+      "group": "Điều hướng / đầu vào",
+      "source_ref": "AD-18 00-overview.md; 02-events.md EV-01; 06-navigation.md; AD18 page.ts; admin.routes.ts",
+      "priority": "Cao",
+      "design_status": "Source-wired; browser chưa xác minh",
+      "notes": "AD-15 chỉ tạo link cho Number.isSafeInteger; ID int64 lớn hơn safe integer không vào được từ caller hiện tại."
+    },
+    {
+      "id": "AD-18-YC-003",
+      "description": "Tìm và hiển thị Quiz đúng: Target phải được xác định trước confirm. Không có GET detail; #87 local chỉ có id, course_id, title, duration_minutes, passing_score, questions=[].",
+      "group": "Dữ liệu target",
+      "source_ref": "AD-18 00-overview.md; 02-events.md EV-01; 04-api-integration.md; API #87 04_Response.md/models.py/query.py",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận — thiếu target/detail contract",
+      "notes": "Không bịa course title, số câu hỏi, attempt count hoặc trạng thái history."
+    },
+    {
+      "id": "AD-18-YC-004",
+      "description": "Giữ trạng thái chỉ đọc hiện tại: Angular hiện hiển thị ID nguyên bản/placeholder, nêu giới hạn dữ liệu, không gọi API; delete/reason control disabled.",
+      "group": "Trạng thái hiện tại",
+      "source_ref": "AD-18 00-overview.md; ad18-page.ts/html; ad18-api-boundary.ts; ad18-page.spec.ts",
+      "priority": "Cao",
+      "design_status": "Có bằng chứng source; chưa chạy/không xác minh browser",
+      "notes": "Không coi Stitch mockup là giao diện trong môi trường chạy."
+    },
+    {
+      "id": "AD-18-YC-005",
+      "description": "Chỉ bật xác nhận sau khi chốt các nội dung đang bị chặn: đối tượng đích, quyền và chính sách lượt làm/câu trả lời/chưa có lượt làm/xung đột đồng thời. Nút hiện bị vô hiệu hóa và không có hàm xử lý.",
+      "group": "Hành động phá hủy",
+      "source_ref": "AD-18 02-events.md EV-04; 05-business-rules.md; ad18-page.html; API #90 OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "BLOCKED — action chưa wire",
+      "notes": "Không thực thi destructive case hoặc tuyên bố flow đã nghiệm thu."
+    },
+    {
+      "id": "AD-18-YC-006",
+      "description": "Request #90 path-only: Candidate DELETE /api/v1/admin/quizzes/{quiz_id}; chỉ Authorization và positive signed-int64 path; không body/query.",
+      "group": "Tích hợp API",
+      "source_ref": "list_api.md #90; API #90 03_Request.md; route v1.py; AD-18 04-api-integration.md",
+      "priority": "Cao",
+      "design_status": "Catalog/source tồn tại; API DD Draft",
+      "notes": "Không gửi lý do audit hoặc UI-only field."
+    },
+    {
+      "id": "AD-18-YC-007",
+      "description": "Response thành công: Catalog candidate 200 DESIGN_RESOURCE_DELETED với DeleteResult {id:int64,status:\"deleted\",deleted_at:date-time}; client phải đối chiếu ID.",
+      "group": "Phản hồi API",
+      "source_ref": "list_api.md #90; API #90 04_Response.md; models.py; AD-18 02-events.md EV-04",
+      "priority": "Cao",
+      "design_status": "Contract candidate; UI chưa xử lý",
+      "notes": "Success state, copy, cache invalidation mechanism và destination chưa wire/chưa chốt."
+    },
+    {
+      "id": "AD-18-YC-008",
+      "description": "Tập lỗi API và conflict: Catalog khai báo 401/403/404/422/500; không có 409. Local 422 là invalid quiz_id, không phải history conflict.",
+      "group": "Xử lý lỗi",
+      "source_ref": "list_api.md #90; API #90 06_Error.md; route v1.py; AD-18 04-api-integration.md",
+      "priority": "Cao",
+      "design_status": "Catalog hiện có; inventory conflict DISCREPANCY",
+      "notes": "Không thêm 409 hay đổi tên 422 thành conflict."
+    },
+    {
+      "id": "AD-18-YC-009",
+      "description": "Chính sách attempt/lịch sử: AC-35 chỉ nêu xóa mềm khi có attempts; không chốt trường hợp chưa có attempt. Mã nguồn cục bộ xóa mềm khi có attempt hoặc câu trả lời liên kết; trường hợp còn lại xóa cứng.",
+      "group": "Vòng đời dữ liệu",
+      "source_ref": "AC-35 n10; AD-18 00-overview.md; API #90 07/08/09/10; view.py/query.py",
+      "priority": "Cao",
+      "design_status": "Chờ owner duyệt; local nhánh bổ sung DERIVED",
+      "notes": "Không hứa xóa cứng hoặc mềm như expected behavior."
+    },
+    {
+      "id": "AD-18-YC-010",
+      "description": "Tombstone, timestamp và retry: mã nguồn cục bộ cho DELETE tombstone lặp 200 và map updated_at thành deleted_at; catalog chưa chốt timestamp/timezone/idempotency/retry.",
+      "group": "Vòng đời và retry",
+      "source_ref": "AD-18 00-overview.md; API #90 05_Data_Mapping.md/OPEN_QUESTIONS.md; query.py/view.py",
+      "priority": "Cao",
+      "design_status": "DERIVED/chưa duyệt",
+      "notes": "Không tự gửi lại request destructive sau timeout."
+    },
+    {
+      "id": "AD-18-YC-011",
+      "description": "Race tạo attempt: Khóa quiz trong #90 chưa chứng minh đồng bộ với API #29 tạo attempt; local checkout không có route/module #29 tương thích được xác minh.",
+      "group": "Đồng thời",
+      "source_ref": "AD-18 00-overview.md; AD-18_PLAN.md; API #90 OPEN_QUESTIONS.md; API #90 query.py",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Không tuyên bố race-safe."
+    },
+    {
+      "id": "AD-18-YC-012",
+      "description": "Hiển thị sau xóa xuyên #87/#89/#91: Local #87 ẩn tombstone, #89 chặn sửa tombstone/history và #91 vẫn có thể đọc thống kê; policy sau xóa chưa được duyệt.",
+      "group": "Vòng đời màn liên quan",
+      "source_ref": "AD-18 00-overview.md; #87 query.py; #89 query.py; #91 query.py; API #90 OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "Local source only; chờ duyệt",
+      "notes": "Không biến hiện trạng source thành rule sản phẩm."
+    },
+    {
+      "id": "AD-18-YC-013",
+      "description": "Audit reason: Mockup có reason textarea disabled/ISO claim; API #90 không có body; Angular hiện tại cũng disabled.",
+      "group": "Kiểm toán",
+      "source_ref": "AD-18 01-ui-elements.md markers #29–32; 02-events.md EV-05; list_api.md #90; ad18-page.html",
+      "priority": "Cao",
+      "design_status": "Không có contract; control disabled",
+      "notes": "Không khẳng định bắt buộc, gửi reason hoặc tạo bản ghi kiểm toán."
+    },
+    {
+      "id": "AD-18-YC-014",
+      "description": "Điều hướng trở lại AD-15: Angular return/cancel link có đích /admin/quizzes; filter/page/scroll state và direct-entry history chưa quy định.",
+      "group": "Điều hướng",
+      "source_ref": "AD-18 02-events.md EV-02/EV-03; 06-navigation.md; AD18 HTML; AD15 page",
+      "priority": "Trung bình",
+      "design_status": "Đích có trong source; runtime/state restore chưa xác minh",
+      "notes": "Không tự thêm query params hoặc khẳng định giữ trang bộ lọc."
+    },
+    {
+      "id": "AD-18-YC-015",
+      "description": "Inventory conflict discrepancy: Inventory có state conflict nhưng #90 catalog/mã nguồn cục bộ không có 409/dependency conflict.",
+      "group": "SAI KHÁC",
+      "source_ref": "list_screen.md row 76; AD-18 00-overview.md; list_api.md #90; OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "Chờ cập nhật contract/tracker",
+      "notes": "422 chỉ cho validation path hiện tại."
+    },
+    {
+      "id": "AD-18-YC-016",
+      "description": "Unknown outcome: Network timeout sau request có thể không rõ kết quả; contract không quy định reconciliation hoặc retry.",
+      "group": "Xử lý lỗi",
+      "source_ref": "AD-18 02-events.md EV-04; 03-data-flow.md; 06-navigation.md; API #90 OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "Chưa có rule",
+      "notes": "Không hiển thị đã xóa/chưa xóa hoặc tự retry khi chưa có quyết định."
+    },
+    {
+      "id": "AD-18-YC-017",
+      "description": "Bộ nhớ đệm và điều hướng sau khi thành công: danh sách kiểm kê kỳ vọng làm mới/tải lại #87; mã nguồn màn hình không có bên gọi thao tác thay đổi/bộ nhớ đệm; chưa xác định đích đến sau thành công.",
+      "group": "Cache / điều hướng",
+      "source_ref": "AD-18 00-overview.md; 02-events.md EV-04; 03-data-flow.md; 06-navigation.md",
+      "priority": "Cao",
+      "design_status": "Expected theo inventory, chưa wire",
+      "notes": "Không khẳng định cache đã refresh hoặc chuyển trang."
+    },
+    {
+      "id": "AD-18-YC-018",
+      "description": "Shell, links và compliance copy: 40 marker là Stitch tài liệu; anchors/#, notification chưa có hàm xử lý, RBAC/System Normal/ISO/compliance claims là static.",
+      "group": "Bản mẫu tĩnh",
+      "source_ref": "AD-18 01-ui-elements.md; 02-events.md EV-06; AD-18_PLAN.md; Stitch code.html",
+      "priority": "Thấp",
+      "design_status": "Prototype-only",
+      "notes": "Không xem copy tĩnh là trạng thái dịch vụ, policy hoặc compliance evidence."
+    },
+    {
+      "id": "AD-18-YC-019",
+      "description": "Môi trường, schema và thực thi: Browser, deployed API, live schema/database chưa xác minh; DD/API status còn blocked/draft.",
+      "group": "Môi trường chạy",
+      "source_ref": "AD-18 00-overview.md; 07-test-cases.md; API #90 00_Cover.md; OPEN_QUESTIONS.md",
+      "priority": "Cao",
+      "design_status": "RUNTIME NOT VERIFIED",
+      "notes": "Không ghi test pass từ source tests đã tồn tại; ca của gói này để chưa chạy."
+    },
+    {
+      "id": "AD-18-YC-020",
+      "description": "Marker/screenshot mapping: 40 marker tuần tự trên ảnh Stitch 1600×1442 map một-một với element rows; đây là bằng chứng thiết kế tĩnh.",
+      "group": "Thiết kế",
+      "source_ref": "AD-18 01-ui-elements.md; AD-18_markers.json; AD-18_PLAN.md; screen-numbered.png",
+      "priority": "Trung bình",
+      "design_status": "Bằng chứng artifact tĩnh",
+      "notes": "Không suy diễn hành vi Angular hoặc runtime từ marker."
+    }
+  ],
+  "apis": [
+    {
+      "id": "AD-18-API-001",
+      "method": "DELETE",
+      "path": "/api/v1/admin/quizzes/{quiz_id}",
+      "request": "API danh mục #90: JWT Bearer và `quiz_id:int64` dương trong đường dẫn; không có phần thân yêu cầu hoặc tham số truy vấn. Máy khách AD-18 hiện không gọi điểm cuối này; máy chủ xác thực vai trò ADMIN trước khi phân tích đường dẫn thô.",
+      "response": "Ứng viên catalog: HTTP 200 DESIGN_RESOURCE_DELETED, ApiEnvelope<DeleteResult>; data {id:int64,status:\"deleted\",deleted_at:date-time}. Mã nguồn cục bộ có các nhánh xóa mềm/cứng, kết quả tombstone lặp và ánh xạ timestamp được suy ra; đây chưa phải chính sách UI đã duyệt.",
+      "errors": "Theo catalog/tuyến hiện tại: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 422 DESIGN_VALIDATION_ERROR (quiz_id cục bộ không hợp lệ); 500 DESIGN_INTERNAL_ERROR. Không có 409.",
+      "auth": "Bearer JWT; danh mục trực tiếp ghi role Admin; AC-35 yêu cầu quyền quản lý quiz; guard dùng chung hiện chỉ kiểm tra ADMIN. Chưa thống nhất ánh xạ quyền.",
+      "design_status": "API #90 ở trạng thái Nháp — Cần xác nhận; DD AD-18 BỊ CHẶN; giao diện hiện tại không gọi API thay đổi dữ liệu.",
+      "source_ref": "docs/lists/list_api.md #90; AC-35; API #90 DD 00–10/OPEN_QUESTIONS; route v1.py; validate.py/models.py/view.py/query.py; AD-18 DD 00–07.",
+      "event_ids": [
+        "AD-18-EV-004"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-18-EL-001",
+      "marker": "#1",
+      "name": "Nhận diện Study2Work LMS/admin",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(16,36) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Logo/brand tĩnh trong mockup; không chứng minh phiên hoặc runtime.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #1; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-002",
+      "marker": "#2",
+      "name": "Điều hướng shell — Tổng quan",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(355,61) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Prototype anchor href=\"#\"; không có destination được chứng minh.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #2; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-003",
+      "marker": "#3",
+      "name": "Điều hướng shell — Người dùng",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(490,61) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Prototype anchor href=\"#\"; không có destination được chứng minh.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #3; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-004",
+      "marker": "#4",
+      "name": "Điều hướng shell — Khóa học & Nội dung",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(660,61) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Prototype anchor href=\"#\"; không có destination được chứng minh.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #4; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-005",
+      "marker": "#5",
+      "name": "Điều hướng shell — Kiểm duyệt",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(856,61) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Prototype anchor href=\"#\"; không có destination được chứng minh.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #5; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-006",
+      "marker": "#6",
+      "name": "Điều hướng shell — Báo cáo",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(983,61) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Prototype anchor href=\"#\"; không có destination được chứng minh.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #6; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-007",
+      "marker": "#7",
+      "name": "Nội dung trạng thái “System Normal” (tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1152,61) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Copy trạng thái tĩnh; không phải health check/runtime status.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #7; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-008",
+      "marker": "#8",
+      "name": "Nút thông báo không có handler",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1295,60) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Nút không có handler trong prototype.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #8; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-009",
+      "marker": "#9",
+      "name": "Danh tính và avatar quản trị viên (tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1584,61) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Tên/avatar tĩnh; không chứng minh danh tính phiên hiện tại.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #9; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-010",
+      "marker": "#10",
+      "name": "Đường dẫn điều hướng toàn cục",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(18,95) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Breadcrumb tĩnh; prototype không thiết lập hành vi route.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #10; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-011",
+      "marker": "#11",
+      "name": "Copy bảo đảm RBAC (tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1585,95) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Copy RBAC tĩnh; không chứng minh authorization policy.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #11; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-012",
+      "marker": "#12",
+      "name": "Đường dẫn điều hướng Quản trị khảo thí",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(130,171) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Nhãn breadcrumb tĩnh của vùng quản trị khảo thí.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #12; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-013",
+      "marker": "#13",
+      "name": "Breadcrumb Danh sách bài kiểm tra",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(333,171) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Anchor danh sách trong prototype; Angular hiện tại target /admin/quizzes.",
+      "event_ids": [
+        "AD-18-EV-002",
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #13; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-014",
+      "marker": "#14",
+      "name": "Breadcrumb Xóa bài kiểm tra hiện tại",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(508,171) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Nhãn trang hiện tại trong prototype.",
+      "event_ids": [
+        "AD-18-EV-002",
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #14; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-015",
+      "marker": "#15",
+      "name": "Liên kết quay lại AD-15 (href #)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1547,247) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Anchor href=\"#\"; Angular hiện tại có link /admin/quizzes riêng.",
+      "event_ids": [
+        "AD-18-EV-002"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #15; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-016",
+      "marker": "#16",
+      "name": "Icon cảnh báo nguy cơ",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(346,390) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Icon cảnh báo thiết kế; không phát sinh hành vi.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #16; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-017",
+      "marker": "#17",
+      "name": "Nhãn nguy cơ ảnh hưởng dữ liệu học tập",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(880,328) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Nhãn nguy cơ tĩnh trong mockup.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #17; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-018",
+      "marker": "#18",
+      "name": "Tiêu đề xác nhận",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(985,393) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Tiêu đề tĩnh; không chứng minh action đã sẵn sàng.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #18; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-019",
+      "marker": "#19",
+      "name": "Tiêu đề vùng bản ghi đích",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(390,462) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Heading của card target.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #19; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-020",
+      "marker": "#20",
+      "name": "Pill trạng thái bản ghi được chọn (placeholder)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1218,462) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Placeholder “chưa chọn bản ghi”; không phải target đã tải.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #20; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-021",
+      "marker": "#21",
+      "name": "Trường tên Quiz và giá trị placeholder",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(640,606) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Tên Quiz placeholder; không có detail data.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #21; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-022",
+      "marker": "#22",
+      "name": "Trường mã Quiz và giá trị placeholder",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(920,606) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "ID Quiz placeholder; Angular page hiện hiển thị route ID riêng.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #22; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-023",
+      "marker": "#23",
+      "name": "Trường khóa học liên kết và placeholder",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1200,606) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Tên khóa học placeholder; #87 không cung cấp course title.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #23; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-024",
+      "marker": "#24",
+      "name": "Icon cảnh báo an toàn attempt",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(350,770) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Icon trang trí cảnh báo attempt/history.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #24; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-025",
+      "marker": "#25",
+      "name": "Tiêu đề chính sách an toàn",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(900,715) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Heading chính sách tĩnh.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #25; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-026",
+      "marker": "#26",
+      "name": "Đoạn cảnh báo attempt/history (claim tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1215,803) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Claim tĩnh; không khẳng định đúng với policy đã duyệt.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #26; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-027",
+      "marker": "#27",
+      "name": "Copy chính sách attempts chưa được quyết định",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(760,878) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Copy policy đang mở; không được coi là rule đã chốt.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #27; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-028",
+      "marker": "#28",
+      "name": "Copy trạng thái chỉ đọc",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1160,878) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Copy chỉ đọc của mockup.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #28; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-029",
+      "marker": "#29",
+      "name": "Nhãn lý do audit",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(625,927) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Nhãn audit reason; không tạo body API.",
+      "event_ids": [
+        "AD-18-EV-005"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #29; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-030",
+      "marker": "#30",
+      "name": "Copy chính sách ISO-27001 (claim tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1217,927) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Claim ISO tĩnh; không phải bằng chứng chứng nhận hoặc policy.",
+      "event_ids": [
+        "AD-18-EV-005"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #30; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-031",
+      "marker": "#31",
+      "name": "Textarea lý do audit disabled",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(380,1066) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Textarea disabled; không nhận input/gửi request.",
+      "event_ids": [
+        "AD-18-EV-005"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #31; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-032",
+      "marker": "#32",
+      "name": "Gợi ý field disabled",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1221,1095) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Hint field tĩnh; không thiết lập validation.",
+      "event_ids": [
+        "AD-18-EV-005"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #32; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-033",
+      "marker": "#33",
+      "name": "Liên kết quay lại an toàn (href #)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(685,1138) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Anchor href=\"#\" trong prototype; Angular link về AD-15.",
+      "event_ids": [
+        "AD-18-EV-003"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #33; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-034",
+      "marker": "#34",
+      "name": "Nút xóa vĩnh viễn disabled, không handler",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1225,1138) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Button disabled, không có handler/request trong prototype/Angular hiện tại.",
+      "event_ids": [
+        "AD-18-EV-004"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #34; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-035",
+      "marker": "#35",
+      "name": "Copy banner bảo vệ dữ liệu (claim tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(735,1252) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Claim bảo vệ dữ liệu tĩnh.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #35; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-036",
+      "marker": "#36",
+      "name": "Badge ED-TECH/compliance (claim tĩnh)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1254,1252) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Badge compliance tĩnh; không phải chứng cứ tuân thủ.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #36; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-037",
+      "marker": "#37",
+      "name": "Copyright và nhãn hệ thống",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(468,1390) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Copyright/system label tĩnh.",
+      "event_ids": [],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #37; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-038",
+      "marker": "#38",
+      "name": "Liên kết privacy ở chân trang (href #)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1090,1390) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Anchor href=\"#\"; không suy ra destination.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #38; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-039",
+      "marker": "#39",
+      "name": "Liên kết chuẩn RBAC ở chân trang (href #)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1368,1390) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Anchor href=\"#\"; không suy ra destination.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #39; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-040",
+      "marker": "#40",
+      "name": "Liên kết hỗ trợ kỹ thuật ở chân trang (href #)",
+      "type": "Dấu mốc giao diện tĩnh từ Stitch",
+      "position": "(1584,1390) source pixels trên ảnh 1600×1442, gốc tọa độ góc trên trái",
+      "properties": "Anchor href=\"#\"; không suy ra destination.",
+      "event_ids": [
+        "AD-18-EV-006"
+      ],
+      "design_status": "Bản mẫu tĩnh; không xác nhận UI/runtime Angular.",
+      "source_ref": "01-ui-elements.md marker #40; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+    },
+    {
+      "id": "AD-18-EL-041",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Route ID hiển thị trong trang hiện tại",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Route param được giữ dạng chuỗi; không thay bằng target title.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.ts; ad18-page.html; 02-events.md EV-01"
+    },
+    {
+      "id": "AD-18-EL-042",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Kiểm tra hợp lệ ID dương signed-int64",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Local client validation: chữ số, >0, tối đa 19 ký tự và <= 9223372036854775807; server vẫn là authority.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.ts; API #90 validate.py; 02-events.md EV-01"
+    },
+    {
+      "id": "AD-18-EL-043",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Accessible alert cho ID không hợp lệ",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Angular template hiển thị cảnh báo cục bộ cho route ID không hợp lệ; không có request.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.ts/html; ad18-page.spec.ts"
+    },
+    {
+      "id": "AD-18-EL-044",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Target preview chưa có dữ liệu",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Các field target đang là placeholder; không gọi detail API và không bịa course/history values.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.html; ad18-api-boundary.ts; 00-overview.md"
+    },
+    {
+      "id": "AD-18-EL-045",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Badge chưa tải / mã Quiz không hợp lệ",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Badge đổi theo validity của ID; không phải trạng thái record loaded/deleted.",
+      "event_ids": [
+        "AD-18-EV-001"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.html; ad18-page.ts; ad18-screen.ui.ts"
+    },
+    {
+      "id": "AD-18-EL-046",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Ô nhập lý do đang bị Angular vô hiệu hóa",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Field không thể nhập; #90 không chấp nhận body.",
+      "event_ids": [
+        "AD-18-EV-005"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.html; 02-events.md EV-05; list_api.md #90"
+    },
+    {
+      "id": "AD-18-EL-047",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Nút xóa Angular disabled",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Button disabled/aria-disabled với reason; không có click handler hoặc request.",
+      "event_ids": [
+        "AD-18-EV-004"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.html; ad18-page.ts; ad18-api-boundary.ts; ad18-page.spec.ts"
+    },
+    {
+      "id": "AD-18-EL-048",
+      "marker": "Chỉ có trong mã nguồn — không có marker Stitch",
+      "name": "Quay lại/cancel Angular các liên kết",
+      "type": "Điều khiển/trạng thái chỉ có trong mã nguồn Angular hiện tại",
+      "position": "Không có tọa độ điểm đánh dấu; kiểm tra mã nguồn/bản mẫu.",
+      "properties": "Mã nguồn hiện tại quay về /admin/quizzes; việc khôi phục filter/page và kết quả trên trình duyệt chưa được xác minh.",
+      "event_ids": [
+        "AD-18-EV-002",
+        "AD-18-EV-003"
+      ],
+      "design_status": "Có bằng chứng source; chưa chạy và browser runtime chưa xác minh.",
+      "source_ref": "ad18-page.html; 06-navigation.md; ad15-page.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-18-EV-001",
+      "name": "Mở AD-18 và nhận diện Quiz",
+      "trigger": "AD-15 delete liên kết hoặc mở route /admin/quizzes/:quizId/delete trực tiếp.",
+      "processing": "Trang hiện tại giữ quizId dạng chuỗi; chỉ chấp nhận chữ số dương trong signed-int64. AD-15 chỉ tạo link khi ID là JS safe integer. Không có GET detail, không gọi #90 khi load; target vẫn placeholder/chỉ đọc. Invalid route hiện alert cục bộ.",
+      "element_ids": [
+        "AD-18-EL-013",
+        "AD-18-EL-014",
+        "AD-18-EL-015",
+        "AD-18-EL-019",
+        "AD-18-EL-020",
+        "AD-18-EL-021",
+        "AD-18-EL-022",
+        "AD-18-EL-023",
+        "AD-18-EL-041",
+        "AD-18-EL-042",
+        "AD-18-EL-043",
+        "AD-18-EL-044",
+        "AD-18-EL-045"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-01; 06-navigation.md; AD18 page.ts/html; AD15 page.ts; admin-screen-renderers.ts; admin.routes.ts"
+    },
+    {
+      "id": "AD-18-EV-002",
+      "name": "Quay về AD-15",
+      "trigger": "Chọn breadcrumb hoặc liên kết return ở phần đầu.",
+      "processing": "Angular return links đi tới /admin/quizzes; không gửi #90. Khôi phục filter/page/scroll chưa có contract và browser chưa xác minh. Stitch anchor nguồn dùng href=\"#\".",
+      "element_ids": [
+        "AD-18-EL-013",
+        "AD-18-EL-014",
+        "AD-18-EL-015",
+        "AD-18-EL-048"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-02; 06-navigation.md; AD18 page.html; AD-18_markers.json #13/#15"
+    },
+    {
+      "id": "AD-18-EV-003",
+      "name": "Hủy an toàn",
+      "trigger": "Chọn liên kết hủy/return ở cuối vùng hành động.",
+      "processing": "Liên kết Angular quay về /admin/quizzes; không có thao tác thay đổi dữ liệu/làm mới bộ nhớ đệm. Trong Stitch, điểm đánh dấu #33 dùng href=\"#\". Không cần xác nhận trạng thái biểu mẫu vì trường lý do bị vô hiệu hóa.",
+      "element_ids": [
+        "AD-18-EL-033",
+        "AD-18-EL-048"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-03; 06-navigation.md; AD18 page.html; AD-18_markers.json #33"
+    },
+    {
+      "id": "AD-18-EV-004",
+      "name": "Xác nhận xóa — hiện bị khóa",
+      "trigger": "Nút destructive hiện disabled; trong Stitch tương ứng marker #34.",
+      "processing": "Không có click handler/request hiện tại. Candidate flow chỉ sau khi target, permission, policy no-attempt/answer-only/attempt và race được duyệt: DELETE path-only #90; không body/query; 200 phải có envelope hợp lệ và ID trong phản hồi khớp. Cache #87/success navigation chưa wire.",
+      "element_ids": [
+        "AD-18-EL-029",
+        "AD-18-EL-030",
+        "AD-18-EL-034",
+        "AD-18-EL-047"
+      ],
+      "api_ids": [
+        "AD-18-API-001"
+      ],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-04; ad18-page.html/ts; ad18-api-boundary.ts; list_api.md #90; API #90 DD; 03-data-flow.md"
+    },
+    {
+      "id": "AD-18-EV-005",
+      "name": "Nhập lý do audit — field hiện bị khóa",
+      "trigger": "Textarea audit reason ở marker #31.",
+      "processing": "Angular hiện tại textarea disabled; Stitch textarea cũng disabled; không có handler. Placeholder/ISO copy không tạo validation rule. API #90 path-only, không body; không gửi reason.",
+      "element_ids": [
+        "AD-18-EL-029",
+        "AD-18-EL-030",
+        "AD-18-EL-031",
+        "AD-18-EL-032",
+        "AD-18-EL-046"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-05; AD18 HTML; list_api.md #90; AD-18_markers.json #29–32"
+    },
+    {
+      "id": "AD-18-EV-006",
+      "name": "Shell, notification, breadcrumb và chân trang tĩnh",
+      "trigger": "Tương tác với shell/chân trang marker #2–#6, #8, #10, #12–#15, #38–#40.",
+      "processing": "Trong bản mẫu, các liên kết dùng `href=\"#\"` và notification không có bộ xử lý; không phát sinh yêu cầu hay cập nhật trạng thái. Thanh điều hướng Angular có mã nguồn riêng, và các liên kết quay về được kiểm tra riêng; không suy ra đích của điều khiển trong bản mẫu.",
+      "element_ids": [
+        "AD-18-EL-002",
+        "AD-18-EL-003",
+        "AD-18-EL-004",
+        "AD-18-EL-005",
+        "AD-18-EL-006",
+        "AD-18-EL-008",
+        "AD-18-EL-010",
+        "AD-18-EL-012",
+        "AD-18-EL-013",
+        "AD-18-EL-014",
+        "AD-18-EL-015",
+        "AD-18-EL-038",
+        "AD-18-EL-039",
+        "AD-18-EL-040"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận — ca chưa chạy",
+      "source_ref": "02-events.md EV-06; AD-18_PLAN.md; Stitch code.html; AD-18_markers.json"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD-18-BL-001",
+      "description": "DD/API chưa được duyệt: AD-18 DD BLOCKED; API #90 Draft — Needs Confirmation; owner/reviewer/approver chưa xác định.",
+      "impact": "Không thể xem ca destructive là acceptance đã duyệt.",
+      "decision": "Owner/reviewer chốt DD/API và ký các quyết định còn mở trước khi bật luồng.",
+      "source_ref": "AD-18 00-overview.md; API #90 00_Cover.md/OPEN_QUESTIONS.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-002",
+      "description": "Quyền theo AC-35: AC-35 nêu quyền quiz-management; #90 cục bộ chỉ dùng vai trò ADMIN.",
+      "impact": "Có nguy cơ mở action cho role khác policy hoặc chặn actor hợp lệ.",
+      "decision": "Product/Security xác nhận mapping và guard.",
+      "source_ref": "AC-35; API #90 validate.py; API #90 OPEN_QUESTIONS.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-003",
+      "description": "Target detail thiếu: Không có detail GET; #87 không có course title/history count; AD-15 không truyền object.",
+      "impact": "Admin chưa đủ dữ liệu để xác nhận đúng target/tác động.",
+      "decision": "Chốt handoff hoặc nguồn dữ liệu đã tồn tại; không tự tạo API.",
+      "source_ref": "AD-18 00-overview.md; API #87 response/models; AD-15 navigation",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-004",
+      "description": "Delete/history branches: AC-35 chỉ nói soft-delete có attempts; answer-only/no-attempt branch, tombstone/timestamp/repeat còn mở.",
+      "impact": "Hành vi xóa dữ liệu/history chưa được thống nhất.",
+      "decision": "Owner/BE duyệt policy trước khi destructive flow có thể test nghiệm thu.",
+      "source_ref": "AC-35 n10; API #90 OPEN_QUESTIONS.md; API #90 query.py/view.py",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-005",
+      "description": "Conflict discrepancy: Inventory có conflict nhưng #90 không khai báo 409; local 422 là invalid path.",
+      "impact": "Test có thể assert nhầm validation thành conflict.",
+      "decision": "Sửa contract/inventory sau quyết định; hiện giữ discrepancy riêng.",
+      "source_ref": "list_screen.md row 76; list_api.md #90; AD-18 00-overview.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-006",
+      "description": "Race với attempt creation: Khóa parent trong #90 chưa chứng minh API #29 đồng bộ; module/route tương thích không có trong checkout.",
+      "impact": "Không biết có thể tạo attempt đồng thời với delete hay không.",
+      "decision": "BE xác nhận concurrency contract/locking.",
+      "source_ref": "AD-18 00-overview.md; API #90 OPEN_QUESTIONS.md; API #29 inventory",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-007",
+      "description": "Vòng đời #87/#89/#91: danh sách cục bộ ẩn tombstone, thao tác cập nhật chặn một số trường hợp vòng đời, còn truy vấn thống kê có thể vẫn đọc Quiz đã xóa; chính sách sản phẩm chưa được quyết định.",
+      "impact": "Post-delete discoverability/edit/statistics có thể không khớp kỳ vọng.",
+      "decision": "Owner duyệt consistency policy qua các API.",
+      "source_ref": "API #87/#89/#91 query.py; API #90 OPEN_QUESTIONS.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-008",
+      "description": "Audit reason không có contract: Mockup textarea bị khóa; #90 path-only, không gửi yêu cầu body.",
+      "impact": "Không thể test required reason, audit log hoặc ISO claim.",
+      "decision": "Bỏ claim hoặc cấp contract/audit policy được duyệt trước khi bật field.",
+      "source_ref": "AD-18 markers #29–32; API #90 request; AD-18 EV-05",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-009",
+      "description": "Retry/cache/navigation/unknown outcome: không có timeout reconciliation/idempotency; #87 invalidation chỉ là inventory expectation; success destination chưa chốt.",
+      "impact": "Không thể xác định retry an toàn, UI result hoặc nơi đến.",
+      "decision": "Chốt UX/cache/retry và error recovery.",
+      "source_ref": "AD-18 02–06; API #90 OPEN_QUESTIONS.md",
+      "status": "Đang mở — chờ xác nhận"
+    },
+    {
+      "id": "AD-18-BL-010",
+      "description": "Runtime/schema chưa xác minh: Browser, deployment, live schema/database chưa verified; fake-session tests không chứng minh runtime.",
+      "impact": "Không thể tuyên bố test thực thi hoặc data policy chạy trên môi trường.",
+      "decision": "Chọn môi trường và xác minh schema/deployment sau khi blocker contract được gỡ.",
+      "source_ref": "AD-18 00-overview.md; 07-test-cases.md; API #90 tests/DD",
+      "status": "Đang mở — chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-18-TC-MH-001",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Đi vào AD-18 từ AD-15 với ID an toàn",
+        "requirement_ids": [
+          "AD-18-YC-002",
+          "AD-18-YC-014",
+          "AD-18-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Quiz giả id=5101; môi trường không có dữ liệu thật.",
+        "steps": [
+          "Mở AD-15 với fixture id=5101.",
+          "Chọn Xóa và ghi nhận URL/trạng thái trang."
+        ],
+        "expected": "Caller chỉ tạo delete route khi id là JS safe integer; AD-18 giữ tuyến nguyên bản ID, hiện trạng chỉ đọc và không tải target detail. Browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-15 renderQuizRow; AD15 quizDeleteRoute; AD18 page; 02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-002",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Mở direct route với signed-int64 hợp lệ",
+        "requirement_ids": [
+          "AD-18-YC-002",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "quizId=9223372036854775807.",
+        "steps": [
+          "Mở direct route với ID tối đa hợp lệ.",
+          "Quan sát ID và trạng thái controls."
+        ],
+        "expected": "Angular source nhận ID dạng chuỗi và chấp nhận positive signed-int64; target vẫn chưa được tải, reason/delete controls vẫn disabled; không có request. Đây là source expectation, chưa chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.ts/html; 02-events.md EV-01; API #90 validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-003",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Từ chối route ID không hợp lệ ở client",
+        "requirement_ids": [
+          "AD-18-YC-002",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Lần lượt quizId=0, abc, -1, 9223372036854775808 và thiếu param.",
+        "steps": [
+          "Mở route với từng giá trị không hợp lệ.",
+          "Kiểm tra cảnh báo accessible và network."
+        ],
+        "expected": "Source cục bộ đánh dấu ID không hợp lệ, hiển thị alert và không gửi request; không khẳng định browser runtime đã kiểm chứng. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.ts/html; ad18-page.spec.ts; API #90 validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-004",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị target hoặc history tự suy diễn",
+        "requirement_ids": [
+          "AD-18-YC-003",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Quiz giả; không có detail endpoint.",
+        "steps": [
+          "Mở route hợp lệ.",
+          "Đối chiếu vùng title, course và attempt/history với source/API #87."
+        ],
+        "expected": "Không có GET detail; trang hiện tại hiển thị trạng thái chưa tải/placeholder. Không hiển thị course title, attempt count hoặc question count không có contract. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "AD-18 00-overview.md; ad18-page.html; ad18-api-boundary.ts; API #87 models/query"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-005",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Giữ nút xóa disabled trước khi blockers được gỡ",
+        "requirement_ids": [
+          "AD-18-YC-005",
+          "AD-18-YC-019"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Page có quizId hợp lệ; policy chưa duyệt.",
+        "steps": [
+          "Mở AD-18.",
+          "Thử kiểm tra trạng thái nút xóa và network log."
+        ],
+        "expected": "Nút vẫn bị vô hiệu hóa/aria-disabled; không handler và không DELETE request. Không đánh giá destructive acceptance khi DD/API còn blocked. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "ad18-page.html/ts; ad18-page.spec.ts; AD-18 EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-006",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Không nhận/gửi audit reason khi field disabled",
+        "requirement_ids": [
+          "AD-18-YC-013",
+          "AD-18-YC-006"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chuỗi reason tổng hợp.",
+        "steps": [
+          "Tập trung và thử nhập vào textarea.",
+          "Quan sát value và request body."
+        ],
+        "expected": "Textarea disabled; không nhận text và không phát request/body. #90 path-only; ISO/static copy không tạo rule. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "ad18-page.html; API #90 03_Request.md; AD-18 EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-007",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Quay lại AD-15 từ liên kết đầu trang",
+        "requirement_ids": [
+          "AD-18-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Mở route AD-18 trực tiếp.",
+        "steps": [
+          "Chọn link quay lại/breadcrumb hiện tại.",
+          "Quan sát route và mutation log."
+        ],
+        "expected": "Angular source link trỏ /admin/quizzes; không mutation. Filter/page/scroll restore và direct-entry fallback chưa được quy định; browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.html; AD-18 06-navigation.md; 02-events.md EV-02"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-008",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Hủy thao tác an toàn về AD-15",
+        "requirement_ids": [
+          "AD-18-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Quiz giả; chưa gửi mutation.",
+        "steps": [
+          "Chọn link hủy ở cuối trang.",
+          "Quan sát route và request log."
+        ],
+        "expected": "Angular link trỏ /admin/quizzes, không mutation/cache invalidation. Hành vi runtime chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.html; AD-18 02-events.md EV-03; 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-009",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu candidate request path-only sau khi được duyệt",
+        "requirement_ids": [
+          "AD-18-YC-005",
+          "AD-18-YC-006",
+          "AD-18-YC-001"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ môi trường tích hợp được duyệt; token giả; ID positive signed-int64.",
+        "steps": [
+          "Sau khi policy/permission/target được duyệt, bật flow theo contract.",
+          "Quan sát method, path, headers, query và body."
+        ],
+        "expected": "Candidate #90 là DELETE /api/v1/admin/quizzes/{quiz_id}; Bearer Authorization và path ID; không body/query. Gói hiện tại không có client caller nên chưa thể khẳng định request được gửi. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "list_api.md #90; route v1.py; API #90 03_Request.md; AD-18 EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-010",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Chỉ nhận success envelope khớp target khi flow được wire",
+        "requirement_ids": [
+          "AD-18-YC-006",
+          "AD-18-YC-007",
+          "AD-18-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Response giả 200 DESIGN_RESOURCE_DELETED với data.id khớp route ID.",
+        "steps": [
+          "Khi client handler được triển khai, cung cấp envelope candidate hợp lệ.",
+          "So sánh ID trong phản hồi với target ID."
+        ],
+        "expected": "Dạng dữ liệu trong danh mục là {id,status:\"deleted\",deleted_at}; danh sách kiểm kê mong đợi trạng thái deleted và làm mới/tải lại #87. Bộ phân tích giao diện/bộ nhớ đệm/điều hướng chưa được kết nối; ứng dụng hiện tại không đánh dấu thành công. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "list_api.md #90; API #90 04_Response.md; AD-18 EV-04; 03-data-flow.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-011",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt 401 và 403",
+        "requirement_ids": [
+          "AD-18-YC-001",
+          "AD-18-YC-008"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Response giả 401 rồi 403.",
+        "steps": [
+          "Sau khi flow được duyệt, kiểm tra mapping riêng cho từng status."
+        ],
+        "expected": "Catalog: 401 authentication required, 403 access denied; UI recovery chưa wire. Không gộp hai trạng thái thành success. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "list_api.md #90; API #90 06_Error.md; AD-18 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-012",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị not-found khi target không tồn tại",
+        "requirement_ids": [
+          "AD-18-YC-003",
+          "AD-18-YC-008"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Response giả 404 DESIGN_RESOURCE_NOT_FOUND.",
+        "steps": [
+          "Sau khi handler được triển khai, đưa response 404.",
+          "Quan sát success state và recovery."
+        ],
+        "expected": "Không được tuyên bố deleted; catalog code 404. Recovery UI/destination chưa xác định và chưa wire. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "list_api.md #90; API #90 06_Error.md; AD-18 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-013",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Không hiểu 422 là conflict và không thêm 409",
+        "requirement_ids": [
+          "AD-18-YC-008",
+          "AD-18-YC-015"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Response giả 422 invalid quiz_id; thử tìm nhánh 409 trong contract.",
+        "steps": [
+          "Đối chiếu catalog/OpenAPI và mapping tương lai.",
+          "Kiểm tra error label không gọi invalid path là history conflict."
+        ],
+        "expected": "422 là validation lỗi path trong mã nguồn cục bộ; catalog không có 409. Inventory conflict là discrepancy cần quyết định, không tạo API result giả. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "list_api.md #90; route v1.py; API #90 06_Error.md; list_screen.md row 76"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-014",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Map 500 thành service error an toàn",
+        "requirement_ids": [
+          "AD-18-YC-008",
+          "AD-18-YC-019"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Response giả 500 DESIGN_INTERNAL_ERROR.",
+        "steps": [
+          "Sau khi handler được wire, cung cấp 500.",
+          "Kiểm tra thông báo không lộ SQL/private detail."
+        ],
+        "expected": "Server source map lỗi nội bộ thành 500 an toàn; UI recovery chưa wire. Không đưa database detail lên UI. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "API #90 view.py; test_admin_quizzes_delete.py; AD-18 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-015",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Không tự retry khi outcome mạng chưa rõ",
+        "requirement_ids": [
+          "AD-18-YC-010",
+          "AD-18-YC-016"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Mô phỏng timeout sau khả năng server nhận DELETE (chỉ sau khi flow có contract).",
+        "steps": [
+          "Quan sát số lần gửi request và thông báo trạng thái.",
+          "Không phát lại request tự động."
+        ],
+        "expected": "Retry/idempotency/reconciliation chưa được catalog chốt; không tự tuyên bố deleted/not-deleted hoặc tự gửi lại destructive request. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "AD-18 02-events.md EV-04; 03-data-flow.md; API #90 OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-016",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Không coi soft/hard delete local là policy đã duyệt",
+        "requirement_ids": [
+          "AD-18-YC-009",
+          "AD-18-YC-010",
+          "AD-18-YC-011",
+          "AD-18-YC-012"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Dữ liệu tổng hợp gồm attempt, answer-only, no-history và tombstone.",
+        "steps": [
+          "Đối chiếu AC-35 với local #90 branches.",
+          "Ghi từng discrepancy thay vì assert policy dựa trên source local."
+        ],
+        "expected": "AC-35 chỉ yêu cầu soft-delete nếu attempts; no-attempt/answer-only/tombstone/repeat và lifecycle cross-API còn mở. Ca policy giữ blocked cho đến khi owner phê duyệt. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "AC-35 n10; API #90 07–10/OPEN_QUESTIONS; API #87/#89/#91 query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-MH-017",
+        "target_id": "AD-18",
+        "group": "Toàn màn hình",
+        "title": "Không suy diễn cache refresh hoặc success destination",
+        "requirement_ids": [
+          "AD-18-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Candidate success response; chưa có cache implementation.",
+        "steps": [
+          "Kiểm tra inventory expectation sau 200.",
+          "Tìm caller/cache invalidation/success route trong current AD-18 source."
+        ],
+        "expected": "Inventory mong invalidate/refetch #87; current AD-18 không có mutation/cache caller. Mechanism và destination chưa wire/chưa chốt. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "AD-18 00-overview.md; 02-events.md EV-04; ad18-api-boundary.ts; 06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-18-TC-TP-001",
+        "target_id": "AD-18-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #1: Nhận diện Study2Work LMS/admin",
+        "requirement_ids": [
+          "AD-18-YC-018",
+          "AD-18-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #1 ở tọa độ (16,36) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #1 ánh xạ tới Nhận diện Study2Work LMS/Admin tại (16,36) source pixels. Logo/brand tĩnh trong mockup; không chứng minh phiên hoặc runtime. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #1; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-002",
+        "target_id": "AD-18-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #2: Điều hướng shell — Tổng quan",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #2 ở tọa độ (355,61) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #2 ánh xạ tới Điều hướng shell — Tổng quan tại (355,61) source pixels. Prototype anchor href=\"#\"; không có destination được chứng minh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #2; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-003",
+        "target_id": "AD-18-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #3: Điều hướng shell — Người dùng",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #3 ở tọa độ (490,61) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #3 ánh xạ tới Điều hướng shell — Người dùng tại (490,61) source pixels. Prototype anchor href=\"#\"; không có destination được chứng minh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #3; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-004",
+        "target_id": "AD-18-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #4: Điều hướng shell — Khóa học & Nội dung",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #4 ở tọa độ (660,61) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #4 ánh xạ tới Điều hướng shell — Khóa học & Nội dung tại (660,61) source pixels. Prototype anchor href=\"#\"; không có destination được chứng minh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #4; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-005",
+        "target_id": "AD-18-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #5: Điều hướng shell — Kiểm duyệt",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #5 ở tọa độ (856,61) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #5 ánh xạ tới Điều hướng shell — Kiểm duyệt tại (856,61) source pixels. Prototype anchor href=\"#\"; không có destination được chứng minh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #5; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-006",
+        "target_id": "AD-18-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #6: Điều hướng shell — Báo cáo",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #6 ở tọa độ (983,61) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #6 ánh xạ tới Điều hướng shell — Báo cáo tại (983,61) source pixels. Prototype anchor href=\"#\"; không có destination được chứng minh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #6; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-007",
+        "target_id": "AD-18-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #7: Copy trạng thái System Normal (tĩnh)",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #7 ở tọa độ (1152,61) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #7 ánh xạ tới Copy trạng thái System Normal (tĩnh) tại (1152,61) source pixels. Copy trạng thái tĩnh; không phải health check/runtime status. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #7; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-008",
+        "target_id": "AD-18-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #8: Nút thông báo không có handler",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #8 ở tọa độ (1295,60) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #8 ánh xạ tới Nút thông báo không có handler tại (1295,60) source pixels. Nút không có handler trong prototype. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #8; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-009",
+        "target_id": "AD-18-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #9: Danh tính và avatar quản trị viên (tĩnh)",
+        "requirement_ids": [
+          "AD-18-YC-001",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #9 ở tọa độ (1584,61) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #9 ánh xạ tới Danh tính và avatar Admin (tĩnh) tại (1584,61) source pixels. Tên/avatar tĩnh; không chứng minh danh tính phiên hiện tại. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #9; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-010",
+        "target_id": "AD-18-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #10: Breadcrumb toàn cục",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #10 ở tọa độ (18,95) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #10 ánh xạ tới Breadcrumb toàn cục tại (18,95) source pixels. Breadcrumb tĩnh; prototype không thiết lập hành vi route. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #10; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-011",
+        "target_id": "AD-18-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #11: Copy bảo đảm RBAC (tĩnh)",
+        "requirement_ids": [
+          "AD-18-YC-001",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #11 ở tọa độ (1585,95) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #11 ánh xạ tới Copy bảo đảm RBAC (tĩnh) tại (1585,95) source pixels. Copy RBAC tĩnh; không chứng minh authorization policy. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #11; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-012",
+        "target_id": "AD-18-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #12: Breadcrumb Quản trị khảo thí",
+        "requirement_ids": [
+          "AD-18-YC-014",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #12 ở tọa độ (130,171) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #12 ánh xạ tới Breadcrumb Quản trị khảo thí tại (130,171) source pixels. Nhãn breadcrumb tĩnh của vùng quản trị khảo thí. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #12; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-013",
+        "target_id": "AD-18-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #13: Breadcrumb Danh sách bài kiểm tra",
+        "requirement_ids": [
+          "AD-18-YC-014",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #13 ở tọa độ (333,171) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #13 ánh xạ tới Breadcrumb Danh sách bài kiểm tra tại (333,171) source pixels. Anchor danh sách trong prototype; Angular hiện tại target /admin/quizzes. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #13; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-02"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-014",
+        "target_id": "AD-18-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #14: Breadcrumb Xóa bài kiểm tra hiện tại",
+        "requirement_ids": [
+          "AD-18-YC-014",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #14 ở tọa độ (508,171) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #14 ánh xạ tới Breadcrumb Xóa bài kiểm tra hiện tại tại (508,171) source pixels. Nhãn trang hiện tại trong prototype. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #14; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-02"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-015",
+        "target_id": "AD-18-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #15: liên kết quay lại AD-15 (href #)",
+        "requirement_ids": [
+          "AD-18-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #15 ở tọa độ (1547,247) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #15 ánh xạ tới Link quay lại AD-15 (href #) tại (1547,247) source pixels. Anchor href=\"#\"; Angular hiện tại có link /admin/quizzes riêng. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #15; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-02"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-016",
+        "target_id": "AD-18-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #16: Icon cảnh báo nguy cơ",
+        "requirement_ids": [
+          "AD-18-YC-009",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #16 ở tọa độ (346,390) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #16 ánh xạ tới Icon cảnh báo nguy cơ tại (346,390) source pixels. Icon cảnh báo thiết kế; không phát sinh hành vi. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #16; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-017",
+        "target_id": "AD-18-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #17: Nhãn nguy cơ ảnh hưởng dữ liệu học tập",
+        "requirement_ids": [
+          "AD-18-YC-009",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #17 ở tọa độ (880,328) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #17 ánh xạ tới Nhãn nguy cơ ảnh hưởng dữ liệu học tập tại (880,328) source pixels. Nhãn nguy cơ tĩnh trong mockup. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #17; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-018",
+        "target_id": "AD-18-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #18: Tiêu đề xác nhận",
+        "requirement_ids": [
+          "AD-18-YC-005",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #18 ở tọa độ (985,393) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #18 ánh xạ tới Tiêu đề xác nhận tại (985,393) source pixels. Tiêu đề tĩnh; không chứng minh action đã sẵn sàng. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #18; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-019",
+        "target_id": "AD-18-EL-019",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #19: Tiêu đề vùng bản ghi đích",
+        "requirement_ids": [
+          "AD-18-YC-003"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #19 ở tọa độ (390,462) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #19 ánh xạ tới Tiêu đề vùng bản ghi đích tại (390,462) source pixels. Heading của card target. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #19; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-020",
+        "target_id": "AD-18-EL-020",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #20: Pill trạng thái bản ghi được chọn (placeholder)",
+        "requirement_ids": [
+          "AD-18-YC-003",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #20 ở tọa độ (1218,462) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #20 ánh xạ tới Pill trạng thái bản ghi được chọn (placeholder) tại (1218,462) source pixels. Placeholder “chưa chọn bản ghi”; không phải target đã tải. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #20; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-021",
+        "target_id": "AD-18-EL-021",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #21: Trường tên Quiz và giá trị placeholder",
+        "requirement_ids": [
+          "AD-18-YC-003",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #21 ở tọa độ (640,606) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #21 ánh xạ tới Trường tên Quiz và giá trị placeholder tại (640,606) source pixels. Tên Quiz placeholder; không có detail data. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #21; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-022",
+        "target_id": "AD-18-EL-022",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #22: Trường mã Quiz và giá trị placeholder",
+        "requirement_ids": [
+          "AD-18-YC-002",
+          "AD-18-YC-003"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #22 ở tọa độ (920,606) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #22 ánh xạ tới Trường mã Quiz và giá trị placeholder tại (920,606) source pixels. ID Quiz placeholder; Angular page hiện hiển thị route ID riêng. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #22; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-023",
+        "target_id": "AD-18-EL-023",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #23: Trường khóa học liên kết và placeholder",
+        "requirement_ids": [
+          "AD-18-YC-003"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #23 ở tọa độ (1200,606) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #23 ánh xạ tới Trường khóa học liên kết và placeholder tại (1200,606) source pixels. Tên khóa học placeholder; #87 không cung cấp course title. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #23; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-024",
+        "target_id": "AD-18-EL-024",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #24: Icon cảnh báo an toàn attempt",
+        "requirement_ids": [
+          "AD-18-YC-009"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #24 ở tọa độ (350,770) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #24 ánh xạ tới Icon cảnh báo an toàn attempt tại (350,770) source pixels. Icon trang trí cảnh báo attempt/history. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #24; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-025",
+        "target_id": "AD-18-EL-025",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #25: Tiêu đề chính sách an toàn",
+        "requirement_ids": [
+          "AD-18-YC-009"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #25 ở tọa độ (900,715) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #25 ánh xạ tới Tiêu đề chính sách an toàn tại (900,715) source pixels. Heading chính sách tĩnh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #25; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-026",
+        "target_id": "AD-18-EL-026",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #26: Đoạn cảnh báo attempt/history (claim tĩnh)",
+        "requirement_ids": [
+          "AD-18-YC-009",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #26 ở tọa độ (1215,803) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Điểm đánh dấu #26 ánh xạ đến đoạn cảnh báo attempt/history (khẳng định tĩnh) tại tọa độ (1215,803) trên ảnh nguồn. Đây là nội dung tĩnh, không khẳng định phù hợp với chính sách đã duyệt. Chỉ là xác nhận trong tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #26; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-027",
+        "target_id": "AD-18-EL-027",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #27: Copy chính sách attempts chưa được quyết định",
+        "requirement_ids": [
+          "AD-18-YC-009"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #27 ở tọa độ (760,878) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #27 ánh xạ tới Copy chính sách attempts chưa được quyết định tại (760,878) source pixels. Copy policy đang mở; không được coi là rule đã chốt. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #27; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-028",
+        "target_id": "AD-18-EL-028",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #28: Copy trạng thái chỉ đọc",
+        "requirement_ids": [
+          "AD-18-YC-004",
+          "AD-18-YC-005"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #28 ở tọa độ (1160,878) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #28 ánh xạ tới Copy trạng thái chỉ đọc tại (1160,878) source pixels. Copy chỉ đọc của mockup. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #28; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-029",
+        "target_id": "AD-18-EL-029",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #29: Nhãn lý do audit",
+        "requirement_ids": [
+          "AD-18-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #29 ở tọa độ (625,927) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #29 ánh xạ tới Nhãn lý do audit tại (625,927) source pixels. Nhãn audit reason; không tạo body API. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #29; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-05"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-030",
+        "target_id": "AD-18-EL-030",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #30: Copy chính sách ISO-27001 (claim tĩnh)",
+        "requirement_ids": [
+          "AD-18-YC-013",
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #30 ở tọa độ (1217,927) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Điểm đánh dấu #30 ánh xạ đến nội dung chính sách ISO-27001 (khẳng định tĩnh) tại tọa độ (1217,927) trên ảnh nguồn. Đây là khẳng định tĩnh về ISO, không phải bằng chứng chứng nhận hoặc chính sách. Chỉ xác nhận tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #30; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-05"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-031",
+        "target_id": "AD-18-EL-031",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #31: Textarea lý do audit disabled",
+        "requirement_ids": [
+          "AD-18-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #31 ở tọa độ (380,1066) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Điểm đánh dấu #31 ánh xạ đến textarea lý do kiểm toán bị vô hiệu hóa tại tọa độ (380,1066) trên ảnh nguồn. Textarea bị vô hiệu hóa; không nhận dữ liệu nhập hoặc gửi yêu cầu. Đây là khẳng định trong tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #31; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-032",
+        "target_id": "AD-18-EL-032",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #32: Gợi ý field disabled",
+        "requirement_ids": [
+          "AD-18-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #32 ở tọa độ (1221,1095) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Điểm đánh dấu #32 ánh xạ đến gợi ý trường bị vô hiệu hóa tại tọa độ (1221,1095) trên ảnh nguồn. Gợi ý là nội dung tĩnh; không thiết lập quy tắc kiểm tra hợp lệ. Đây là xác nhận tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #32; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-05"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-033",
+        "target_id": "AD-18-EL-033",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #33: liên kết quay lại an toàn (href #)",
+        "requirement_ids": [
+          "AD-18-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #33 ở tọa độ (685,1138) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #33 ánh xạ tới Link quay lại an toàn (href #) tại (685,1138) source pixels. Anchor href=\"#\" trong prototype; Angular link về AD-15. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #33; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-03"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-034",
+        "target_id": "AD-18-EL-034",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #34: Nút xóa vĩnh viễn disabled, không handler",
+        "requirement_ids": [
+          "AD-18-YC-005"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #34 ở tọa độ (1225,1138) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Điểm đánh dấu #34 ánh xạ tới nút xóa vĩnh viễn bị vô hiệu hóa tại tọa độ (1225,1138) của ảnh nguồn. Nút bị khóa, không có bộ xử lý hay yêu cầu trong bản mẫu/Angular hiện tại. Đây là nhận định dựa trên tài liệu tĩnh, không xác nhận hành vi Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md marker #34; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-035",
+        "target_id": "AD-18-EL-035",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #35: Copy banner bảo vệ dữ liệu (claim tĩnh)",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #35 ở tọa độ (735,1252) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #35 ánh xạ tới Copy banner bảo vệ dữ liệu (claim tĩnh) tại (735,1252) source pixels. Claim bảo vệ dữ liệu tĩnh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #35; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-036",
+        "target_id": "AD-18-EL-036",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #36: Badge ED-TECH/compliance (claim tĩnh)",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #36 ở tọa độ (1254,1252) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #36 ánh xạ tới Badge ED-TECH/compliance (claim tĩnh) tại (1254,1252) source pixels. Badge compliance tĩnh; không phải chứng cứ tuân thủ. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #36; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-037",
+        "target_id": "AD-18-EL-037",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #37: Copyright và nhãn hệ thống",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #37 ở tọa độ (468,1390) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #37 ánh xạ tới Copyright và nhãn hệ thống tại (468,1390) source pixels. Copyright/system label tĩnh. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #37; AD-18_markers.json; screen-numbered.png; screen-clean.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-038",
+        "target_id": "AD-18-EL-038",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #38: liên kết privacy ở chân trang (href #)",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #38 ở tọa độ (1090,1390) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #38 ánh xạ tới Link privacy ở footer (href #) tại (1090,1390) source pixels. Anchor href=\"#\"; không suy ra destination. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #38; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-039",
+        "target_id": "AD-18-EL-039",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #39: liên kết chuẩn RBAC ở chân trang (href #)",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #39 ở tọa độ (1368,1390) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #39 ánh xạ tới Link chuẩn RBAC ở footer (href #) tại (1368,1390) source pixels. Anchor href=\"#\"; không suy ra destination. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #39; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-040",
+        "target_id": "AD-18-EL-040",
+        "group": "Thành phần",
+        "title": "Đối chiếu marker #40: liên kết hỗ trợ kỹ thuật ở chân trang (href #)",
+        "requirement_ids": [
+          "AD-18-YC-018"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Ảnh thiết kế tĩnh và ảnh đánh số; không dùng dữ liệu người học thật.",
+        "steps": [
+          "Mở ảnh clean và ảnh đã đánh số của AD-18.",
+          "Đối chiếu marker #40 ở tọa độ (1584,1390) trên ảnh 1600×1442 với element DD.",
+          "Ghi nhận riêng khác biệt giữa mockup và Angular source; không suy ra runtime."
+        ],
+        "expected": "Marker #40 ánh xạ tới Link hỗ trợ kỹ thuật ở footer (href #) tại (1584,1390) source pixels. Anchor href=\"#\"; không suy ra destination. Đây là assertion tài liệu tĩnh, không xác nhận Angular/trình duyệt/môi trường chạy. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md marker #40; AD-18_markers.json; screen-numbered.png; screen-clean.png",
+          "02-events.md EV-06"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-041",
+        "target_id": "AD-18-EL-041",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Route ID hiển thị trong trang hiện tại",
+        "requirement_ids": [
+          "AD-18-YC-002",
+          "AD-18-YC-003",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Route ID hiển thị trong trang hiện tại: Route param được giữ dạng chuỗi; không thay bằng target title. Bằng chứng code hiện tại; chưa chạy và browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.ts; ad18-page.html; 02-events.md EV-01",
+          "AD-18 02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-042",
+        "target_id": "AD-18-EL-042",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Validation ID positive signed-int64",
+        "requirement_ids": [
+          "AD-18-YC-002"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Kiểm tra ID dương trong giới hạn int64 có dấu: mã nguồn máy khách cục bộ kiểm tra chữ số, giá trị >0, tối đa 19 ký tự và không vượt 9223372036854775807; máy chủ vẫn là nguồn quyết định cuối cùng. Đây là bằng chứng mã nguồn hiện tại; chưa chạy và chưa xác minh trình duyệt. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.ts; API #90 validate.py; 02-events.md EV-01",
+          "AD-18 02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-043",
+        "target_id": "AD-18-EL-043",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Accessible alert cho ID không hợp lệ",
+        "requirement_ids": [
+          "AD-18-YC-002"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Accessible alert cho ID không hợp lệ: Angular template hiển thị cảnh báo cục bộ cho route ID không hợp lệ; không có request. Bằng chứng code hiện tại; chưa chạy và browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.ts/html; ad18-page.spec.ts",
+          "AD-18 02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-044",
+        "target_id": "AD-18-EL-044",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Target preview chưa có dữ liệu",
+        "requirement_ids": [
+          "AD-18-YC-003",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Target preview chưa có dữ liệu: Các field target đang là placeholder; không gọi detail API và không bịa course/history values. Bằng chứng code hiện tại; chưa chạy và browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.html; ad18-api-boundary.ts; 00-overview.md",
+          "AD-18 02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-045",
+        "target_id": "AD-18-EL-045",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Badge chưa tải / mã Quiz không hợp lệ",
+        "requirement_ids": [
+          "AD-18-YC-002",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Badge chưa tải / mã Quiz không hợp lệ: Badge đổi theo validity của ID; không phải trạng thái record loaded/deleted. Bằng chứng code hiện tại; chưa chạy và browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.html; ad18-page.ts; ad18-screen.ui.ts",
+          "AD-18 02-events.md EV-01"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-046",
+        "target_id": "AD-18-EL-046",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Reason textarea Angular disabled",
+        "requirement_ids": [
+          "AD-18-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Reason textarea Angular disabled: Field không thể nhập; #90 không chấp nhận body. Bằng chứng code hiện tại; chưa chạy và browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.html; 02-events.md EV-05; list_api.md #90",
+          "AD-18 02-events.md EV-05"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-047",
+        "target_id": "AD-18-EL-047",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Nút xóa Angular disabled",
+        "requirement_ids": [
+          "AD-18-YC-004",
+          "AD-18-YC-005"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Nút xóa trong Angular bị vô hiệu hóa: có disabled/aria-disabled cùng lý do; không có hàm xử lý khi nhấp hoặc yêu cầu gửi đi. Đây là bằng chứng mã nguồn hiện tại; chưa chạy và chưa xác minh trình duyệt. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "ad18-page.html; ad18-page.ts; ad18-api-boundary.ts; ad18-page.spec.ts",
+          "AD-18 02-events.md EV-04"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-TP-048",
+        "target_id": "AD-18-EL-048",
+        "group": "Thành phần",
+        "title": "Đối chiếu chỉ có trong mã nguồn: Return/cancel Angular các liên kết",
+        "requirement_ids": [
+          "AD-18-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chỉ đọc source đã nêu; chưa chạy app/browser.",
+        "steps": [
+          "Đối chiếu Angular template/logic với mô tả chỉ có trong mã nguồn.",
+          "Xác nhận trạng thái disabled/alert/route mapping ở code; không ghi thành kết quả runtime."
+        ],
+        "expected": "Return/cancel Angular links: mã nguồn hiện tại targets /admin/quizzes; filter/page restore và browser outcome remain unverified. Bằng chứng code hiện tại; chưa chạy và browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "ad18-page.html; 06-navigation.md; ad15-page.ts",
+          "AD-18 02-events.md EV-02",
+          "AD-18 02-events.md EV-03"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-18-TC-SK-001",
+        "target_id": "AD-18-EV-001",
+        "group": "Sự kiện",
+        "title": "Mở route hợp lệ/không hợp lệ",
+        "requirement_ids": [
+          "AD-18-YC-002",
+          "AD-18-YC-003",
+          "AD-18-YC-004"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Quiz ID giả 5101; invalid 0/abc/out-of-range.",
+        "steps": "Đối chiếu mã nguồn hiện tại valid/invalid branch và network expectation.",
+        "expected": "ID hợp lệ được giữ raw; invalid ID thông báo accessible; cả hai trường hợp hiện không gọi detail/delete API. Browser chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-01",
+          "ad18-page.ts/html",
+          "AD15 page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-SK-002",
+        "target_id": "AD-18-EV-002",
+        "group": "Sự kiện",
+        "title": "Điều hướng liên kết return",
+        "requirement_ids": [
+          "AD-18-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Route AD-18 hợp lệ.",
+        "steps": "Chọn return/breadcrumb trong có căn cứ từ mã nguồn UI khi chạy ở môi trường sau này.",
+        "expected": "Angular target là /admin/quizzes, không mutation; filter/page/scroll restore chưa có contract. Prototype anchor href=\"#\". Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-02",
+          "06-navigation.md",
+          "AD18 page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-SK-003",
+        "target_id": "AD-18-EV-003",
+        "group": "Sự kiện",
+        "title": "Điều hướng hủy an toàn",
+        "requirement_ids": [
+          "AD-18-YC-014"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Chưa gửi mutation.",
+        "steps": "Chọn link hủy và quan sát request/cache.",
+        "expected": "Angular hiện tại link về /admin/quizzes; không mutation hoặc cache invalidation. Runtime chưa xác minh. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-03",
+          "06-navigation.md",
+          "AD18 page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-SK-004",
+        "target_id": "AD-18-EV-004",
+        "group": "Sự kiện",
+        "title": "Confirm destructive action khi vẫn disabled",
+        "requirement_ids": [
+          "AD-18-YC-005",
+          "AD-18-YC-006",
+          "AD-18-YC-007",
+          "AD-18-YC-008",
+          "AD-18-YC-009",
+          "AD-18-YC-010",
+          "AD-18-YC-011",
+          "AD-18-YC-012",
+          "AD-18-YC-015",
+          "AD-18-YC-016",
+          "AD-18-YC-017"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "DD/API còn blocker; button disabled.",
+        "steps": "Xác nhận disabled state và không có request.",
+        "expected": "Không có hàm xử lý khi nhấp/bên gọi hiện tại; không gửi #90. Chỉ kiểm thử hợp đồng ứng viên sau khi chính sách/quyền/đối tượng đích và môi trường thực được duyệt; các nhánh xóa cục bộ chưa phải kỳ vọng nghiệp vụ. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [
+          "AD-18-API-001"
+        ],
+        "source_refs": [
+          "02-events.md EV-04",
+          "ad18-page.html/ts",
+          "API #90 DD/source",
+          "AC-35"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-SK-005",
+        "target_id": "AD-18-EV-005",
+        "group": "Sự kiện",
+        "title": "Tương tác audit reason disabled",
+        "requirement_ids": [
+          "AD-18-YC-013"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "Textarea disabled; không đưa PII.",
+        "steps": "Thử focus/nhập theo source review; kiểm tra API contract.",
+        "expected": "Textarea không nhận input; request body không tồn tại trong #90. Không áp required/ISO rule từ mockup. Chờ xác nhận; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-05",
+          "ad18-page.html",
+          "list_api.md #90"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-18-TC-SK-006",
+        "target_id": "AD-18-EV-006",
+        "group": "Sự kiện",
+        "title": "Kiểm tra prototype shell controls không có hành vi",
+        "requirement_ids": [
+          "AD-18-YC-018",
+          "AD-18-YC-020"
+        ],
+        "precondition": "Ca chưa chạy. Chỉ chạy sau khi có môi trường được duyệt và dữ liệu giả/tổng hợp; DD/API #90 còn BLOCKED nên các thao tác destructive/API chưa phải tiêu chí nghiệm thu.",
+        "data": "HTML/tài nguyên tĩnh của bản mẫu Stitch.",
+        "steps": "Đối chiếu href/handler của nav, notification và footer controls.",
+        "expected": "Các liên kết điều hướng/chân trang trong bản mẫu dùng #; thông báo không có hàm xử lý; không phát sinh yêu cầu hoặc cập nhật trạng thái. Không suy ra đích đến/chính sách từ nội dung. Chờ xác nhận; ca kiểm thử chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "02-events.md EV-06",
+          "AD-18_PLAN.md",
+          "screen_stitch code.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

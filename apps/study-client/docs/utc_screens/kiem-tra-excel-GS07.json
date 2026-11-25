@@ -1,0 +1,52 @@
+{
+  "artifact": "UTC_GS-07_XemVaTaiTaiNguyen.xlsx",
+  "checks": {
+    "trace_integrity_and_coverage": true,
+    "source_hashes_and_references": true,
+    "26_markers_map_one_to_one": true,
+    "marker_coordinates_in_bounds": true,
+    "zip_integrity": true,
+    "four_sheets": true,
+    "styles_valid": true,
+    "json_workbook_rows_match": true,
+    "all_99_cases_unrun": true,
+    "execution_columns_blank": true,
+    "formula_count_exact": true,
+    "three_dropdowns_correct": true,
+    "no_unresolved_template_tokens": true,
+    "intentional_resource_id_placeholder_only": true,
+    "accessibility_responsive_and_safe_link_literals": true,
+    "no_embedded_viewer_in_runtime_template": true,
+    "cross_refs_valid": true
+  },
+  "requirements": 41,
+  "elements": 36,
+  "events": 10,
+  "case_rows": 99,
+  "unrun": 99,
+  "blank_execution_fields": 99,
+  "formula_count": 297,
+  "source_refs": 38,
+  "hashed_sources": 61,
+  "dropdowns": [
+    [
+      2,
+      "O72:O112",
+      "\"Chưa chạy,Đạt,Không đạt,Bị chặn\""
+    ],
+    [
+      3,
+      "O43:O78",
+      "\"Chưa chạy,Đạt,Không đạt,Bị chặn\""
+    ],
+    [
+      4,
+      "O17:O38",
+      "\"Chưa chạy,Đạt,Không đạt,Bị chặn\""
+    ]
+  ],
+  "notes": [
+    "Từ placeholder trong audit chỉ xuất hiện trong mô tả kỹ thuật resourceId literal của prototype; đây là nội dung test, không phải placeholder tài liệu."
+  ],
+  "errors": []
+}

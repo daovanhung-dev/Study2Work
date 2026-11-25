@@ -1,0 +1,3397 @@
+{
+  "metadata": {
+    "screen_id": "AD-06",
+    "screen_name": "Danh sách khóa học quản trị",
+    "module": "Quản trị",
+    "route": "/admin/courses",
+    "actor": "Admin có quyền quản lý khóa học theo AC-32; bộ kiểm tra quyền API cục bộ hiện yêu cầu ADMIN; cần xác nhận hai điều kiện này tương đương.",
+    "version": "0.1 — KẾ HOẠCH UTC",
+    "dd_version": "0.3 / 2026-11-20; các nội dung theo dõi về mã nguồn hiện tại/tạo mới đến 2026-11-22",
+    "dd_status": "DD BỊ CHẶN — còn mở quyết định về tìm kiếm/bộ lọc/trạng thái/danh mục/chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI))/trường khóa học/quyền/runtime; API #104 tạo khóa học là phần mở rộng đã được duyệt.",
+    "runtime_status": "CHƯA XÁC MINH — chưa xác minh trình duyệt đã xác thực, API/DB trực tiếp hoặc môi trường triển khai.",
+    "author": "AI lập kế hoạch kiểm thử; cần rà soát.",
+    "reviewer": "Chưa phân công",
+    "approver": "Chưa phê duyệt",
+    "date": "2026-11-23",
+    "source_name": "AD-06, các mục DD 00–07; ảnh/bản đồ gồm 44 điểm đánh dấu và bản mẫu Stitch; tuyến/trang/API Angular hiện tại, bên gọi và mã nguồn kiểm thử hiện có",
+    "approval_note": "Dùng DD AD-06 trong repository làm nguồn chuẩn; các quyết định còn mở vẫn được giữ là blocker. API #104 được người dùng duyệt như phần mở rộng riêng, không làm đóng các blocker còn lại."
+  },
+  "overall": {
+    "objective": "Tạo UTC có truy vết cho danh sách khóa học quản trị, phân biệt hành vi hiện tại với các bộ lọc/chỉ số/thao tác chưa được duyệt.",
+    "inputs": "Tuyến /admin/courses; phiên Bearer Admin; GET #73 với page=1; khi mở hộp thoại, GET #68 lấy các trang Mentor đang hoạt động; POST biểu mẫu bằng API #104 theo nội dung có căn cứ từ mã nguồn.",
+    "outputs": "Các dòng danh sách, phân trang và trạng thái lỗi/rỗng/ngoài phạm vi/lệch số lượng; hộp thoại tạo khóa học và kết quả DRAFT đã được kiểm tra. Tìm kiếm/trạng thái/mentor/danh mục, chỉ số/thao tác chưa hỗ trợ và ánh xạ quyền vẫn phụ thuộc quyết định.",
+    "main_flow": "Mở tuyến → GET #73 với page=1 → kiểm tra envelope/Course Page → hiển thị dòng, trạng thái rỗng/ngoài phạm vi/lệch dữ liệu/lỗi → Course.id an toàn có thể mở AD-07. Nút Thêm mở hộp thoại → #68 lấy mentor đang hoạt động → #104 tạo DRAFT → kiểm tra phản hồi → ID an toàn mở AD-07; nếu không, tải lại danh sách.",
+    "states": [
+      "Initial",
+      "Đang tải",
+      "Ready",
+      "Rỗng",
+      "Ngoài phạm vi-empty",
+      "Snapshot-mismatch",
+      "Unauthorized",
+      "Forbidden",
+      "Validation-error",
+      "Service-error",
+      "Create-dialog-open",
+      "Mentors-loading",
+      "Mentors-empty",
+      "Create-pending",
+      "Create-error",
+      "Create-success"
+    ],
+    "preconditions": "Phiên/token Admin và dữ liệu Course/Mentor giả lập; chủ sở hữu DD/API xác nhận quy tắc quyền/lọc/trạng thái/vòng đời AC-32; cần xác minh schema/môi trường chạy mục tiêu trước khi thực hiện nghiệm thu.",
+    "security": "Chỉ gửi Bearer qua máy khách Admin dùng chung; không đặt token trong URL; không dùng PII thật. Nội dung tĩnh về RBAC/System Normal/quản trị không chứng minh quyền hoặc tình trạng hệ thống. Không tự ánh xạ API hoặc tự động thử lại thao tác thay đổi dữ liệu khi chưa có hỗ trợ.",
+    "out_of_scope": "Không tự suy ra query tìm kiếm, kết quả bộ lọc danh mục, enum/khả năng hiển thị trạng thái, chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)), mã khóa học/số bài học, chính sách export/sync/thủ công, thao tác đổi trạng thái trực tiếp, quy tắc hiển thị #77 hoặc runtime trực tiếp từ bản mẫu/kiểm thử mã nguồn."
+  },
+  "apis": [
+    {
+      "id": "AD-06-API-001",
+      "method": "GET",
+      "path": "/api/v1/admin/courses",
+      "request": "JWT Bearer của Admin; không có đường dẫn hoặc nội dung thân yêu cầu. Tham số truy vấn: status dạng chuỗi nguyên dạng tùy chọn, mentor dạng số nguyên int64 có dấu, category dạng int64 (hiện bị từ chối với 422), page dạng int32, mặc định là 1. Không có q/size/sort; máy chủ dùng kích thước 20 và sắp xếp courses.id tăng dần.",
+      "response": "HTTP 200, success=true, DESIGN_RESOURCE_RETRIEVED; Course Page gồm items và pagination{page,size,total,total_pages}. Mỗi Course có id,title,description?,thumbnail_url?,price dạng chuỗi thập phân chính xác,status,mentor{id,full_name,avatar_url?}.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR; lỗi mạng/envelope không hợp lệ xử lý riêng. Catalog không liệt kê 404.",
+      "auth": "Bearer JWT/vai trò Admin theo danh mục; bộ bảo vệ dùng chung cục bộ kiểm tra ADMIN. Cần chủ sở hữu xác nhận ánh xạ sang quyền quản lý khóa học AC-32.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §API request/response matrix; 04-api-integration.md §2",
+      "event_ids": [
+        "AD-06-EV-001",
+        "AD-06-EV-005",
+        "AD-06-EV-006",
+        "AD-06-EV-007",
+        "AD-06-EV-009"
+      ]
+    },
+    {
+      "id": "AD-06-API-002",
+      "method": "GET",
+      "path": "/api/v1/admin/users",
+      "request": "Bearer JWT của quản trị viên; hộp thoại tạo hiện tại gửi role=MENTOR,status=ACTIVE,page=N.",
+      "response": "200 DESIGN_RESOURCE_RETRIEVED; danh sách phân trang các UserProfile ứng viên; phía máy khách kiểm tra trang và chọn ID Mentor đang hoạt động.",
+      "errors": "401/403/422/500 theo mã nguồn danh sách người dùng Admin; khi các tùy chọn đang tải/báo lỗi/rỗng thì không cho tạo mới.",
+      "auth": "Máy khách dùng Bearer của Admin; truy vấn trong mã nguồn chưa xác lập ánh xạ quyền AC-32.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; 04-api-integration.md §Current API #104 implementation",
+      "event_ids": [
+        "AD-06-EV-010"
+      ]
+    },
+    {
+      "id": "AD-06-API-003",
+      "method": "POST",
+      "path": "/api/v1/admin/courses",
+      "request": "Phần mở rộng tạo khóa học được người dùng duyệt, nằm ngoài AC-32: {title:string, description?:string|null, thumbnail_url?:string|null, price:decimal-string, mentor_id:int64}. Máy khách không gửi trường status.",
+      "response": "HTTP 201 DESIGN_RESOURCE_CREATED; projection Course dùng chung có status DRAFT. Hộp thoại kiểm tra envelope và các trường Course trước khi báo thành công.",
+      "errors": "401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR; không có idempotency key hoặc tự động thử lại.",
+      "auth": "Máy khách dùng Bearer của Admin; máy chủ kiểm tra ADMIN và xác thực lại vai trò/trạng thái Mentor. Ánh xạ quyền AC-32 vẫn chưa được quyết định.",
+      "design_status": "Đã xác nhận",
+      "source_ref": "04-api-integration.md §Current API #104 implementation; 05-business-rules.md §4",
+      "event_ids": [
+        "AD-06-EV-010"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "AD-06-YC-001",
+      "description": "Tải danh sách quản trị qua GET #73 tại /admin/courses bằng Admin bearer client; khởi tạo page=1, không path/body và không tự gửi filter.",
+      "group": "API/tải dữ liệu",
+      "source_ref": "02-events.md §EV-01; 04-api-integration.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Angular hiện tại route/page/caller source exists; authenticated môi trường chạy vẫn chưa được xác minh. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-002",
+      "description": "Chỉ chấp nhận HTTP 200 DESIGN_RESOURCE_RETRIEVED với Course Page hợp lệ, page phản hồi khớp, size=20 và total_pages nhất quán; phản hồi khác chuyển sang lỗi.",
+      "group": "Kiểm tra phản hồi",
+      "source_ref": "02-events.md §EV-01/07; 03-data-flow.md §API #73 response/error handling; current-source addendum",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "API #73 DD is Draft; source page validates projection và pagination. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-003",
+      "description": "Chỉ map Course fields do #73 trả; giữ price dưới dạng decimal string, không dựng course code, lesson count, category hoặc chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)).",
+      "group": "Ánh xạ dữ liệu",
+      "source_ref": "00-overview.md §Expected behavior và Quy tắc nghiệp vụ; 01-ui-elements.md §3 #15–#18/#25; 04-api-integration.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Course response contains id/title/description/thumbnail_url/price/status/mentor; unsupported design fields remain blocked. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-004",
+      "description": "Dùng page 1-based với size cố định 20 và thứ tự ID ASC; client chỉ gửi page, không thêm q/size/sort.",
+      "group": "Phân trang/truy vấn",
+      "source_ref": "00-overview.md §1; 02-events.md §EV-01/05/API matrix; 04-api-integration.md §2",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Page int32 range 1..2147483647; mã nguồn hiện tại không gửi size/sort. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-005",
+      "description": "Phân biệt empty (items rỗng, total=0) với ngoài phạm vi (items rỗng, total>0 hoặc page vượt trang khi collection rỗng); giữ total và recovery state có căn cứ.",
+      "group": "Trống/vượt phạm vi",
+      "source_ref": "02-events.md §EV-01/05/07; 03-data-flow.md §Candidate screen states; current-source addendum",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã nguồn hiện tại có thao tác khôi phục về trang 1 nhưng chính sách trải nghiệm người dùng cuối/môi trường chạy chưa được xác minh. Mã YC nội bộ dùng để truy vết DD, không bổ sung hợp đồng."
+    },
+    {
+      "id": "AD-06-YC-006",
+      "description": "Khi COUNT/LIST snapshot lệch, giữ rows đã trả, ẩn total/page có thể stale, khóa pagination và cho tải lại cùng page.",
+      "group": "Consistency",
+      "source_ref": "03-data-flow.md §Current-source addendum; 02-events.md §EV-07",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Angular hiện tại source implements mismatch handling; API read snapshot can drift. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-007",
+      "description": "401/403/422/500, network hoặc invalid envelope không được hiển thị như empty/success; API #73 catalog không định nghĩa 404.",
+      "group": "Xử lý lỗi",
+      "source_ref": "02-events.md §EV-01/API matrix; 03-data-flow.md §API #73 response/error handling; admin-screen-state.ts",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Shared UI error helper also maps HTTP 404 generically; endpoint contract không có listed 404. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-008",
+      "description": "Search theo tên/mã/mentor chưa có #73 query hoặc listener; UI search phải giữ disabled và không gửi q/client-filter 20-row sample.",
+      "group": "Khóa chức năng tìm kiếm",
+      "source_ref": "00-overview.md §Expected behavior; 01-ui-elements.md §3 #19; 02-events.md §EV-02",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Angular hiện tại search disabled; văn bản trong bản mẫu input không có search listener. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-009",
+      "description": "Status/mentor filters chỉ được bật khi vocabulary/options/query rules được duyệt; category giữ disabled vì #73 hiện reject category bằng 422.",
+      "group": "Khóa chức năng lọc",
+      "source_ref": "00-overview.md §1/§Expected behavior; 01-ui-elements.md §3 #20–#22; 02-events.md §EV-03",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mã nguồn hỗ trợ status nguyên dạng và truy vấn mentor dạng int64 có dấu, nhưng các điều khiển giao diện vẫn bị vô hiệu hóa; chưa có quan hệ danh mục. Mã YC nội bộ dùng để truy vết DD, không bổ sung hợp đồng."
+    },
+    {
+      "id": "AD-06-YC-010",
+      "description": "Thao tác đặt lại không được tạo yêu cầu ngoài hợp đồng; Angular hiện tại vô hiệu hóa điều khiển đặt lại/áp dụng, trong khi nút Reset trong bản mẫu chỉ đổi điều khiển cục bộ.",
+      "group": "Đặt lại",
+      "source_ref": "01-ui-elements.md §3 #24; 02-events.md §EV-04",
+      "priority": "Trung bình",
+      "design_status": "Chờ xác nhận",
+      "notes": "Current app và bản mẫu tĩnh differ; preserve discrepancy. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-011",
+      "description": "Không trình bày bốn prototype chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) hoặc course code/lesson count như API data; pagination totals không thay thế aggregate business metrics.",
+      "group": "Chưa được hỗ trợ chỉ số/fields",
+      "source_ref": "00-overview.md §Expected behavior/current behavior; 01-ui-elements.md §3 #15–#18/#25/#32",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Mockup values are được gán cố định zero; #73 không có aggregate/course code/lesson count. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-012",
+      "description": "Mở AD-07 bằng Course.id từ response chỉ khi ID dương và JavaScript-safe; không route bằng course code hay ép int64 mất chính xác.",
+      "group": "Điều hướng/ID",
+      "source_ref": "00-overview.md §Actor, điều kiện và liên kết màn hình; 02-events.md §EV-06; admin-screen-renderers.ts",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Bộ kết xuất hiện tại hiển thị unsafe numeric IDs dưới dạng unavailable và omits route; authenticated runtime not verified. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-013",
+      "description": "Static health/RBAC/governance/source badges, export/sync/manual/footer links không phải authorization, health, moderation hoặc API action evidence.",
+      "group": "Shell/unsupported điều khiểns",
+      "source_ref": "01-ui-elements.md §3 #1–#13/#30–#44; 02-events.md §EV-08",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "Angular hiện tại source disables unsupported actions; các nội dung khẳng định trong bản mẫu vẫn là tĩnh/inert. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-014",
+      "description": "Không được xem quyền quản lý Course AC-32 là tương đương vai trò ADMIN cục bộ nếu chưa có xác nhận của owner; tuyến/môi trường chạy/DB thật chưa được xác minh.",
+      "group": "Phân quyền/môi trường chạy",
+      "source_ref": "00-overview.md §Actor, điều kiện và liên kết màn hình; 04-api-integration.md §2; 07-test-cases.md §Completion decision",
+      "priority": "Cao",
+      "design_status": "Chờ xác nhận",
+      "notes": "DD remains BLOCKED despite implementation và isolated test evidence. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-015",
+      "description": "Điều khiển Thêm mở hộp thoại tạo đã được người dùng duyệt; luồng #104 này tách biệt với AC-32 và không làm đóng các blocker về danh sách, tìm kiếm hoặc bộ lọc.",
+      "group": "Phần mở rộng đã được phê duyệt",
+      "source_ref": "01-ui-elements.md §3 #14 and §5; 02-events.md §EV-10; 05-business-rules.md §4",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Approved in source DD; runtime/deployment vẫn chưa được xác minh. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-016",
+      "description": "Tải các lựa chọn Mentor bằng #68 với role=MENTOR,status=ACTIVE,page; kiểm tra page/role/status/ID dương an toàn với JavaScript và xử lý các trạng thái đang tải/lỗi/rỗng/còn trang.",
+      "group": "Tùy chọn Mentor",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; 03-data-flow.md §Current create-flow data",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Mỗi chuỗi tuyến không hợp lệ đều bị từ chối qua kiểm tra toàn chuỗi signed-int64, trang báo lỗi cục bộ và không gọi #83. Server hiện ánh xạ yêu cầu API sai trực tiếp thành 404. Chờ DD (BLOCKED); chưa phải kết quả thực thi."
+    },
+    {
+      "id": "AD-06-YC-017",
+      "description": "Yêu cầu tạo mới bắt buộc title đã cắt khoảng trắng, dài 1–200 ký tự; price là chuỗi thập phân chính xác; mentor_id phải là số dương. Description/thumbnail_url là tùy chọn; ảnh thu nhỏ là URL, không phải thao tác tải tệp lên.",
+      "group": "Dữ liệu đầu vào khi tạo",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; 05-business-rules.md §4",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Mã nguồn không áp đặt quy tắc giá không âm; không tự thêm quy tắc này. Mã YC nội bộ chỉ để truy vết DD, không bổ sung hợp đồng."
+    },
+    {
+      "id": "AD-06-YC-018",
+      "description": "Chỉ gửi các trường body #104; khi nhận 201 DESIGN_RESOURCE_CREATED, yêu cầu projection Course hợp lệ có DRAFT, title và mentor khớp trước khi báo thành công.",
+      "group": "Phản hồi khi tạo",
+      "source_ref": "02-events.md §EV-10; 04-api-integration.md §Current API #104 implementation; 05-business-rules.md §4",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "User-approved extension và mã nguồn hiện tại; live API schema chưa được xác minh. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    },
+    {
+      "id": "AD-06-YC-019",
+      "description": "Nếu tạo mới thất bại hoặc envelope không hợp lệ, giữ hộp thoại/bản nháp và hiển thị lỗi an toàn. Khóa gửi trùng khi đang chờ; không có cam kết tự động thử lại/tính lặp an toàn.",
+      "group": "Tạo thất bại/thử lại",
+      "source_ref": "02-events.md §EV-10; 01-ui-elements.md §5; 04-api-integration.md §Current API #104 implementation",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Thử lại sau lỗi là thao tác do người dùng chủ động; chưa có idempotency key được định nghĩa. Mã YC nội bộ chỉ để truy vết DD."
+    },
+    {
+      "id": "AD-06-YC-020",
+      "description": "Sau khi tạo, chỉ điều hướng đến AD-07 nếu Course.id dương và an toàn với JS; nếu không, làm mới #73 mà không chuyển đổi ID số gây mất chính xác trên tuyến.",
+      "group": "Điều hướng khi tạo",
+      "source_ref": "02-events.md §EV-10; 03-data-flow.md §Current create-flow data; 06-navigation.md §Current create navigation",
+      "priority": "Cao",
+      "design_status": "Đã xác nhận",
+      "notes": "Returned ID boundary is có căn cứ từ mã nguồn; route/browser behavior vẫn chưa được xác minh. Mã YC nội bộ để truy vết DD; không bổ sung contract."
+    }
+  ],
+  "elements": [
+    {
+      "id": "AD-06-EL-001",
+      "marker": "#1",
+      "name": "Thương hiệu cổng quản trị Study2Work LMS",
+      "type": "Thương hiệu cổng quản trị Study2Work/LMS",
+      "position": "Thương hiệu cổng quản trị Study2Work/LMS; đầu trang trái.",
+      "properties": "Logo và text tĩnh; không lấy từ #73. Visible; click destination chưa có route/handler; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #1; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-002",
+      "marker": "#2",
+      "name": "Nhóm điều hướng chính của trang quản trị",
+      "type": "Nhóm điều hướng chính của trang quản trị",
+      "position": "Nhóm điều hướng chính của trang quản trị; ở giữa đầu trang (Tổng quan, Người dùng, Khóa học & Nội dung, Kiểm duyệt, Báo cáo).",
+      "properties": "Năm liên kết HTML có href=\"#\"; mã nguồn Study Web chưa xác nhận quyền truy cập tuyến đến từng đích. Đang hiển thị; mục được chọn trong bản mẫu là Khóa học & Nội dung; điều hướng chưa được kết nối; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #2; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-003",
+      "marker": "#3",
+      "name": "Huy hiệu “SYSTEM NORMAL”",
+      "type": "Huy hiệu “SYSTEM NORMAL”",
+      "position": "“SYSTEM NORMAL” huy hiệu; đầu trang.",
+      "properties": "Text/green indicator được gán cố định; không có health data/endpoint trong AD-06. Visible nhưng unverified; không dùng để cho phép request; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #3; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-004",
+      "marker": "#4",
+      "name": "Nút thông báo",
+      "type": "Nút thông báo/icon",
+      "position": "Nút/biểu tượng thông báo; bên phải đầu trang.",
+      "properties": "Bell + dot tĩnh; không có unread count source hoặc click handler. Visible; action chưa xác định; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #4; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-005",
+      "marker": "#5",
+      "name": "Danh tính và ảnh đại diện quản trị viên",
+      "type": "Danh tính quản trị viên/avatar block",
+      "position": "Danh tính/ảnh đại diện quản trị viên block; đầu trang phải.",
+      "properties": "Tên/vai trò/ảnh đại diện tĩnh; #73 trả về giảng viên phụ trách khóa học, không phải danh tính Admin. Hiển thị/trạng thái: đang hiển thị. Nguồn danh tính/tuyến nằm ngoài hợp đồng này; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #5; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-006",
+      "marker": "#6",
+      "name": "Đường dẫn điều hướng toàn cục",
+      "type": "Đường dẫn điều hướng toàn cục",
+      "position": "Đường dẫn điều hướng toàn cục ở hàng dưới đầu trang.",
+      "properties": "Home / Hệ thống / Quản trị trung tâm / Không gian làm việc; markup anchor không có trạng thái tuyến. Visible; destinations chưa wired; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #6; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-007",
+      "marker": "#7",
+      "name": "RBAC cam kết huy hiệu",
+      "type": "Huy hiệu “Chuẩn xác thực RBAC”",
+      "position": "Huy hiệu “Chuẩn xác thực RBAC”; cần đặt trong đường dẫn điều hướng.",
+      "properties": "Static claim; API #73 không trả permission result. Visible nhưng unverified; không xem là authorization decision; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #7; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-008",
+      "marker": "#8",
+      "name": "Cục bộ quản lý khóa học đường dẫn điều hướng",
+      "type": "Đường dẫn điều hướng hiện tại “Quản trị đào tạo › Danh sách khóa học”.",
+      "position": "Đường dẫn điều hướng hiện tại “Quản trị đào tạo › Danh sách khóa học”.",
+      "properties": "Nhãn tĩnh, không có route binding trong HTML. Visible; route/return behavior chưa wired; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #8; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-009",
+      "marker": "#9",
+      "name": "API #73 huy hiệu tham chiếu",
+      "type": "API #73 huy hiệu tham chiếu",
+      "position": "Huy hiệu tham chiếu API #73; cạnh đường dẫn điều hướng.",
+      "properties": "Label tĩnh; không chứng minh page gọi #73. Visible; không có action; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #9; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-010",
+      "marker": "#10",
+      "name": "Tiêu đề trang",
+      "type": "Tiêu đề trang “Quản lý danh mục khóa học”.",
+      "position": "Tiêu đề trang “Quản lý danh mục khóa học”.",
+      "properties": "Static heading; API #73 không trả page title. Visible; presentation chỉ.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #10; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-011",
+      "marker": "#11",
+      "name": "Catalog V2 huy hiệu",
+      "type": "“CATALOG V2” huy hiệu",
+      "position": "“CATALOG V2” badge; cạnh title.",
+      "properties": "Static version label; không có catalog version negotiation. Visible, unverified; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #11; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-012",
+      "marker": "#12",
+      "name": "Phụ đề trang",
+      "type": "Phụ đề về giám sát, phân quyền mentor và trạng thái xuất bản.",
+      "position": "Phụ đề về giám sát, phân quyền mentor và trạng thái xuất bản.",
+      "properties": "Editorial text; API #73 chỉ cấp course/mentor projection, không trả aggregate/scope permission. Visible; phải được duyệt nội dung trước implementation; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #12; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-013",
+      "marker": "#13",
+      "name": "Nút xuất báo cáo",
+      "type": "Nút xuất báo cáo",
+      "position": "Export report button; hero bên phải.",
+      "properties": "Nút tĩnh, không có hàm xử lý; API #103 xuất báo cáo tác động riêng, không xuất danh mục khóa học. Trông như đang bật nhưng chưa được hỗ trợ; không gọi #103; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #13; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-014",
+      "marker": "#14",
+      "name": "Nút thêm khóa học mới",
+      "type": "Nút thêm khóa học mới",
+      "position": "Nút thêm khóa học mới; hero bên phải.",
+      "properties": "Mở hộp thoại tạo khóa học; lấy Mentor ACTIVE qua #68 và gửi bằng API #104 (phần mở rộng được người dùng duyệt, nằm ngoài AC-32). Nút bật; khi tải Mentor/lưu thì vô hiệu hóa gửi; Hủy đóng hộp thoại; EV-10.",
+      "event_ids": [
+        "AD-06-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #14; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-015",
+      "marker": "#15",
+      "name": "Tổng số khóa học chỉ số hiệu quả chính (KPI) thẻ",
+      "type": "Chỉ số hiệu quả chính (KPI) “Tổng khóa học”.",
+      "position": "Chỉ số hiệu quả chính (KPI) “Tổng khóa học”.",
+      "properties": "Giá trị 0 được gán cố định; #73 `pagination.total` phụ thuộc filter, không định nghĩa aggregate không lọc. Visible; dữ liệu chưa có căn cứ từ mã nguồn; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #15; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-016",
+      "marker": "#16",
+      "name": "Thẻ chỉ số hiệu quả chính (KPI) nội dung chờ duyệt",
+      "type": "Chỉ số hiệu quả chính (KPI) “Chờ kiểm duyệt”.",
+      "position": "Chỉ số hiệu quả chính (KPI) “Chờ kiểm duyệt”.",
+      "properties": "Giá trị 0 được gán cố định; #73 không có review count/aggregate. AC-33 content review không xác lập course chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)). Visible; moderation relation/definition chưa có; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #16; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-017",
+      "marker": "#17",
+      "name": "Khóa học đã xuất bản chỉ số hiệu quả chính (KPI) thẻ",
+      "type": "Chỉ số hiệu quả chính (KPI) “Đã xuất bản”.",
+      "position": "Chỉ số hiệu quả chính (KPI) “Đã xuất bản”.",
+      "properties": "Giá trị 0 được gán cố định; #73 có `status` mỗi course nhưng không có aggregate/status enum được duyệt. Visible; không thể tính chính xác từ page 20 rows; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #17; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-018",
+      "marker": "#18",
+      "name": "Mentor tham gia chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) thẻ",
+      "type": "Chỉ số hiệu quả chính (KPI) “Giảng viên tham gia”.",
+      "position": "Chỉ số hiệu quả chính (KPI) “Giảng viên tham gia”.",
+      "properties": "Giá trị 0 được gán cố định; #73 không trả distinct mentor count; page projection không bảo đảm danh sách mentor đầy đủ. Visible; không có nguồn hỗ trợ; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #18; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-019",
+      "marker": "#19",
+      "name": "Tìm kiếm khóa học ô nhập",
+      "type": "Ô tìm kiếm",
+      "position": "Search input; đầu hàng bộ lọc.",
+      "properties": "Text, placeholder tên/mã/giảng viên. Không có max length/normalization/search query contract; DOM input không có listener. Visible/editable markup, nhưng hiện không đổi kết quả; EV-02.",
+      "event_ids": [
+        "AD-06-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #19; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-020",
+      "marker": "#20",
+      "name": "Danh sách chọn lọc trạng thái",
+      "type": "Danh sách chọn lọc trạng thái.",
+      "position": "Danh sách chọn lọc trạng thái.",
+      "properties": "Tùy chọn bản mẫu: all, draft, pending, published, archived (chữ thường). API nhận chuỗi gốc và so khớp chính xác; chưa có enum, chuẩn hóa hay allowlist. Đang hiển thị; HTML hiện mặc định all. Chưa ánh xạ bộ lọc máy chủ cho đến khi duyệt tập giá trị và chữ hoa/thường; EV-03.",
+      "event_ids": [
+        "AD-06-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #20; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-021",
+      "marker": "#21",
+      "name": "Danh sách chọn Mentor",
+      "type": "Danh sách chọn người hướng dẫn.",
+      "position": "Danh sách chọn người hướng dẫn.",
+      "properties": "Bản mẫu chỉ có lựa chọn all; API yêu cầu số nguyên int64 có dấu. #73 không có lựa chọn bộ lọc giảng viên; hộp thoại tạo mới có danh sách riêng từ #68 với role=MENTOR/status=ACTIVE. Bộ lọc vẫn chưa khả dụng; lựa chọn trong hộp thoại có căn cứ từ mã nguồn; EV-03/EV-10.",
+      "event_ids": [
+        "AD-06-EV-003",
+        "AD-06-EV-010"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #21; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-022",
+      "marker": "#22",
+      "name": "Huy hiệu bộ lọc danh mục đang khóa",
+      "type": "Huy hiệu bộ lọc danh mục đang khóa.",
+      "position": "Huy hiệu bộ lọc danh mục đang khóa.",
+      "properties": "Static lock/copy “đang chờ cấu hình liên kết dữ liệu”. Valid category int64 hiện trả 422; legacy DDL không có FK `courses.category_id`. Visible/disabled conceptually; giữ disabled; EV-03.",
+      "event_ids": [
+        "AD-06-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #22; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-023",
+      "marker": "#23",
+      "name": "Tóm tắt bộ lọc đang áp dụng",
+      "type": "Tóm tắt bộ lọc đang áp dụng.",
+      "position": "Tóm tắt bộ lọc đang áp dụng.",
+      "properties": "Được gán cố định “Tất cả danh mục gốc (API 73)” và “Không có bộ lọc tùy chỉnh nào hoạt động”; không bind state/API. Visible; summary trong prototype không phản ánh request; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #23; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-024",
+      "marker": "#24",
+      "name": "Điều khiển đặt lại bộ lọc",
+      "type": "“Khôi phục mặc định” reset control.",
+      "position": "“Khôi phục mặc định” reset control.",
+      "properties": "Anchor/button presentation; listener xóa text, đặt status/mentor thành `all`; không sửa category/URL hoặc gọi API. Visible/enabled; local reset chỉ; EV-04.",
+      "event_ids": [
+        "AD-06-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #24; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-025",
+      "marker": "#25",
+      "name": "Nhóm tiêu đề bảng khóa học: mã, tên, Mentor, học phí, trạng thái, bài học, thao tác",
+      "type": "Nhóm tiêu đề bảng khóa học",
+      "position": "Nhóm tiêu đề bảng khóa học ở đầu trang; hàng đầu có 7 cột.",
+      "properties": "Các cột riêng: **Mã khóa** (không có trường phản hồi); **Tên khóa học** ← `title`; **Giảng viên hướng dẫn** ← `mentor.full_name`; **Học phí** ← chuỗi thập phân chính xác `price`; **Trạng thái** ← giá trị `status` nguyên gốc; **Số bài học** (không có trường/API); **Thao tác** (thao tác trên hàng/tuyến chưa triển khai; thao tác đổi trạng thái trực tiếp chưa được AC-32 xác nhận). Hiển thị; hàng trạng thái trống gộp 7 cột; chưa có hàng dữ liệu/lỗi/đang tải; EV-01/EV-06.",
+      "event_ids": [
+        "AD-06-EV-001",
+        "AD-06-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #25; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-026",
+      "marker": "#26",
+      "name": "Hình minh họa trạng thái rỗng",
+      "type": "Trạng thái trống illustration (folder/search-off).",
+      "position": "Trạng thái trống illustration (folder/search-off).",
+      "properties": "Decorative icon/animation từ HTML; không phải server sync indicator. Đang hiển thị trong trạng thái rỗng của bản mẫu; không có event; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #26; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-027",
+      "marker": "#27",
+      "name": "Tiêu đề trạng thái rỗng",
+      "type": "Trạng thái rỗng heading “Chưa có dữ liệu khóa học quản trị”.",
+      "position": "Trạng thái rỗng heading “Chưa có dữ liệu khóa học quản trị”.",
+      "properties": "Static copy. #73 message “No courses found.” có thể ứng với items rỗng nhưng không phân loại nguyên nhân/filters. Visible; target empty-vs-filtered/ngoài phạm vi copy cần định nghĩa; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #27; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-028",
+      "marker": "#28",
+      "name": "Nội dung giải thích trạng thái rỗng",
+      "type": "Trạng thái rỗng body về không có kết quả hoặc đang đồng bộ.",
+      "position": "Trạng thái rỗng body về không có kết quả hoặc đang đồng bộ.",
+      "properties": "Văn bản tĩnh gộp trạng thái trống/bộ lọc/đồng bộ; #73 không trả trạng thái đồng bộ. Đang hiển thị; không trình bày khẳng định đồng bộ như sự thật; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #28; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-029",
+      "marker": "#29",
+      "name": "Nút làm mới danh sách đang vô hiệu hóa",
+      "type": "“Làm mới danh sách khóa học” button.",
+      "position": "“Làm mới danh sách khóa học” button.",
+      "properties": "`disabled`; không handler. Future refresh có thể lặp GET #73, nhưng trigger/loading/disable/retry policy chưa duyệt. Disabled; hiện chưa có sự kiện làm mới; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #29; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-030",
+      "marker": "#30",
+      "name": "Nút xem hướng dẫn đồng bộ",
+      "type": "“Xem sổ tay đồng bộ” button.",
+      "position": "“Xem sổ tay đồng bộ” button.",
+      "properties": "Được bật-looking nút, không có `href`/handler/destination. Hiển thị; chưa được hỗ trợ điều hướng; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #30; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-031",
+      "marker": "#31",
+      "name": "Tuyên bố tĩnh về endpoint API/nguồn dữ liệu",
+      "type": "Tĩnh API mã nguồn tuyên bố `/admin/v1/courses/catalog`.",
+      "position": "Tĩnh API mã nguồn tuyên bố `/admin/v1/courses/catalog`.",
+      "properties": "Text sai path; API catalog/tuyến hiện tại là `/api/v1/admin/courses`. Không dynamic. Visible nhưng inaccurate; không dùng làm endpoint/config evidence; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #31; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-032",
+      "marker": "#32",
+      "name": "Hiển thịed kết quả số lượng",
+      "type": "Result count “Hiển thị 0 trên 0 khóa học”.",
+      "position": "Result count “Hiển thị 0 trên 0 khóa học”.",
+      "properties": "Hai giá trị 0 được gán cố định. Candidate mapping có thể dùng `items.length` và `pagination.total`; wording/page range chưa được xác nhận. Visible; không phản ánh request hiện tại; EV-07.",
+      "event_ids": [
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #32; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-033",
+      "marker": "#33",
+      "name": "Nút về trang trước đang vô hiệu hóa",
+      "type": "Nút về trang trước.",
+      "position": "Nút về trang trước.",
+      "properties": "Đang vô hiệu hóa; không có listener. Trang #73 nhận page tùy chọn kiểu int32, mặc định là 1; size cố định 20; điều hướng trang từ máy khách chưa được nối. Đang vô hiệu hóa; EV-05.",
+      "event_ids": [
+        "AD-06-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #33; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-034",
+      "marker": "#34",
+      "name": "Chỉ báo trang",
+      "type": "Chỉ báo trang `0 / 0`.",
+      "position": "Chỉ báo trang `0 / 0`.",
+      "properties": "Nội dung tĩnh; phản hồi có `pagination.page`, `size`, `total`, `total_pages`. Trang trống hiển thị số 0 không phải metadata của máy chủ (máy chủ mặc định trả page 1, total_pages 0). Đang hiển thị nhưng chưa thống nhất; EV-05/EV-07.",
+      "event_ids": [
+        "AD-06-EV-005",
+        "AD-06-EV-007"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #34; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-035",
+      "marker": "#35",
+      "name": "Nút sang trang tiếp theo đang vô hiệu hóa",
+      "type": "Nút sang trang tiếp theo.",
+      "position": "Nút sang trang tiếp theo.",
+      "properties": "Đang vô hiệu hóa; không có listener. Giới hạn trang tiếp theo trong tương lai có thể dựa vào metadata phân trang, nhưng phép tính/trạng thái trang chưa được triển khai. Đang vô hiệu hóa; EV-05.",
+      "event_ids": [
+        "AD-06-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #35; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-036",
+      "marker": "#36",
+      "name": "Biểu ngữ quản trị shield biểu tượng",
+      "type": "Biểu ngữ quản trị shield biểu tượng.",
+      "position": "Biểu ngữ quản trị shield biểu tượng.",
+      "properties": "Biểu tượng trang trí; không có nguồn dữ liệu kiểm duyệt/quyền. Có hiển thị; không có sự kiện; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #36; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-037",
+      "marker": "#37",
+      "name": "Tiêu đề biểu ngữ quản trị",
+      "type": "Governance heading “Quy chế quản trị & Kiểm định chất lượng”.",
+      "position": "Governance heading “Quy chế quản trị & Kiểm định chất lượng”.",
+      "properties": "Nội dung tĩnh; không có bằng chứng về tài liệu/chính sách hoặc liên kết API. Nội dung/đích của chính sách đang chờ chủ sở hữu phê duyệt. Hiển thị; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #37; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-038",
+      "marker": "#38",
+      "name": "Nội dung quy tắc quản trị và kiểm duyệt",
+      "type": "Văn bản tuyên bố mọi khóa học mới cần kiểm duyệt trước khi xuất bản công khai.",
+      "position": "Văn bản tuyên bố mọi khóa học mới cần kiểm duyệt trước khi xuất bản công khai.",
+      "properties": "Không có quy tắc này trong #73. AC-32 chỉ nhắc đến thao tác “theo chính sách”; AC-33 là luồng kiểm duyệt nội dung riêng. Có hiển thị nhưng chưa xác minh; không xem đây là luồng đã được thực thi; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #38; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-039",
+      "marker": "#39",
+      "name": "Nút kêu gọi hành động về tiêu chuẩn đánh giá",
+      "type": "“Tiêu chuẩn thẩm định” call-to-action.",
+      "position": "“Tiêu chuẩn thẩm định” call-to-action.",
+      "properties": "Liên kết `href=\"#\"`; chưa xác minh đích. Có vẻ được bật nhưng chưa có tuyến; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #39; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-040",
+      "marker": "#40",
+      "name": "Thông báo bản quyền",
+      "type": "Thông báo bản quyền.",
+      "position": "Thông báo bản quyền.",
+      "properties": "Văn bản tĩnh “© 2025 Study2Work LMS”. Có hiển thị; không có sự kiện/nguồn data.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #40; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-041",
+      "marker": "#41",
+      "name": "Nhãn chân trang hệ thống quản trị viên",
+      "type": "Nhãn chân trang hệ thống quản trị viên.",
+      "position": "Nhãn chân trang hệ thống quản trị viên.",
+      "properties": "“Hệ thống quản trị trung tâm.” là nội dung tĩnh, đang hiển thị; không có nguồn sự kiện/dữ liệu.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #41; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-042",
+      "marker": "#42",
+      "name": "Liên kết chân trang về quyền riêng tư dữ liệu",
+      "type": "Liên kết chân trang về quyền riêng tư dữ liệu.",
+      "position": "Liên kết chân trang về quyền riêng tư dữ liệu.",
+      "properties": "Liên kết mẫu có `href=\"#\"`; mã nguồn Study Web không xác định đích đến. Có hiển thị; điều hướng chưa được nối; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #42; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-043",
+      "marker": "#43",
+      "name": "Liên kết chân trang về tiêu chuẩn RBAC",
+      "type": "Liên kết chân trang về tiêu chuẩn RBAC.",
+      "position": "Liên kết chân trang về tiêu chuẩn RBAC.",
+      "properties": "Liên kết mẫu; không xác minh được chính sách RBAC. Có hiển thị; điều hướng chưa được nối; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #43; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-044",
+      "marker": "#44",
+      "name": "Liên kết chân trang hỗ trợ kỹ thuật",
+      "type": "Liên kết chân trang hỗ trợ kỹ thuật hệ thống.",
+      "position": "Liên kết chân trang hỗ trợ kỹ thuật hệ thống.",
+      "properties": "Liên kết mẫu; không có mã nguồn trang/dịch vụ hỗ trợ. Có hiển thị; điều hướng chưa được nối; EV-08.",
+      "event_ids": [
+        "AD-06-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "01-ui-elements.md §2–§3 #44; images/screen-numbered.png"
+    },
+    {
+      "id": "AD-06-EL-045",
+      "marker": "N/A — mã nguồn hiện tại extension",
+      "name": "Khung hộp thoại tạo khóa học và các thao tác",
+      "type": "Thành phần hộp thoại tạo từ mã nguồn hiện tại",
+      "position": "Native dialog; overlay over AD-06",
+      "properties": "Hộp thoại HTML `<dialog>` gốc có aria-modal, labelledby/describedby và tiêu điểm ban đầu ở tiêu đề. Nút Thêm mở hộp thoại; Hủy/Đóng trả tiêu điểm về nút Thêm; không cho đóng khi request đang chờ; các nút hiển thị trạng thái đang chờ/lỗi/thành công.",
+      "event_ids": [
+        "AD-06-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source"
+    },
+    {
+      "id": "AD-06-EL-046",
+      "marker": "N/A — mã nguồn hiện tại extension",
+      "name": "Trường tiêu đề khóa học",
+      "type": "Thành phần hộp thoại tạo từ mã nguồn hiện tại",
+      "position": "Ô nhập bắt buộc trong hộp thoại tạo mới",
+      "properties": "Required; maxlength 200; client trims; server accepts 1–200 characters.",
+      "event_ids": [
+        "AD-06-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source"
+    },
+    {
+      "id": "AD-06-EL-047",
+      "marker": "N/A — mã nguồn hiện tại extension",
+      "name": "Trường mô tả khóa học",
+      "type": "Thành phần hộp thoại tạo từ mã nguồn hiện tại",
+      "position": "Ô văn bản tùy chọn trong hộp thoại tạo mới",
+      "properties": "Chuỗi tùy chọn; cắt khoảng trắng và đổi giá trị rỗng thành null.",
+      "event_ids": [
+        "AD-06-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source"
+    },
+    {
+      "id": "AD-06-EL-048",
+      "marker": "N/A — mã nguồn hiện tại extension",
+      "name": "Trường URL ảnh thu nhỏ",
+      "type": "Thành phần hộp thoại tạo từ mã nguồn hiện tại",
+      "position": "Ô nhập URL tùy chọn trong hộp thoại tạo mới",
+      "properties": "Ô nhập URL; tùy chọn; giá trị rỗng đổi thành null; tải lên/tệp đính kèm không thuộc luồng này.",
+      "event_ids": [
+        "AD-06-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source"
+    },
+    {
+      "id": "AD-06-EL-049",
+      "marker": "N/A — mã nguồn hiện tại extension",
+      "name": "Trường giá khóa học",
+      "type": "Thành phần hộp thoại tạo từ mã nguồn hiện tại",
+      "position": "Ô nhập chuỗi thập phân bắt buộc trong hộp thoại tạo mới",
+      "properties": "Bắt buộc; chuỗi thập phân; mẫu biểu mẫu cho phép tối đa 10 chữ số phần nguyên và 2 chữ số thập phân; máy chủ dùng NUMERIC(12,2); mã nguồn không áp đặt giá không âm.",
+      "event_ids": [
+        "AD-06-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source"
+    },
+    {
+      "id": "AD-06-EL-050",
+      "marker": "N/A — mã nguồn hiện tại extension",
+      "name": "Bộ chọn Mentor đang hoạt động và điều khiển trang",
+      "type": "Thành phần hộp thoại tạo từ mã nguồn hiện tại",
+      "position": "Danh sách chọn bắt buộc, có điều khiển tải thêm",
+      "properties": "Bộ chọn Mentor đang hoạt động gọi API #68 với role=MENTOR,status=ACTIVE,page; kiểm tra envelope/Page, lọc Mentor đang hoạt động và ID dương an toàn, loại trùng ở các trang sau; trạng thái đang tải/lỗi/rỗng không cho gửi biểu mẫu.",
+      "event_ids": [
+        "AD-06-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source"
+    }
+  ],
+  "events": [
+    {
+      "id": "AD-06-EV-001",
+      "name": "Vào màn hình và tải danh sách",
+      "trigger": "Nhập /admin/courses; tải",
+      "processing": "Client Admin dùng Bearer gọi GET #73 với page=1; kiểm tra mã thành công chính xác, Course Page/page echo/size cố định/phân trang an toàn trước khi ánh xạ. Các trạng thái gồm đang tải, đã tải, rỗng/ngoài phạm vi, lệch số lượng và lỗi.",
+      "element_ids": [
+        "AD-06-EL-001",
+        "AD-06-EL-002",
+        "AD-06-EL-003",
+        "AD-06-EL-004",
+        "AD-06-EL-005",
+        "AD-06-EL-006",
+        "AD-06-EL-007",
+        "AD-06-EL-008",
+        "AD-06-EL-009",
+        "AD-06-EL-010",
+        "AD-06-EL-011",
+        "AD-06-EL-012",
+        "AD-06-EL-015",
+        "AD-06-EL-016",
+        "AD-06-EL-017",
+        "AD-06-EL-018",
+        "AD-06-EL-025",
+        "AD-06-EL-026",
+        "AD-06-EL-027",
+        "AD-06-EL-028",
+        "AD-06-EL-031",
+        "AD-06-EL-032",
+        "AD-06-EL-033",
+        "AD-06-EL-034",
+        "AD-06-EL-035"
+      ],
+      "api_ids": [
+        "AD-06-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-01; 03-data-flow.md §2–§4"
+    },
+    {
+      "id": "AD-06-EV-002",
+      "name": "Nhập tìm kiếm",
+      "trigger": "Ô nhập/change/submit tìm kiếm khóa học",
+      "processing": "Ứng dụng hiện vô hiệu hóa tìm kiếm; #73 không có tham số q hoặc bộ lắng nghe tìm kiếm. Không lọc một trang 20 dòng ở phía client và không gửi query chưa được hỗ trợ.",
+      "element_ids": [
+        "AD-06-EL-019"
+      ],
+      "api_ids": [
+        "AD-06-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-02; 01-ui-elements.md §3 #19"
+    },
+    {
+      "id": "AD-06-EV-003",
+      "name": "Đổi status, mentor hoặc category filter",
+      "trigger": "Thay đổi #20/#21; thử thao tác danh mục #22",
+      "processing": "Ứng dụng hiện giữ các điều khiển ở trạng thái vô hiệu hóa. API nhận status/mentor dạng chuỗi chính xác; danh mục giá trị, tùy chọn và reset trang còn bỏ ngỏ; giá trị danh mục không hỗ trợ trả 422.",
+      "element_ids": [
+        "AD-06-EL-020",
+        "AD-06-EL-021",
+        "AD-06-EL-022"
+      ],
+      "api_ids": [
+        "AD-06-API-001",
+        "AD-06-API-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-03; 01-ui-elements.md §3 #20–#22; 04-api-integration.md §2"
+    },
+    {
+      "id": "AD-06-EV-004",
+      "name": "Khôi phục mặc định",
+      "trigger": "Nhấp #24",
+      "processing": "Ứng dụng hiện tại vô hiệu hóa thao tác đặt lại; bản mẫu chỉ xóa search/status/mentor ở phía máy khách, không tải dữ liệu mới hoặc cập nhật URL.",
+      "element_ids": [
+        "AD-06-EL-019",
+        "AD-06-EL-020",
+        "AD-06-EL-021",
+        "AD-06-EL-022",
+        "AD-06-EL-023",
+        "AD-06-EL-024"
+      ],
+      "api_ids": [
+        "AD-06-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-04; 01-ui-elements.md §3 #24"
+    },
+    {
+      "id": "AD-06-EV-005",
+      "name": "Chuyển trang",
+      "trigger": "Nhấp trang trước/trang sau; hiển thị phân trang",
+      "processing": "Dùng page/total_pages được trả về với size cố định 20; chỉ gửi page. Trang hiện tại chặn trang vượt giới hạn, lệch snapshot và điều hướng ra ngoài phạm vi.",
+      "element_ids": [
+        "AD-06-EL-025",
+        "AD-06-EL-032",
+        "AD-06-EL-033",
+        "AD-06-EL-034",
+        "AD-06-EL-035"
+      ],
+      "api_ids": [
+        "AD-06-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-05; 03-data-flow.md §Current-source addendum"
+    },
+    {
+      "id": "AD-06-EV-006",
+      "name": "Mở chi tiết khóa học",
+      "trigger": "Nhấp thao tác trên hàng Course",
+      "processing": "Chỉ dùng Course.id; mã nguồn hiện tại tạo tuyến AD-07 cho ID dương an toàn với JavaScript và bỏ liên kết với giá trị không an toàn; không thay bằng mã khóa học.",
+      "element_ids": [
+        "AD-06-EL-025"
+      ],
+      "api_ids": [
+        "AD-06-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-06; 06-navigation.md §Navigation/data handoff"
+    },
+    {
+      "id": "AD-06-EV-007",
+      "name": "Ánh xạ list, trạng thái rỗng và summary",
+      "trigger": "Hiển thị phản hồi #73 đã được kiểm tra",
+      "processing": "Chỉ ánh xạ trường Course và phân trang được trả về; phân biệt total=0/rỗng với ngoài phạm vi và lệch COUNT/LIST. Chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI))/mã khóa học/số bài học/nội dung sync trong bản mẫu không phải data.",
+      "element_ids": [
+        "AD-06-EL-015",
+        "AD-06-EL-016",
+        "AD-06-EL-017",
+        "AD-06-EL-018",
+        "AD-06-EL-023",
+        "AD-06-EL-025",
+        "AD-06-EL-026",
+        "AD-06-EL-027",
+        "AD-06-EL-028",
+        "AD-06-EL-032",
+        "AD-06-EL-034"
+      ],
+      "api_ids": [
+        "AD-06-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-07; 03-data-flow.md §Candidate screen states/current-source addendum"
+    },
+    {
+      "id": "AD-06-EV-008",
+      "name": "Controls tĩnh, shell navigation và access/error feedback",
+      "trigger": "Nhấp/hiển thị khung giao diện, xuất dữ liệu, thủ công, chính sách, chân trang và làm mới bị vô hiệu hóa",
+      "processing": "Giữ các tương tác chưa hỗ trợ ở trạng thái không hoạt động; trạng thái health/RBAC/governance tĩnh và đường dẫn nguồn sai không phải trạng thái trực tiếp. Không ánh xạ export/sync sang API không liên quan. Lỗi không phải trạng thái rỗng.",
+      "element_ids": [
+        "AD-06-EL-001",
+        "AD-06-EL-002",
+        "AD-06-EL-003",
+        "AD-06-EL-004",
+        "AD-06-EL-005",
+        "AD-06-EL-006",
+        "AD-06-EL-007",
+        "AD-06-EL-008",
+        "AD-06-EL-009",
+        "AD-06-EL-010",
+        "AD-06-EL-011",
+        "AD-06-EL-012",
+        "AD-06-EL-013",
+        "AD-06-EL-029",
+        "AD-06-EL-030",
+        "AD-06-EL-031",
+        "AD-06-EL-036",
+        "AD-06-EL-037",
+        "AD-06-EL-038",
+        "AD-06-EL-039",
+        "AD-06-EL-040",
+        "AD-06-EL-041",
+        "AD-06-EL-042",
+        "AD-06-EL-043",
+        "AD-06-EL-044"
+      ],
+      "api_ids": [
+        "AD-06-API-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §EV-08; 01-ui-elements.md §3 #1–#13/#29–#44"
+    },
+    {
+      "id": "AD-06-EV-009",
+      "name": "API yêu cầu/response matrix",
+      "trigger": "Rà soát hợp đồng/mã nguồn cho #73, #68, #104",
+      "processing": "Tách biệt hợp đồng danh sách #73, truy vấn tùy chọn Mentor #68 và phần mở rộng tạo mới #104 đã được phê duyệt; không thêm query hoặc endpoint chưa được hỗ trợ cho #73; giữ đúng ranh giới giữa DD API và môi trường chạy.",
+      "element_ids": [
+        "AD-06-EL-009",
+        "AD-06-EL-014",
+        "AD-06-EL-019",
+        "AD-06-EL-020",
+        "AD-06-EL-021",
+        "AD-06-EL-022",
+        "AD-06-EL-025",
+        "AD-06-EL-031"
+      ],
+      "api_ids": [
+        "AD-06-API-001",
+        "AD-06-API-002",
+        "AD-06-API-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "02-events.md §API request/response matrix; 04-api-integration.md §2"
+    },
+    {
+      "id": "AD-06-EV-010",
+      "name": "Tạo khóa học mới — approved extension",
+      "trigger": "Mở hộp thoại Thêm, tải danh sách Mentor, gửi khóa học",
+      "processing": "Mở hộp thoại hỗ trợ truy cập; lấy các lựa chọn Mentor đang hoạt động theo trang từ #68; kiểm tra biểu mẫu; gửi body #104; chỉ chấp nhận 201 DESIGN_RESOURCE_CREATED cùng Course DRAFT hợp lệ; giữ hộp thoại khi lỗi; ID dương an toàn mở AD-07, nếu không thì tải lại danh sách.",
+      "element_ids": [
+        "AD-06-EL-014",
+        "AD-06-EL-045",
+        "AD-06-EL-046",
+        "AD-06-EL-047",
+        "AD-06-EL-048",
+        "AD-06-EL-049",
+        "AD-06-EL-050"
+      ],
+      "api_ids": [
+        "AD-06-API-002",
+        "AD-06-API-003",
+        "AD-06-API-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "02-events.md §EV-10; 01-ui-elements.md §5; 05-business-rules.md §4"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "AD06-BL-001",
+      "description": "Quyền quản lý Course AC-32 chưa được ánh xạ/phê duyệt là tương đương với vai trò ADMIN cục bộ.",
+      "impact": "Việc chấp nhận phân quyền và hành vi truy cập trực tiếp/phiên đăng nhập vẫn chưa được quyết định.",
+      "decision": "Chủ sở hữu/bộ phận bảo mật phê duyệt quyền, đơn vị/phạm vi và chính sách kiểm soát tuyến.",
+      "source_ref": "00-overview.md §Actor/current behavior; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-002",
+      "description": "Tài liệu danh mục có mô tả tìm kiếm nhưng hợp đồng query/hành vi tìm kiếm cho #73 chưa tồn tại.",
+      "impact": "Không thể bật hoặc xác minh chức năng tìm kiếm.",
+      "decision": "Chủ sở hữu cung cấp API/hợp đồng tìm kiếm hoặc gỡ điều khiển tìm kiếm.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-02",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-003",
+      "description": "Chưa duyệt enum/cách viết hoa trạng thái, nguồn bộ lọc mentor và quy tắc reset trang/giữ query khi quay lại.",
+      "impact": "Chưa thể nghiệm thu giá trị bộ lọc và trạng thái điều hướng.",
+      "decision": "Owner phê duyệt bộ giá trị trạng thái, nguồn Mentor và ngữ nghĩa query/trang.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-03/05; 06-navigation.md §4",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-004",
+      "description": "Schema ứng viên cũ không có quan hệ category và #73 từ chối category; chính sách hiển thị trạng thái/DELETED vẫn chưa được quyết định.",
+      "impact": "Chưa thể chốt cách hiển thị category/trạng thái hoặc danh sách Course đã xóa.",
+      "decision": "API/CSDL/sản phẩm phê duyệt quan hệ danh mục và quy tắc hiển thị theo vòng đời.",
+      "source_ref": "00-overview.md §Expected behavior; 04-api-integration.md §2; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-005",
+      "description": "Chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)), cột mã Course/số bài học, xuất dữ liệu, đồng bộ/thủ công và các tuyên bố quản trị trong bản mẫu không có hợp đồng dữ liệu/thao tác danh sách hỗ trợ.",
+      "impact": "Không thể kiểm thử các mục này như chỉ số/thao tác đang hoạt động.",
+      "decision": "Bộ phận thiết kế/sản phẩm cung cấp mã nguồn/hợp đồng hoặc gỡ các tuyên bố giao diện chưa có căn cứ.",
+      "source_ref": "01-ui-elements.md §3 #13–#18/#25/#30–#44; 02-events.md §EV-07/08",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-006",
+      "description": "DD API #73 vẫn ở trạng thái Draft; dữ liệu COUNT/LIST có thể không đồng nhất; chính sách thử lại/timeout/cache chưa được quy định đầy đủ.",
+      "impact": "Tính nhất quán của danh sách và tiêu chí thử lại ngoài cách xử lý cục bộ hiện tại vẫn còn bỏ ngỏ.",
+      "decision": "Owner API ký xác nhận response/schema/snapshot và chính sách thử lại.",
+      "source_ref": "03-data-flow.md §API #73 handling/current-source addendum; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-007",
+      "description": "Chưa xác minh schema DB thật/triển khai và trình duyệt/môi trường chạy đã xác thực; các đối tượng giả lập kiểm thử riêng lẻ không chứng minh được các yếu tố này.",
+      "impact": "Không thể khẳng định đã thực hiện nghiệm thu đầu cuối.",
+      "decision": "Chủ sở hữu CSDL/API cung cấp môi trường đích đã xác minh cùng tài khoản/dữ liệu kiểm thử được duyệt.",
+      "source_ref": "00-overview.md §Current-source addendum; 07-test-cases.md §Completion decision",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-008",
+      "description": "Chưa có OpenAPI chính thức cho Study #73/#104; #104 được người dùng phê duyệt và nối với mã nguồn nhưng là phần mở rộng nằm ngoài AC-32.",
+      "impact": "Giữ phần mở rộng tạo mới tách biệt với AC-32 và bảo toàn ranh giới hợp đồng/môi trường chạy thực tế.",
+      "decision": "Chủ sở hữu API công bố/ký hợp đồng chính thức và xác minh tuyến/lược đồ đã triển khai.",
+      "source_ref": "04-api-integration.md §Current API #104 implementation; 05-business-rules.md §4",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "AD-06-TC-MH-001",
+        "requirement_ids": [
+          "AD-06-YC-001",
+          "AD-06-YC-004",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Tải ban đầu chỉ gửi page 1",
+        "precondition": "Phiên Admin/token kiểm thử giả lập; trình duyệt đã xác thực trong môi trường chạy chưa được xác minh.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Mở /admin/courses; kiểm tra header/query của yêu cầu và trạng thái đang tải.",
+        "expected": "Mã nguồn hiện tại gọi GET #73?page=1 qua máy khách Admin có Bearer; không thêm q/category/size/sort. Việc ánh xạ quyền vẫn còn bỏ ngỏ. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §Expected behavior/current source",
+          "02-events.md §EV-01",
+          "ad06-api.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-002",
+        "requirement_ids": [
+          "AD-06-YC-001",
+          "AD-06-YC-002",
+          "AD-06-YC-003"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Phản hồi danh sách hợp lệ và cấu trúc dữ liệu chính xác",
+        "precondition": "Course Page hợp lệ được giả lập; không dùng PII thật.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Giả lập phản hồi 200 DESIGN_RESOURCE_RETRIEVED với page=1,size=20 và một Course; kiểm tra dòng hiển thị và thông tin phân trang.",
+        "expected": "Chỉ validated envelope/Page renders; hàng hiển thị ID,title,description,mentor,chuỗi giá chính xác,status và nguồn phân trang. Không có code/lesson fields invented. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01/07",
+          "04-api-integration.md §2",
+          "admin-api-guards.ts",
+          "admin-screen-renderers.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-003",
+        "requirement_ids": [
+          "AD-06-YC-002",
+          "AD-06-YC-004",
+          "AD-06-YC-007"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Mã businessCode hoặc cấu trúc Course Page không hợp lệ",
+        "precondition": "Chỉ dùng phản hồi giả lập.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Trả về businessCode sai, page phản hồi không khớp, size khác 20, Course sai cấu trúc hoặc total_pages không nhất quán; kiểm tra trạng thái.",
+        "expected": "Phản hồi là lỗi, không phải rỗng/thành công; không kết xuất dòng dữ liệu hay phân trang chưa được kiểm tra. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01",
+          "03-data-flow.md §API #73 response/error handling",
+          "admin-api-guards.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-004",
+        "requirement_ids": [
+          "AD-06-YC-005"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Phân biệt danh sách rỗng bình thường với trang vượt phạm vi",
+        "precondition": "Các trang API giả lập: items=[], total=0 và items=[], total>0/trang vượt giới hạn.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Giả lập từng phản hồi rồi kiểm tra nội dung trạng thái rỗng/ngoài phạm vi, total và thao tác khôi phục.",
+        "expected": "Total=0 nghĩa là không có dữ liệu; khi trang vượt phạm vi vẫn giữ total và hiển thị cách quay về trang 1. Không đổi trang rỗng thành “không có khóa học” khi total>0. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01/05/07",
+          "03-data-flow.md §Candidate screen states"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-005",
+        "requirement_ids": [
+          "AD-06-YC-006"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Sai khác ảnh chụp dữ liệu COUNT/LIST",
+        "precondition": "Course Page giả lập có số hàng không khớp với total/page/size.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Giả lập page không khớp; kiểm tra các dòng, total, phân trang, cảnh báo và nút thử lại.",
+        "expected": "Các dòng từ phản hồi vẫn hiển thị; tổng/trang có thể đã cũ được ẩn, phân trang bị vô hiệu hóa và có thể thử lại cùng trang. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "03-data-flow.md §Current-source addendum",
+          "02-events.md §EV-07"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-006",
+        "requirement_ids": [
+          "AD-06-YC-007",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Lỗi truy cập/API không được hiển thị như danh sách rỗng",
+        "precondition": "Các phản hồi giả lập 401/403/422/500, lỗi mạng và phong bì không hợp lệ.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Trả từng lỗi riêng; kiểm tra cảnh báo và đảm bảo không hiện nội dung của trạng thái rỗng.",
+        "expected": "Chỉ gửi GET #74 và giữ nguyên chuỗi tuyến; trạng thái đang tải rồi đã tải chỉ áp dụng với Page<Course> hợp lệ theo mã nguồn. Quyền và môi trường chạy còn chưa được xác minh. Chờ DD/API policy (BLOCKED); chưa nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §API matrix",
+          "03-data-flow.md §API #73 response/error handling",
+          "admin-screen-state.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-007",
+        "requirement_ids": [
+          "AD-06-YC-008"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Tìm kiếm vẫn vô hiệu hóa và không gửi q",
+        "precondition": "Trang Angular hiện tại; không dùng dữ liệu thật.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Kiểm tra ô tìm kiếm và yêu cầu được gửi khi tải trang.",
+        "expected": "Search bị vô hiệu hóa và không có q được gửi; never filter chỉ current 20 rows. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #19",
+          "02-events.md §EV-02",
+          "ad06-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-008",
+        "requirement_ids": [
+          "AD-06-YC-009"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Bộ lọc status, Mentor và category vẫn bị khóa",
+        "precondition": "Trang Angular hiện tại và phản hồi dịch vụ giả lập.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Kiểm tra các điều khiển và xác nhận chưa có bộ lọc hoạt động; request danh mục trực tiếp qua mock có thể trả 422 nhưng không bật giao diện.",
+        "expected": "Các điều khiển trạng thái/giảng viên/danh mục vẫn bị vô hiệu hóa; khi tải trang không gửi khóa bộ lọc. Giá trị danh mục bị từ chối với mã 422; không gửi giá trị đại diện all. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001",
+          "AD-06-API-002"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #20–#22",
+          "02-events.md §EV-03",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-009",
+        "requirement_ids": [
+          "AD-06-YC-010"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Đặt lại vẫn không khả dụng trong ứng dụng hiện tại",
+        "precondition": "Đối chiếu trang Angular hiện tại với bản mẫu tĩnh.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Kiểm tra các điều khiển Apply/Reset; sau đó đọc listener Reset trong bản mẫu mà không chạy script.",
+        "expected": "Các điều khiển Angular hiện đang bị vô hiệu hóa; thao tác Đặt lại trong bản mẫu chỉ đổi giá trị cục bộ, không gọi API. Giữ riêng sai khác giữa bản mẫu và mã nguồn. Chờ xác nhận DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #24",
+          "02-events.md §EV-04",
+          "ad06-page.html",
+          "code.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-010",
+        "requirement_ids": [
+          "AD-06-YC-004",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Phân trang tuân theo giới hạn trang được trả về",
+        "precondition": "Metadata trang giả lập; size cố định là 20.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Giả lập trang 1/2, chuyển tiếp; ở trang 2 thử chuyển tiếp lần nữa; kiểm tra request và tham số.",
+        "expected": "Chỉ thao tác chuyển trang hợp lệ mới gọi #73 với page; client không gửi size/sort và rejects ngoài phạm vi page values. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-05",
+          "ad06-page.ts",
+          "admin-api.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-011",
+        "requirement_ids": [
+          "AD-06-YC-003",
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Không có false chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI))/course code/lesson số lượng",
+        "precondition": "Hàng Course và tổng số trang giả lập.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Đối chiếu thẻ tóm tắt, tiêu đề bảng và các trường của hàng đã kết xuất với projection #73.",
+        "expected": "Ứng dụng hiện hiển thị chỉ số phân trang do máy chủ cung cấp; không tự tạo chỉ số giả về trạng thái chờ, đã xuất bản hoặc người hướng dẫn chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)), course code hoặc lesson count. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §Expected behavior/current behavior",
+          "01-ui-elements.md §3 #15–#18/#25/#32",
+          "admin-screen-renderers.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-012",
+        "requirement_ids": [
+          "AD-06-YC-003"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Giá giữ nguyên chuỗi thập phân chính xác",
+        "precondition": "Giá trị price giả lập là `250000.00` và `0`; không giả định quy tắc tiền tệ.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Hiển thị giá Course và đối chiếu văn bản với chuỗi trong phản hồi.",
+        "expected": "Giá không chuyển qua số dấu phẩy động hay định dạng theo quy tắc tiền tệ/locale chưa được duyệt. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #25",
+          "04-api-integration.md §2",
+          "admin-screen-renderers.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-013",
+        "requirement_ids": [
+          "AD-06-YC-012"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Course.id an toàn mở trang chi tiết AD-07",
+        "precondition": "Hàng giả lập có ID số nguyên dương an toàn với JavaScript.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Chọn thao tác xem chi tiết của một hàng; kiểm tra đường dẫn tuyến được tạo và routerLink.",
+        "expected": "Tuyến dùng giá trị Course.id; không thay bằng mã khóa học hoặc điểm cuối công khai. Điều hướng có xác thực vẫn chưa được xác minh. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-06",
+          "06-navigation.md §Navigation/data handoff",
+          "admin-screen-renderers.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-014",
+        "requirement_ids": [
+          "AD-06-YC-012"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "ID int64 không an toàn không được ép thành giá trị trên tuyến",
+        "precondition": "Course giả lập có số nguyên nằm ngoài phạm vi an toàn của JavaScript.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Kết xuất hàng; kiểm tra định danh hiển thị và có liên kết chi tiết hay không.",
+        "expected": "Bộ kết xuất báo không thể hiển thị số chính xác và bỏ liên kết AD-07; không làm tròn/ép kiểu sang ID khác. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "00-overview.md §4/Current-source addendum",
+          "02-events.md §EV-06",
+          "admin-screen-renderers.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-015",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Tuyên bố khung giao diện tĩnh và thao tác chưa hỗ trợ không hoạt động",
+        "precondition": "Mã nguồn hiện tại và bản mẫu tĩnh; không dùng mock API không liên quan.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Kiểm tra các điều khiển xuất dữ liệu/thủ công/quản trị/thông báo/chân trang và tuyên bố về đường dẫn nguồn.",
+        "expected": "Các điều khiển chưa được hỗ trợ không gọi #103/#78 và không điều hướng. Khẳng định RBAC/Normal/governance trong mẫu tĩnh không chứng minh quyền hay runtime. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §3 #1–#13/#30–#44",
+          "02-events.md §EV-08"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-016",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Hộp thoại tạo tải các lựa chọn Mentor đang hoạt động",
+        "precondition": "Trang UserProfile #68 giả lập.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Nhấn Add; kiểm tra hộp thoại, tiêu điểm, truy vấn role/status/page của #68 và trạng thái gửi.",
+        "expected": "Hộp thoại hỗ trợ truy cập và đặt tiêu điểm vào title; #68 dùng role=MENTOR,status=ACTIVE,page=1; khi đang chờ thì không cho gửi cho đến khi có tùy chọn.",
+        "api_ids": [
+          "AD-06-API-002"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §5",
+          "02-events.md §EV-10",
+          "ad06-page.html",
+          "ad06-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-017",
+        "requirement_ids": [
+          "AD-06-YC-016",
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Biểu mẫu tạo mới chỉ kiểm tra các trường có căn cứ từ mã nguồn",
+        "precondition": "Mentor đang hoạt động giả lập; không dùng tài khoản thật.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Gửi khi thiếu title/price/mentor; sau đó dùng description/thumbnail URL tùy chọn hợp lệ và giá dạng thập phân.",
+        "expected": "Bắt buộc có title/price/mentor; title được cắt khoảng trắng và dài 1–200 ký tự; chuỗi thập phân theo NUMERIC(12,2); description/thumbnail là tùy chọn, URL không phải tải tệp lên. Không tự đặt quy tắc giá không âm.",
+        "api_ids": [
+          "AD-06-API-003"
+        ],
+        "source_refs": [
+          "01-ui-elements.md §5",
+          "05-business-rules.md §4",
+          "ad06-page.html",
+          "ad06-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-018",
+        "requirement_ids": [
+          "AD-06-YC-018",
+          "AD-06-YC-020"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Chỉ chấp nhận tạo thành công khi Course ở trạng thái DRAFT hợp lệ và điều hướng an toàn",
+        "precondition": "Phản hồi HTTP 201 giả lập cho #104.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Gửi biểu mẫu; trả body chính xác; thử riêng ID dương an toàn và ID không an toàn; kiểm tra hộp thoại và điều hướng/tải lại danh sách.",
+        "expected": "Chỉ chấp nhận success=true cùng DESIGN_RESOURCE_CREATED và Course hợp lệ khớp dữ liệu, có DRAFT; ID dương an toàn mở AD-07 kèm thông báo tạo thành công; nếu không thì tải lại #73 mà không ép kiểu tuyến.",
+        "api_ids": [
+          "AD-06-API-002",
+          "AD-06-API-003",
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-10",
+          "03-data-flow.md §Current create-flow data",
+          "06-navigation.md §Current create navigation"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-019",
+        "requirement_ids": [
+          "AD-06-YC-019",
+          "AD-06-YC-020"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Tạo thất bại vẫn giữ bản nháp và chặn gửi trùng",
+        "precondition": "Phản hồi #104 giả lập bị trễ/bị từ chối.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Chỉ gửi một lần; trong lúc chờ, thử gửi lại/đóng; trả về 422 hoặc envelope không hợp lệ rồi kiểm tra phản hồi/trạng thái biểu mẫu.",
+        "expected": "Khi request đang chờ, chặn gửi lần nữa và đóng hộp thoại; khi lỗi, giữ biểu mẫu/dữ liệu đã nhập, xóa trạng thái chờ, hiện lỗi an toàn và không điều hướng. Không tự động thử lại.",
+        "api_ids": [
+          "AD-06-API-003"
+        ],
+        "source_refs": [
+          "02-events.md §EV-10",
+          "04-api-integration.md §Current API #104 implementation",
+          "ad06-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-MH-020",
+        "requirement_ids": [
+          "AD-06-YC-014",
+          "AD-06-YC-015",
+          "AD-06-YC-016",
+          "AD-06-YC-017",
+          "AD-06-YC-018",
+          "AD-06-YC-019",
+          "AD-06-YC-020"
+        ],
+        "target_id": "AD-06",
+        "group": "Toàn màn hình",
+        "title": "Không khẳng định quá mức về quyền, OpenAPI và môi trường chạy",
+        "precondition": "Không có live server/browser assumptions.",
+        "data": "Fixture Course/Mentor giả lập; không dùng thông tin xác thực hoặc dữ liệu người dùng thật.",
+        "steps": "Rà soát ranh giới phê duyệt DD, bằng chứng schema/môi trường chạy chính thức và nguồn kiểm thử tập trung trong các tạo tác.",
+        "expected": "Luồng mở rộng tạo mới được phê duyệt trong DD nguồn; việc ánh xạ AC-32↔ADMIN và yêu cầu danh sách vẫn đang bị chặn. Các kiểm thử riêng lẻ không xác lập trạng thái cơ sở dữ liệu, bản triển khai hay môi trường trình duyệt đang chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-002",
+          "AD-06-API-001",
+          "AD-06-API-003"
+        ],
+        "source_refs": [
+          "00-overview.md §Current-source addendum",
+          "04-api-integration.md §Current API #104 implementation",
+          "07-test-cases.md §Completion decision"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "AD-06-TC-TP-001",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-001",
+        "group": "Thành phần",
+        "title": "Kiểm tra #1: Thương hiệu cổng quản trị Study2Work LMS",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #1: Study2Work LMS cổng quản trị thương hiệu; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #1 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Logo và text tĩnh; không lấy từ #73. Visible; click destination chưa có route/handler; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Thương hiệu Study2Work LMS Admin Portal: logo và văn bản tĩnh, không lấy từ #73. Đang hiển thị; thao tác nhấp chưa có tuyến đích hoặc hàm xử lý; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #1; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-002",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-002",
+        "group": "Thành phần",
+        "title": "Kiểm tra #2: Nhóm điều hướng chính của trang quản trị",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #2: quản trị chính nhóm điều hướng; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #2 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD: năm liên kết HTML có href=\"#\"; mã nguồn Study Web chưa xác nhận quyền truy cập tuyến đến từng đích. Đang hiển thị; mục được chọn trong bản mẫu là Khóa học & Nội dung; điều hướng chưa được kết nối; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nhóm điều hướng Admin chính: năm liên kết dùng HTML href=\"#\"; mã nguồn Study Web chưa xác nhận quyền truy cập qua tuyến đến từng đích. Đang hiển thị; mục đang được chọn trong bản mẫu là Khóa học & Nội dung; điều hướng chưa được kết nối; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #2; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-003",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-003",
+        "group": "Thành phần",
+        "title": "Kiểm tra #3: huy hiệu trạng thái “SYSTEM NORMAL”",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #3: huy hiệu trạng thái “SYSTEM NORMAL”; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #3 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Text/green indicator được gán cố định; không có health data/endpoint trong AD-06. Visible nhưng unverified; không dùng để cho phép request; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Huy hiệu trạng thái “SYSTEM NORMAL”: văn bản/dấu hiệu màu xanh được gán cố định; AD-06 không có dữ liệu hoặc điểm cuối kiểm tra tình trạng hệ thống. Đang hiển thị nhưng chưa xác minh; không dùng để cho phép gửi yêu cầu; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #3; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-004",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-004",
+        "group": "Thành phần",
+        "title": "Kiểm tra #4: Notifications button",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #4: nút thông báo; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #4 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Bell + dot tĩnh; không có unread count source hoặc click handler. Visible; action chưa xác định; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nút thông báo: biểu tượng chuông và chấm tĩnh; không có nguồn đếm chưa đọc hoặc hàm xử lý khi nhấp. Đang hiển thị; thao tác chưa được xác định; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #4; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-005",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-005",
+        "group": "Thành phần",
+        "title": "Kiểm tra #5: Danh tính và ảnh đại diện quản trị viên",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Điểm đánh dấu/thành phần #5: danh tính quản trị viên và ảnh đại diện; không có dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #5 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD: tên/vai trò/ảnh đại diện là nội dung tĩnh; #73 trả về giảng viên phụ trách khóa học, không phải danh tính Admin. Đang hiển thị; nguồn danh tính/tuyến nằm ngoài hợp đồng này; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Danh tính và ảnh đại diện Admin: tên/vai trò/ảnh đại diện là nội dung tĩnh; #73 trả về giảng viên phụ trách khóa học, không phải danh tính Admin. Đang hiển thị; nguồn danh tính/tuyến nằm ngoài hợp đồng này; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #5; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-006",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-006",
+        "group": "Thành phần",
+        "title": "Kiểm tra #6: đường dẫn điều hướng toàn cục",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #6: Global đường dẫn điều hướng trail; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #6 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Home / Hệ thống / Quản trị trung tâm / Không gian làm việc; markup anchor không có trạng thái tuyến. Visible; destinations chưa wired; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Global breadcrumb trail: Home / Hệ thống / Quản trị trung tâm / Không gian làm việc; markup anchor không có trạng thái tuyến. Visible; destinations chưa wired; EV-08. Xác minh riêng giao diện Angular hiện tại và trạng thái mã nguồn, tách biệt với bản mẫu đã đánh số. Static/chỉ có trong bản mẫu Nội dung tĩnh không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #6; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-007",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-007",
+        "group": "Thành phần",
+        "title": "Kiểm tra #7: RBAC assurance badge",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #7: RBAC cam kết huy hiệu; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #7 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Static claim; API #73 không trả permission result. Visible nhưng unverified; không xem là authorization decision; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Huy hiệu đảm bảo RBAC: khẳng định tĩnh; API #73 không trả kết quả quyền. Đang hiển thị nhưng chưa xác minh; không xem là quyết định cấp quyền; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #7; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-008",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-008",
+        "group": "Thành phần",
+        "title": "Kiểm tra #8: Local course-management breadcrumb",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #8: cục bộ quản lý khóa học đường dẫn điều hướng; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #8 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: nhãn tĩnh, không có route binding trong HTML. Visible; route/return behavior chưa wired; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Breadcrumb quản lý khóa học cục bộ: nhãn tĩnh, không có liên kết với tuyến trong HTML. Đang hiển thị; tuyến và hành vi quay lại chưa được kết nối; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #8; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-009",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-009",
+        "group": "Thành phần",
+        "title": "Kiểm tra #9: API #73 reference badge",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #9: API #73 huy hiệu tham chiếu; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #9 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Label tĩnh; không chứng minh page gọi #73. Visible; không có action; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Huy hiệu tham chiếu API #73: nhãn tĩnh; không chứng minh trang đã gọi #73. Đang hiển thị; không có thao tác; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #9; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-010",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-010",
+        "group": "Thành phần",
+        "title": "Kiểm tra #10: tiêu đề trang",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #10: Page tiêu đề; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #10 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Static heading; API #73 không trả page title. Visible; presentation chỉ..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Tiêu đề trang: tiêu đề tĩnh; API #73 không trả tiêu đề trang. Đang hiển thị, chỉ phục vụ trình bày. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #10; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-011",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-011",
+        "group": "Thành phần",
+        "title": "Kiểm tra #11: Catalog V2 badge",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #11: Catalog V2 huy hiệu; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #11 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Static version label; không có catalog version negotiation. Visible, unverified; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Huy hiệu phiên bản V2 của danh mục: nhãn phiên bản tĩnh; không có cơ chế thương lượng phiên bản danh mục. Đang hiển thị nhưng chưa xác minh; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #11; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-012",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-012",
+        "group": "Thành phần",
+        "title": "Kiểm tra #12: Page phụ đề",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #12: Page tiêu đề phụ đề; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #12 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Editorial text; API #73 chỉ cấp course/mentor projection, không trả aggregate/scope permission. Visible; phải được duyệt nội dung trước implementation; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Phụ đề trang: nội dung biên tập; API #73 chỉ cung cấp phần dữ liệu chiếu của khóa học/giảng viên, không trả dữ liệu tổng hợp hoặc phạm vi quyền. Đang hiển thị; cần duyệt nội dung trước khi triển khai; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #12; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-013",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EL-013",
+        "group": "Thành phần",
+        "title": "Kiểm tra #13: Export report button",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #13: xuất báo cáo nút; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #13 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD: nút tĩnh, không có hàm xử lý; API #103 xuất báo cáo tác động riêng, không xuất danh mục khóa học. Nút trông như đang bật nhưng chưa được hỗ trợ; không gọi #103; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nút xuất báo cáo: nút tĩnh, không có hàm xử lý; API #103 xuất báo cáo tác động riêng, không xuất danh mục khóa học. Nút trông như đang bật nhưng chưa có hỗ trợ; không gọi #103; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #13; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-014",
+        "requirement_ids": [
+          "AD-06-YC-015"
+        ],
+        "target_id": "AD-06-EL-014",
+        "group": "Thành phần",
+        "title": "Kiểm tra #14: Nút thêm khóa học mới",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #14: Add new khóa học nút; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #14 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD: mở hộp thoại tạo khóa học; lấy Mentor ACTIVE qua #68 và gửi bằng API #104 (phần mở rộng được người dùng duyệt, nằm ngoài AC-32). Nút bật; khi tải Mentor/lưu thì vô hiệu hóa gửi; Hủy đóng hộp thoại; EV-10.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nút thêm khóa học mới: mở hộp thoại tạo khóa học; lấy Mentor ACTIVE qua #68 và gửi bằng API #104 (phần mở rộng được người dùng duyệt, nằm ngoài AC-32). Nút bật; trong lúc tải Mentor/lưu thì vô hiệu hóa gửi; Hủy đóng hộp thoại; EV-10. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #14; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-015",
+        "requirement_ids": [
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-015",
+        "group": "Thành phần",
+        "title": "Kiểm tra #15: Total courses chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) card",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #15: tổng số khóa học KPI thẻ; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #15 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Giá trị 0 được gán cố định; #73 `pagination.total` phụ thuộc filter, không định nghĩa aggregate không lọc. Visible; dữ liệu chưa có căn cứ từ mã nguồn; EV-07..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Total courses chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) card: Giá trị 0 được gán cố định; #73 `pagination.total` phụ thuộc filter, không định nghĩa aggregate không lọc. Visible; dữ liệu chưa có căn cứ từ mã nguồn; EV-07. Xác minh riêng giao diện Angular hiện tại và trạng thái mã nguồn, tách biệt với bản mẫu đã đánh số. Static/chỉ có trong bản mẫu Nội dung tĩnh không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #15; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-016",
+        "requirement_ids": [
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-016",
+        "group": "Thành phần",
+        "title": "Kiểm tra #16: Pending review chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) card",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #16: chờ duyệt KPI thẻ; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #16 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Giá trị 0 được gán cố định; #73 không có review count/aggregate. AC-33 content review không xác lập course chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)). Visible; moderation relation/definition chưa có; EV-07..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Thẻ KPI bài đánh giá đang chờ: giá trị 0 được gán cố định; #73 không có số lượng/tổng hợp đánh giá. AC-33 về duyệt nội dung không xác lập KPI khóa học. Đang hiển thị; chưa có quan hệ/định nghĩa kiểm duyệt; EV-07. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #16; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-017",
+        "requirement_ids": [
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-017",
+        "group": "Thành phần",
+        "title": "Kiểm tra #17: Published courses chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) card",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #17: khóa học đã xuất bản KPI thẻ; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #17 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Giá trị 0 được gán cố định; #73 có `status` mỗi course nhưng không có aggregate/status enum được duyệt. Visible; không thể tính chính xác từ page 20 rows; EV-07..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Thẻ KPI khóa học đã phát hành: giá trị 0 được gán cố định; #73 có status cho từng Course nhưng chưa có enum/tổng hợp trạng thái được duyệt. Không thể tính chính xác từ 20 hàng của một trang; EV-07. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #17; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-018",
+        "requirement_ids": [
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-018",
+        "group": "Thành phần",
+        "title": "Kiểm tra #18: Participating mentors chỉ số hiệu quả chính (chỉ số hiệu quả chính (KPI)) card",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #18: Mentor tham gia KPI thẻ; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #18 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Giá trị 0 được gán cố định; #73 không trả distinct mentor count; page projection không bảo đảm danh sách mentor đầy đủ. Visible; không có nguồn hỗ trợ; EV-07..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Thẻ KPI giảng viên tham gia: giá trị 0 được gán cố định; #73 không trả số lượng mentor phân biệt; dữ liệu của một trang không bảo đảm có đủ danh sách Mentor. Đang hiển thị; chưa có nguồn hỗ trợ; EV-07. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #18; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-019",
+        "requirement_ids": [
+          "AD-06-YC-008"
+        ],
+        "target_id": "AD-06-EL-019",
+        "group": "Thành phần",
+        "title": "Kiểm tra #19: Ô tìm kiếm khóa học",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #19: tìm kiếm khóa học ô nhập; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #19 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Text, placeholder tên/mã/giảng viên. Không có max length/normalization/search query contract; DOM input không có listener. Visible/editable markup, nhưng hiện không đổi kết quả; EV-02..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Ô tìm kiếm khóa học: văn bản gợi ý nhập tên/mã/giảng viên. Chưa có hợp đồng về độ dài tối đa/chuẩn hóa/truy vấn tìm kiếm; input DOM không có trình xử lý. Có thể nhập nhưng không làm thay đổi kết quả hiện tại; EV-02. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #19; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-020",
+        "requirement_ids": [
+          "AD-06-YC-009"
+        ],
+        "target_id": "AD-06-EL-020",
+        "group": "Thành phần",
+        "title": "Kiểm tra #20: Status filter select",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #20: danh sách chọn lọc trạng thái; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #20 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD. Tùy chọn bản mẫu: all, draft, pending, published, archived (chữ thường). API so khớp chính xác chuỗi gốc; chưa có enum, chuẩn hóa hay allowlist. HTML mặc định all; ánh xạ bộ lọc máy chủ chờ duyệt tập giá trị/chữ hoa-thường; EV-03.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Bộ chọn trạng thái: các tùy chọn bản mẫu là all, draft, pending, published, archived (chữ thường). API so khớp chính xác chuỗi gốc; chưa có enum, chuẩn hóa hay allowlist. HTML mặc định all; ánh xạ bộ lọc máy chủ chờ duyệt tập giá trị/chữ hoa-thường; EV-03. Đối chiếu riêng Angular và mã nguồn với bản mẫu đã đánh số; nội dung tĩnh không chứng minh dữ liệu/môi trường chạy. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #20; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-021",
+        "requirement_ids": [
+          "AD-06-YC-009"
+        ],
+        "target_id": "AD-06-EL-021",
+        "group": "Thành phần",
+        "title": "Kiểm tra #21: Mentor filter select",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #21: danh sách chọn lọc Mentor; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #21 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD: bản mẫu chỉ có lựa chọn all; API yêu cầu số nguyên int64 có dấu. #73 không có lựa chọn bộ lọc giảng viên; hộp thoại tạo mới có danh sách riêng từ #68 với role=MENTOR/status=ACTIVE. Bộ lọc vẫn chưa khả dụng; lựa chọn trong hộp thoại có căn cứ từ mã nguồn; EV-03/EV-10.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Danh sách chọn bộ lọc giảng viên: bản mẫu chỉ có lựa chọn all; API yêu cầu số nguyên int64 có dấu. #73 không có lựa chọn bộ lọc giảng viên; hộp thoại tạo mới có danh sách riêng từ #68 với role=MENTOR/status=ACTIVE. Bộ lọc vẫn chưa khả dụng; lựa chọn trong hộp thoại có căn cứ từ mã nguồn; EV-03/EV-10. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #21; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-022",
+        "requirement_ids": [
+          "AD-06-YC-009"
+        ],
+        "target_id": "AD-06-EL-022",
+        "group": "Thành phần",
+        "title": "Kiểm tra #22: Locked category filter badge",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #22: bị khóa category bộ lọc huy hiệu; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #22 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Static lock/copy “đang chờ cấu hình liên kết dữ liệu”. Valid category int64 hiện trả 422; legacy DDL không có FK `courses.category_id`. Visible/disabled conceptually; giữ disabled; EV-03..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Huy hiệu khóa bộ lọc danh mục: biểu tượng/nhãn tĩnh “đang chờ cấu hình liên kết dữ liệu”. Danh mục hợp lệ kiểu int64 hiện trả 422; DDL cũ không có khóa ngoại `courses.category_id`. Hiển thị nhưng bị vô hiệu hóa theo thiết kế; giữ khóa; EV-03. Xác minh riêng giao diện Angular và mã nguồn, tách khỏi bản mẫu. Nội dung tĩnh không chứng minh có dữ liệu/hành vi khi chạy. Chờ xác nhận DD trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #22; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-023",
+        "requirement_ids": [
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-023",
+        "group": "Thành phần",
+        "title": "Kiểm tra #23: Applied-filter summary",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #23: Applied-bộ lọc tóm tắt; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #23 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: được gán cố định “Tất cả danh mục gốc (API 73)” và “Không có bộ lọc tùy chỉnh nào hoạt động”; không bind state/API. Visible; summary trong prototype không phản ánh request; EV-07..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Tóm tắt bộ lọc đã áp dụng: các câu “Tất cả danh mục gốc (API 73)” và “Không có bộ lọc tùy chỉnh nào hoạt động” được gán cố định, không liên kết với trạng thái/trạng thái API. Đang hiển thị; phần tóm tắt trong bản mẫu không phản ánh yêu cầu thực tế; EV-07. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #23; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-024",
+        "requirement_ids": [
+          "AD-06-YC-010"
+        ],
+        "target_id": "AD-06-EL-024",
+        "group": "Thành phần",
+        "title": "Kiểm tra #24: Reset filters control",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #24: đặt lại bộ lọcs điều khiển; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #24 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Anchor/button presentation; listener xóa text, đặt status/mentor thành `all`; không sửa category/URL hoặc gọi API. Visible/enabled; local reset chỉ; EV-04..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Điều khiển đặt lại bộ lọc: cách trình bày như liên kết/nút; trình xử lý xóa văn bản và đặt status/mentor thành all, nhưng không sửa category/URL hoặc gọi API. Đang hiển thị/được bật; chỉ đặt lại cục bộ; EV-04. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #24; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-025",
+        "requirement_ids": [
+          "AD-06-YC-003",
+          "AD-06-YC-011",
+          "AD-06-YC-012"
+        ],
+        "target_id": "AD-06-EL-025",
+        "group": "Thành phần",
+        "title": "Kiểm tra #25: Course table đầu trang nhóm: code, name, mentor, fee, status, lessons, actions",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #25: bảng khóa học đầu trang nhóm: code, name, Mentor, fee, trạng thái, bài bài học, thao tács; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #25 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD: các cột gồm **Mã khóa** (không có trường phản hồi); **Tên khóa học** ← title; **Giảng viên hướng dẫn** ← mentor.full_name; **Học phí** ← price dạng chuỗi thập phân nguyên dạng; **Trạng thái** ← status nguyên dạng; **Số bài học** (không có trường/API); **Thao tác** (thao tác/tuyến trên hàng chưa được triển khai; thao tác đổi trạng thái trực tiếp chưa được AC-32 xác nhận). Đang hiển thị; hàng trống hiện gộp 7 cột; chưa có hàng dữ liệu/lỗi/đang tải; EV-01/EV-06.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nhóm tiêu đề bảng khóa học: code, name, mentor, fee, status, lessons, actions. Các cột riêng: **Mã khóa** (không có trường trong phản hồi); **Tên khóa học** ← `title`; **Giảng viên hướng dẫn** ← `mentor.full_name`; **Học phí** ← `price` dạng chuỗi thập phân chính xác; **Trạng thái** ← `status` nguyên giá trị; **Số bài học** (không có trường/API); **Thao tác** (chưa triển khai hành động/tuyến trên hàng; AC-32 chưa xác nhận thao tác đổi trạng thái trực tiếp). Hàng rỗng hiện phủ 7 cột; chưa có hàng dữ liệu/lỗi/đang tải; EV-01/EV-06. Xác minh riêng giao diện Angular/mã nguồn và bản mẫu. Nội dung tĩnh không chứng minh có dữ liệu/hành vi khi chạy. Chờ xác nhận DD trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #25; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-026",
+        "requirement_ids": [
+          "AD-06-YC-005",
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-026",
+        "group": "Thành phần",
+        "title": "Kiểm tra #26: Hình minh họa trạng thái rỗng",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #26: hình minh họa trạng thái rỗng; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #26 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Decorative icon/animation từ HTML; không phải server sync indicator. Đang hiển thị trong trạng thái rỗng của bản mẫu; không có event; EV-07..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Hình minh họa trạng thái rỗng: Decorative icon/animation từ HTML; không phải server sync indicator. Đang hiển thị trong trạng thái rỗng của bản mẫu; không có event; EV-07. Xác minh riêng giao diện Angular hiện tại và trạng thái mã nguồn, tách biệt với bản mẫu đã đánh số. Static/chỉ có trong bản mẫu Nội dung tĩnh không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #26; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-027",
+        "requirement_ids": [
+          "AD-06-YC-005",
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-027",
+        "group": "Thành phần",
+        "title": "Kiểm tra #27: trạng thái rỗng heading",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #27: tiêu đề trạng thái rỗng; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #27 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Static copy. #73 message “No courses found.” có thể ứng với items rỗng nhưng không phân loại nguyên nhân/filters. Visible; target empty-vs-filtered/ngoài phạm vi copy cần định nghĩa; EV-07..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Tiêu đề trạng thái rỗng: nội dung tĩnh. Thông báo #73 “No courses found.” có thể ứng với items rỗng nhưng không phân loại nguyên nhân/bộ lọc. Đang hiển thị; cần định nghĩa nội dung cho trạng thái rỗng so với đã lọc/nằm ngoài phạm vi; EV-07. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #27; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-028",
+        "requirement_ids": [
+          "AD-06-YC-005",
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EL-028",
+        "group": "Thành phần",
+        "title": "Kiểm tra #28: Nội dung giải thích trạng thái rỗng",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #28: nội dung giải thích trạng thái rỗng; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #28 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu trường, trạng thái và sự kiện với DD: văn bản tĩnh gộp trạng thái trống/bộ lọc/đồng bộ; #73 không trả trạng thái đồng bộ. Đang hiển thị; không trình bày khẳng định đồng bộ như sự thật; EV-07.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Phần giải thích trạng thái trống: văn bản tĩnh gộp trạng thái trống/bộ lọc/đồng bộ; #73 không trả trạng thái đồng bộ. Đang hiển thị; không trình bày khẳng định đồng bộ như sự thật; EV-07. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #28; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-029",
+        "requirement_ids": [
+          "AD-06-YC-006",
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-029",
+        "group": "Thành phần",
+        "title": "Kiểm tra #29: Nút làm mới danh sách bị vô hiệu hóa",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #29: nút làm mới danh sách đang vô hiệu hóa; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #29 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: nút trông như đang bật nhưng không có `href`/bộ xử lý/đích. Đang hiển thị; điều hướng chưa được hỗ trợ; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nút làm mới danh sách bị vô hiệu hóa: disabled, không có hàm xử lý. Làm mới trong tương lai có thể lặp GET #73, nhưng điều kiện kích hoạt/trạng thái tải/quy tắc vô hiệu hóa/thử lại chưa được duyệt. Hiện chưa có sự kiện làm mới; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #29; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-030",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-030",
+        "group": "Thành phần",
+        "title": "Kiểm tra #30: View sync manual button",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #30: View đồng bộ thủ công nút; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #30 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: nút trông như đang bật nhưng không có `href`/bộ xử lý/đích. Đang hiển thị; điều hướng chưa được hỗ trợ; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nút xem đồng bộ thủ công: nút trông như đang bật, không có href/hàm xử lý/đích đến. Đang hiển thị; điều hướng chưa được hỗ trợ; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #30; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-031",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-031",
+        "group": "Thành phần",
+        "title": "Kiểm tra #31: Tuyên bố tĩnh về nguồn điểm cuối API",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #31: tĩnh API endpoint mã nguồn tuyên bố; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #31 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn dữ liệu của trường, trạng thái và sự kiện liên kết với DD: Text sai path; API catalog/tuyến hiện tại là `/api/v1/admin/courses`. Không dynamic. Visible nhưng inaccurate; không dùng làm endpoint/config evidence; EV-08..",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Tuyên bố tĩnh về nguồn điểm cuối API: đường dẫn trong nội dung không đúng; danh mục API/tuyến hiện tại là /api/v1/admin/courses. Đây không phải giá trị động. Đang hiển thị nhưng không chính xác; không dùng làm bằng chứng về điểm cuối/cấu hình; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #31; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-032",
+        "requirement_ids": [
+          "AD-06-YC-004",
+          "AD-06-YC-005",
+          "AD-06-YC-006"
+        ],
+        "target_id": "AD-06-EL-032",
+        "group": "Thành phần",
+        "title": "Kiểm tra #32: Displayed result count",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #32: hiển thịed kết quả số lượng; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #32 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: bị vô hiệu hóa; không có listener. #73 nhận page dạng int32 tùy chọn, mặc định 1; size cố định 20; client chưa nối điều hướng trang. Bị vô hiệu hóa; EV-05.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Số kết quả hiển thị: hai giá trị 0 được gán cố định. Có thể ánh xạ theo ứng viên từ items.length và pagination.total; nội dung và khoảng trang chưa được xác nhận. Đang hiển thị; không phản ánh yêu cầu hiện tại; EV-07. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #32; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-033",
+        "requirement_ids": [
+          "AD-06-YC-004",
+          "AD-06-YC-005",
+          "AD-06-YC-006"
+        ],
+        "target_id": "AD-06-EL-033",
+        "group": "Thành phần",
+        "title": "Kiểm tra #33: Nút về trang trước bị vô hiệu hóa",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #33: nút về trang trước đang vô hiệu hóa; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #33 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: bị vô hiệu hóa; không có listener. #73 nhận page dạng int32 tùy chọn, mặc định 1; size cố định 20; client chưa nối điều hướng trang. Bị vô hiệu hóa; EV-05.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nút về trang trước bị vô hiệu hóa, không có bộ lắng nghe sự kiện. #73 quy định `page` là int32 tùy chọn, mặc định 1; `size` cố định 20. Chuyển trang phía máy khách chưa được nối. Điều khiển bị khóa; EV-05. Xác minh riêng giao diện Angular/mã nguồn và bản mẫu. Nội dung tĩnh không chứng minh có dữ liệu/hành vi khi chạy. Chờ xác nhận DD trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #33; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-034",
+        "requirement_ids": [
+          "AD-06-YC-004",
+          "AD-06-YC-005",
+          "AD-06-YC-006"
+        ],
+        "target_id": "AD-06-EL-034",
+        "group": "Thành phần",
+        "title": "Kiểm tra #34: Page indicator",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Điểm đánh dấu/thành phần #34: chỉ báo trang; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #34 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: nội dung tĩnh; phản hồi có `pagination.page`, `size`, `total`, `total_pages`. Trang rỗng hiển thị số 0 không phải metadata máy chủ (máy chủ trả page 1 mặc định, total_pages 0). Đang hiển thị nhưng chưa thống nhất; EV-05/EV-07.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Chỉ báo trang trong bản mẫu là tĩnh; phản hồi có `pagination.page`, `size`, `total`, `total_pages`. Số 0 hiển thị khi danh sách rỗng không phải metadata từ máy chủ (máy chủ mặc định `page=1` và trả `total_pages=0`). Đang hiển thị nhưng chưa khớp; EV-05/EV-07. Đối chiếu riêng Angular và bản mẫu; chữ tĩnh không chứng minh hành vi khi chạy. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #34; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-035",
+        "requirement_ids": [
+          "AD-06-YC-004",
+          "AD-06-YC-005",
+          "AD-06-YC-006"
+        ],
+        "target_id": "AD-06-EL-035",
+        "group": "Thành phần",
+        "title": "Kiểm tra #35: Nút sang trang sau bị vô hiệu hóa",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần #35: nút sang trang tiếp theo đang vô hiệu hóa; không có PII thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #35 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: bị vô hiệu hóa; không có listener. Điều hướng trang kế tiếp trong tương lai có thể dùng metadata phân trang, nhưng chưa triển khai tính toán/trạng thái trang. Bị vô hiệu hóa; EV-05.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nút sang trang sau bị vô hiệu hóa, chưa có bộ lắng nghe sự kiện. Về sau có thể giới hạn theo siêu dữ liệu phân trang, nhưng chưa triển khai tính trang hay trạng thái. EV-05. Đối chiếu riêng Angular/mã nguồn với bản mẫu; nội dung tĩnh không chứng minh môi trường chạy. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #35; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-036",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-036",
+        "group": "Thành phần",
+        "title": "Kiểm tra #36: Governance banner shield icon",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #36: biểu ngữ quản trị shield biểu tượng; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #36 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: biểu tượng trang trí; không có nguồn kiểm duyệt/quyền. Đang hiển thị; không có sự kiện; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Governance banner shield icon: Decorative icon; không có moderation/permission source. Visible; không có event; EV-08. Xác minh riêng giao diện Angular hiện tại và trạng thái mã nguồn, tách biệt với bản mẫu đã đánh số. Static/chỉ có trong bản mẫu Nội dung tĩnh không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #36; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-037",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-037",
+        "group": "Thành phần",
+        "title": "Kiểm tra #37: Governance banner heading",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #37: biểu ngữ quản trị tiêu đề; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #37 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: nội dung biên tập tĩnh; không có bằng chứng về tài liệu chính sách/liên kết API. Đang hiển thị; owner cần duyệt đích/nội dung chính sách; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Tiêu đề biểu ngữ quản trị: nội dung biên tập tĩnh; không có tài liệu chính sách hoặc bằng chứng liên kết API. Đang hiển thị; chủ sở hữu cần phê duyệt đích đến/nội dung chính sách; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #37; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-038",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-038",
+        "group": "Thành phần",
+        "title": "Kiểm tra #38: Governance và moderation rule copy",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Điểm đánh dấu/thành phần #38: quy tắc quản trị và kiểm duyệt nội dung; không có dữ liệu cá nhân thật.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #38 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: không có quy tắc này trong #73. AC-32 chỉ nêu thao tác “theo chính sách”; AC-33 là luồng kiểm duyệt nội dung riêng. Đang hiển thị nhưng chưa xác minh; không xem là luồng đã được thực thi; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Nội dung về quy tắc quản trị/kiểm duyệt không có trong #73. AC-32 chỉ nói thao tác “theo chính sách”; AC-33 là quy trình duyệt nội dung riêng. Đang hiển thị nhưng chưa xác minh; không coi là quy trình được thực thi; EV-08. Đối chiếu riêng Angular với prototype đã đánh số. Nội dung tĩnh không chứng minh dữ liệu hay runtime. Chờ DD trước nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #38; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-039",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-039",
+        "group": "Thành phần",
+        "title": "Kiểm tra #39: Assessment tiêu chuẩn call-to-action",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #39: Assessment standards call-to-thao tác; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #39 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: anchor `href=\"#\"`; chưa xác minh đích. Trông như đang bật nhưng không có tuyến; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Assessment tiêu chuẩn call-to-action: Anchor `href=\"#\"`; không có verified destination. Enabled-looking, không có tuyến; EV-08. Xác minh riêng giao diện Angular hiện tại và trạng thái mã nguồn, tách biệt với bản mẫu đã đánh số. Static/chỉ có trong bản mẫu Nội dung tĩnh không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #39; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-040",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-040",
+        "group": "Thành phần",
+        "title": "Kiểm tra #40: Copyright notice",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #40: thông báo bản quyền; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #40 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: dòng “© 2025 Study2Work LMS” tĩnh. Đang hiển thị; không có sự kiện/nguồn data.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Copyright notice: Static “© 2025 Study2Work LMS.” Visible; không có event/nguồn dữ liệu. Xác minh riêng giao diện Angular hiện tại và trạng thái mã nguồn, tách biệt với bản mẫu đã đánh số. Static/chỉ có trong bản mẫu Nội dung tĩnh không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #40; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-041",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-041",
+        "group": "Thành phần",
+        "title": "Kiểm tra #41: quản trị viên system chân trang caption",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #41: chân trang hệ thống quản trị caption; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #41 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: anchor giữ chỗ `href=\"#\"`; mã nguồn Study Web không có đích. Đang hiển thị; chưa nối điều hướng; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Dòng chân trang về hệ thống Admin: văn bản tĩnh “Hệ thống quản trị trung tâm.” Đang hiển thị; không có sự kiện/nguồn dữ liệu. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #41; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-042",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-042",
+        "group": "Thành phần",
+        "title": "Kiểm tra #42: Data privacy chân trang liên kết",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #42: dữ liệu quyền riêng tư chân trang link; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #42 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: anchor giữ chỗ `href=\"#\"`; mã nguồn Study Web không có đích. Đang hiển thị; chưa nối điều hướng; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Liên kết quyền riêng tư dữ liệu ở chân trang: liên kết thay thế có href=\"#\"; chưa có đích đến trong mã nguồn Study Web. Đang hiển thị nhưng chưa được kết nối điều hướng; EV-08. Đối chiếu riêng giao diện Angular và trạng thái mã nguồn hiện tại với bản mẫu đã đánh số. Nội dung tĩnh trong bản mẫu không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước khi nghiệm thu.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #42; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-043",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-043",
+        "group": "Thành phần",
+        "title": "Kiểm tra #43: RBAC tiêu chuẩn chân trang liên kết",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #43: RBAC standards chân trang link; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #43 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: anchor giữ chỗ; không chứng minh chính sách RBAC. Đang hiển thị; chưa nối điều hướng; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "RBAC tiêu chuẩn footer link: Anchor placeholder; không xác minh RBAC policy. Visible; navigation chưa được kết nối; EV-08. Xác minh riêng giao diện Angular hiện tại và trạng thái mã nguồn, tách biệt với bản mẫu đã đánh số. Static/chỉ có trong bản mẫu Nội dung tĩnh không chứng minh có dữ liệu hoặc hành vi khi chạy. Chờ xác nhận DD trước acceptance.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #43; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-044",
+        "requirement_ids": [
+          "AD-06-YC-013"
+        ],
+        "target_id": "AD-06-EL-044",
+        "group": "Thành phần",
+        "title": "Kiểm tra #44: Technical support chân trang liên kết",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/component #44: Technical support chân trang link; no real PII.",
+        "steps": [
+          "Tìm điểm đánh dấu/thành phần #44 được mô tả trong tài liệu.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: anchor giữ chỗ; không có nguồn trang/dịch vụ hỗ trợ. Đang hiển thị; chưa nối điều hướng; EV-08.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Vỏ hộp thoại tạo khóa học và các thao tác: `<dialog>` gốc có aria-modal, labelledby/describedby và tiêu điểm tiêu đề. Nút Thêm mở hộp thoại; Hủy/Đóng trả tiêu điểm về nút Thêm; không cho đóng khi request đang chờ; nút phản ánh trạng thái đang chờ/lỗi/thành công. Kiểm tra cách Angular hiện tại hiển thị và trạng thái mã nguồn riêng với bản mẫu được đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §2–§3 #44; images/screen-numbered.png",
+          "images/screen-numbered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-045",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016",
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06-EL-045",
+        "group": "Thành phần",
+        "title": "Kiểm thử chưa chạy — phần mở rộng theo mã nguồn hiện tại: khung hộp thoại tạo khóa học và thao tác",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần không áp dụng — phần mở rộng theo mã nguồn hiện tại: khung và thao tác hộp thoại tạo Course; không có PII thật.",
+        "steps": [
+          "Tìm thành phần/marker tương ứng; N/A — phần mở rộng từ mã nguồn hiện tại.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: `<dialog>` gốc có aria-modal, labelledby/describedby và tiêu điểm tiêu đề. Nút Thêm mở hộp thoại; Hủy/Đóng trả tiêu điểm về nút Thêm; không cho đóng khi request đang chờ; nút phản ánh trạng thái đang chờ/lỗi/thành công.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Vỏ hộp thoại tạo khóa học và các thao tác: `<dialog>` gốc có aria-modal, labelledby/describedby và tiêu điểm tiêu đề. Nút Thêm mở hộp thoại; Hủy/Đóng trả tiêu điểm về nút Thêm; không cho đóng khi request đang chờ; nút phản ánh trạng thái đang chờ/lỗi/thành công. Kiểm tra cách Angular hiện tại hiển thị và trạng thái mã nguồn riêng với bản mẫu được đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source",
+          "00-overview.md §Current-source addendum"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-046",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016",
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06-EL-046",
+        "group": "Thành phần",
+        "title": "Kiểm tra N/A — current-source extension: Course title field",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần không áp dụng — phần mở rộng theo mã nguồn hiện tại: ô nhập tiêu đề Course; không có PII thật.",
+        "steps": [
+          "Tìm thành phần/marker tương ứng; N/A — phần mở rộng từ mã nguồn hiện tại.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: bắt buộc; maxlength 200; client loại khoảng trắng đầu/cuối; server nhận 1–200 ký tự.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Trường tên khóa học: bắt buộc; maxlength 200; client loại khoảng trắng đầu/cuối; server nhận 1–200 ký tự. Kiểm tra cách Angular hiện tại hiển thị và trạng thái mã nguồn riêng với bản mẫu được đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source",
+          "00-overview.md §Current-source addendum"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-047",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016",
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06-EL-047",
+        "group": "Thành phần",
+        "title": "Kiểm tra N/A — current-source extension: Course description field",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần không áp dụng — phần mở rộng theo mã nguồn hiện tại: ô nhập mô tả Course; không có PII thật.",
+        "steps": [
+          "Tìm thành phần/marker tương ứng; N/A — phần mở rộng từ mã nguồn hiện tại.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: chuỗi tùy chọn; đã trim và giá trị rỗng được chuyển thành null.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Trường mô tả khóa học: chuỗi tùy chọn; giá trị đã trim và rỗng được chuyển thành null. Kiểm tra cách Angular hiện tại hiển thị và trạng thái mã nguồn riêng với bản mẫu được đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source",
+          "00-overview.md §Current-source addendum"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-048",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016",
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06-EL-048",
+        "group": "Thành phần",
+        "title": "Kiểm tra N/A — current-source extension: Thumbnail URL field",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần không áp dụng — phần mở rộng theo mã nguồn hiện tại: ô nhập URL ảnh thu nhỏ; không có PII thật.",
+        "steps": [
+          "Tìm thành phần/marker tương ứng; N/A — phần mở rộng từ mã nguồn hiện tại.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: trường URL tùy chọn; giá trị rỗng thành null; luồng này không bao gồm tải tệp/đính kèm tệp.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Trường URL ảnh đại diện khóa học: URL tùy chọn; giá trị rỗng thành null; luồng này không bao gồm tải tệp/đính kèm tệp. Kiểm tra cách Angular hiện tại hiển thị và trạng thái mã nguồn riêng với bản mẫu được đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source",
+          "00-overview.md §Current-source addendum"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-049",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016",
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06-EL-049",
+        "group": "Thành phần",
+        "title": "Kiểm tra N/A — current-source extension: Course price field",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Marker/thành phần không áp dụng — phần mở rộng theo mã nguồn hiện tại: ô nhập giá Course; không có PII thật.",
+        "steps": [
+          "Tìm thành phần/marker tương ứng; N/A — phần mở rộng từ mã nguồn hiện tại.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: bắt buộc; chuỗi thập phân; mẫu biểu mẫu cho phép tối đa 10 chữ số nguyên và 2 chữ số thập phân; server dùng NUMERIC(12,2); mã nguồn không chặn giá âm.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Trường giá khóa học: bắt buộc; chuỗi thập phân; mẫu biểu mẫu cho phép tối đa 10 chữ số nguyên và 2 chữ số thập phân; server dùng NUMERIC(12,2); mã nguồn không chặn giá âm. Kiểm tra cách Angular hiện tại hiển thị và trạng thái mã nguồn riêng với bản mẫu được đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source",
+          "00-overview.md §Current-source addendum"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-TP-050",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016",
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06-EL-050",
+        "group": "Thành phần",
+        "title": "Kiểm thử chưa chạy — phần mở rộng theo mã nguồn hiện tại: danh sách Mentor đang hoạt động và điều khiển trang",
+        "precondition": "Có dòng DD và bản mẫu/mã nguồn tương ứng; chỉ dùng dữ liệu giả lập.",
+        "data": "Thành phần N/A — phần mở rộng từ mã nguồn hiện tại: bộ chọn mentor đang hoạt động và điều khiển phân trang; không dùng PII thật.",
+        "steps": [
+          "Tìm thành phần/marker tương ứng; N/A — phần mở rộng từ mã nguồn hiện tại.",
+          "Đối chiếu nhãn, nguồn trường, trạng thái và sự kiện liên quan với DD: API #68 với role=MENTOR,status=ACTIVE,page; kiểm tra envelope/Page, lọc Mentor đang hoạt động và ID dương an toàn, loại trùng ở trang sau; trạng thái đang tải/lỗi/rỗng không cho gửi biểu mẫu.",
+          "Với phần mở rộng từ mã nguồn hiện tại, kiểm tra trạng thái của thành phần; không xem ảnh thiết kế là bằng chứng runtime."
+        ],
+        "expected": "Bộ chọn Mentor đang hoạt động và điều khiển trang: gọi API #68 với role=MENTOR,status=ACTIVE,page; kiểm tra envelope/Page, lọc Mentor đang hoạt động và ID dương an toàn, loại trùng ở các trang sau; trạng thái đang tải/lỗi/rỗng không cho gửi biểu mẫu. Kiểm tra riêng hành vi Angular hiện tại với bản mẫu đã đánh số.",
+        "api_ids": [],
+        "source_refs": [
+          "01-ui-elements.md §5; 02-events.md §EV-10; AD06 page current source",
+          "00-overview.md §Current-source addendum"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "AD-06-TC-SK-001",
+        "requirement_ids": [
+          "AD-06-YC-001",
+          "AD-06-YC-002",
+          "AD-06-YC-004"
+        ],
+        "target_id": "AD-06-EV-001",
+        "group": "Sự kiện",
+        "title": "Yêu cầu #73 ban đầu",
+        "precondition": "Dữ liệu phiên Admin giả lập; trạng thái trang ban đầu là trang 1.",
+        "data": "Chỉ dùng dữ liệu giả lập; dữ liệu phiên Admin giả lập; trạng thái trang ban đầu là trang 1.",
+        "steps": "Mở /admin/courses; kiểm tra trạng thái đang tải và header/query của GET được gửi đi.",
+        "expected": "Tuyến hiện tại gọi #73 qua client Bearer của Admin với page=1; không gửi q/category/size/sort chưa được hỗ trợ.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01; 03-data-flow.md §2–§4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-002",
+        "requirement_ids": [
+          "AD-06-YC-002",
+          "AD-06-YC-003",
+          "AD-06-YC-004",
+          "AD-06-YC-007"
+        ],
+        "target_id": "AD-06-EV-001",
+        "group": "Sự kiện",
+        "title": "Envelope thành công đã được xác thực và Course Page",
+        "precondition": "Course Page hợp lệ được giả lập, có một hàng Course.",
+        "data": "Chỉ dùng dữ liệu giả lập; Course Page hợp lệ được giả lập, có một hàng Course.",
+        "steps": "Trả về 200 DESIGN_RESOURCE_RETRIEVED; kiểm tra kết quả mapper, phân trang và cấu trúc các hàng.",
+        "expected": "Chỉ hiển thị khi mã thành công khớp chính xác và Page/hàng dữ liệu hợp lệ; giữ nguyên chuỗi giá và các trường được cho phép. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01; 03-data-flow.md §2–§4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-003",
+        "requirement_ids": [
+          "AD-06-YC-002",
+          "AD-06-YC-005",
+          "AD-06-YC-006",
+          "AD-06-YC-007"
+        ],
+        "target_id": "AD-06-EV-001",
+        "group": "Sự kiện",
+        "title": "Phản hồi trang không hợp lệ chuyển sang trạng thái lỗi",
+        "precondition": "Dữ liệu giả lập có mã businessCode/page phản hồi/size/total_pages/Course không đúng.",
+        "data": "Chỉ dùng dữ liệu giả lập; dữ liệu giả lập có mã businessCode/page phản hồi/size/total_pages/Course không đúng.",
+        "steps": "Lần lượt trả về từng dạng phản hồi không hợp lệ.",
+        "expected": "Không hiển thị phản hồi hợp lệ như trạng thái rỗng/thành công; dòng dữ liệu sai hoặc phân trang sai không được kết xuất. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01; 03-data-flow.md §2–§4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-004",
+        "requirement_ids": [
+          "AD-06-YC-005",
+          "AD-06-YC-006",
+          "AD-06-YC-007"
+        ],
+        "target_id": "AD-06-EV-001",
+        "group": "Sự kiện",
+        "title": "Danh sách rỗng, vượt phạm vi và số lượng/hàng không khớp",
+        "precondition": "Dữ liệu giả lập cho danh sách rỗng, trang vượt phạm vi và count/page không khớp.",
+        "data": "Chỉ dùng dữ liệu giả lập; dữ liệu giả lập cho danh sách rỗng, trang vượt phạm vi và count/page không khớp.",
+        "steps": "Hiển thị trạng thái rỗng với total=0; trang ngoài phạm vi; trang lệch số dòng, cả khi có và không có dòng.",
+        "expected": "Tách trạng thái rỗng và ngoài phạm vi; khi lệch số lượng, giữ các dòng phản hồi, ẩn total/page cũ và cho thử lại cùng trang; ngoài phạm vi có cách khôi phục về trang 1.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01; 03-data-flow.md §2–§4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-005",
+        "requirement_ids": [
+          "AD-06-YC-007",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EV-001",
+        "group": "Sự kiện",
+        "title": "Lỗi xác thực, kiểm tra dữ liệu, dịch vụ và mạng",
+        "precondition": "Synthetic 401/403/422/500/network/invalid envelope.",
+        "data": "Synthetic fixtures chỉ; Synthetic 401/403/422/500/network/invalid envelope.",
+        "steps": "Lần lượt trả về từng lỗi rồi kiểm tra cảnh báo và khả năng hiển thị trạng thái rỗng.",
+        "expected": "Không biến lỗi thành trạng thái rỗng; hợp đồng #73 liệt kê 401/403/422/500 nhưng không có 404. Ánh xạ 404 chung hiện có là điểm không khớp cần xác nhận. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-01; 03-data-flow.md §2–§4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-006",
+        "requirement_ids": [
+          "AD-06-YC-008"
+        ],
+        "target_id": "AD-06-EV-002",
+        "group": "Sự kiện",
+        "title": "Điều khiển tìm kiếm không gửi q",
+        "precondition": "Trang Angular hiện tại.",
+        "data": "Chỉ dùng dữ liệu giả lập; trang Angular hiện tại.",
+        "steps": "Kiểm tra trạng thái vô hiệu hóa của tìm kiếm và tham số yêu cầu; không nhập vào điều khiển đang vô hiệu hóa.",
+        "expected": "Không có search query hoặc client filtering is performed; #73 không có q parameter. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-02; 01-ui-elements.md §3 #19",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-007",
+        "requirement_ids": [
+          "AD-06-YC-009"
+        ],
+        "target_id": "AD-06-EV-003",
+        "group": "Sự kiện",
+        "title": "Các điều khiển lọc danh sách vẫn bị khóa",
+        "precondition": "Trang Angular hiện tại; category giả lập trả 422.",
+        "data": "Chỉ dùng dữ liệu giả lập; trang Angular hiện tại; category giả lập bị từ chối với 422.",
+        "steps": "Kiểm tra bộ điều khiển trạng thái/mentor/danh mục; xác nhận request #73 ban đầu không gửi bộ lọc.",
+        "expected": "Các điều khiển vẫn bị vô hiệu hóa; không gửi giá trị đánh dấu tất cả; không bật request danh mục vì #73 trả 422.",
+        "api_ids": [
+          "AD-06-API-001",
+          "AD-06-API-002"
+        ],
+        "source_refs": [
+          "02-events.md §EV-03; 01-ui-elements.md §3 #20–#22; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-008",
+        "requirement_ids": [
+          "AD-06-YC-010"
+        ],
+        "target_id": "AD-06-EV-004",
+        "group": "Sự kiện",
+        "title": "Khác biệt giữa hành vi Reset trong mã nguồn và bản mẫu",
+        "precondition": "Trang Angular hiện tại cùng mã nguồn bản mẫu tĩnh.",
+        "data": "Chỉ dùng dữ liệu giả lập; trang Angular hiện tại cùng mã nguồn bản mẫu tĩnh.",
+        "steps": "Kiểm tra Reset đang vô hiệu hóa trong Angular; đọc listener Reset của bản mẫu mà không chạy.",
+        "expected": "Đặt lại trong ứng dụng hiện bị vô hiệu hóa; bản mẫu chỉ đổi giá trị cục bộ, không tải lại dữ liệu. Không mô tả đây là hành vi hiện tại khi chạy. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-04; 01-ui-elements.md §3 #24",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-009",
+        "requirement_ids": [
+          "AD-06-YC-004",
+          "AD-06-YC-005",
+          "AD-06-YC-006"
+        ],
+        "target_id": "AD-06-EV-005",
+        "group": "Sự kiện",
+        "title": "Chuyển trang theo giới hạn được trả về",
+        "precondition": "Metadata trang 1/2 và trang cuối hợp lệ.",
+        "data": "Chỉ dùng dữ liệu giả lập; metadata trang 1/2 và trang cuối hợp lệ.",
+        "steps": "Nhấn trang tiếp/trước tại trang hợp lệ và trang biên; kiểm tra các yêu cầu.",
+        "expected": "Page changes chỉ within returned bounds, sends page chỉ, fixed size 20 và blocks navigation during mismatch/ngoài phạm vi. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-05; 03-data-flow.md §Current-source addendum",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-010",
+        "requirement_ids": [
+          "AD-06-YC-012"
+        ],
+        "target_id": "AD-06-EV-006",
+        "group": "Sự kiện",
+        "title": "Thao tác trên hàng dùng Course.id dương an toàn với JavaScript",
+        "precondition": "ID hàng giả lập 42.",
+        "data": "Chỉ dùng dữ liệu giả lập: hàng giả lập có ID 42.",
+        "steps": "Kết xuất hàng và kiểm tra tuyến liên kết đến AD-07.",
+        "expected": "Link route contains Course.id 42 và không dùng course-code data. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-06; 06-navigation.md §Navigation/data handoff",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-011",
+        "requirement_ids": [
+          "AD-06-YC-012"
+        ],
+        "target_id": "AD-06-EV-006",
+        "group": "Sự kiện",
+        "title": "ID int64 không an toàn không được làm mất chính xác trên tuyến",
+        "precondition": "Giá trị phản hồi giả lập là số nguyên không an toàn với JS.",
+        "data": "Chỉ dùng dữ liệu giả lập; giá trị phản hồi là số nguyên không an toàn với JS.",
+        "steps": "Hiển thị hàng rồi kiểm tra ID được trình bày và thao tác hiện có.",
+        "expected": "Giá trị được đánh dấu là không thể hiển thị chính xác và không có liên kết tuyến; không làm tròn hay dùng ID khác. Chờ DD xác nhận trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-06; 06-navigation.md §Navigation/data handoff",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-012",
+        "requirement_ids": [
+          "AD-06-YC-003",
+          "AD-06-YC-005",
+          "AD-06-YC-011"
+        ],
+        "target_id": "AD-06-EV-007",
+        "group": "Sự kiện",
+        "title": "Các trường Course và trạng thái rỗng có căn cứ từ mã nguồn",
+        "precondition": "Một hàng Course hợp lệ được giả lập; trường hợp rỗng bình thường và trường hợp lọc/trang vượt phạm vi.",
+        "data": "Chỉ dùng dữ liệu giả lập; một hàng Course hợp lệ được giả lập; trường hợp rỗng bình thường và trường hợp lọc/trang vượt phạm vi.",
+        "steps": "Đối chiếu tất cả trường/dòng tóm tắt và nội dung trạng thái rỗng với phản hồi đã xác thực.",
+        "expected": "Chỉ kết xuất Course projection và phân trang; không hiển thị mã khóa học/số bài học chưa được API hỗ trợ, không giả trạng thái đồng bộ và không suy ra KPI từ trang hiện tại. Chờ DD trước nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-07; 03-data-flow.md §Candidate screen states/current-source addendum",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-013",
+        "requirement_ids": [
+          "AD-06-YC-013",
+          "AD-06-YC-014"
+        ],
+        "target_id": "AD-06-EV-008",
+        "group": "Sự kiện",
+        "title": "Điều khiển tĩnh và tuyên bố nguồn không hoạt động",
+        "precondition": "Không cấu hình endpoint hoặc đích đến không liên quan.",
+        "data": "Chỉ dùng dữ liệu giả lập; không cấu hình endpoint hoặc đích đến không liên quan.",
+        "steps": "Inspect xuất, đồng bộ/manual, governance, notification, đầu trang/footer và path huy hiệu.",
+        "expected": "Không có calls to #103/#78 hoặc fictitious route; static RBAC/health/policy/path text không phải là permission/source-of-truth result. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-08; 01-ui-elements.md §3 #1–#13/#29–#44",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-014",
+        "requirement_ids": [
+          "AD-06-YC-001",
+          "AD-06-YC-004",
+          "AD-06-YC-007",
+          "AD-06-YC-009"
+        ],
+        "target_id": "AD-06-EV-009",
+        "group": "Sự kiện",
+        "title": "Bảng API không mở rộng hợp đồng #73",
+        "precondition": "Rà soát tùy chọn yêu cầu đã tuần tự hóa và mô tả endpoint.",
+        "data": "Chỉ dùng dữ liệu giả lập; rà soát tùy chọn yêu cầu đã tuần tự hóa và mô tả endpoint.",
+        "steps": "Đối chiếu riêng yêu cầu danh sách #73, truy vấn Mentor #68 và body tạo mới #104.",
+        "expected": "Không bổ sung thành công cho tìm kiếm/size/sort/category; #68/#104 chỉ thuộc phần mở rộng hộp thoại tạo mới đã được duyệt. Chờ DD xác nhận trước khi nghiệm thu.",
+        "api_ids": [
+          "AD-06-API-001",
+          "AD-06-API-002",
+          "AD-06-API-003"
+        ],
+        "source_refs": [
+          "02-events.md §API request/response matrix; 04-api-integration.md §2",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-015",
+        "requirement_ids": [
+          "AD-06-YC-015",
+          "AD-06-YC-016"
+        ],
+        "target_id": "AD-06-EV-010",
+        "group": "Sự kiện",
+        "title": "Mở hộp thoại hỗ trợ truy cập và tải Mentor đang hoạt động",
+        "precondition": "Trang đầu #68 được giả lập với Mentor đang hoạt động.",
+        "data": "Chỉ dùng dữ liệu giả lập; trang đầu #68 được giả lập với Mentor đang hoạt động.",
+        "steps": "Bấm Thêm; kiểm tra ngữ nghĩa hộp thoại, tiêu điểm, request role/status/page và trạng thái đang tải.",
+        "expected": "Hộp thoại mở và đặt tiêu điểm ở tiêu đề; request #68 có role=MENTOR,status=ACTIVE,page=1; chỉ cho gửi khi các lựa chọn hợp lệ.",
+        "api_ids": [
+          "AD-06-API-002"
+        ],
+        "source_refs": [
+          "02-events.md §EV-10; 01-ui-elements.md §5; 05-business-rules.md §4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-016",
+        "requirement_ids": [
+          "AD-06-YC-016"
+        ],
+        "target_id": "AD-06-EV-010",
+        "group": "Sự kiện",
+        "title": "Phân trang Mentor và tùy chọn không khả dụng",
+        "precondition": "Trang #68 giả lập có thêm kết quả; sau đó dùng trang rỗng/lỗi.",
+        "data": "Chỉ dùng fixture giả lập; trang #68 giả lập có thêm kết quả, sau đó trả về trang rỗng/lỗi.",
+        "steps": "Tải trang 1 rồi chọn Tải thêm; kiểm thử riêng phản hồi rỗng và lỗi.",
+        "expected": "Chỉ cho chọn Mentor đang hoạt động chính xác, có ID dương an toàn; loại dòng trùng giữa các trang; trạng thái đang tải/lỗi/rỗng giữ nút gửi ở trạng thái vô hiệu hóa.",
+        "api_ids": [
+          "AD-06-API-002"
+        ],
+        "source_refs": [
+          "02-events.md §EV-10; 01-ui-elements.md §5; 05-business-rules.md §4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-017",
+        "requirement_ids": [
+          "AD-06-YC-017"
+        ],
+        "target_id": "AD-06-EV-010",
+        "group": "Sự kiện",
+        "title": "Dữ liệu tạo tuân thủ hợp đồng đã phê duyệt",
+        "precondition": "Mentor hợp lệ được giả lập; không dùng dữ liệu thật.",
+        "data": "Chỉ dùng dữ liệu giả lập; Mentor hợp lệ được giả lập; không dùng dữ liệu thật.",
+        "steps": "Check missing values, tiêu đề length/trim, decimal price và optional description/thumbnail URL.",
+        "expected": "Tiêu đề dài 1–200 ký tự sau khi bỏ khoảng trắng đầu/cuối; giá là chuỗi thập phân NUMERIC(12,2); bắt buộc có Mentor; mô tả/URL ảnh thu nhỏ là tùy chọn; không giả định có giới hạn giá không âm.",
+        "api_ids": [
+          "AD-06-API-003"
+        ],
+        "source_refs": [
+          "02-events.md §EV-10; 01-ui-elements.md §5; 05-business-rules.md §4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-018",
+        "requirement_ids": [
+          "AD-06-YC-018",
+          "AD-06-YC-020"
+        ],
+        "target_id": "AD-06-EV-010",
+        "group": "Sự kiện",
+        "title": "Tạo thành công xác thực projection DRAFT và ID tuyến",
+        "precondition": "Phản hồi HTTP 201 giả lập với Course ở trạng thái DRAFT.",
+        "data": "Chỉ dùng dữ liệu giả lập; phản hồi HTTP 201 giả lập có Course ở trạng thái DRAFT.",
+        "steps": "Gửi biểu mẫu; trả projection hợp lệ khớp dữ liệu; đối chiếu điều hướng với ID dương an toàn và ID không an toàn.",
+        "expected": "Chỉ DESIGN_RESOURCE_CREATED cùng Course/DRAFT hợp lệ và khớp mới là thành công; ID dương an toàn điều hướng kèm thông báo tạo thành công, nếu không thì tải lại #73 mà không ép kiểu.",
+        "api_ids": [
+          "AD-06-API-002",
+          "AD-06-API-003",
+          "AD-06-API-001"
+        ],
+        "source_refs": [
+          "02-events.md §EV-10; 01-ui-elements.md §5; 05-business-rules.md §4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "AD-06-TC-SK-019",
+        "requirement_ids": [
+          "AD-06-YC-019",
+          "AD-06-YC-020"
+        ],
+        "target_id": "AD-06-EV-010",
+        "group": "Sự kiện",
+        "title": "Lỗi tạo mới giữ bản nháp và ngăn gửi trùng",
+        "precondition": "Đã giả lập độ trễ, 401/403/422/500 hoặc projection thành công không hợp lệ.",
+        "data": "Chỉ dùng dữ liệu giả lập; đã giả lập độ trễ, 401/403/422/500 hoặc projection thành công không hợp lệ.",
+        "steps": "Khi đang chờ, thử gửi/đóng lại; sau đó trả lỗi/envelope không hợp lệ và kiểm tra hộp thoại.",
+        "expected": "Trạng thái đang chờ chặn gửi lặp/đóng; khi lỗi, xóa trạng thái chờ, giữ hộp thoại và dữ liệu đã nhập, hiện lỗi an toàn và không điều hướng; không khẳng định có tự động thử lại/tính lũy đẳng.",
+        "api_ids": [
+          "AD-06-API-003"
+        ],
+        "source_refs": [
+          "02-events.md §EV-10; 01-ui-elements.md §5; 05-business-rules.md §4",
+          "04-api-integration.md §2"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ]
+  }
+}

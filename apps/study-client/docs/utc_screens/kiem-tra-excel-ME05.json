@@ -1,0 +1,46 @@
+{
+  "screen_id": "ME-05",
+  "validator": "kiem_tra_excel.py + kiểm tra tĩnh OOXML/JSON",
+  "checks": {
+    "source_refs": 25,
+    "source_hashes": 25,
+    "source_hash_errors": [],
+    "zip_crc": "PASS",
+    "sheet_names": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "case_sheets": {
+      "screen": {
+        "count": 37,
+        "unique": 37,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      },
+      "elements": {
+        "count": 33,
+        "unique": 33,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      },
+      "events": {
+        "count": 20,
+        "unique": 20,
+        "id_parity": true,
+        "all_chua_chay": true,
+        "evidence_blank": true
+      }
+    },
+    "formula_count": 128,
+    "data_validation_ranges": 9,
+    "xml_parts_parsed": 11
+  },
+  "errors": [],
+  "valid": true,
+  "execution_status": "Tất cả 90 ca giữ Chưa chạy; ô kết quả/bằng chứng/người kiểm thử/ngày chạy để trống.",
+  "approval_note": "Validator UTC báo cấu trúc hợp lệ nhưng chưa đủ điều kiện phê duyệt do các mục còn chờ xác nhận DD; giữ nguyên cảnh báo theo tài liệu chuẩn."
+}

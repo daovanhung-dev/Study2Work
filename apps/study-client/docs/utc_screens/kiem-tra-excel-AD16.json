@@ -1,0 +1,26 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-16_TaoChinhSuaBaiKiemTra.xlsx",
+  "hop_le": true,
+  "so_sheet": 4,
+  "so_cong_thuc": 159,
+  "kiem_tra_chuan_excel": {
+    "hop_le": true,
+    "so_cong_thuc": 159,
+    "loi": []
+  },
+  "so_ca_theo_dac_ta": 87,
+  "so_ca_trong_workbook": 87,
+  "so_ca_chua_chay": 87,
+  "o_ket_qua_bang_chung_trong": true,
+  "so_lien_ket_truy_vet_thuc_te": 127,
+  "so_lien_ket_truy_vet_theo_dac_ta": 127,
+  "so_marker": 35,
+  "so_thanh_phan_chi_co_trong_ma_nguon": 20,
+  "tep_zip_hop_le": true,
+  "loi": [],
+  "kiem_tra_ngon_ngu": {
+    "van_xuoi": "Tiếng Việt; đã rà soát nội dung hướng dẫn, điều kiện, thao tác và kết quả mong đợi.",
+    "dinh_danh_ky_thuat": "Giữ nguyên tên API, đường dẫn, trường/enum/mã trạng thái và nhãn giao diện khi cần; các thuật ngữ xuất hiện trong văn xuôi có diễn giải tiếng Việt gần kề."
+  },
+  "ghi_chu": "Báo cáo kiểm tra cấu trúc workbook, trạng thái ca, ô bằng chứng, công thức, liên kết truy vết, tệp ZIP và ngôn ngữ."
+}

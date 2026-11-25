@@ -1,0 +1,169 @@
+{
+  "screen_id": "AD-06",
+  "screen_name": "Danh sách khóa học quản trị",
+  "status": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
+  "officially_approved": false,
+  "executable_for_acceptance": false,
+  "canonical_dd": {
+    "version": "0.3 / 2026-11-20; current-source/create follow-ups through 2026-11-22",
+    "status": "DD BLOCKED — search/filter/status/category/KPI/course fields/permission/runtime decisions remain open; API #104 create is an approved extension",
+    "source_name": "AD-06 DD sections 00–07; 44 marker image/map and screen-stitch prototype; current AD06 Angular route/page/API caller and existing test source"
+  },
+  "coverage": {
+    "requirements": 20,
+    "requirements_traced": 20,
+    "elements": 50,
+    "marker_elements": 44,
+    "current_source_extension_elements": 6,
+    "events": 10,
+    "apis": 3,
+    "cases": 89,
+    "case_groups": {
+      "screen": 20,
+      "elements": 50,
+      "events": 19
+    }
+  },
+  "validation": {
+    "hop_le_ve_cau_truc": true,
+    "du_dieu_kien_phe_duyet": false,
+    "thong_tin": [
+      "20 yêu cầu, 50 thành phần, 10 sự kiện, 3 API",
+      "20 ca toàn màn hình, 50 ca thành phần, 19 ca sự kiện",
+      "Tổng ca: 89; yêu cầu được truy vết: 20/20"
+    ],
+    "loi": [],
+    "canh_bao": [
+      "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
+    ]
+  },
+  "blockers": [
+    {
+      "id": "AD06-BL-001",
+      "description": "AC-32 course-management permission is not mapped/approved as equivalent to local ADMIN role.",
+      "impact": "Authorization acceptance and direct-entry/session behavior remain open.",
+      "decision": "Owner/security approves permission, tenant/scope and route guard policy.",
+      "source_ref": "00-overview.md §Actor/current behavior; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-002",
+      "description": "Search is described by the inventory but no #73 search query/behavior contract exists.",
+      "impact": "Search cannot be enabled or verified.",
+      "decision": "Owner supplies a search API/contract or removes the search affordance.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-02",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-003",
+      "description": "Status enum/casing, mentor filter source and page-reset/return query semantics are not approved.",
+      "impact": "Filter values and navigation state are not acceptance-ready.",
+      "decision": "Owner approves status vocabulary, mentor source and query/page semantics.",
+      "source_ref": "00-overview.md §Expected behavior; 02-events.md §EV-03/05; 06-navigation.md §4",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-004",
+      "description": "Category relation is absent in legacy candidate schema and #73 rejects category; status/DELETED visibility policy is open.",
+      "impact": "Category/status visibility and deleted-course list behavior cannot be finalized.",
+      "decision": "API/DB/Product approves category relation and lifecycle visibility semantics.",
+      "source_ref": "00-overview.md §Expected behavior; 04-api-integration.md §2; 05-business-rules.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-005",
+      "description": "Prototype KPI, course-code/lesson-count columns, export, sync/manual and governance claims have no supporting list data/action contract.",
+      "impact": "These cannot be tested as live metrics/actions.",
+      "decision": "Design/product supplies source/contract or removes unsupported UI claims.",
+      "source_ref": "01-ui-elements.md §3 #13–#18/#25/#30–#44; 02-events.md §EV-07/08",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-006",
+      "description": "API #73 DD remains Draft and COUNT/LIST reads can drift; retry/timeout/cache behavior is not fully contracted.",
+      "impact": "List consistency and retry acceptance beyond current local handling remain open.",
+      "decision": "API owner signs response/schema/snapshot and retry policy.",
+      "source_ref": "03-data-flow.md §API #73 handling/current-source addendum; 04-api-integration.md §2",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-007",
+      "description": "Live DB schema/deployment and authenticated browser/runtime are not verified; isolated test fakes do not establish them.",
+      "impact": "No end-to-end acceptance execution can be claimed.",
+      "decision": "DB/API owner supplies verified target environment and approved test account/fixtures.",
+      "source_ref": "00-overview.md §Current-source addendum; 07-test-cases.md §Completion decision",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "AD06-BL-008",
+      "description": "Formal OpenAPI for Study #73/#104 is not present; #104 is user-approved/source wired but is an extension outside AC-32.",
+      "impact": "Keep the create extension separate from AC-32 and preserve live-contract/deployment boundary.",
+      "decision": "API owner publishes/signs formal contract and verifies deployed route/schema.",
+      "source_ref": "04-api-integration.md §Current API #104 implementation; 05-business-rules.md §4",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "source_discrepancies": [
+    "Current Angular page calls #73, renders API-backed rows and pagination, keeps search/status/mentor/category and Apply/Reset disabled, and includes a source-backed #68/#104 create dialog.",
+    "Prototype contains hard-coded KPI, course-code/lesson-count columns, inaccurate API source path and static RBAC/System Normal/governance/sync claims; they are not data/action evidence.",
+    "Current Angular reset is disabled while prototype Reset only updates local controls; prototype table/empty and app source states differ.",
+    "AD-06 row link uses positive JavaScript-safe Course.id; unsafe numeric IDs do not navigate; authenticated browser/runtime is not verified.",
+    "AC-32 permission mapping, status/category/search/visibility rules, live schema and deployment remain open."
+  ],
+  "workbook": {
+    "path": "UTC_AD-06_DanhSachKhoaHocQuanTri.xlsx",
+    "validation": {
+      "tep": "apps/study-client/docs/utc_screens/UTC_AD-06_DanhSachKhoaHocQuanTri.xlsx",
+      "trang_tinh": [
+        "01. Bìa",
+        "02. Tổng quan",
+        "03. Thành phần",
+        "04. Sự kiện"
+      ],
+      "so_cong_thuc": 622,
+      "loi": [],
+      "hop_le": true,
+      "execution_audit": {
+        "case_count": 89,
+        "not_run": 89,
+        "filled_execution_cells": 0,
+        "row_check_formulas": 89,
+        "stale_ad04_strings": 0,
+        "approved_extension_design_cases": 16
+      },
+      "visual_review": {
+        "status": "NOT_RENDERED",
+        "reason": "No LibreOffice/soffice or artifact_tool runtime is available in this environment."
+      }
+    },
+    "cover_metadata": {
+      "D7": "AD-06",
+      "D8": "Danh sách khóa học quản trị",
+      "D9": "Admin",
+      "D10": "/admin/courses",
+      "D11": "0.1 — KẾ HOẠCH UTC",
+      "D12": "0.3 / 2026-11-20; current-source/create follow-ups through 2026-11-22",
+      "D13": "DD BLOCKED — search/filter/status/category/KPI/course fields/permission/runtime decisions remain open; API #104 create is an approved extension",
+      "D14": "NOT VERIFIED — authenticated browser, live API/DB schema and deployment are not verified",
+      "D15": "AI lập kế hoạch kiểm thử; cần review",
+      "D16": "Chưa phân công",
+      "D17": "Chưa phê duyệt",
+      "D18": "2026-11-23"
+    },
+    "cached_metrics": {
+      "D22": "20",
+      "D23": "50",
+      "D24": "19",
+      "D25": "89",
+      "D26": "0",
+      "D27": "0",
+      "D28": "0",
+      "D29": "0",
+      "D30": "0",
+      "D31": "0",
+      "D32": "20",
+      "D33": "0"
+    }
+  },
+  "interpretation": "UTC plan only. Cases are unexecuted; all 89 status cells are Chưa chạy and actual/evidence/bug/tester/date fields are blank. The API #104 create extension is documented as user-approved, but the AD-06 DD remains BLOCKED and does not qualify the package for acceptance execution."
+}

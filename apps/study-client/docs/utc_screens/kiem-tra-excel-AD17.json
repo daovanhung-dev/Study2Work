@@ -1,0 +1,33 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-17_ThongKeBaiKiemTra.xlsx",
+  "hop_le": true,
+  "so_sheet": 4,
+  "so_cong_thuc": 154,
+  "kiem_tra_chuan_excel": {
+    "tep": "/home/daovh/develop/Study2Work/apps/study-client/docs/utc_screens/UTC_AD-17_ThongKeBaiKiemTra.xlsx",
+    "trang_tinh": [
+      "01. Bìa",
+      "02. Tổng quan",
+      "03. Thành phần",
+      "04. Sự kiện"
+    ],
+    "so_cong_thuc": 154,
+    "loi": [],
+    "hop_le": true
+  },
+  "so_ca_theo_dac_ta": 82,
+  "so_ca_trong_workbook": 82,
+  "so_ca_chua_chay": 82,
+  "o_ket_qua_bang_chung_trong": true,
+  "so_lien_ket_truy_vet_thuc_te": 147,
+  "so_lien_ket_truy_vet_theo_dac_ta": 147,
+  "so_marker": 33,
+  "so_thanh_phan_chi_co_trong_ma_nguon": 15,
+  "tep_zip_hop_le": true,
+  "loi": [],
+  "kiem_tra_ngon_ngu": {
+    "van_xuoi": "Tiếng Việt; đã rà soát nội dung điều kiện, thao tác và kết quả mong đợi; tên kỹ thuật giữ nguyên khi cần.",
+    "dinh_danh_ky_thuat": "Giữ nguyên tên API, đường dẫn, trường/enum/mã trạng thái và nhãn giao diện; thuật ngữ quan trọng có diễn giải tiếng Việt."
+  },
+  "ghi_chu": "Báo cáo cấu trúc workbook, trạng thái ca, ô kết quả/bằng chứng, công thức, liên kết truy vết, tệp ZIP và kiểm tra ngôn ngữ."
+}

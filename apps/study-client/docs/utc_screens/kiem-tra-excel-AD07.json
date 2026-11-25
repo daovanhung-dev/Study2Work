@@ -1,0 +1,28 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-07_ChiTietKhoaHocQuanTri.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 622,
+  "loi": [],
+  "hop_le": true,
+  "execution_audit": {
+    "case_count": 94,
+    "not_run": 94,
+    "filled_execution_cells": 0,
+    "row_check_formulas": 94,
+    "requirement_case_trace_pairs": 157,
+    "expected_requirement_case_trace_pairs": 157,
+    "stale_ad04_strings": 0,
+    "prototype_marker_elements": 56,
+    "source_only_elements": 11
+  },
+  "visual_review": {
+    "status": "NOT_RENDERED",
+    "reason": "No LibreOffice/soffice or artifact_tool runtime is available in this environment."
+  },
+  "release_state": "PLAN_ONLY_DD_BLOCKED"
+}

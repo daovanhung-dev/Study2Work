@@ -1,0 +1,44 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-22_DanhSachThaoLuanBiBaoCao.xlsx",
+  "hop_le_zip": true,
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 159,
+  "so_data_validation": 9,
+  "loi_o_excel": [],
+  "loi_tham_chieu_cong_thuc": [],
+  "ca_theo_nhom": {
+    "screen": 26,
+    "elements": 71,
+    "events": 31
+  },
+  "tong_ca": 128,
+  "ma_ca_khop_spec_theo_sheet": true,
+  "tat_ca_chua_chay": true,
+  "cot_ket_qua_den_ngay_chay_de_trong": true,
+  "yeu_cau_duoc_phu": 25,
+  "tong_yeu_cau": 25,
+  "truy_vet_yeu_cau_ca": 248,
+  "element_co_marker": 48,
+  "element_chi_co_trong_nguon": 23,
+  "so_ca_theo_event": {
+    "AD-22-EV-001": 6,
+    "AD-22-EV-002": 1,
+    "AD-22-EV-003": 2,
+    "AD-22-EV-004": 2,
+    "AD-22-EV-005": 1,
+    "AD-22-EV-006": 2,
+    "AD-22-EV-007": 1,
+    "AD-22-EV-008": 3,
+    "AD-22-EV-009": 3,
+    "AD-22-EV-010": 10
+  },
+  "dieu_kien_chan": 8,
+  "hop_le_cau_truc_excel": true,
+  "phuong_phap_tao": "tao_utc.py thiếu artifact_tool; tạo file OOXML bằng thư viện chuẩn Python, sau đó kiểm tra bằng kiem_tra_excel.py và đối chiếu cell/case/trace bằng XML.",
+  "xem_truoc_hinh_anh": "Chưa kết xuất; artifact_tool và LibreOffice/soffice không có trong môi trường."
+}

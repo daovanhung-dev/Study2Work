@@ -1,0 +1,3622 @@
+{
+  "metadata": {
+    "screen_id": "SH-01",
+    "screen_name": "Trang giới thiệu Study",
+    "module": "Study Web — Phần dùng chung",
+    "route": "/",
+    "actor": "Khách",
+    "version": "1.0 — Kế hoạch UTC theo DD nguồn; chưa được phê duyệt phát hành",
+    "dd_version": "SH-01 DD 0.3; ghi nhận mã nguồn đến 2026-11-21",
+    "dd_status": "DD bị chặn (BỊ CHẶN) — còn quyết định chờ xác nhận",
+    "runtime_status": "Tuyến, trang Angular và hai dịch vụ gọi API có trong mã nguồn; DD ghi kiểm thử tập trung SH-01 đạt 7/7 và bản dựng Angular riêng đạt. Chưa xác minh trình duyệt, API/CSDL trực tiếp hoặc môi trường triển khai trong lượt này.",
+    "author": "Chưa được chỉ định",
+    "reviewer": "Chưa được chỉ định",
+    "approver": "Chưa được chỉ định",
+    "date": "2026-11-24",
+    "source_name": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md và các trang DD SH-01",
+    "baseline_authorization": "Người dùng xác nhận DD đang chặn là nguồn chuẩn để lập UTC; câu hỏi mở vẫn được ghi chờ xác nhận.",
+    "release_readiness": "Đây là kế hoạch UTC, chưa đủ điều kiện nghiệm thu/phát hành vì DD/API còn vấn đề chờ xử lý và các ca trong bộ này chưa chạy.",
+    "discrepancy_note": "Tách PNG, HTML mẫu và Angular. #05/#06 được gọi độc lập; #06 nguồn hiện từ chối danh mục; thẻ không điều hướng đến khi chốt GS-03/#08; giá và tuyên bố tiếp thị thiếu nguồn nên bị ẩn."
+  },
+  "overall": {
+    "objective": "Giúp khách tìm và duyệt danh mục/khóa học công khai bằng dữ liệu #05/#06, đồng thời mở các tuyến tài khoản/danh sách hiện có.",
+    "inputs": "Mở `/`; nhập q tùy chọn; nhận phản hồi công khai #05 và #06.",
+    "outputs": "Khung trang; tên danh mục; tối đa sáu khóa học PUBLISHED; trạng thái tải/rỗng/lỗi/thử lại riêng; điều hướng tới GS-02, GS-01, SH-02 hoặc SH-03.",
+    "main_flow": "Khách mở `/` → hai GET công khai khởi chạy độc lập → kiểm cấu trúc bao phản hồi/phép chiếu dữ liệu/phân trang → mỗi vùng hiện dữ liệu hoặc trạng thái riêng → khách có thể gửi q đã trim hoặc mở danh sách/tài khoản.",
+    "preconditions": "Tuyến Angular `/` đã đăng ký. Không cần đăng nhập. Kiểm thử dữ liệu cần fixture/API kiểm thử; browser/môi trường chạy trong lượt lập UTC chưa xác minh.",
+    "states": [
+      "Đang tải danh mục",
+      "Danh mục sẵn sàng",
+      "Danh mục rỗng",
+      "Lỗi danh mục và thử lại",
+      "Đang tải khóa học",
+      "Khóa học sẵn sàng",
+      "Không có khóa học đã xuất bản",
+      "Lỗi khóa học và thử lại"
+    ],
+    "security": "#05/#06 là GET công khai; không gửi token/secret. Không đưa email/session vào URL. 401/403 vẫn là lỗi cục bộ, không tự chuyển đăng nhập.",
+    "out_of_scope": "Không gọi #07 từ SH-01; không lọc danh mục, băng chuyền, sắp xếp, mở #08 từ thẻ, thu thập thư điện tử, hiển thị giá thiếu đơn vị tiền tệ, chỉ số (chỉ số hiệu quả chính (KPI)), điểm đánh giá, lời chứng thực, logo hoặc chứng nhận chưa có nguồn."
+  },
+  "apis": [
+    {
+      "id": "API-005",
+      "number": "05",
+      "method": "GET",
+      "path": "/api/v1/categories",
+      "request": "Không body; không truyền locale. Nguồn server dùng DEFAULT_LOCALE=\"vi-VN\". GET công khai.",
+      "response": "Envelope success=true,businessCode=DESIGN_RESOURCE_RETRIEVED; items[] id/name/slug/description?; pagination page=1,size=itemCount,total=itemCount,total_pages=1. Empty hợp lệ: page=1,size=0,total=0,total_pages=1.",
+      "errors": "422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR. Client đưa response sai vào error của riêng vùng danh mục.",
+      "auth": "Công khai; SH-01 không gửi Authorization.",
+      "design_status": "Chờ xác nhận",
+      "event_ids": [
+        "SH-01-EV-001",
+        "SH-01-EV-006",
+        "SH-01-EV-011"
+      ],
+      "source_ref": "docs/lists/list_api.md #05; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_05_categories/{view.py,validate.py,query.py,models.py}; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md; apps/study-client/src/app/features/shared/SH01/data-access/sh01-catalog.service.ts; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts"
+    },
+    {
+      "id": "API-006",
+      "number": "06",
+      "method": "GET",
+      "path": "/api/v1/courses",
+      "request": "Query page=1,size=6; không category/sort/body. GET công khai.",
+      "response": "Envelope: `success=true`, `businessCode=DESIGN_RESOURCE_RETRIEVED`; `items[]` gồm `id`, `title`, `description?`, `thumbnail_url?`, `price`, `status`, `mentor{id,full_name,avatar_url?}`; `pagination` gồm `page=1`, `size=6`, `total>=0`, `total_pages=0` nếu `total=0`, nếu không thì `ceil(total/6)`. Máy khách chỉ hiển thị mục có `status=PUBLISHED`.",
+      "errors": "422 DESIGN_VALIDATION_ERROR (mã nguồn hiện từ chối category); 500 DESIGN_INTERNAL_ERROR. Response/model/phân trang sai vào error vùng course.",
+      "auth": "Công khai; SH-01 không gửi Authorization.",
+      "design_status": "Chờ xác nhận",
+      "event_ids": [
+        "SH-01-EV-001",
+        "SH-01-EV-007",
+        "SH-01-EV-011"
+      ],
+      "source_ref": "docs/lists/list_api.md #06; apps/study-server/app/api/v1.py; apps/study-server/app/modules/guest/api_06_courses/{view.py,validate.py,query.py,models.py}; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md; apps/study-client/src/app/features/shared/SH01/data-access/sh01-catalog.service.ts; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SH-01-YC-001",
+      "description": "Mở `/` tới SH-01, không cần đăng nhập.",
+      "group": "Tuyến",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "00-overview.md §1–3; apps/study-client/src/app/app.routes.ts; apps/study-client/src/app/features/shared/shared.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-002",
+      "description": "Hiển thị khung Angular hiện tại; không suy từ ảnh sang giao diện đang chạy.",
+      "group": "Giao diện",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "00-overview.md §1–5; SH-01.md §1",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-003",
+      "description": "Giữ riêng PNG, HTML mẫu và Angular; lựa chọn giao diện cuối còn chờ xác nhận.",
+      "group": "Sai khác",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "00-overview.md §6; 01-ui-elements.md §1–4",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-004",
+      "description": "Liên kết hiện có dùng `/`, `/courses`, `/courses/search`, `/login`, `/register`.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "06-navigation.md §1–3; apps/study-client/src/app/features/shared/shared.route.ts; apps/study-client/src/app/features/guest/guest.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-005",
+      "description": "Ô tìm kiếm có nhãn tiếng Việt và thao tác bàn phím.",
+      "group": "Truy cập",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md §3 Element 4–5; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-006",
+      "description": "Loại bỏ khoảng trắng thừa quanh `q` rồi điều hướng tới GS-02; SH-01 không gọi #07.",
+      "group": "Tìm kiếm",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-02; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-007",
+      "description": "Nếu `q` rỗng sau khi bỏ khoảng trắng, không điều hướng và không gửi yêu cầu tìm kiếm.",
+      "group": "Tìm kiếm",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-02; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html; sh01-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-008",
+      "description": "Liên kết hiện tại cuộn tới ô phần mở đầu; không có ô tìm kiếm thứ hai.",
+      "group": "Sai khác",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "02-events.md SH01-EV-03, SH01-EV-13; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-009",
+      "description": "GET #05 không truy vấn; máy chủ hiện dùng ngôn ngữ mặc định `vi-VN`.",
+      "group": "API #05",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "04-api-integration.md §2–3; apps/study-client/src/app/features/shared/SH01/data-access/sh01-catalog.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-010",
+      "description": "Chỉ nhận cấu trúc bao phản hồi hợp lệ có các trường `id`, `name`, `slug`; `description` có thể vắng hoặc null.",
+      "group": "API #05",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "03-data-flow.md §3; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-011",
+      "description": "`page=1,size=total=itemCount,total_pages=1`; khi rỗng: `size=0,total=0,total_pages=1`.",
+      "group": "API #05",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "03-data-flow.md §3; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-012",
+      "description": "Chỉ hiển thị `name`; không có số lượng, biểu tượng hoặc bộ lọc; tên danh mục không tương tác.",
+      "group": "Danh mục",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md Element 9; 02-events.md SH01-EV-08; 05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-013",
+      "description": "Danh mục và khóa học có trạng thái tải/sẵn sàng/rỗng/lỗi độc lập.",
+      "group": "Trạng thái",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "03-data-flow.md §1–3; 02-events.md SH01-EV-01,06,07",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-014",
+      "description": "Chỉ gọi lại #05 và giữ nguyên vùng khóa học.",
+      "group": "Thử lại",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-11; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-015",
+      "description": "GET #06 với `page=1,size=6`; không truyền `category` hoặc `sort`.",
+      "group": "API #06",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "04-api-integration.md §2–3.1; apps/study-client/src/app/features/shared/SH01/data-access/sh01-catalog.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-016",
+      "description": "Kiểm tra cấu trúc bao phản hồi và các trường khóa học/người hướng dẫn; mô tả, ảnh thu nhỏ và ảnh đại diện có thể vắng hoặc null.",
+      "group": "API #06",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "03-data-flow.md §3; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-017",
+      "description": "`page=1,size=6`; tối đa sáu mục; total và `total_pages` hợp lệ.",
+      "group": "API #06",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "03-data-flow.md §3; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-018",
+      "description": "Chỉ hiện PUBLISHED theo thứ tự phản hồi; không tự xếp hạng.",
+      "group": "Khóa học",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md Element 13; 02-events.md SH01-EV-07; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-019",
+      "description": "Không hiện giá khi đơn vị tiền tệ chưa được xác định.",
+      "group": "Khóa học",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md §4.1; 05-business-rules.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-020",
+      "description": "Hiển thị `title` và người hướng dẫn; chỉ hiện `description` khi có giá trị; ảnh thiếu hoặc lỗi dùng vùng thay thế.",
+      "group": "Khóa học",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md §4.1; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html; sh01-course-card.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-021",
+      "description": "Không mở #08 tới khi giải quyết xung đột GS-03/#08.",
+      "group": "Điều hướng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-10; 03-data-flow.md §2; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-022",
+      "description": "Liên kết mở GS-01 `/courses`, không gọi API thêm ở SH-01.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-04; 06-navigation.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-023",
+      "description": "Không bật băng chuyền, bộ lọc, sắp xếp; không gửi danh mục vì #06 hiện từ chối.",
+      "group": "Điều khiển",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md Element 10,12; 02-events.md SH01-EV-08–09",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-024",
+      "description": "Không hiển thị chỉ số (chỉ số hiệu quả chính (KPI)), lợi ích, điểm đánh giá hoặc lời chứng thực chưa có nguồn/phê duyệt.",
+      "group": "Nội dung",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md Element 2–7,14–17; 02-events.md SH01-EV-14",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-025",
+      "description": "Không hiện logo đối tác, chứng nhận, nhãn cam kết chưa có bằng chứng.",
+      "group": "Nội dung",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md Element 18,22,25–26; 02-events.md SH01-EV-14",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-026",
+      "description": "Không có biểu mẫu thư điện tử hoạt động; không gửi/lưu/theo dõi thư điện tử.",
+      "group": "Riêng tư",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-12; 05-business-rules.md; 01-ui-elements.md Element 19–21",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-027",
+      "description": "Chỉ dùng tuyến đã đăng ký; fragment mẫu không chứng minh tuyến.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-13; 06-navigation.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-028",
+      "description": "Lỗi 401/403 giữ người dùng ở trang và báo lỗi đúng vùng.",
+      "group": "Lỗi / quyền",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "03-data-flow.md; 05-business-rules.md; 07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-029",
+      "description": "Cấu trúc bao phản hồi, phép chiếu dữ liệu hoặc phân trang sai phải thành lỗi, không được coi là dữ liệu rỗng.",
+      "group": "Lỗi API",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-06–07; apps/study-client/src/app/features/shared/SH01/models/sh01-catalog.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-030",
+      "description": "Không đưa thư điện tử/mã truy cập/phiên vào URL.",
+      "group": "Riêng tư",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "02-events.md SH01-EV-02,12; 05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-031",
+      "description": "Khi đang tải, vùng dùng `role=status`; khi lỗi, vùng dùng `role=alert`; mọi điều khiển có nhãn.",
+      "group": "Truy cập",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "01-ui-elements.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-032",
+      "description": "Kiểm tra 320px và vùng chạm tối thiểu 44px; cần xác nhận môi trường chạy đích.",
+      "group": "Thích ứng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "07-test-cases.md §3; SH-01.md §1; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.css",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-033",
+      "description": "Không thay phản hồi API bằng danh mục/khóa học ghi cứng trong ảnh hoặc HTML.",
+      "group": "Nguồn dữ liệu",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "07-test-cases.md §3; 05-business-rules.md; SH-01.md §1.1",
+      "notes": ""
+    },
+    {
+      "id": "SH-01-YC-034",
+      "description": "Không coi mã nguồn hoặc kết quả kiểm thử cũ là kết quả chạy của bộ UTC này hay API trực tiếp.",
+      "group": "Bằng chứng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "00-overview.md §4,6; 07-test-cases.md; SH-01.md §1",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "SH-01-EL-001",
+      "marker": "#1",
+      "source_element_id": "SH01-EL-01",
+      "name": "Nhãn hiệu, điều hướng và tiện ích đầu trang",
+      "type": "Nhóm đầu trang",
+      "position": "Mốc #1, tọa độ (278, 16) trên ảnh 559×1600.",
+      "properties": "Angular có thương hiệu, điều hướng, đăng nhập/đăng ký; không có ô nhập tìm kiếm thứ hai, chuông hoặc ảnh đại diện như ảnh.",
+      "event_ids": [
+        "SH-01-EV-013"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #1; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-002",
+      "marker": "#2",
+      "source_element_id": "SH01-EL-02",
+      "name": "Nhãn chiến dịch phần mở đầu",
+      "type": "Nội dung tiếp thị",
+      "position": "Mốc #2, tọa độ (280, 52) trên ảnh 559×1600.",
+      "properties": "Chỉ có trong ảnh; không có API/nguồn tuyên bố. Không hiển thị khi chưa duyệt.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #2; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-003",
+      "marker": "#3",
+      "source_element_id": "SH01-EL-03",
+      "name": "Tiêu đề và mô tả phần mở đầu",
+      "type": "Nội dung tĩnh",
+      "position": "Mốc #3, tọa độ (278, 101) trên ảnh 559×1600.",
+      "properties": "Angular hiện “Khám phá khóa học” và nội dung duyệt/tìm; khác ảnh mẫu.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #3; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-004",
+      "marker": "#4",
+      "source_element_id": "SH01-EL-04",
+      "name": "Ô tìm kiếm phần mở đầu",
+      "type": "Ô nhập",
+      "position": "Mốc #4, tọa độ (260, 151) trên ảnh 559×1600.",
+      "properties": "`type=search`, `name=q`; không có maxlength được xác nhận.",
+      "event_ids": [
+        "SH-01-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #4; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-005",
+      "marker": "#5",
+      "source_element_id": "SH01-EL-05",
+      "name": "Nút gửi tìm kiếm",
+      "type": "Nút",
+      "position": "Mốc #5, tọa độ (399, 151) trên ảnh 559×1600.",
+      "properties": "Bị vô hiệu hóa khi q sau trim rỗng; q khác rỗng chuyển GS-02; không gọi #07.",
+      "event_ids": [
+        "SH-01-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #5; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-006",
+      "marker": "#6",
+      "source_element_id": "SH01-EL-06",
+      "name": "Hai nút kêu gọi hành động ở phần mở đầu",
+      "type": "Liên kết",
+      "position": "Mốc #6, tọa độ (278, 184) trên ảnh 559×1600.",
+      "properties": "“Khám phá khóa học” tới `/courses`; “Đăng ký tài khoản” tới `/register`.",
+      "event_ids": [
+        "SH-01-EV-004",
+        "SH-01-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #6; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-007",
+      "marker": "#7",
+      "source_element_id": "SH01-EL-07",
+      "name": "Ba thẻ chỉ số (chỉ số hiệu quả chính (KPI))",
+      "type": "Nội dung tiếp thị",
+      "position": "Mốc #7, tọa độ (278, 235) trên ảnh 559×1600.",
+      "properties": "10.000+, 120+, 94% không có nguồn hiện hành; bị ẩn.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #7; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-008",
+      "marker": "#8",
+      "source_element_id": "SH01-EL-08",
+      "name": "Tiêu đề khu vực danh mục",
+      "type": "Tiêu đề",
+      "position": "Mốc #8, tọa độ (170, 294) trên ảnh 559×1600.",
+      "properties": "Angular hiển thị “Danh mục khóa học”.",
+      "event_ids": [
+        "SH-01-EV-006",
+        "SH-01-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #8; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-009",
+      "marker": "#9",
+      "source_element_id": "SH01-EL-09",
+      "name": "Danh sách nhãn danh mục",
+      "type": "Danh sách",
+      "position": "Mốc #9, tọa độ (278, 336) trên ảnh 559×1600.",
+      "properties": "Hiển thị trường `name` từ #05; không có số lượng, biểu tượng hoặc bộ lọc; tên danh mục không có liên kết.",
+      "event_ids": [
+        "SH-01-EV-006",
+        "SH-01-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #9; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-010",
+      "marker": "#10",
+      "source_element_id": "SH01-EL-10",
+      "name": "Nút băng chuyền trước/sau",
+      "type": "Điều khiển chưa có hợp đồng",
+      "position": "Mốc #10, tọa độ (538, 327) trên ảnh 559×1600.",
+      "properties": "Mã nguồn/API không có trạng thái hay hành vi cho băng chuyền; không hiển thị hoặc bật điều khiển này.",
+      "event_ids": [
+        "SH-01-EV-009"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #10; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-011",
+      "marker": "#11",
+      "source_element_id": "SH01-EL-11",
+      "name": "Tiêu đề khu vực khóa học",
+      "type": "Tiêu đề",
+      "position": "Mốc #11, tọa độ (190, 397) trên ảnh 559×1600.",
+      "properties": "Angular ghi “Khóa học đã xuất bản”; không tuyên bố phổ biến/nổi bật.",
+      "event_ids": [
+        "SH-01-EV-007",
+        "SH-01-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #11; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-012",
+      "marker": "#12",
+      "source_element_id": "SH01-EL-12",
+      "name": "Nhóm bộ lọc, sắp xếp và xem tất cả",
+      "type": "Nhóm điều khiển",
+      "position": "Mốc #12, tọa độ (460, 399) trên ảnh 559×1600.",
+      "properties": "Chỉ có liên kết “Xem tất cả”; bộ lọc/sắp xếp trên ảnh không có trong Angular.",
+      "event_ids": [
+        "SH-01-EV-004",
+        "SH-01-EV-009",
+        "SH-01-EV-013"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #12; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-013",
+      "marker": "#13",
+      "source_element_id": "SH01-EL-13",
+      "name": "Lưới thẻ khóa học",
+      "type": "Danh sách lặp",
+      "position": "Mốc #13, tọa độ (278, 620) trên ảnh 559×1600.",
+      "properties": "GET #06 với `page=1,size=6`; chỉ hiển thị PUBLISHED theo đúng thứ tự; mỗi thẻ là phần tử HTML `<article>`, không phải liên kết.",
+      "event_ids": [
+        "SH-01-EV-007",
+        "SH-01-EV-010",
+        "SH-01-EV-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-014",
+      "marker": "#14",
+      "source_element_id": "SH01-EL-14",
+      "name": "Tiêu đề phần lợi ích",
+      "type": "Nội dung tiếp thị",
+      "position": "Mốc #14, tọa độ (278, 860) trên ảnh 559×1600.",
+      "properties": "Chỉ có trong ảnh; không có nguồn tuyên bố được duyệt.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #14; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-015",
+      "marker": "#15",
+      "source_element_id": "SH01-EL-15",
+      "name": "Ba thẻ lợi ích",
+      "type": "Nội dung tiếp thị",
+      "position": "Mốc #15, tọa độ (278, 957) trên ảnh 559×1600.",
+      "properties": "Nội dung/tính năng trên ảnh không có API; không giới thiệu như dịch vụ đang hoạt động.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #15; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-016",
+      "marker": "#16",
+      "source_element_id": "SH01-EL-16",
+      "name": "Tiêu đề và chỉ số lời chứng thực",
+      "type": "Lời chứng thực",
+      "position": "Mốc #16, tọa độ (278, 1053) trên ảnh 559×1600.",
+      "properties": "Chưa có nguồn cho chỉ số/đánh giá của SH-01.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #16; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-017",
+      "marker": "#17",
+      "source_element_id": "SH01-EL-17",
+      "name": "Ba thẻ lời chứng thực",
+      "type": "Dữ liệu cá nhân/claim",
+      "position": "Mốc #17, tọa độ (278, 1150) trên ảnh 559×1600.",
+      "properties": "Lời trích dẫn, tên, ảnh đại diện, chức danh, điểm đánh giá thiếu nguồn/quyền sử dụng.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #17; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-018",
+      "marker": "#18",
+      "source_element_id": "SH01-EL-18",
+      "name": "Dải logo doanh nghiệp",
+      "type": "Tuyên bố đối tác",
+      "position": "Mốc #18, tọa độ (278, 1237) trên ảnh 559×1600.",
+      "properties": "Logo/tên thiếu nguồn và quyền sử dụng tài sản.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #18; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-019",
+      "marker": "#19",
+      "source_element_id": "SH01-EL-19",
+      "name": "Nội dung lời kêu gọi hành động (CTA) thư điện tử",
+      "type": "Thu thập thông tin",
+      "position": "Mốc #19, tọa độ (278, 1364) trên ảnh 559×1600.",
+      "properties": "Không có điểm cuối, sự đồng ý, thời hạn lưu trữ; không hiển thị biểu mẫu.",
+      "event_ids": [
+        "SH-01-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #19; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-020",
+      "marker": "#20",
+      "source_element_id": "SH01-EL-20",
+      "name": "Ô nhập thư điện tử",
+      "type": "Dữ liệu cá nhân",
+      "position": "Mốc #20, tọa độ (165, 1424) trên ảnh 559×1600.",
+      "properties": "Chưa có hợp đồng; không thu thập, lưu trữ hoặc ghi nhật ký.",
+      "event_ids": [
+        "SH-01-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #20; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-021",
+      "marker": "#21",
+      "source_element_id": "SH01-EL-21",
+      "name": "Nút gửi thư điện tử",
+      "type": "Nút chưa hỗ trợ",
+      "position": "Mốc #21, tọa độ (306, 1424) trên ảnh 559×1600.",
+      "properties": "Không có API; không gửi và không báo thành công giả.",
+      "event_ids": [
+        "SH-01-EV-012"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #21; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-022",
+      "marker": "#22",
+      "source_element_id": "SH01-EL-22",
+      "name": "Nhãn quyền riêng tư/đảm bảo",
+      "type": "Tuyên bố chính sách",
+      "position": "Mốc #22, tọa độ (280, 1454) trên ảnh 559×1600.",
+      "properties": "Tuyên bố trên ảnh chưa có chính sách hoặc nguồn xác nhận.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #22; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-023",
+      "marker": "#23",
+      "source_element_id": "SH01-EL-23",
+      "name": "Thương hiệu/mô tả chân trang",
+      "type": "Nội dung thương hiệu",
+      "position": "Mốc #23, tọa độ (115, 1530) trên ảnh 559×1600.",
+      "properties": "Angular hiện chỉ có thương hiệu liên kết; đoạn mô tả ảnh chưa được xác nhận.",
+      "event_ids": [
+        "SH-01-EV-013",
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #23; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-024",
+      "marker": "#24",
+      "source_element_id": "SH01-EL-24",
+      "name": "Các cột liên kết chân trang",
+      "type": "Điều hướng",
+      "position": "Mốc #24, tọa độ (385, 1534) trên ảnh 559×1600.",
+      "properties": "Angular hiện có Khóa học, Đăng nhập, Đăng ký; không suy tuyến từ fragment.",
+      "event_ids": [
+        "SH-01-EV-013"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #24; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-025",
+      "marker": "#25",
+      "source_element_id": "SH01-EL-25",
+      "name": "Huy hiệu chứng nhận",
+      "type": "Tuyên bố chứng nhận",
+      "position": "Mốc #25, tọa độ (155, 1566) trên ảnh 559×1600.",
+      "properties": "Thiếu issuer, thông tin xác thực ID và bằng chứng; không hiển thị.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #25; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-026",
+      "marker": "#26",
+      "source_element_id": "SH01-EL-26",
+      "name": "Bản quyền và khẩu hiệu cuối trang",
+      "type": "Nội dung pháp lý/biên tập",
+      "position": "Mốc #26, tọa độ (280, 1590) trên ảnh 559×1600.",
+      "properties": "Không suy năm hoặc khẩu hiệu từ ảnh tĩnh.",
+      "event_ids": [
+        "SH-01-EV-014"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #26; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+    },
+    {
+      "id": "SH-01-EL-S01",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Liên kết bỏ qua điều hướng",
+      "type": "Liên kết trợ năng",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Hiện khi tiêu điểm; đích #sh01-main.",
+      "event_ids": [
+        "SH-01-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S02",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Khung chờ danh mục",
+      "type": "Trạng thái tải",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Bốn khung chờ, `role=status`, `aria-live=polite`, `aria-busy=true`.",
+      "event_ids": [
+        "SH-01-EV-001",
+        "SH-01-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S03",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Lỗi/thử lại danh mục",
+      "type": "Trạng thái lỗi/nút",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "`role=alert`; nút thử lại chỉ nạp #05.",
+      "event_ids": [
+        "SH-01-EV-006",
+        "SH-01-EV-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.ts"
+    },
+    {
+      "id": "SH-01-EL-S04",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Danh mục rỗng",
+      "type": "Trạng thái rỗng",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Hiện thông báo rỗng; không thêm danh mục mẫu.",
+      "event_ids": [
+        "SH-01-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S05",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Khung chờ khóa học",
+      "type": "Trạng thái tải",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Sáu khung chờ và thông báo trạng thái/thuộc tính ARIA-busy.",
+      "event_ids": [
+        "SH-01-EV-001",
+        "SH-01-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S06",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Lỗi/thử lại khóa học",
+      "type": "Trạng thái lỗi/nút",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "`role=alert`; nút thử lại chỉ nạp #06 với `page=1,size=6`.",
+      "event_ids": [
+        "SH-01-EV-007",
+        "SH-01-EV-011"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.ts"
+    },
+    {
+      "id": "SH-01-EL-S07",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Khóa học rỗng",
+      "type": "Trạng thái rỗng",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Thông báo không có khóa học đã xuất bản; không tạo thẻ mẫu.",
+      "event_ids": [
+        "SH-01-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S08",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Vỏ thẻ khóa học",
+      "type": "Thẻ không tương tác",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Thẻ `<article>`; không liên kết/nút và không gọi #08.",
+      "event_ids": [
+        "SH-01-EV-007",
+        "SH-01-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html"
+    },
+    {
+      "id": "SH-01-EL-S09",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Ảnh khóa học/vùng thay thế",
+      "type": "Ảnh/trạng thái lỗi",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "`alt=title`, `loading=lazy`, `referrerpolicy=no-referrer`; ảnh null/lỗi dùng vùng trung tính `aria-hidden`.",
+      "event_ids": [
+        "SH-01-EV-007",
+        "SH-01-EV-010"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.ts"
+    },
+    {
+      "id": "SH-01-EL-S10",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Tiêu đề/mô tả khóa học",
+      "type": "Văn bản thẻ",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Title bắt buộc; description chỉ hiện khi có giá trị.",
+      "event_ids": [
+        "SH-01-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html"
+    },
+    {
+      "id": "SH-01-EL-S11",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Người hướng dẫn và ảnh đại diện",
+      "type": "Thông tin người hướng dẫn",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Hiện `full_name`; ảnh đại diện giá trị null/lỗi thành vùng thay thế; ảnh có văn bản thay thế rỗng.",
+      "event_ids": [
+        "SH-01-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.ts"
+    },
+    {
+      "id": "SH-01-EL-S12",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Giá không hiển thị",
+      "type": "Trường bị ẩn",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Không hiển thị giá vì chưa có đơn vị tiền tệ/quy tắc định dạng được xác nhận.",
+      "event_ids": [
+        "SH-01-EV-007",
+        "SH-01-EV-014"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/05-business-rules.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html"
+    },
+    {
+      "id": "SH-01-EL-S13",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Liên kết tìm kiếm đầu trang",
+      "type": "Liên kết neo",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "`href=#sh01-search`; là liên kết tới phần mở đầu, không có ô ô nhập thứ hai.",
+      "event_ids": [
+        "SH-01-EV-003",
+        "SH-01-EV-013"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S14",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Biểu mẫu tìm kiếm có ngữ nghĩa",
+      "type": "Form/nhãn",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "`role=search`, `aria-label`; nhãn ẩn khớp với `id` ô nhập; gửi biểu mẫu dùng cùng logic.",
+      "event_ids": [
+        "SH-01-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S15",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Điều hướng chính",
+      "type": "Nhóm liên kết",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Trang chủ `/`, Khóa học `/courses`, tìm kiếm #sh01-search.",
+      "event_ids": [
+        "SH-01-EV-004",
+        "SH-01-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/06-navigation.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html; apps/study-client/src/app/features/guest/guest.route.ts"
+    },
+    {
+      "id": "SH-01-EL-S16",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Liên kết tài khoản đầu trang",
+      "type": "Nhóm liên kết",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Đăng nhập `/login`, đăng ký `/register`; không gửi thông tin xác thực.",
+      "event_ids": [
+        "SH-01-EV-005",
+        "SH-01-EV-013"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    },
+    {
+      "id": "SH-01-EL-S17",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Điều hướng chân trang hiện tại",
+      "type": "Nhóm liên kết",
+      "position": "Thành phần Angular; không có marker riêng trên ảnh.",
+      "properties": "Khóa học `/courses`, Đăng nhập `/login`, Đăng ký `/register`.",
+      "event_ids": [
+        "SH-01-EV-013"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/06-navigation.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+    }
+  ],
+  "events": [
+    {
+      "id": "SH-01-EV-001",
+      "source_event_id": "SH01-EV-01",
+      "name": "Mở trang và nạp dữ liệu công khai",
+      "trigger": "Mở `/`",
+      "processing": "Khởi tạo #05 và #06 độc lập; hiển thị shell; từng vùng có trạng thái riêng.",
+      "element_ids": [
+        "SH-01-EL-001",
+        "SH-01-EL-S02",
+        "SH-01-EL-S05"
+      ],
+      "api_ids": [
+        "API-005",
+        "API-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-01; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-002",
+      "source_event_id": "SH01-EV-02",
+      "name": "Gửi tìm kiếm phần mở đầu",
+      "trigger": "Gửi khi q sau trim khác rỗng",
+      "processing": "Loại bỏ khoảng trắng thừa quanh `q` và điều hướng `/courses/search`; không gọi #07 ở SH-01.",
+      "element_ids": [
+        "SH-01-EL-004",
+        "SH-01-EL-005",
+        "SH-01-EL-S14"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-02; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-003",
+      "source_event_id": "SH01-EV-03",
+      "name": "Tìm kiếm riêng trên đầu trang theo ảnh",
+      "trigger": "Chọn điều khiển tìm kiếm PNG nếu được giữ",
+      "processing": "DD mô tả ô nhập thứ hai; Angular hiện chỉ có neo #sh01-search. Không tạo API/handler kép.",
+      "element_ids": [
+        "SH-01-EL-001",
+        "SH-01-EL-S13"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-03; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-004",
+      "source_event_id": "SH01-EV-04",
+      "name": "Mở danh sách khóa học",
+      "trigger": "Chọn lời kêu gọi hành động (CTA) khám phá hoặc xem tất cả",
+      "processing": "Đi tới GS-01 `/courses`; không phát sinh API mới tại SH-01.",
+      "element_ids": [
+        "SH-01-EL-006",
+        "SH-01-EL-012"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-04; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-005",
+      "source_event_id": "SH01-EV-05",
+      "name": "Mở đăng nhập hoặc đăng ký",
+      "trigger": "Chọn liên kết tài khoản hoặc lời kêu gọi hành động (CTA)",
+      "processing": "Đăng nhập `/login`; đăng ký `/register`; không gọi xác thực API ở SH-01.",
+      "element_ids": [
+        "SH-01-EL-001",
+        "SH-01-EL-006",
+        "SH-01-EL-S16"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-05; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-006",
+      "source_event_id": "SH01-EV-06",
+      "name": "Nhận và ánh xạ danh mục #05",
+      "trigger": "Phản hồi GET #05",
+      "processing": "Kiểm cấu trúc bao phản hồi/phép chiếu dữ liệu/phân trang; hợp lệ->sẵn sàng, rỗng->rỗng, lỗi/cấu trúc sai->lỗi riêng.",
+      "element_ids": [
+        "SH-01-EL-009",
+        "SH-01-EL-S02",
+        "SH-01-EL-S03",
+        "SH-01-EL-S04"
+      ],
+      "api_ids": [
+        "API-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-06; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-007",
+      "source_event_id": "SH01-EV-07",
+      "name": "Nhận và ánh xạ khóa học #06",
+      "trigger": "Phản hồi GET #06",
+      "processing": "Kiểm tra cấu trúc bao phản hồi/phép chiếu dữ liệu/phân trang; lọc PUBLISHED; không giá/field không có nguồn.",
+      "element_ids": [
+        "SH-01-EL-013",
+        "SH-01-EL-S05",
+        "SH-01-EL-S06",
+        "SH-01-EL-S07",
+        "SH-01-EL-S08",
+        "SH-01-EL-S09",
+        "SH-01-EL-S10",
+        "SH-01-EL-S11",
+        "SH-01-EL-S12"
+      ],
+      "api_ids": [
+        "API-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-07; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-008",
+      "source_event_id": "SH01-EV-08",
+      "name": "Chọn nhãn danh mục",
+      "trigger": "Nhấn chuột/bàn phím trên nhãn",
+      "processing": "Hiện là li văn bản; không trạng thái, điều hướng hay yêu cầu #06.",
+      "element_ids": [
+        "SH-01-EL-009"
+      ],
+      "api_ids": [
+        "API-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-08; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-009",
+      "source_event_id": "SH01-EV-09",
+      "name": "Băng chuyền, sắp xếp hoặc lọc",
+      "trigger": "Chọn mũi tên/tab nếu tồn tại",
+      "processing": "Không thay URL/list/request; các điều khiển không có bộ xử lý. “Xem tất cả” là liên kết riêng.",
+      "element_ids": [
+        "SH-01-EL-010",
+        "SH-01-EL-012"
+      ],
+      "api_ids": [
+        "API-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-09; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-010",
+      "source_event_id": "SH01-EV-10",
+      "name": "Chọn thẻ khóa học",
+      "trigger": "Nhấn chuột/bàn phím trên thẻ",
+      "processing": "Thẻ `<article>` hiện không điều hướng; chờ quyết định GS-03/#08. Không gọi #08 từ SH-01.",
+      "element_ids": [
+        "SH-01-EL-013",
+        "SH-01-EL-S08"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-10; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-011",
+      "source_event_id": "SH01-EV-11",
+      "name": "Thử lại vùng lỗi",
+      "trigger": "Nhấp thử lại trong danh mục hoặc khóa học",
+      "processing": "Lặp đúng GET và params của một vùng; giữ trạng thái vùng còn lại; không thử lại 422 tự động.",
+      "element_ids": [
+        "SH-01-EL-S03",
+        "SH-01-EL-S06"
+      ],
+      "api_ids": [
+        "API-005",
+        "API-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-11; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-012",
+      "source_event_id": "SH01-EV-12",
+      "name": "Nhập/gửi thư điện tử lời kêu gọi hành động (CTA)",
+      "trigger": "Biểu mẫu trong ảnh mẫu",
+      "processing": "Không có biểu mẫu, API hoặc cơ chế xin sự đồng ý; không xác thực, gửi, lưu, theo dõi hoặc nhật ký thư điện tử.",
+      "element_ids": [
+        "SH-01-EL-019",
+        "SH-01-EL-020",
+        "SH-01-EL-021"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-12; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-013",
+      "source_event_id": "SH01-EV-13",
+      "name": "Điều hướng đầu trang/chân trang",
+      "trigger": "Chọn liên kết cụ thể",
+      "processing": "Chỉ tuyến đăng ký; neo đầu trang tới tìm kiếm; fragment mẫu không tạo tuyến.",
+      "element_ids": [
+        "SH-01-EL-001",
+        "SH-01-EL-024",
+        "SH-01-EL-S13",
+        "SH-01-EL-S15",
+        "SH-01-EL-S16",
+        "SH-01-EL-S17"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    },
+    {
+      "id": "SH-01-EV-014",
+      "source_event_id": "SH01-EV-14",
+      "name": "Hiển thị nội dung tĩnh marketing/chân trang",
+      "trigger": "Hiển thị trang",
+      "processing": "Chỉ nội dung được xác nhận; ẩn tuyên bố, dữ liệu cá nhân, logo/chứng nhận và thư điện tử chưa có nguồn.",
+      "element_ids": [
+        "SH-01-EL-002",
+        "SH-01-EL-003",
+        "SH-01-EL-007",
+        "SH-01-EL-014",
+        "SH-01-EL-015",
+        "SH-01-EL-016",
+        "SH-01-EL-017",
+        "SH-01-EL-018",
+        "SH-01-EL-019",
+        "SH-01-EL-022",
+        "SH-01-EL-023",
+        "SH-01-EL-025",
+        "SH-01-EL-026"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-14; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B-01",
+      "description": "DD và API còn chờ xác nhận",
+      "impact": "DD SH-01 và DD API #05/#06 còn trạng thái BLOCKED/bản nháp.",
+      "decision": "Không dùng ca chờ xác nhận để tuyên bố nghiệm thu. Người phụ trách sản phẩm/API xác nhận câu hỏi mở; tiếp tục dùng DD hiện có làm nguồn lập UTC theo chỉ dẫn người dùng.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md; apps/study-server/docs/dd/05_categories/00_Cover.md; apps/study-server/docs/dd/06_courses/00_Cover.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-02",
+      "description": "Ảnh, HTML và Angular khác nhau",
+      "impact": "Chưa chọn ảnh PNG, HTML hay mã Angular làm hình thức chuẩn cuối.",
+      "decision": "Không thể coi toàn bộ marker ảnh là giao diện môi trường chạy. Người phụ trách sản phẩm/thiết kế duyệt phạm vi và nội dung; giữ ca đối chiếu nguồn riêng.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md §6; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §1–4; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01.md §1.1",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-03",
+      "description": "Bộ lọc danh mục chưa có hợp đồng",
+      "impact": "#06 hiện từ chối truy vấn danh mục bằng 422; lược đồ CSDL kế thừa không có quan hệ khóa học-danh mục.",
+      "decision": "Không bật chip bộ lọc hoặc gửi id/slug tới #06. API/dữ liệu người phụ trách xác nhận quan hệ, tham số và phân trang.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-08; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md §3.1; apps/study-server/app/modules/guest/api_06_courses/validate.py",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-04",
+      "description": "Đích thẻ khóa học mâu thuẫn",
+      "impact": "GS-03/#08 được nêu là đích trong một nguồn nhưng không có trong danh sách màn hình tiếp theo SH-01.",
+      "decision": "Không xác nhận điều hướng chi tiết. Người phụ trách sản phẩm/màn hình người phụ trách chốt đích trước khi tạo liên kết.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-10; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md §2; apps/study-client/docs/list_screen.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-05",
+      "description": "Tuyên bố và dữ liệu ảnh thiếu nguồn",
+      "impact": "Chỉ số (chỉ số hiệu quả chính (KPI)), giá/currency, điểm đánh giá, thời lượng, lời chứng thực, logo, chứng nhận và thư điện tử thiếu nguồn hoặc phê duyệt.",
+      "decision": "Không trình bày như dữ liệu thật; không thu thập PII. Người phụ trách liên quan cung cấp nguồn, định nghĩa, quyền sử dụng và phê duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §3–4; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-12, SH01-EV-14",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-06",
+      "description": "Không có biến thể thứ hai",
+      "impact": "Cây tài liệu hiện tại chỉ có biến thể-1; biến thể-2 không tìm thấy.",
+      "decision": "Không có căn cứ bao phủ biến thể chưa được cung cấp. Cung cấp/duyệt biến thể nếu còn thuộc phạm vi.",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_PLAN.md; apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01.md §1.1",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-07",
+      "description": "API/schema/môi trường chạy chưa xác minh",
+      "impact": "API DD còn bản nháp; DB/schema thật, trực tiếp dữ liệu và triển khai chưa được xác minh.",
+      "decision": "UTC là kế hoạch theo DD/nguồn, không chứng minh môi trường thật hoạt động. API/CSDL/vận hành người phụ trách xác nhận hợp đồng và môi trường trước kiểm thử tích hợp.",
+      "source_ref": "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md §4, §6; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "B-08",
+      "description": "Thiết kế và hướng dẫn Study lệch nhau",
+      "impact": "Ảnh tham khảo và hướng dẫn Study khác token/kích thước/bố cục.",
+      "decision": "Đánh giá hình thức phụ thuộc chuẩn được chọn và trình duyệt đích. Thiết kế người phụ trách chốt hướng dẫn rồi xác minh máy tính/thiết bị di động/accessibility.",
+      "source_ref": "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01.md §1; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md §3; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.css",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "SH-01-TC-MH-001",
+        "requirement_ids": [
+          "SH-01-YC-001",
+          "SH-01-YC-002",
+          "SH-01-YC-009",
+          "SH-01-YC-015",
+          "SH-01-YC-034"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến `/` với vai trò khách",
+        "precondition": "Không cần phiên đăng nhập.",
+        "data": "Truy cập `/`.",
+        "steps": [
+          "Mở trực tiếp `/`.",
+          "Ghi nhận tuyến và hai yêu cầu."
+        ],
+        "expected": "SH-01 được đăng ký tại `/`; không yêu cầu đăng nhập; khởi tạo GET #05 và #06 riêng. Trình duyệt của lượt này chưa xác minh.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-002",
+        "requirement_ids": [
+          "SH-01-YC-002",
+          "SH-01-YC-009",
+          "SH-01-YC-010",
+          "SH-01-YC-011",
+          "SH-01-YC-012",
+          "SH-01-YC-013",
+          "SH-01-YC-015",
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-018",
+          "SH-01-YC-019",
+          "SH-01-YC-020",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Tải thành công cả hai vùng",
+        "precondition": "Có dữ liệu giả lập hợp lệ cho hai GET.",
+        "data": "#05 có danh mục; #06 có ba khóa học PUBLISHED.",
+        "steps": [
+          "Mở trang.",
+          "Trả phản hồi riêng cho từng GET.",
+          "Quan sát hai vùng."
+        ],
+        "expected": "Danh mục hiện name; khóa học hiện theo thứ tự phản hồi; không giá; hai vùng cập nhật độc lập.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-003",
+        "requirement_ids": [
+          "SH-01-YC-009",
+          "SH-01-YC-010",
+          "SH-01-YC-012",
+          "SH-01-YC-013",
+          "SH-01-YC-014",
+          "SH-01-YC-029",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Danh mục lỗi, khóa học thành công",
+        "precondition": "Hai yêu cầu đang chờ.",
+        "data": "#05 trả 500; #06 trả khóa học hợp lệ.",
+        "steps": [
+          "Trả #05 lỗi.",
+          "Trả #06 thành công."
+        ],
+        "expected": "Danh mục vào lỗi/thử lại; khóa học vẫn hiện; lỗi không biến thành rỗng.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-004",
+        "requirement_ids": [
+          "SH-01-YC-013",
+          "SH-01-YC-014",
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-018",
+          "SH-01-YC-023",
+          "SH-01-YC-029",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Khóa học lỗi, danh mục thành công",
+        "precondition": "Hai yêu cầu đang chờ.",
+        "data": "#05 hợp lệ; #06 lỗi mạng.",
+        "steps": [
+          "Trả #05 thành công.",
+          "Trả #06 lỗi."
+        ],
+        "expected": "Danh mục giữ nguyên; khóa học vào lỗi/thử lại riêng.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-005",
+        "requirement_ids": [
+          "SH-01-YC-010",
+          "SH-01-YC-011",
+          "SH-01-YC-012",
+          "SH-01-YC-013",
+          "SH-01-YC-018",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Danh mục rỗng, khóa học có dữ liệu",
+        "precondition": "Hai GET có dữ liệu giả lập riêng.",
+        "data": "#05 rỗng hợp lệ; #06 có khóa học PUBLISHED.",
+        "steps": [
+          "Mở trang; trả hai dữ liệu giả lập."
+        ],
+        "expected": "Danh mục hiện rỗng; khóa học vẫn hiển thị; không nhãn mẫu.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-006",
+        "requirement_ids": [
+          "SH-01-YC-013",
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-018",
+          "SH-01-YC-023",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Khóa học rỗng, danh mục có dữ liệu",
+        "precondition": "Hai GET có dữ liệu giả lập riêng.",
+        "data": "#05 có mục; #06 `items=[]`,total=0,`total_pages`=0.",
+        "steps": [
+          "Mở trang; trả hai dữ liệu giả lập."
+        ],
+        "expected": "Danh mục vẫn hiện; khóa học hiện thông báo rỗng; không thẻ mẫu.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-007",
+        "requirement_ids": [
+          "SH-01-YC-009",
+          "SH-01-YC-010",
+          "SH-01-YC-012",
+          "SH-01-YC-029",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Cấu trúc bao phản hồi #05 sai",
+        "precondition": "HTTP thành công nhưng cấu trúc bao phản hồi sai.",
+        "data": "`businessCode` khác hoặc `success=false`.",
+        "steps": [
+          "Trả phản hồi sai cho #05.",
+          "Quan sát vùng danh mục."
+        ],
+        "expected": "Vùng danh mục báo lỗi; không hiện rỗng; vùng khóa học không đổi.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-008",
+        "requirement_ids": [
+          "SH-01-YC-015",
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-029",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Phép chiếu dữ liệu/phân trang #06 sai",
+        "precondition": "HTTP thành công nhưng dữ liệu sai.",
+        "data": "Thiếu người hướng dẫn.`full_name` hoặc phân trang sai.",
+        "steps": [
+          "Trả dữ liệu giả lập không hợp lệ.",
+          "Quan sát vùng khóa học."
+        ],
+        "expected": "Vùng khóa học báo lỗi; không hiển thị một phần hoặc chuyển rỗng.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-009",
+        "requirement_ids": [
+          "SH-01-YC-001",
+          "SH-01-YC-002",
+          "SH-01-YC-028",
+          "SH-01-YC-029",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "GET công khai trả 401/403",
+        "precondition": "Trang đã mở.",
+        "data": "Lượt riêng: #05 trả 401; #06 trả 403.",
+        "steps": [
+          "Giả lập từng lỗi.",
+          "Quan sát URL và hai vùng."
+        ],
+        "expected": "Người dùng vẫn ở SH-01; lỗi chỉ hiện tại vùng tương ứng; không tự chuyển `/login`.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-010",
+        "requirement_ids": [
+          "SH-01-YC-009",
+          "SH-01-YC-014",
+          "SH-01-YC-015",
+          "SH-01-YC-023",
+          "SH-01-YC-029"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu chính xác yêu cầu API",
+        "precondition": "Có spy HTTP trong môi trường kiểm thử.",
+        "data": "Không mã truy cập; #05 không truy vấn; #06 `page=1,size=6`.",
+        "steps": [
+          "Mở trang.",
+          "Ghi method, URL, truy vấn, headers, phần thân yêu cầu."
+        ],
+        "expected": "Chỉ có GET #05 không truy vấn và GET #06 với `page=1,size=6`; không `danh mục`/`sắp xếp`/phần thân yêu cầu/Authorization.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-011",
+        "requirement_ids": [
+          "SH-01-YC-005",
+          "SH-01-YC-006",
+          "SH-01-YC-008",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Tìm kiếm Unicode có khoảng trắng",
+        "precondition": "Ô phần mở đầu đã hiển thị.",
+        "data": "`  Công nghệ React  `.",
+        "steps": [
+          "Nhập q.",
+          "Gửi bằng Enter.",
+          "Quan sát route/truy vấn/mạng."
+        ],
+        "expected": "Đi tới `/courses/search`, q=`Công nghệ React`; không gọi #07 tại SH-01 và không có truy vấn thừa.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-012",
+        "requirement_ids": [
+          "SH-01-YC-005",
+          "SH-01-YC-007",
+          "SH-01-YC-008"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Không gửi tìm kiếm rỗng",
+        "precondition": "Biểu mẫu đã hiển thị.",
+        "data": "q rỗng rồi q gồm ba dấu cách.",
+        "steps": [
+          "Nhập từng giá trị.",
+          "Thử gửi."
+        ],
+        "expected": "Nút bị vô hiệu hóa; gửi guard không điều hướng hoặc phát yêu cầu.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-013",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-022"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Lời kêu gọi hành động (CTA) danh sách mở GS-01",
+        "precondition": "Trang đã hiển thị.",
+        "data": "lời kêu gọi hành động (CTA) “Khám phá khóa học”, liên kết “Xem tất cả khóa học”.",
+        "steps": [
+          "Chọn từng liên kết ở lượt riêng."
+        ],
+        "expected": "Mỗi liên kết mở `/courses`; SH-01 không gọi thêm API.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-014",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Lời kêu gọi hành động (CTA) tài khoản mở đúng tuyến",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Đăng nhập `/login`; đăng ký `/register`.",
+        "steps": [
+          "Chọn đăng nhập rồi đăng ký ở lượt riêng."
+        ],
+        "expected": "Mở đúng tuyến; không gọi API xác thực hoặc gửi credential/email.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-015",
+        "requirement_ids": [
+          "SH-01-YC-003",
+          "SH-01-YC-024",
+          "SH-01-YC-025",
+          "SH-01-YC-026",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Không trình bày tuyên bố mẫu như dữ liệu thật",
+        "precondition": "Hai GET trả dữ liệu hợp lệ.",
+        "data": "Không có nguồn chỉ số (KPI), điểm đánh giá, lời chứng thực, logo, chứng nhận, đơn vị tiền tệ hoặc thư điện tử API.",
+        "steps": [
+          "Rà soát toàn trang và cây trợ năng."
+        ],
+        "expected": "Không xuất hiện dữ liệu/claim mẫu; giá, biểu mẫu thư điện tử và vùng tiếp thị thiếu nguồn được lược. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-016",
+        "requirement_ids": [
+          "SH-01-YC-018",
+          "SH-01-YC-019",
+          "SH-01-YC-020",
+          "SH-01-YC-021"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Không hiển thị giá thiếu tiền tệ",
+        "precondition": "Khóa học có giá.",
+        "data": "giá=`2850000.00`; không đơn vị tiền tệ.",
+        "steps": [
+          "Trả khóa học PUBLISHED.",
+          "Kiểm tra thẻ."
+        ],
+        "expected": "Không giá, đơn vị tiền tệ, giá cũ hoặc giảm giá.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-017",
+        "requirement_ids": [
+          "SH-01-YC-026",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Không làm lộ thư điện tử/mã truy cập",
+        "precondition": "Trang mở; quan sát URL/request/storage.",
+        "data": "Chỉ nhập q giả lập; không dùng tài khoản thật.",
+        "steps": [
+          "Mở trang và tìm kiếm.",
+          "Kiểm tra URL, GET headers, bộ nhớ lưu trữ."
+        ],
+        "expected": "Chỉ q đã trim có thể chuyển sang GS-02; không thư điện tử, mã truy cập hoặc phiên ID.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-018",
+        "requirement_ids": [
+          "SH-01-YC-002",
+          "SH-01-YC-031",
+          "SH-01-YC-032"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Bàn phím và khung nhìn thích ứng",
+        "precondition": "Cần browser/môi trường chạy đích để xác minh.",
+        "data": "Tab/Shift+Tab; khung nhìn 320px và máy tính.",
+        "steps": [
+          "Dùng phím Tab để đi qua bỏ qua liên kết, điều hướng, tìm kiếm, lời kêu gọi hành động (CTA) và thử lại.",
+          "Rà soát tiêu điểm/nhãn/tràn ngang/vùng chạm."
+        ],
+        "expected": "Liên kết bỏ qua điều hướng hiện khi tiêu điểm; nhãn/tiêu điểm nhìn thấy; không tràn ở 320px và điều khiển đạt 44px theo DD. Chờ xác nhận môi trường chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-MH-019",
+        "requirement_ids": [
+          "SH-01-YC-003",
+          "SH-01-YC-027",
+          "SH-01-YC-033",
+          "SH-01-YC-034"
+        ],
+        "target_id": "SH-01",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu chân trang với nguồn hiện tại",
+        "precondition": "Đã cuộn cuối trang.",
+        "data": "Angular chân trang so với asset PNG.",
+        "steps": [
+          "Rà soát text và links."
+        ],
+        "expected": "Chỉ brand/link hiện trong mã được coi là môi trường chạy; cột pháp lý, chứng nhận và bản quyền trong ảnh còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/00-overview.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/07-test-cases.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "SH-01-TC-TP-001",
+        "requirement_ids": [
+          "SH-01-YC-003",
+          "SH-01-YC-004"
+        ],
+        "target_id": "SH-01-EL-001",
+        "group": "Nhóm đầu trang",
+        "title": "Đối chiếu đầu trang",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Đầu trang Angular và PNG mẫu.",
+        "steps": [
+          "Rà soát nhóm đầu trang."
+        ],
+        "expected": "Đầu trang khớp cấu trúc mã hiện tại; không có ô tìm kiếm riêng, chuông hoặc ảnh đại diện như ảnh; khác biệt thiết kế vẫn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #1; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-002",
+        "requirement_ids": [
+          "SH-01-YC-024"
+        ],
+        "target_id": "SH-01-EL-002",
+        "group": "Nội dung tiếp thị",
+        "title": "Ẩn huy hiệu chiến dịch",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Huy hiệu PNG không có nguồn data.",
+        "steps": [
+          "Rà soát đầu phần mở đầu."
+        ],
+        "expected": "Không hiển thị badge/claim chiến dịch từ ảnh. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #2; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-003",
+        "requirement_ids": [
+          "SH-01-YC-002",
+          "SH-01-YC-003"
+        ],
+        "target_id": "SH-01-EL-003",
+        "group": "Nội dung tĩnh",
+        "title": "Đối chiếu nội dung phần mở đầu",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Nội dung Angular khác PNG.",
+        "steps": [
+          "Đọc h1 và phần mô tả."
+        ],
+        "expected": "Hiện nội dung Angular hiện tại; không dùng nội dung ảnh như tuyên bố đã duyệt. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #3; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-004",
+        "requirement_ids": [
+          "SH-01-YC-005",
+          "SH-01-YC-006"
+        ],
+        "target_id": "SH-01-EL-004",
+        "group": "Ô nhập",
+        "title": "Nhập tìm kiếm Unicode",
+        "precondition": "Ô phần mở đầu có tiêu điểm.",
+        "data": "`Công nghệ React`; không đặt maxlength.",
+        "steps": [
+          "Nhập từ khóa và dấu tiếng Việt."
+        ],
+        "expected": "Giá trị không bị cắt hoặc tự đổi trước khi gửi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #4; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-005",
+        "requirement_ids": [
+          "SH-01-YC-006",
+          "SH-01-YC-007"
+        ],
+        "target_id": "SH-01-EL-005",
+        "group": "Nút",
+        "title": "Trạng thái nút tìm kiếm",
+        "precondition": "Biểu mẫu đã hiển thị.",
+        "data": "q=`   ` rồi ` React `.",
+        "steps": [
+          "Nhập từng giá trị.",
+          "Quan sát bị vô hiệu hóa."
+        ],
+        "expected": "Bị vô hiệu hóa khi trim rỗng; được bật khi còn ký tự.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #5; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-006",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-005"
+        ],
+        "target_id": "SH-01-EL-006",
+        "group": "Liên kết",
+        "title": "Điều hướng lời kêu gọi hành động (CTA) phần mở đầu",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Khám phá khóa học; Đăng ký tài khoản.",
+        "steps": [
+          "Chọn mỗi lời kêu gọi hành động (CTA) ở lượt riêng."
+        ],
+        "expected": "Mở `/courses` và `/register`; không gọi xác thực API.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #6; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-007",
+        "requirement_ids": [
+          "SH-01-YC-024"
+        ],
+        "target_id": "SH-01-EL-007",
+        "group": "Nội dung tiếp thị",
+        "title": "Ẩn chỉ số (chỉ số hiệu quả chính (KPI)) mẫu",
+        "precondition": "Trang đã hiển thị.",
+        "data": "10.000+, 120+, 94% trên ảnh.",
+        "steps": [
+          "Rà soát phần mở đầu."
+        ],
+        "expected": "Không có chỉ số (chỉ số hiệu quả chính (KPI)) nào được hiển thị như dữ liệu thật. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #7; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-008",
+        "requirement_ids": [
+          "SH-01-YC-012",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01-EL-008",
+        "group": "Tiêu đề",
+        "title": "Tiêu đề danh mục",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Eyebrow Danh mục; h2 Danh mục khóa học.",
+        "steps": [
+          "Đọc tên phần/tiêu đề."
+        ],
+        "expected": "Hiển thị đúng nhãn tiếng Việt trong mã.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #8; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-009",
+        "requirement_ids": [
+          "SH-01-YC-010",
+          "SH-01-YC-012"
+        ],
+        "target_id": "SH-01-EL-009",
+        "group": "Danh sách",
+        "title": "Danh mục chỉ là nhãn",
+        "precondition": "#05 trả danh mục hợp lệ.",
+        "data": "Hai name giả lập; id/slug chỉ phục vụ trace.",
+        "steps": [
+          "Quan sát danh sách, thử phím Tab/nhấn chuột."
+        ],
+        "expected": "Chỉ hiển thị `name`; không nút/liên kết, số lượng, biểu tượng hay GET #06 khi chọn.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #9; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-010",
+        "requirement_ids": [
+          "SH-01-YC-023"
+        ],
+        "target_id": "SH-01-EL-010",
+        "group": "Điều khiển chưa có hợp đồng",
+        "title": "Ẩn băng chuyền",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Nút mũi tên có trên PNG.",
+        "steps": [
+          "Rà soát DOM/cây trợ năng."
+        ],
+        "expected": "Không có nút hoặc bộ xử lý cho băng chuyền. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #10; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-011",
+        "requirement_ids": [
+          "SH-01-YC-018",
+          "SH-01-YC-022"
+        ],
+        "target_id": "SH-01-EL-011",
+        "group": "Tiêu đề",
+        "title": "Tiêu đề khóa học không xếp hạng",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Tiêu đề hiện Khóa học đã xuất bản.",
+        "steps": [
+          "Đọc tiêu đề."
+        ],
+        "expected": "Không gắn “phổ biến/nổi bật” từ ảnh.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #11; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-012",
+        "requirement_ids": [
+          "SH-01-YC-022",
+          "SH-01-YC-023"
+        ],
+        "target_id": "SH-01-EL-012",
+        "group": "Nhóm điều khiển",
+        "title": "Tách Xem tất cả khỏi bộ lọc",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Liên kết hiện tại; thẻ ảnh mẫu.",
+        "steps": [
+          "Rà soát điều khiển; chọn liên kết."
+        ],
+        "expected": "Chỉ liên kết mở `/courses`; không có thẻ hoặc truy vấn sắp xếp/bộ lọc. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #12; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-013",
+        "requirement_ids": [
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-018",
+          "SH-01-YC-019",
+          "SH-01-YC-020"
+        ],
+        "target_id": "SH-01-EL-013",
+        "group": "Danh sách lặp",
+        "title": "Lưới chỉ dùng phản hồi",
+        "precondition": "#06 trả 6 mục PUBLISHED và DRAFT.",
+        "data": "Các trường API thực có; currency/rating/lesson số lượng không có.",
+        "steps": [
+          "Trả dữ liệu giả lập; đếm và đối chiếu thứ tự/trường."
+        ],
+        "expected": "Chỉ PUBLISHED, tối đa sáu theo thứ tự; không hiện trường ngoài DTO hoặc giá.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-014",
+        "requirement_ids": [
+          "SH-01-YC-024"
+        ],
+        "target_id": "SH-01-EL-014",
+        "group": "Nội dung tiếp thị",
+        "title": "Ẩn phần lợi ích",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Phần chỉ có trên PNG.",
+        "steps": [
+          "Rà soát sau khóa học grid."
+        ],
+        "expected": "Không hiển thị heading/claim lợi ích chưa duyệt. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #14; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-015",
+        "requirement_ids": [
+          "SH-01-YC-024"
+        ],
+        "target_id": "SH-01-EL-015",
+        "group": "Nội dung tiếp thị",
+        "title": "Ẩn thẻ lợi ích",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Ba thẻ trên ảnh.",
+        "steps": [
+          "Rà soát nội dung."
+        ],
+        "expected": "Không hiển thị tính năng/benefit như dịch vụ đã xác nhận. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #15; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-016",
+        "requirement_ids": [
+          "SH-01-YC-025"
+        ],
+        "target_id": "SH-01-EL-016",
+        "group": "Lời chứng thực",
+        "title": "Ẩn chỉ số lời chứng thực",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Chỉ số trên ảnh.",
+        "steps": [
+          "Rà soát khu vực lời chứng thực."
+        ],
+        "expected": "Không metric/testimonial chưa có nguồn. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #16; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-017",
+        "requirement_ids": [
+          "SH-01-YC-025",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01-EL-017",
+        "group": "Dữ liệu cá nhân/claim",
+        "title": "Ẩn dữ liệu lời chứng thực cá nhân",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Quote/tên/avatar/rating trên ảnh.",
+        "steps": [
+          "Rà soát trang và cây trợ năng."
+        ],
+        "expected": "Không lời trích dẫn, tên, ảnh, điểm đánh giá hoặc chức danh mẫu. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #17; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-018",
+        "requirement_ids": [
+          "SH-01-YC-025"
+        ],
+        "target_id": "SH-01-EL-018",
+        "group": "Tuyên bố đối tác",
+        "title": "Ẩn logo doanh nghiệp",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Logo/năm tên trong ảnh.",
+        "steps": [
+          "Rà soát trước chân trang."
+        ],
+        "expected": "Không logo/claim đối tác chưa được cấp quyền. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #18; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-019",
+        "requirement_ids": [
+          "SH-01-YC-026"
+        ],
+        "target_id": "SH-01-EL-019",
+        "group": "Thu thập thông tin",
+        "title": "Ẩn nội dung lời kêu gọi hành động (CTA) thư điện tử",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Không có điểm cuối/consent.",
+        "steps": [
+          "Rà soát trước chân trang."
+        ],
+        "expected": "Không nội dung thu thập thư điện tử chưa có hệ thống máy chủ/chính sách. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #19; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-020",
+        "requirement_ids": [
+          "SH-01-YC-026",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01-EL-020",
+        "group": "Dữ liệu cá nhân",
+        "title": "Không tạo ô nhập thư điện tử",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Các ô nhập hiện có.",
+        "steps": [
+          "Rà soát toàn trang."
+        ],
+        "expected": "Chỉ có tìm kiếm ô nhập; không có ô nhập thư điện tử. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #20; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-021",
+        "requirement_ids": [
+          "SH-01-YC-026",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01-EL-021",
+        "group": "Nút chưa hỗ trợ",
+        "title": "Không tạo nút gửi thư điện tử",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Không có bản tin API.",
+        "steps": [
+          "Rà soát biểu mẫu và nút."
+        ],
+        "expected": "Không có nút gửi hoặc thành công giả. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #21; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-022",
+        "requirement_ids": [
+          "SH-01-YC-025",
+          "SH-01-YC-026"
+        ],
+        "target_id": "SH-01-EL-022",
+        "group": "Tuyên bố chính sách",
+        "title": "Ẩn nhãn bảo đảm",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Nhãn ảnh về riêng tư/tư vấn.",
+        "steps": [
+          "Rà soát lời kêu gọi hành động (CTA)/footer."
+        ],
+        "expected": "Không hiển thị cam kết chưa có chính sách. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #22; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-023",
+        "requirement_ids": [
+          "SH-01-YC-002",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EL-023",
+        "group": "Nội dung thương hiệu",
+        "title": "Đối chiếu thương hiệu chân trang",
+        "precondition": "Trang đã hiển thị đến cuối.",
+        "data": "Thương hiệu Angular; mô tả dài PNG.",
+        "steps": [
+          "Rà soát chân trang."
+        ],
+        "expected": "Chỉ nội dung thương hiệu trong nguồn; không thêm tuyên bố ảnh. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #23; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-024",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EL-024",
+        "group": "Điều hướng",
+        "title": "Kiểm tra liên kết chân trang",
+        "precondition": "Trang đã hiển thị đến cuối.",
+        "data": "`/courses`, `/login`, `/register`.",
+        "steps": [
+          "Kiểm tra href từng liên kết."
+        ],
+        "expected": "Mỗi liên kết tới đúng tuyến đã đăng ký; không dựng liên kết pháp lý giả. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #24; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-025",
+        "requirement_ids": [
+          "SH-01-YC-025"
+        ],
+        "target_id": "SH-01-EL-025",
+        "group": "Tuyên bố chứng nhận",
+        "title": "Ẩn chứng nhận",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Không có issuer/mã chứng nhận.",
+        "steps": [
+          "Rà soát chân trang."
+        ],
+        "expected": "Không hiển thị badge/claim chứng nhận. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #25; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-026",
+        "requirement_ids": [
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EL-026",
+        "group": "Nội dung pháp lý/biên tập",
+        "title": "Không tự thêm copyright/tagline",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Năm/tagline chỉ có trên PNG.",
+        "steps": [
+          "Rà soát cuối trang."
+        ],
+        "expected": "Không tự tạo năm bản quyền hoặc khẩu hiệu chưa được duyệt. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json #26; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md §2–3"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-027",
+        "requirement_ids": [
+          "SH-01-YC-005",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01-EL-S01",
+        "group": "Liên kết trợ năng",
+        "title": "Tiêu điểm liên kết bỏ qua",
+        "precondition": "Trang đầu, bàn phím ở đầu tài liệu.",
+        "data": "Phím Thẻ.",
+        "steps": [
+          "Nhấn Thẻ.",
+          "Quan sát liên kết rồi chọn."
+        ],
+        "expected": "Liên kết tiếng Việt hiện khi tiêu điểm và nhảy tới #sh01-main.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-028",
+        "requirement_ids": [
+          "SH-01-YC-012",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01-EL-S02",
+        "group": "Trạng thái tải",
+        "title": "Khung chờ danh mục truy cập được",
+        "precondition": "#05 đang chờ.",
+        "data": "Phản hồi chưa trả.",
+        "steps": [
+          "Mở trang; giữ #05 chờ.",
+          "Kiểm tra trạng thái/thuộc tính ARIA."
+        ],
+        "expected": "Có bốn khung chờ; vùng trạng thái báo đang tải và `aria-busy=true`.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-029",
+        "requirement_ids": [
+          "SH-01-YC-012",
+          "SH-01-YC-013"
+        ],
+        "target_id": "SH-01-EL-S03",
+        "group": "Trạng thái lỗi/nút",
+        "title": "Thử lại danh mục riêng",
+        "precondition": "#05 lỗi, #06 thành công.",
+        "data": "Nút Thử lại danh mục.",
+        "steps": [
+          "Chọn nút."
+        ],
+        "expected": "Chỉ GET #05 lặp; vùng khóa học giữ nguyên.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-030",
+        "requirement_ids": [
+          "SH-01-YC-010",
+          "SH-01-YC-012"
+        ],
+        "target_id": "SH-01-EL-S04",
+        "group": "Trạng thái rỗng",
+        "title": "Thông báo danh mục rỗng",
+        "precondition": "#05 trả rỗng hợp lệ.",
+        "data": "`items=[]`; size=0,total=0,`total_pages`=1.",
+        "steps": [
+          "Trả dữ liệu giả lập và đọc vùng."
+        ],
+        "expected": "Hiện thông báo rỗng; không danh mục mẫu.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-031",
+        "requirement_ids": [
+          "SH-01-YC-012",
+          "SH-01-YC-031"
+        ],
+        "target_id": "SH-01-EL-S05",
+        "group": "Trạng thái tải",
+        "title": "Khung chờ khóa học truy cập được",
+        "precondition": "#06 đang chờ.",
+        "data": "Phản hồi chưa trả.",
+        "steps": [
+          "Mở trang; giữ #06 chờ.",
+          "Kiểm tra trạng thái/thuộc tính ARIA."
+        ],
+        "expected": "Có sáu khung chờ; trạng thái báo đang tải và `aria-busy=true`.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-032",
+        "requirement_ids": [
+          "SH-01-YC-013",
+          "SH-01-YC-014"
+        ],
+        "target_id": "SH-01-EL-S06",
+        "group": "Trạng thái lỗi/nút",
+        "title": "Thử lại khóa học riêng",
+        "precondition": "#06 lỗi, #05 thành công.",
+        "data": "Nút Thử lại khóa học.",
+        "steps": [
+          "Chọn nút."
+        ],
+        "expected": "Chỉ GET #06 `page=1,size=6` lặp; danh mục giữ nguyên.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-033",
+        "requirement_ids": [
+          "SH-01-YC-016",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01-EL-S07",
+        "group": "Trạng thái rỗng",
+        "title": "Thông báo khóa học rỗng",
+        "precondition": "#06 trả rỗng hợp lệ.",
+        "data": "`items=[]`; total=0,`total_pages`=0.",
+        "steps": [
+          "Trả dữ liệu giả lập và đọc vùng."
+        ],
+        "expected": "Hiện thông báo không có khóa học đã xuất bản; không thẻ mẫu.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-034",
+        "requirement_ids": [
+          "SH-01-YC-018",
+          "SH-01-YC-020"
+        ],
+        "target_id": "SH-01-EL-S08",
+        "group": "Thẻ không tương tác",
+        "title": "Thẻ không nhận tương tác điều hướng",
+        "precondition": "Có thẻ PUBLISHED.",
+        "data": "thẻ `<article>` khóa học id=42.",
+        "steps": [
+          "Dùng phím Tab để đi qua thẻ; chọn ảnh/heading."
+        ],
+        "expected": "Không liên kết/nút/tiêu điểmable; URL không đổi, #08 không gọi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-035",
+        "requirement_ids": [
+          "SH-01-YC-019"
+        ],
+        "target_id": "SH-01-EL-S09",
+        "group": "Ảnh/trạng thái lỗi",
+        "title": "Ảnh khóa học có phương án thay thế",
+        "precondition": "Khóa học có ảnh hợp lệ, null và URL lỗi ở lượt riêng.",
+        "data": "`thumbnail_url` và title.",
+        "steps": [
+          "Kiểm tra từng biến thể."
+        ],
+        "expected": "Ảnh dùng alt=title,lazy,`no-referrer`; giá trị null/lỗi dùng chữ gợi ý trung tính.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-036",
+        "requirement_ids": [
+          "SH-01-YC-016",
+          "SH-01-YC-019"
+        ],
+        "target_id": "SH-01-EL-S10",
+        "group": "Văn bản thẻ",
+        "title": "Tiêu đề và description tùy chọn",
+        "precondition": "Khóa học hợp lệ.",
+        "data": "title bắt buộc; description chuỗi/null.",
+        "steps": [
+          "Trả hai biến thể."
+        ],
+        "expected": "Tiêu đề hiện ở cả hai; description chỉ khi có chuỗi.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-037",
+        "requirement_ids": [
+          "SH-01-YC-016",
+          "SH-01-YC-019"
+        ],
+        "target_id": "SH-01-EL-S11",
+        "group": "Thông tin người hướng dẫn",
+        "title": "Tên người hướng dẫn và ảnh đại diện phương án thay thế",
+        "precondition": "Khóa học có người hướng dẫn hợp lệ.",
+        "data": "`full_name` bắt buộc; ảnh đại diện URL/giá trị null/lỗi.",
+        "steps": [
+          "Kiểm tra từng biến thể."
+        ],
+        "expected": "Tên đúng `full_name`; ảnh đại diện giá trị null/lỗi có chữ gợi ý; ảnh văn bản thay thế rỗng.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-038",
+        "requirement_ids": [
+          "SH-01-YC-018",
+          "SH-01-YC-019"
+        ],
+        "target_id": "SH-01-EL-S12",
+        "group": "Trường bị ẩn",
+        "title": "Ẩn giá trong DOM hiển thị",
+        "precondition": "Khóa học có giá nhưng không đơn vị tiền tệ.",
+        "data": "giá=`2850000.00`; không đơn vị tiền tệ.",
+        "steps": [
+          "Trả khóa học; rà soát thẻ."
+        ],
+        "expected": "Không có giá/đơn vị/giảm giá trong nội dung hiển thị.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/05-business-rules.md; apps/study-client/src/app/features/shared/SH01/ui/sh01-course-card.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-039",
+        "requirement_ids": [
+          "SH-01-YC-008"
+        ],
+        "target_id": "SH-01-EL-S13",
+        "group": "Liên kết neo",
+        "title": "Liên kết tìm kiếm neo tới phần mở đầu",
+        "precondition": "Đầu trang có `href=#sh01-search`.",
+        "data": "Một ô nhập tìm kiếm ở phần mở đầu.",
+        "steps": [
+          "Chọn liên kết Tìm kiếm."
+        ],
+        "expected": "Tới biểu mẫu phần mở đầu; không có ô nhập đầu trang thứ hai. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-040",
+        "requirement_ids": [
+          "SH-01-YC-005",
+          "SH-01-YC-006",
+          "SH-01-YC-007",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01-EL-S14",
+        "group": "Form/nhãn",
+        "title": "Nhãn, role và gửi biểu mẫu",
+        "precondition": "Biểu mẫu đã hiển thị.",
+        "data": "`role=search`; `aria-label` và nhãn for khớp.",
+        "steps": [
+          "Kiểm tra cây trợ năng.",
+          "Dùng nhãn tiêu điểm và Enter."
+        ],
+        "expected": "Tên biểu mẫu/nhãn bằng tiếng Việt; Enter gọi cùng logic gửi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/01-ui-elements.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-041",
+        "requirement_ids": [
+          "SH-01-YC-001",
+          "SH-01-YC-004",
+          "SH-01-YC-008"
+        ],
+        "target_id": "SH-01-EL-S15",
+        "group": "Nhóm liên kết",
+        "title": "Các liên kết điều hướng chính",
+        "precondition": "Trang đã hiển thị.",
+        "data": "`/`, `/courses`, `#sh01-search`.",
+        "steps": [
+          "Chọn từng liên kết."
+        ],
+        "expected": "Mở tuyến gốc và `/courses` hoặc cuộn tới phần mở đầu; không có chuông/avatar.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/06-navigation.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html; apps/study-client/src/app/features/guest/guest.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-042",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-026"
+        ],
+        "target_id": "SH-01-EL-S16",
+        "group": "Nhóm liên kết",
+        "title": "Liên kết tài khoản đầu trang",
+        "precondition": "Trang đã hiển thị.",
+        "data": "`/login`, `/register`.",
+        "steps": [
+          "Chọn mỗi liên kết."
+        ],
+        "expected": "Mở đúng tuyến; không phát yêu cầu xác thực/thư điện tử.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-TP-043",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EL-S17",
+        "group": "Nhóm liên kết",
+        "title": "Liên kết chân trang hiện có",
+        "precondition": "Đã cuộn cuối trang.",
+        "data": "`/courses`, `/login`, `/register`.",
+        "steps": [
+          "Chọn từng liên kết."
+        ],
+        "expected": "Mở đúng tuyến, không tới fragment không có đích. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/06-navigation.md; apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "SH-01-TC-SK-001",
+        "requirement_ids": [
+          "SH-01-YC-001",
+          "SH-01-YC-002",
+          "SH-01-YC-009",
+          "SH-01-YC-015"
+        ],
+        "target_id": "SH-01-EV-001",
+        "group": "Sự kiện",
+        "title": "Khởi tạo yêu cầu công khai độc lập",
+        "precondition": "Mở `/`; chưa có phản hồi.",
+        "data": "#05 không truy vấn; #06 `page=1,size=6`.",
+        "steps": [
+          "Mở trang.",
+          "Ghi yêu cầu và trạng thái ban đầu."
+        ],
+        "expected": "Hai GET khởi chạy; hai vùng bắt đầu đang tải riêng; không xác thực guard.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-01; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-002",
+        "requirement_ids": [
+          "SH-01-YC-012",
+          "SH-01-YC-013",
+          "SH-01-YC-023",
+          "SH-01-YC-029"
+        ],
+        "target_id": "SH-01-EV-001",
+        "group": "Sự kiện",
+        "title": "Phản hồi về khác thứ tự",
+        "precondition": "Hai yêu cầu đang chạy.",
+        "data": "#06 thành công trước, #05 lỗi sau.",
+        "steps": [
+          "Trả #06 trước.",
+          "Sau đó trả #05 lỗi."
+        ],
+        "expected": "Khóa học sẵn sàng; danh mục lỗi; thứ tự hoàn tất không ghi đè trạng thái vùng kia.",
+        "api_ids": [
+          "API-005",
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-01; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-003",
+        "requirement_ids": [
+          "SH-01-YC-005",
+          "SH-01-YC-006",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01-EV-002",
+        "group": "Sự kiện",
+        "title": "Gửi q đã trim có Unicode",
+        "precondition": "Biểu mẫu tìm kiếm đang mở.",
+        "data": "`  Đào tạo React  `.",
+        "steps": [
+          "Nhập q.",
+          "Gửi bằng Enter."
+        ],
+        "expected": "Đi tới `/courses/search?q=Đào tạo React` sau mã hóa của bộ định tuyến; không gọi #07 ở SH-01.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-02; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-004",
+        "requirement_ids": [
+          "SH-01-YC-005",
+          "SH-01-YC-007"
+        ],
+        "target_id": "SH-01-EV-002",
+        "group": "Sự kiện",
+        "title": "Bỏ qua q rỗng",
+        "precondition": "Biểu mẫu tìm kiếm đang mở.",
+        "data": "`   `.",
+        "steps": [
+          "Nhập khoảng trắng.",
+          "Thử gửi."
+        ],
+        "expected": "Không gọi bộ định tuyến hoặc API; nút bị vô hiệu hóa và gửi guard giữ trang.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-02; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-005",
+        "requirement_ids": [
+          "SH-01-YC-003",
+          "SH-01-YC-008"
+        ],
+        "target_id": "SH-01-EV-003",
+        "group": "Sự kiện",
+        "title": "Không dựng ô nhập đầu trang thứ hai",
+        "precondition": "Trang Angular hiện tại.",
+        "data": "Ảnh có ô nhập; mã hiện có neo #sh01-search.",
+        "steps": [
+          "Đếm ô nhập tìm kiếm.",
+          "Chọn liên kết Tìm kiếm."
+        ],
+        "expected": "Chỉ có một ô nhập phần mở đầu; neo đưa tới biểu mẫu. Quyết định thiết kế cuối còn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-03; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-006",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-022"
+        ],
+        "target_id": "SH-01-EV-004",
+        "group": "Sự kiện",
+        "title": "Mở `/courses` từ lời kêu gọi hành động (CTA) phần mở đầu",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Liên kết “Khám phá khóa học”.",
+        "steps": [
+          "Chọn liên kết."
+        ],
+        "expected": "Mở GS-01 `/courses`, không gọi API do nhấp.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-04; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-007",
+        "requirement_ids": [
+          "SH-01-YC-022"
+        ],
+        "target_id": "SH-01-EV-004",
+        "group": "Sự kiện",
+        "title": "Mở `/courses` từ liên kết xem tất cả",
+        "precondition": "Khóa học phần đã hiển thị.",
+        "data": "Liên kết “Xem tất cả khóa học”.",
+        "steps": [
+          "Chọn liên kết."
+        ],
+        "expected": "Mở `/courses`; không chuyển `danh mục`/`sắp xếp` hoặc gọi lại #05/#06.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-04; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-008",
+        "requirement_ids": [
+          "SH-01-YC-004"
+        ],
+        "target_id": "SH-01-EV-005",
+        "group": "Sự kiện",
+        "title": "Mở `/login`",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Liên kết đăng nhập.",
+        "steps": [
+          "Chọn liên kết."
+        ],
+        "expected": "Mở SH-02 `/login`; SH-01 không gọi #03.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-05; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-009",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-026"
+        ],
+        "target_id": "SH-01-EV-005",
+        "group": "Sự kiện",
+        "title": "Mở `/register`",
+        "precondition": "Trang đã hiển thị.",
+        "data": "lời kêu gọi hành động (CTA)/link đăng ký.",
+        "steps": [
+          "Chọn liên kết."
+        ],
+        "expected": "Mở SH-03 `/register`; SH-01 không gọi #01 và không thu thư điện tử.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-05; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-010",
+        "requirement_ids": [
+          "SH-01-YC-009",
+          "SH-01-YC-010",
+          "SH-01-YC-011",
+          "SH-01-YC-012",
+          "SH-01-YC-013"
+        ],
+        "target_id": "SH-01-EV-006",
+        "group": "Sự kiện",
+        "title": "Danh mục hợp lệ",
+        "precondition": "GET #05 chờ phản hồi.",
+        "data": "Một mục id/name/slug; `page=1,size=1`,total=1,`total_pages`=1.",
+        "steps": [
+          "Trả cấu trúc bao phản hồi hợp lệ."
+        ],
+        "expected": "Vùng danh mục sẵn sàng; chỉ name hiển thị.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-06; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-011",
+        "requirement_ids": [
+          "SH-01-YC-010",
+          "SH-01-YC-011",
+          "SH-01-YC-012",
+          "SH-01-YC-013"
+        ],
+        "target_id": "SH-01-EV-006",
+        "group": "Sự kiện",
+        "title": "Danh mục rỗng hợp lệ",
+        "precondition": "GET #05 chờ phản hồi.",
+        "data": "`items=[]`; `page=1,size=0,total=0,`total_pages`=1`.",
+        "steps": [
+          "Trả cấu trúc bao phản hồi rỗng."
+        ],
+        "expected": "Vùng danh mục rỗng; thông báo rỗng; không nhãn mẫu.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-06; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-012",
+        "requirement_ids": [
+          "SH-01-YC-010",
+          "SH-01-YC-012",
+          "SH-01-YC-013",
+          "SH-01-YC-029"
+        ],
+        "target_id": "SH-01-EV-006",
+        "group": "Sự kiện",
+        "title": "Cấu trúc bao phản hồi/phép chiếu dữ liệu danh mục sai",
+        "precondition": "GET #05 chờ phản hồi.",
+        "data": "businessCode sai, thiếu name hoặc phân trang không khớp.",
+        "steps": [
+          "Trả từng dữ liệu giả lập sai riêng."
+        ],
+        "expected": "Mỗi dữ liệu giả lập đưa vùng danh mục vào lỗi; không empty/partial.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-06; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-013",
+        "requirement_ids": [
+          "SH-01-YC-009",
+          "SH-01-YC-013",
+          "SH-01-YC-028",
+          "SH-01-YC-029"
+        ],
+        "target_id": "SH-01-EV-006",
+        "group": "Sự kiện",
+        "title": "Lỗi #05 422/500/mạng",
+        "precondition": "GET #05 chờ phản hồi.",
+        "data": "Mỗi lượt dùng một loại lỗi.",
+        "steps": [
+          "Trả lỗi.",
+          "Quan sát danh mục và khóa học."
+        ],
+        "expected": "Danh mục báo lỗi; không tự chuyển hướng đăng nhập; khóa học giữ trạng thái.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-06; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-014",
+        "requirement_ids": [
+          "SH-01-YC-015",
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-018",
+          "SH-01-YC-019",
+          "SH-01-YC-020"
+        ],
+        "target_id": "SH-01-EV-007",
+        "group": "Sự kiện",
+        "title": "Khóa học PUBLISHED hợp lệ",
+        "precondition": "GET #06 chờ phản hồi.",
+        "data": "Một mục đầy đủ; tùy chọn trường giá trị null; `page=1,size=6`,total=1,`total_pages`=1.",
+        "steps": [
+          "Trả cấu trúc bao phản hồi hợp lệ."
+        ],
+        "expected": "Khóa học sẵn sàng; `title`/người hướng dẫn hiện; ảnh chữ gợi ý; giá ẩn.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-07; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-015",
+        "requirement_ids": [
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-018"
+        ],
+        "target_id": "SH-01-EV-007",
+        "group": "Sự kiện",
+        "title": "Lọc trạng thái khóa học",
+        "precondition": "GET #06 chờ phản hồi.",
+        "data": "Một mục PUBLISHED và một DRAFT.",
+        "steps": [
+          "Trả phản hồi hợp lệ."
+        ],
+        "expected": "Chỉ PUBLISHED được hiển thị.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-07; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-016",
+        "requirement_ids": [
+          "SH-01-YC-015",
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-018"
+        ],
+        "target_id": "SH-01-EV-007",
+        "group": "Sự kiện",
+        "title": "Khóa học rỗng hợp lệ",
+        "precondition": "GET #06 chờ phản hồi.",
+        "data": "`items=[]`; `page=1,size=6`,total=0,`total_pages`=0.",
+        "steps": [
+          "Trả phản hồi rỗng."
+        ],
+        "expected": "Vùng khóa học rỗng; không thẻ giả.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-07; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-017",
+        "requirement_ids": [
+          "SH-01-YC-016",
+          "SH-01-YC-017",
+          "SH-01-YC-029"
+        ],
+        "target_id": "SH-01-EV-007",
+        "group": "Sự kiện",
+        "title": "Phép chiếu dữ liệu/phân trang khóa học sai",
+        "precondition": "GET #06 chờ phản hồi.",
+        "data": "Thiếu người hướng dẫn.`full_name`, 7 items hoặc `total_pages` sai.",
+        "steps": [
+          "Trả từng phản hồi không hợp lệ."
+        ],
+        "expected": "Vùng khóa học lỗi; không hiển thị một phần hoặc thành rỗng.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-07; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-018",
+        "requirement_ids": [
+          "SH-01-YC-012",
+          "SH-01-YC-023"
+        ],
+        "target_id": "SH-01-EV-008",
+        "group": "Sự kiện",
+        "title": "Không lọc khi chọn danh mục",
+        "precondition": "Danh mục hiện dạng li.",
+        "data": "Danh mục có id/slug.",
+        "steps": [
+          "Thử nhấn chuột/phím Thẻ.",
+          "Theo dõi URL và yêu cầu."
+        ],
+        "expected": "Không được chọn trạng thái, tuyến hay yêu cầu #06; nếu UI biến thành điều khiển thì chờ G-05.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-08; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-019",
+        "requirement_ids": [
+          "SH-01-YC-023"
+        ],
+        "target_id": "SH-01-EV-009",
+        "group": "Sự kiện",
+        "title": "Không kích hoạt băng chuyền",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Nút mũi tên chỉ có trong PNG.",
+        "steps": [
+          "Rà soát DOM/cây trợ năng."
+        ],
+        "expected": "Không nút/bộ xử lý băng chuyền.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-09; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-020",
+        "requirement_ids": [
+          "SH-01-YC-022",
+          "SH-01-YC-023"
+        ],
+        "target_id": "SH-01-EV-009",
+        "group": "Sự kiện",
+        "title": "Không bật lọc/sắp xếp",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Nhãn sắp xếp/bộ lọc của ảnh.",
+        "steps": [
+          "Rà soát điều khiển và truy vấn #06."
+        ],
+        "expected": "Không filter/sort; không `danh mục`/`sắp xếp` truy vấn; liên kết xem tất cả là riêng.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-09; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-021",
+        "requirement_ids": [
+          "SH-01-YC-018",
+          "SH-01-YC-020",
+          "SH-01-YC-021"
+        ],
+        "target_id": "SH-01-EV-010",
+        "group": "Sự kiện",
+        "title": "Không mở khóa học detail",
+        "precondition": "Có thẻ PUBLISHED.",
+        "data": "thẻ `<article>` id giả 42.",
+        "steps": [
+          "Nhấp title/ảnh; thử phím Thẻ.",
+          "Quan sát URL/#08."
+        ],
+        "expected": "Không điều hướng hoặc gọi #08; thẻ không tương tác. Đích GS-03 còn chờ chốt. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-10; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-022",
+        "requirement_ids": [
+          "SH-01-YC-013",
+          "SH-01-YC-014",
+          "SH-01-YC-029"
+        ],
+        "target_id": "SH-01-EV-011",
+        "group": "Sự kiện",
+        "title": "Thử lại danh mục giữ khóa học",
+        "precondition": "Danh mục lỗi; khóa học sẵn sàng.",
+        "data": "Nút thử lại danh mục.",
+        "steps": [
+          "Chọn thử lại."
+        ],
+        "expected": "Chỉ #05 lặp; khóa học vẫn giữ; lỗi vẫn lỗi nếu thất bại.",
+        "api_ids": [
+          "API-005"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-11; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-023",
+        "requirement_ids": [
+          "SH-01-YC-013",
+          "SH-01-YC-014",
+          "SH-01-YC-023",
+          "SH-01-YC-029"
+        ],
+        "target_id": "SH-01-EV-011",
+        "group": "Sự kiện",
+        "title": "Thử lại khóa học giữ danh mục",
+        "precondition": "Khóa học lỗi; danh mục sẵn sàng.",
+        "data": "Nút thử lại khóa học.",
+        "steps": [
+          "Chọn thử lại."
+        ],
+        "expected": "Chỉ #06 `page=1,size=6` lặp; danh mục vẫn giữ; không thử lại 422 tự động.",
+        "api_ids": [
+          "API-006"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-11; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-024",
+        "requirement_ids": [
+          "SH-01-YC-026",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01-EV-012",
+        "group": "Sự kiện",
+        "title": "Không gửi thư điện tử lời kêu gọi hành động (CTA)",
+        "precondition": "Biểu mẫu chỉ có trong PNG.",
+        "data": "Thư điện tử giả lập không dùng tài khoản thật.",
+        "steps": [
+          "Tìm input/biểu mẫu trong DOM.",
+          "Theo dõi request/storage/log nếu có."
+        ],
+        "expected": "Không biểu mẫu, yêu cầu, bộ nhớ lưu trữ, phân tích hành vi hoặc nhật ký thư điện tử; không thông báo thành công.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-12; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-025",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EV-013",
+        "group": "Sự kiện",
+        "title": "Điều hướng thương hiệu/trang chủ",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Logo đầu trang/chân trang `/`.",
+        "steps": [
+          "Chọn từng logo."
+        ],
+        "expected": "Khi chọn lần lượt logo đầu trang và chân trang, trình duyệt trở về trang `/` theo liên kết được đăng ký trong ứng dụng.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md",
+          "apps/study-client/src/app/features/shared/SH01/pages/sh01-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-026",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-022",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EV-013",
+        "group": "Sự kiện",
+        "title": "Điều hướng khóa học",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Liên kết Khóa học `/courses`.",
+        "steps": [
+          "Chọn liên kết đầu trang và chân trang."
+        ],
+        "expected": "Mỗi liên kết mở `/courses`; không truy vấn bộ lọc.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-027",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EV-013",
+        "group": "Sự kiện",
+        "title": "Điều hướng đăng nhập",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Liên kết `/login`.",
+        "steps": [
+          "Chọn liên kết đầu trang/chân trang."
+        ],
+        "expected": "Mỗi liên kết mở `/login`; không xác thực yêu cầu từ SH-01.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-028",
+        "requirement_ids": [
+          "SH-01-YC-004",
+          "SH-01-YC-026",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EV-013",
+        "group": "Sự kiện",
+        "title": "Điều hướng đăng ký",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Liên kết `/register`.",
+        "steps": [
+          "Chọn lời kêu gọi hành động (CTA) và liên kết chân trang."
+        ],
+        "expected": "Mỗi liên kết mở `/register`; không gửi thư điện tử.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-029",
+        "requirement_ids": [
+          "SH-01-YC-008",
+          "SH-01-YC-030"
+        ],
+        "target_id": "SH-01-EV-013",
+        "group": "Sự kiện",
+        "title": "Neo tới ô tìm kiếm",
+        "precondition": "Trang đã hiển thị; liên kết đầu trang có `href=#sh01-search`.",
+        "data": "Phần tử đích là biểu mẫu phần mở đầu; chỉ có một ô tìm kiếm.",
+        "steps": [
+          "Chọn liên kết Tìm kiếm.",
+          "Quan sát vị trí, URL và yêu cầu."
+        ],
+        "expected": "Trang cuộn tới biểu mẫu phần mở đầu; không có ô nhập thứ hai hoặc yêu cầu API. Việc giữ kiểu liên kết này trong thiết kế cuối vẫn chờ xác nhận.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-13; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-030",
+        "requirement_ids": [
+          "SH-01-YC-003",
+          "SH-01-YC-024",
+          "SH-01-YC-025",
+          "SH-01-YC-026",
+          "SH-01-YC-033"
+        ],
+        "target_id": "SH-01-EV-014",
+        "group": "Sự kiện",
+        "title": "Ẩn tuyên bố tiếp thị thiếu nguồn",
+        "precondition": "Trang đã hiển thị.",
+        "data": "Không có chỉ số (KPI)/review/partner/certificate/email hợp đồng.",
+        "steps": [
+          "Rà soát nội dung và cây trợ năng."
+        ],
+        "expected": "Không tuyên bố/dữ liệu mẫu không có nguồn; không thay bằng chữ gợi ý giả. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-14; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "SH-01-TC-SK-031",
+        "requirement_ids": [
+          "SH-01-YC-025",
+          "SH-01-YC-026",
+          "SH-01-YC-027"
+        ],
+        "target_id": "SH-01-EV-014",
+        "group": "Sự kiện",
+        "title": "Ẩn cam kết và khẩu hiệu chưa duyệt",
+        "precondition": "Chân trang đã hiển thị.",
+        "data": "Ảnh có cam kết quyền riêng tư/copyright/tagline.",
+        "steps": [
+          "Rà soát nội dung cuối trang."
+        ],
+        "expected": "Không tuyên bố policy/chứng nhận/năm/tagline chưa có người phụ trách xác nhận. Phần giao diện này vẫn chờ xác nhận theo DD.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/02-events.md SH01-EV-14; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/03-data-flow.md; apps/study-client/docs/dd_screens/SH-01-TrangGioiThieuStudyVariant1/04-api-integration.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

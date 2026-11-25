@@ -1,0 +1,34 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_ST-03_ChinhSuaHoSoAvatar.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 577,
+  "loi": [],
+  "hop_le": true,
+  "doi_chieu_noi_dung": {
+    "case_ids_match": true,
+    "case_counts": {
+      "screen": 23,
+      "elements": 42,
+      "events": 24
+    },
+    "all_cases_not_run": true,
+    "execution_evidence_error_tester_date_blank": true,
+    "requirement_case_links": 130,
+    "requirements_covered": 24,
+    "requirements_total": 24,
+    "source_refs": 192,
+    "referenced_paths": 11,
+    "missing_source_paths": [],
+    "source_paths_corrupted": 0,
+    "formula_count": 577,
+    "sheet3_markers_and_source_elements": "26 mốc được đánh số trong DD và 13 thành phần bổ sung từ mã nguồn hiện tại; phân biệt thiết kế với hành vi đang nối.",
+    "sheet4_event_count": "Bao phủ đủ 9 sự kiện trong DD; các nhánh chưa chốt được đánh dấu “Chờ xác nhận”.",
+    "zip_crc": "valid",
+    "excel_validator": "valid"
+  }
+}

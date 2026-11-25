@@ -1,0 +1,2692 @@
+{
+  "metadata": {
+    "screen_id": "ST-02",
+    "screen_name": "Hồ sơ cá nhân",
+    "module": "Study Web — Khu vực học viên",
+    "route": "/student/profile",
+    "actor": "Học viên có phiên STUDENT hợp lệ; nếu chưa đăng nhập, StudentLayout hiển thị giao diện đăng nhập của khung cha.",
+    "version": "1.0 — UTC chính thức theo DD hiện có; tất cả ca chưa chạy",
+    "dd_version": "DD ST-02 bản 0.3, đối chiếu mã nguồn đến 2026-11-25",
+    "dd_status": "DD ghi BLOCKED/IMPLEMENTATION BLOCKED cho các điểm thiết kế về hồ sơ sau đăng nhập, bộ nhớ đệm, quyền và một số trường data. Người dùng chỉ định dùng DD này làm chuẩn; các mục bị chặn vẫn được ghi là chưa có quyết định.",
+    "runtime_status": "Mã Angular hiện đăng ký tuyến /student/profile và gọi API #04. Trang có trạng thái đang tải, lỗi, thử lại; khi thành công hiện tên, email, nhãn vai trò/trạng thái, ảnh đại diện an toàn và liên kết sửa hồ sơ. Đã đọc mã nguồn và tài liệu đặc tả nhưng chưa chạy; chưa xác minh qua trình duyệt, API trực tiếp hoặc cơ sở dữ liệu triển khai.",
+    "author": "Chưa được DD ghi nhận",
+    "reviewer": "Chưa được DD ghi nhận",
+    "approver": "Chưa được DD ghi nhận",
+    "date": "2026-11-25",
+    "source_name": "DD ST-02, 10 điểm đánh dấu trong bản mẫu, mã Study Web và Study Server",
+    "baseline_authorization": "Người dùng xác nhận các DD đã duyệt và yêu cầu lấy DD trong kho làm chuẩn, kể cả tài liệu ghi BLOCKED. Vì vậy các mục BLOCKED vẫn được giữ là chưa có quyết định; hành vi hiện tại được mô tả theo mã nguồn.",
+    "release_readiness": "Đã lập ca toàn màn hình, từng thành phần và từng sự kiện; tất cả ca vẫn Chưa chạy. Trước nghiệm thu cần thực thi trong môi trường được duyệt và người phụ trách quyết định các điểm chặn thiết kế.",
+    "discrepancy_note": "DD mô tả tuyến chưa nối, trang đăng nhập tĩnh và nút sửa bị vô hiệu hóa; mã Angular hiện tại có tuyến/API #04, giao diện hồ sơ và liên kết sửa hoạt động. Ảnh gốc thiếu nội dung phần thân; ảnh chú thích được ghép từ HTML tĩnh. API #04 dùng claim sub/roles, khác ký hiệu user_id/role trong AC. Phản hồi không có trường bio (tiểu sử) hoặc permissions (quyền truy cập). DDL cho phép users.status=NULL trong khi mô hình yêu cầu chuỗi; chưa xác minh cơ sở dữ liệu triển khai."
+  },
+  "overall": {
+    "objective": "Cho học viên đã đăng nhập xem hồ sơ do API #04 trả về, gồm tên, email, nhãn vai trò/trạng thái, ảnh đại diện an toàn và liên kết sang màn hình sửa hồ sơ.",
+    "inputs": "Mở tuyến /student/profile trong phiên STUDENT còn hiệu lực. Trang gọi GET #04, không gửi ID trên tuyến, tham số truy vấn hoặc phần thân yêu cầu; ứng dụng gọi API gửi Bearer token lấy từ phiên.",
+    "outputs": "Đầu trang và chân trang điều hướng; trạng thái đang tải, lỗi và thử lại. Khi thành công, trang hiện full_name, email, nhãn role/status, ảnh đại diện từ URL http/https hợp lệ hoặc ảnh thay thế, cùng liên kết /student/profile/edit.",
+    "main_flow": "StudentLayout kiểm tra phiên trước khi hiển thị tuyến con. Khi khởi tạo, ST02Page gọi API #04, kiểm tra cấu trúc phản hồi, mã thành công và StudentProfile; trang hiện hồ sơ hợp lệ hoặc thông báo lỗi. Nếu #04 trả 401, StudentApiService thử làm mới phiên; 401 cuối hoặc 403 có thể đưa người dùng tới /forbidden theo trạng thái SH-05.",
+    "preconditions": "Dùng môi trường kiểm thử được duyệt và tài khoản STUDENT. Chỉ dùng dữ liệu cá nhân giả do người kiểm thử kiểm soát. Tất cả ca trong bảng tính đang Chưa chạy; môi trường triển khai chưa được xác minh.",
+    "states": [
+      "Chưa đăng nhập — StudentLayout hiện giao diện đăng nhập của khung cha",
+      "Đang tải — aria-busy=true và role=status",
+      "Có hồ sơ — hiện tên, email, nhãn role/status, ảnh đại diện hợp lệ hoặc SVG thay thế",
+      "Không tải được — hiện tiêu đề lỗi, role=alert, thông báo thân thiện và nút Thử tải lại",
+      "Vai trò chưa xác định — giá trị role trong DB khác STUDENT sau chuẩn hóa",
+      "Trạng thái chưa xác định — giá trị status trong DB ngoài ACTIVE/SUSPENDED sau chuẩn hóa"
+    ],
+    "security": "API #04 xác thực Bearer và kiểm tra role STUDENT từ claim; lấy user_id từ sub, không nhận ID do người dùng truyền. Máy chủ chỉ trả các trường UserProfile đã định nghĩa, không chọn password_hash. Giao diện không hiển thị ID, token, phone, dấu thời gian, bio hoặc permissions. Role/status trong dòng DB chỉ dùng làm nhãn, không cấp quyền thay JWT.",
+    "out_of_scope": "ST-02 không sửa hồ sơ hoặc tải ảnh; các thao tác đó thuộc ST-03. Không tự tạo bio/permissions, không suy quyền từ role/status trong phản hồi, không đặt PII/token lên URL và không khẳng định đã có bộ nhớ đệm hay đã kiểm tra cơ sở dữ liệu triển khai."
+  },
+  "apis": [
+    {
+      "id": "ST-02-API-001",
+      "number": "4",
+      "method": "GET",
+      "path": "/api/v1/users/me",
+      "request": "Một tiêu đề Authorization: Bearer <jwt>; không có tham số đường dẫn, tham số truy vấn hoặc phần thân yêu cầu. Mã trang lấy token từ phiên STUDENT lưu trong tab.",
+      "response": "HTTP 200, success=true, businessCode DESIGN_RESOURCE_RETRIEVED. Data là UserProfile gồm id, full_name, email, role, avatar_url|null, phone|null, status, created_at và updated_at; meta rỗng, có traceId. Mô hình dữ liệu bỏ trường ngoài danh sách cho phép; không trả password_hash, bio hoặc permissions.",
+      "errors": "HTTP 401 nếu thiếu/sai Bearer, JWT hoặc claim, hay không tìm thấy dòng người dùng. Ứng dụng gọi API thử làm mới token một lần; nếu vẫn 401 thì kết thúc phiên cục bộ và điều hướng theo trạng thái SH-05. HTTP 403 nếu token không có role STUDENT; ứng dụng điều hướng /forbidden. HTTP 500 nếu lỗi cấu hình JWT, truy vấn hoặc ánh xạ mô hình; giao diện chỉ hiện thông báo an toàn.",
+      "auth": "Bearer JWT; API lấy ID người dùng số dương từ sub và yêu cầu role STUDENT trong roles trước khi truy vấn. role/status trong DB không thay thế claim dùng để cấp quyền.",
+      "design_status": "Đã xác nhận",
+      "event_ids": [
+        "ST-02-EV-001",
+        "ST-02-EV-006",
+        "ST-02-EV-007",
+        "ST-02-EV-009"
+      ],
+      "source_ref": "docs/lists/list_api.md; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/query.py; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-server/app/api/v1.py; apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py; infra/postgres/study-server/DB.sql"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-02-YC-001",
+      "description": "Tuyến /student/profile mở ST02Page bên trong StudentLayout với khung giao diện tùy chỉnh.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/app.routes.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-002",
+      "description": "Nếu phiên STUDENT chưa hợp lệ, StudentLayout hiện giao diện đăng nhập và ST02Page không phát GET #04.",
+      "group": "Xác thực",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/layouts/student/student-layout.ts; apps/study-client/src/app/layouts/student/student-layout.html; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-003",
+      "description": "Khi trang khởi tạo với phiên hợp lệ, ST02ProfileService gọi API #04 một lần, không có phần thân yêu cầu/tham số truy vấn/ID trong tuyến.",
+      "group": "Tích hợp API",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts; apps/study-client/src/app/core/constant/api.constants.ts; apps/study-server/app/api/v1.py",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-004",
+      "description": "StudentApiService lấy Bearer từ phiên; API #04 lấy danh tính từ claim sub/roles, không tin ID do người dùng truyền.",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-server/app/modules/student/api_04_users_me/view.py; docs/lists/list_api.md",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-005",
+      "description": "Trang chỉ nhận success=true cùng DESIGN_RESOURCE_RETRIEVED và StudentProfile vượt qua bộ kiểm tra hồ sơ.",
+      "group": "Kiểm tra phản hồi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-006",
+      "description": "Bộ kiểm tra hồ sơ kiểm tra ID dương an toàn, các trường chuỗi bắt buộc, phone/ảnh đại diện có thể nhận giá trị null và hai dấu thời gian phân tích được.",
+      "group": "Kiểm tra phản hồi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-007",
+      "description": "API #04 trả danh sách cho phép UserProfile; password_hash và trường ngoài mô hình dữ liệu không được đưa vào phản hồi.",
+      "group": "Riêng tư",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/query.py; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-008",
+      "description": "Khi thành công, nhãn tài khoản và tiêu đề thẻ dùng full_name do phản hồi cung cấp.",
+      "group": "Hiển thị hồ sơ",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-009",
+      "description": "Khi thành công, địa chỉ email được hiển thị dưới nhãn Địa chỉ email.",
+      "group": "Hiển thị hồ sơ",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-010",
+      "description": "Role=STUDENT sau loại khoảng trắng đầu/cuối và chuyển thành chữ hoa hiển thị Học viên; role khác hiển thị Chưa xác định.",
+      "group": "Vai trò",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-011",
+      "description": "Status=ACTIVE hiển thị Đang hoạt động, SUSPENDED hiển thị Tạm khóa; giá trị khác hiển thị Chưa xác định.",
+      "group": "Trạng thái",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-012",
+      "description": "Ảnh đại diện chỉ dùng URL tuyệt đối giao thức http/https; null hoặc URL khác giao thức hiện SVG thay thế.",
+      "group": "Ảnh đại diện",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts; apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-013",
+      "description": "Trang không hiển thị id, phone, created_at, updated_at, password/token, bio hoặc permissions.",
+      "group": "Riêng tư",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/shared/models/student-api.models.ts; apps/study-server/app/modules/student/api_04_users_me/models.py",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-014",
+      "description": "Khối hồ sơ đánh dấu aria-busy khi tải và hiển thị role=status trong lúc chờ.",
+      "group": "Trợ năng và trạng thái",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-015",
+      "description": "Lỗi hiển thị tiêu đề, role=alert và thông điệp thân thiện; không hiển thị nội dung lỗi thô.",
+      "group": "Xử lý lỗi",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-016",
+      "description": "Nút Thử tải lại gọi lại profile() của API #04; không gọi API #13/#14 trong ST-02.",
+      "group": "Thử lại",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-017",
+      "description": "Lỗi 401 cuối của API #04 kết thúc phiên cục bộ và điều hướng /forbidden với trạng thái SH-05 an toàn.",
+      "group": "Phiên hết hạn",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-018",
+      "description": "Lỗi 403 của API #04 điều hướng /forbidden; không biến quyền thiếu thành dữ liệu hồ sơ rỗng.",
+      "group": "Từ chối quyền",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/core/http/student-api.service.ts; apps/study-server/app/modules/student/api_04_users_me/view.py",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-019",
+      "description": "Đầu trang hiện logo, Trang chủ, Khóa học, Khóa học của tôi, Hồ sơ cá nhân và nhãn tài khoản.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-020",
+      "description": "Đầu trang dùng RouterLink hiện hành; Hồ sơ cá nhân có aria-current=page và trạng thái được đánh dấu hiện hành theo tuyến.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-021",
+      "description": "Chân trang hiện logo cùng liên kết Trang chủ, Khóa học và Khóa học của tôi.",
+      "group": "Điều hướng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-022",
+      "description": "Liên kết Chỉnh sửa hồ sơ hiện hoạt động tới /student/profile/edit; khác DD và ảnh cũ ghi nút bị khóa.",
+      "group": "Sai khác thiết kế",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-023",
+      "description": "ST-02 chỉ đọc hồ sơ; liên kết sửa không gửi #13/#14 từ trang này.",
+      "group": "Ranh giới màn hình",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-024",
+      "description": "Bản mẫu có 10 điểm đánh dấu, gồm thẻ đăng nhập và chỉnh sửa bị vô hiệu hóa; các khác biệt với DOM Angular phải giữ riêng, không coi là giao diện hiện hành.",
+      "group": "Sai khác bản mẫu",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/screen_annotated.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-025",
+      "description": "AC-02 mô tả user_id/role nhưng API #04 hiện tiêu thụ sub/roles; không sửa token contract từ UTC.",
+      "group": "Sai khác xác thực",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/03-data-flow.md; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py; docs/lists/list_api.md",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-026",
+      "description": "API #04 không trả bio hoặc permissions; trang không dựng các trường này từ nguồn khác.",
+      "group": "Thiếu hợp đồng",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/04-api-integration.md; apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/query.py; docs/lists/list_api.md",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-027",
+      "description": "Bộ nhớ đệm hồ sơ được nêu ở bảng danh mục màn hình nhưng ST02Page gọi API khi mỗi lần khởi tạo; không có TTL/vô hiệu hóa trong mã nguồn.",
+      "group": "Bộ nhớ đệm",
+      "design_status": "Chờ xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/03-data-flow.md",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-028",
+      "description": "Role/status của dòng DB chỉ dùng để hiển thị nhãn, không thay vai trò JWT hoặc kiểm tra quyền truy cập.",
+      "group": "Bảo mật",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-server/app/modules/student/api_04_users_me/query.py; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/05-business-rules.md",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-029",
+      "description": "Users.status có thể nhận giá trị null trong DDL ứng viên nhưng UserProfile yêu cầu chuỗi; dòng null có thể bị API ánh xạ thành 500.",
+      "group": "Schema",
+      "design_status": "Chờ xác nhận",
+      "priority": "Cao",
+      "source_ref": "infra/postgres/study-server/DB.sql; apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/04-api-integration.md",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-030",
+      "description": "Bố cục có điểm ngắt 820px và 560px; giảm chuyển động tắt transition; CSS đặt viền focus-visible.",
+      "group": "Hiển thị đáp ứng",
+      "design_status": "Đã xác nhận",
+      "priority": "Trung bình",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.css",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-031",
+      "description": "Kiểm thử trang hiện có một ca thành công; kiểm thử máy chủ có các điều kiện kiểm tra API nhưng chưa chạy trong lượt này.",
+      "group": "Bằng chứng kiểm thử",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.spec.ts; apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/07-test-cases.md",
+      "notes": ""
+    },
+    {
+      "id": "ST-02-YC-032",
+      "description": "Chưa có bằng chứng trình duyệt, API thực hoặc cơ sở dữ liệu triển khai; không ghi ca nào là đã đạt.",
+      "group": "Giới hạn xác minh",
+      "design_status": "Đã xác nhận",
+      "priority": "Cao",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/00-overview.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/07-test-cases.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/04-api-integration.md",
+      "notes": ""
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-02-EL-001",
+      "marker": "#1",
+      "source_element_id": "ST02-EL-01",
+      "name": "Biểu trưng Study2Work ở đầu trang",
+      "type": "Liên kết thương hiệu",
+      "position": "Đầu trang, bên trái",
+      "properties": "Bản mẫu dùng href giữ chỗ; Angular hiện có RouterLink về /.",
+      "event_ids": [
+        "ST-02-EV-002"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-002",
+      "marker": "#2",
+      "source_element_id": "ST02-EL-02",
+      "name": "Nhóm điều hướng chính",
+      "type": "Nhóm liên kết",
+      "position": "Đầu trang",
+      "properties": "Ảnh có Trang chủ, Khóa học, Khóa học của tôi và Hồ sơ cá nhân; hiện Angular dùng RouterLink thật.",
+      "event_ids": [
+        "ST-02-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-003",
+      "marker": "#3",
+      "source_element_id": "ST02-EL-03",
+      "name": "Liên kết Đăng nhập trên đầu trang",
+      "type": "Liên kết",
+      "position": "Đầu trang, bên phải",
+      "properties": "Chỉ có trong ảnh bản mẫu; Angular hiện hiển thị nhãn tài khoản theo full_name hoặc nhãn Hồ sơ học viên.",
+      "event_ids": [
+        "ST-02-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-004",
+      "marker": "#4",
+      "source_element_id": "ST02-EL-04",
+      "name": "Tiêu đề và mô tả hỗ trợ",
+      "type": "Tiêu đề và mô tả",
+      "position": "Đầu phần nội dung",
+      "properties": "Bản mẫu ghi mô tả quản lý tiến độ/chứng nhận; Angular hiện ghi Xem thông tin tài khoản học viên của bạn.",
+      "event_ids": [
+        "ST-02-EV-001"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-005",
+      "marker": "#5",
+      "source_element_id": "ST02-EL-05",
+      "name": "Bề mặt thẻ hồ sơ và biểu tượng tài khoản",
+      "type": "Thẻ hồ sơ",
+      "position": "Giữa nội dung",
+      "properties": "Bản mẫu dùng biểu tượng account_circle tĩnh. Angular thay bằng ảnh đại diện URL an toàn hoặc SVG dự phòng.",
+      "event_ids": [
+        "ST-02-EV-006",
+        "ST-02-EV-008"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-006",
+      "marker": "#6",
+      "source_element_id": "ST02-EL-06",
+      "name": "Tiêu đề thẻ và lời giải thích đăng nhập",
+      "type": "Tiêu đề và nội dung trạng thái",
+      "position": "Trong thẻ",
+      "properties": "Lời nhắc đăng nhập là nội dung tĩnh của HTML Stitch; Angular sau xác thực hiện tên hồ sơ. Chưa chứng minh lời nhắc đó là trạng thái API.",
+      "event_ids": [
+        "ST-02-EV-001",
+        "ST-02-EV-006"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-007",
+      "marker": "#7",
+      "source_element_id": "ST02-EL-07",
+      "name": "Nút Đăng nhập trong thẻ",
+      "type": "Liên kết hành động",
+      "position": "Trong thẻ",
+      "properties": "HTML bản mẫu dùng href giữ chỗ. Angular hiện không hiển thị nút đăng nhập trong vùng hồ sơ; phiên chưa đăng nhập được StudentLayout xử lý ở khung cha.",
+      "event_ids": [
+        "ST-02-EV-003"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/layouts/student/student-layout.html"
+    },
+    {
+      "id": "ST-02-EL-008",
+      "marker": "#8",
+      "source_element_id": "ST02-EL-08",
+      "name": "Nút Chỉnh sửa hồ sơ bị khóa",
+      "type": "Nút bị vô hiệu hóa",
+      "position": "Trong thẻ, bên phải",
+      "properties": "Bản mẫu có nút bị vô hiệu hóa. Angular hiện hiển thị liên kết hoạt động /student/profile/edit sau khi hồ sơ tải thành công.",
+      "event_ids": [
+        "ST-02-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-009",
+      "marker": "#9",
+      "source_element_id": "ST02-EL-09",
+      "name": "Liên kết thương hiệu ở chân trang",
+      "type": "Liên kết thương hiệu",
+      "position": "Chân trang, bên trái",
+      "properties": "Bản mẫu dùng href giữ chỗ; Angular hiện RouterLink về /.",
+      "event_ids": [
+        "ST-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EL-010",
+      "marker": "#10",
+      "source_element_id": "ST02-EL-10",
+      "name": "Nhóm liên kết chân trang",
+      "type": "Nhóm liên kết",
+      "position": "Chân trang, bên phải",
+      "properties": "Danh sách bản mẫu khác Angular: bản hiện tại có Trang chủ, Khóa học, Khóa học của tôi.",
+      "event_ids": [
+        "ST-02-EV-005"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-SRC-EL-001",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-01",
+      "name": "Root màn hình hồ sơ",
+      "type": "Vùng màn hình",
+      "position": "Toàn trang",
+      "properties": "Phần tử gốc có data-screen-id=ST-02; trang tự hiển thị đầu trang và chân trang trong tuyến khung giao diện tùy chỉnh.",
+      "event_ids": [
+        "ST-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-002",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-02",
+      "name": "Biểu trưng và liên kết trang chủ",
+      "type": "Liên kết thương hiệu",
+      "position": "Đầu trang",
+      "properties": "Study2Work là RouterLink về / và có aria-label trang chủ.",
+      "event_ids": [
+        "ST-02-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-SRC-EL-003",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-03",
+      "name": "Điều hướng chính và trạng thái hiện hành",
+      "type": "Nhóm liên kết",
+      "position": "Đầu trang",
+      "properties": "RouterLink tới /, /courses, /student/courses và /student/profile; hồ sơ có aria-current=page.",
+      "event_ids": [
+        "ST-02-EV-002"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-004",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-04",
+      "name": "Nhãn tài khoản",
+      "type": "Nhãn tài khoản",
+      "position": "Đầu trang, bên phải",
+      "properties": "Dùng full_name từ hồ sơ; nếu chưa có giá trị thì hiện Hồ sơ học viên.",
+      "event_ids": [
+        "ST-02-EV-001",
+        "ST-02-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-005",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-05",
+      "name": "Tiêu đề và mô tả trang",
+      "type": "Tiêu đề trang",
+      "position": "Đầu nội dung",
+      "properties": "Hiển thị Hồ sơ cá nhân cùng mô tả Xem thông tin tài khoản học viên của bạn.",
+      "event_ids": [
+        "ST-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-SRC-EL-006",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-06",
+      "name": "Khối hồ sơ và trạng thái bận",
+      "type": "Vùng nội dung",
+      "position": "Thân trang",
+      "properties": "Section có aria-labelledby và aria-busy phản ánh loading(); bề mặt trang chứa nội dung thành công/lỗi/tải.",
+      "event_ids": [
+        "ST-02-EV-001",
+        "ST-02-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-007",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-07",
+      "name": "Thông báo đang tải",
+      "type": "Trạng thái tải",
+      "position": "Trong khối hồ sơ",
+      "properties": "Khi loading=true, hiện Đang tải hồ sơ học viên… với role=status.",
+      "event_ids": [
+        "ST-02-EV-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-008",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-08",
+      "name": "Tiêu đề lỗi và cảnh báo",
+      "type": "Thông báo lỗi",
+      "position": "Trong khối hồ sơ",
+      "properties": "Khi lỗi có giá trị, hiện Chưa thể tải hồ sơ và nội dung role=alert.",
+      "event_ids": [
+        "ST-02-EV-007",
+        "ST-02-EV-009"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-009",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-09",
+      "name": "Nút Thử tải lại",
+      "type": "Nút thao tác",
+      "position": "Trong khối lỗi",
+      "properties": "Nút gọi retry() và nạp lại API #04.",
+      "event_ids": [
+        "ST-02-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-010",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-10",
+      "name": "Ảnh đại diện thật hoặc hình SVG dự phòng",
+      "type": "Hình đại diện",
+      "position": "Trên tên hồ sơ",
+      "properties": "URL chỉ dùng khi isSafeHttpUrl chấp nhận http/https; trường null hoặc URL không an toàn dùng SVG trang trí.",
+      "event_ids": [
+        "ST-02-EV-008"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-011",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-11",
+      "name": "Tên học viên",
+      "type": "Tiêu đề hồ sơ",
+      "position": "Trong khối thành công",
+      "properties": "H2 lấy full_name; cùng giá trị được dùng ở nhãn tài khoản.",
+      "event_ids": [
+        "ST-02-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-012",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-12",
+      "name": "Địa chỉ email",
+      "type": "Trường hồ sơ",
+      "position": "Danh sách chi tiết",
+      "properties": "Hiển thị email dạng văn bản dưới nhãn Địa chỉ email.",
+      "event_ids": [
+        "ST-02-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-013",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-13",
+      "name": "Nhãn vai trò",
+      "type": "Trường hồ sơ",
+      "position": "Danh sách chi tiết",
+      "properties": "STUDENT sau chuẩn hóa hiển thị Học viên; giá trị khác hiển thị Chưa xác định.",
+      "event_ids": [
+        "ST-02-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-014",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-14",
+      "name": "Nhãn trạng thái tài khoản",
+      "type": "Trường hồ sơ",
+      "position": "Danh sách chi tiết",
+      "properties": "ACTIVE hiển thị Đang hoạt động; SUSPENDED hiển thị Tạm khóa; giá trị khác hiển thị Chưa xác định. Không chặn truy cập theo status DB.",
+      "event_ids": [
+        "ST-02-EV-006"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-server/app/modules/student/api_04_users_me/view.py"
+    },
+    {
+      "id": "ST-02-SRC-EL-015",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-15",
+      "name": "Liên kết Chỉnh sửa hồ sơ",
+      "type": "Liên kết hành động",
+      "position": "Dưới danh sách hồ sơ",
+      "properties": "Liên kết hiện hành tới /student/profile/edit; khác nút bị vô hiệu hóa trong điểm đánh dấu #8. API #13/#14 thuộc trang ST-03.",
+      "event_ids": [
+        "ST-02-EV-004"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-02-SRC-EL-016",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-16",
+      "name": "Thương hiệu và điều hướng chân trang",
+      "type": "Nhóm liên kết",
+      "position": "Chân trang",
+      "properties": "Hiện logo về / cùng các liên kết /, /courses, /student/courses.",
+      "event_ids": [
+        "ST-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-SRC-EL-017",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-17",
+      "name": "Bố cục linh hoạt theo chiều rộng",
+      "type": "Bố cục",
+      "position": "Toàn trang",
+      "properties": "Đầu trang chuyển cách xếp ở max-width 820px; phần thân/chân trang chuyển padding/xếp cột ở 560px.",
+      "event_ids": [
+        "ST-02-EV-002",
+        "ST-02-EV-005"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.css"
+    },
+    {
+      "id": "ST-02-SRC-EL-018",
+      "marker": "Mã nguồn hiện hành",
+      "source_element_id": "ST02-SRC-EL-18",
+      "name": "Viền focus và giảm chuyển động",
+      "type": "Kiểu bàn phím",
+      "position": "Liên kết và nút",
+      "properties": "CSS dùng outline khi focus-visible; prefers-reduced-motion tắt transition cho các điều khiển.",
+      "event_ids": [
+        "ST-02-EV-002",
+        "ST-02-EV-004",
+        "ST-02-EV-005",
+        "ST-02-EV-007"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.css"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST-02-EV-001",
+      "source_event_id": "ST02-EV-01",
+      "name": "Mở tuyến và nạp hồ sơ",
+      "trigger": "Học viên mở /student/profile khi StudentLayout cho phép tuyến con.",
+      "processing": "ST02Page gọi profile() khi khởi tạo. StudentApiService lấy Bearer từ phiên, API #04 xác thực role STUDENT rồi truy vấn users theo sub. Trang kiểm cấu trúc bao phản hồi, mã thành công và StudentProfile; khi hợp lệ chuyển sang trạng thái hồ sơ. Không có quy tắc bộ nhớ đệm trong trang.",
+      "element_ids": [
+        "ST-02-SRC-EL-001",
+        "ST-02-SRC-EL-006",
+        "ST-02-SRC-EL-007"
+      ],
+      "api_ids": [
+        "ST-02-API-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts; apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-server/app/modules/student/api_04_users_me/query.py"
+    },
+    {
+      "id": "ST-02-EV-002",
+      "source_event_id": "ST02-EV-02",
+      "name": "Điều hướng từ thương hiệu hoặc đầu trang",
+      "trigger": "Bấm logo hoặc một liên kết trong nhóm điều hướng đầu trang.",
+      "processing": "RouterLink mở /, /courses, /student/courses hoặc /student/profile; tuyến hiện tại nhận trạng thái được đánh dấu hiện hành. Điều này khác href giữ chỗ của bản mẫu. Không gửi API #04 chỉ do bấm nhóm điều hướng ngoài tuyến hồ sơ.",
+      "element_ids": [
+        "ST-02-EL-001",
+        "ST-02-EL-002",
+        "ST-02-SRC-EL-002",
+        "ST-02-SRC-EL-003"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/features/student/ST02/pages/st02-page.css"
+    },
+    {
+      "id": "ST-02-EV-003",
+      "source_event_id": "ST02-EV-03",
+      "name": "Liên kết đăng nhập trong bản mẫu",
+      "trigger": "Người dùng bấm điểm đánh dấu #3 hoặc #7 trên HTML/ảnh cũ.",
+      "processing": "Hai liên kết đăng nhập là thành phần bản mẫu, không xuất hiện trong ST02Page hiện hành. Phiên chưa đăng nhập được StudentLayout xử lý ở khung cha; không khẳng định bấm điểm đánh dấu này có tuyến hoặc giữ returnTo.",
+      "element_ids": [
+        "ST-02-EL-003",
+        "ST-02-EL-007"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/code.html; apps/study-client/src/app/layouts/student/student-layout.html; apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+    },
+    {
+      "id": "ST-02-EV-004",
+      "source_event_id": "ST02-EV-04",
+      "name": "Mở màn hình sửa hồ sơ",
+      "trigger": "Học viên bấm liên kết Chỉnh sửa hồ sơ khi hồ sơ đã tải thành công.",
+      "processing": "Mã nguồn Angular hiện tại hiển thị thẻ liên kết RouterLink /student/profile/edit. Liên kết không bị vô hiệu hóa; tuyến ST-03 sở hữu API #13/#14. DD/điểm đánh dấu cũ ghi nút bị vô hiệu hóa và không có hàm xử lý. Ghi sai khác; không gọi thao tác ghi dữ liệu ở ST-02.",
+      "element_ids": [
+        "ST-02-EL-008",
+        "ST-02-SRC-EL-015"
+      ],
+      "api_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/06-navigation.md"
+    },
+    {
+      "id": "ST-02-EV-005",
+      "source_event_id": "ST02-EV-05",
+      "name": "Điều hướng ở chân trang",
+      "trigger": "Bấm thương hiệu hoặc một liên kết ở chân trang.",
+      "processing": "RouterLink hiện hành mở /, /courses hoặc /student/courses. Bản mẫu có thêm Điều khoản sử dụng và Chính sách bảo mật với href giữ chỗ; hai đích này không có trong chân trang hiện hành.",
+      "element_ids": [
+        "ST-02-EL-009",
+        "ST-02-EL-010",
+        "ST-02-SRC-EL-016"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/06-navigation.md"
+    },
+    {
+      "id": "ST-02-EV-006",
+      "source_event_id": "ST02-SRC-EV-06",
+      "name": "Ánh xạ phản hồi hồ sơ hợp lệ",
+      "trigger": "API #04 trả cấu trúc bao phản hồi thành công.",
+      "processing": "Trang yêu cầu businessCode DESIGN_RESOURCE_RETRIEVED và isStudentProfile(data). Hiển thị full_name/email; chuyển role thành Học viên hoặc Chưa xác định; chuyển status thành Đang hoạt động/Tạm khóa/Chưa xác định; ảnh đại diện dùng URL http/https hợp lệ hoặc SVG. Không hiển thị id, phone, dấu thời gian, bio, permissions hoặc password_hash.",
+      "element_ids": [
+        "ST-02-SRC-EL-008",
+        "ST-02-SRC-EL-010",
+        "ST-02-SRC-EL-011",
+        "ST-02-SRC-EL-012",
+        "ST-02-SRC-EL-013",
+        "ST-02-SRC-EL-014"
+      ],
+      "api_ids": [
+        "ST-02-API-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts; apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/view.py"
+    },
+    {
+      "id": "ST-02-EV-007",
+      "source_event_id": "ST02-SRC-EV-07",
+      "name": "Xử lý lỗi và thử lại",
+      "trigger": "API trả lỗi HTTP/mạng, cấu trúc bao phản hồi không thành công hoặc dữ liệu không qua bộ kiểm tra.",
+      "processing": "Hiển thị thông điệp an toàn trong role=alert và nút Thử tải lại. Nút gọi lại profile() #04. Lỗi không được diễn giải thành hồ sơ rỗng; phản hồi thô/chi tiết DB không được hiển thị.",
+      "element_ids": [
+        "ST-02-SRC-EL-008",
+        "ST-02-SRC-EL-009"
+      ],
+      "api_ids": [
+        "ST-02-API-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts; apps/study-server/app/modules/student/api_04_users_me/view.py"
+    },
+    {
+      "id": "ST-02-EV-008",
+      "source_event_id": "ST02-SRC-EV-08",
+      "name": "Chọn ảnh đại diện hoặc hình thay thế",
+      "trigger": "Hồ sơ thành công có avatar_url hoặc trường null/URL không được hỗ trợ.",
+      "processing": "IsSafeHttpUrl chấp nhận URL tuyệt đối dùng http: hoặc https:. Trường null, URL sai cú pháp hoặc giao thức khác làm avatarUrl() trả null; mẫu HTML hiện SVG trang trí. Không tải tệp hoặc gọi API #13 tại ST-02.",
+      "element_ids": [
+        "ST-02-SRC-EL-010"
+      ],
+      "api_ids": [],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts"
+    },
+    {
+      "id": "ST-02-EV-009",
+      "source_event_id": "ST02-SRC-EV-09",
+      "name": "Làm mới phiên hoặc từ chối quyền",
+      "trigger": "API #04 trả 401 hoặc 403.",
+      "processing": "Với #04, StudentApiService thử làm mới sau 401; nếu lỗi vẫn là 401, xóa phiên cục bộ và điều hướng /forbidden với sh05Error/sh05ReturnTo an toàn. 403 cũng đưa /forbidden. Không suy rằng mọi 401 đều là cổng kiểm tra tuyến của ST02; ghi nhận theo dịch vụ hiện tại.",
+      "element_ids": [
+        "ST-02-SRC-EL-006",
+        "ST-02-SRC-EL-008"
+      ],
+      "api_ids": [
+        "ST-02-API-001"
+      ],
+      "design_status": "Đã xác nhận",
+      "source_ref": "apps/study-client/src/app/core/http/student-api.service.ts; apps/study-client/src/app/core/auth/student-session.service.ts; apps/study-client/src/app/layouts/student/student-layout.ts; apps/study-server/app/modules/student/api_04_users_me/view.py"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-02-BL-001",
+      "description": "DD ST-02 ghi BLOCKED vì chưa định nghĩa đầy đủ giao diện sau khi học viên đăng nhập, trong khi mã Angular hiện có trạng thái hồ sơ thành công.",
+      "impact": "Chưa thể xem giao diện hiện tại là thiết kế mong muốn đã chốt. Ảnh và điểm đánh dấu cũ không thể hiện đầy đủ DOM của trang Angular.",
+      "decision": "Dùng mã nguồn hiện tại để mô tả hành vi đang có; giữ các điểm thiết kế chưa rõ ở trạng thái Chờ xác nhận.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/00-overview.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ST-02-BL-002",
+      "description": "DD và điểm đánh dấu #8 ghi nút sửa bị vô hiệu hóa; mã nguồn hiện hiển thị liên kết hoạt động /student/profile/edit.",
+      "impact": "Thiết kế mô tả và hành vi trong mã nguồn khác nhau; người dùng có thể mở ST-03.",
+      "decision": "Ghi nhận liên kết đang hoạt động theo mã nguồn; không xem khác biệt này là quyết định thiết kế đã chốt.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.html; apps/study-client/src/app/features/student/student.route.ts",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ST-02-BL-003",
+      "description": "AC-02 nêu claim user_id/role; API #04 hiện đọc sub/roles và yêu cầu role STUDENT trong JWT.",
+      "impact": "Sơ đồ, danh mục API và mã nguồn token dùng tên claim khác nhau.",
+      "decision": "Ghi đúng hợp đồng hiện tại; UTC không tự đổi claim hoặc tạo hợp đồng API mới.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/03-data-flow.md; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py; docs/lists/list_api.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ST-02-BL-004",
+      "description": "AC-02 nhắc permissions; danh mục API ghi bio là tùy chọn; API #04 không trả hai trường này.",
+      "impact": "Chưa có bằng chứng để hiển thị hoặc lưu các trường thiếu.",
+      "decision": "Không tự tạo trường hoặc nguồn thay thế; chờ người phụ trách sản phẩm và máy chủ quyết định.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/04-api-integration.md; apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/query.py; docs/lists/list_api.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ST-02-BL-005",
+      "description": "Bảng danh mục màn hình nêu bộ nhớ đệm hồ sơ; ST02Page hiện gọi GET #04 mỗi lần khởi tạo và không có quy tắc bộ nhớ đệm trong mã nguồn.",
+      "impact": "TTL, thời điểm làm mới dữ liệu và cách xử lý yêu cầu trùng chưa được định nghĩa.",
+      "decision": "Ghi đúng hành vi trong mã nguồn; không giả định có bộ nhớ đệm.",
+      "source_ref": "apps/study-client/docs/list_screen.md; apps/study-client/src/app/features/student/ST02/pages/st02-page.ts; apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/03-data-flow.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ST-02-BL-006",
+      "description": "DDL dự kiến cho phép users.status=NULL nhưng UserProfile yêu cầu status là chuỗi; giá trị NULL có thể làm API #04 trả 500.",
+      "impact": "Chưa xác minh sự tương thích giữa mã nguồn, cấu trúc dữ liệu và dữ liệu đang triển khai.",
+      "decision": "Giữ tình huống này trong bộ ca; không tuyên bố đã kiểm tra cơ sở dữ liệu triển khai.",
+      "source_ref": "infra/postgres/study-server/DB.sql; apps/study-server/app/modules/student/api_04_users_me/models.py; apps/study-server/app/modules/student/api_04_users_me/view.py; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/04-api-integration.md",
+      "status": "Chờ xác nhận"
+    },
+    {
+      "id": "ST-02-BL-007",
+      "description": "Lượt lập UTC không chạy kiểm thử sản phẩm, trình duyệt, API hoặc cơ sở dữ liệu triển khai.",
+      "impact": "62 ca chưa có kết quả thực thi hoặc bằng chứng kiểm thử.",
+      "decision": "Để mọi ca ở trạng thái Chưa chạy và các ô kết quả/bằng chứng trống.",
+      "source_ref": "apps/study-client/src/app/features/student/ST02/pages/st02-page.spec.ts; apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/07-test-cases.md; apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/00-overview.md",
+      "status": "Chờ xác nhận"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST-02-TC-MH-001",
+        "requirement_ids": [
+          "ST-02-YC-001",
+          "ST-02-YC-002",
+          "ST-02-YC-003",
+          "ST-02-YC-004",
+          "ST-02-YC-005",
+          "ST-02-YC-014",
+          "ST-02-YC-032"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Mở hồ sơ với phiên STUDENT hợp lệ",
+        "precondition": "Phiên STUDENT có Bearer hợp lệ; API #04 trả UserProfile đủ trường. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do QA kiểm soát, không dùng dữ liệu cá nhân thật.",
+        "steps": [
+          "Mở /student/profile.",
+          "Đợi yêu cầu #04 hoàn tất.",
+          "Kiểm tra đầu trang, trạng thái tải và dữ liệu hồ sơ.",
+          "Đếm số GET #04."
+        ],
+        "expected": "Trang ST02 hiển thị dưới StudentLayout; lúc chờ có role=status; khi thành công hiện hồ sơ hợp lệ. #04 được gọi một lần với Bearer, không path/tham số truy vấn/phần thân yêu cầu. Ca chưa chạy.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-002",
+        "requirement_ids": [
+          "ST-02-YC-001",
+          "ST-02-YC-002",
+          "ST-02-YC-003"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Mở tuyến khi phiên không hợp lệ",
+        "precondition": "Không có phiên học viên trong bộ nhớ tab. Ca này chưa được chạy.",
+        "data": "Theo dõi tuyến và yêu cầu.",
+        "steps": [
+          "Mở /student/profile trực tiếp.",
+          "Quan sát StudentLayout.",
+          "Kiểm tra không có GET #04 từ ST02Page."
+        ],
+        "expected": "StudentLayout không tạo trang ST02Page và hiện luồng đăng nhập của khung cha; dữ liệu hồ sơ không được yêu cầu khi chưa có phiên.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/layouts/student/student-layout.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-003",
+        "requirement_ids": [
+          "ST-02-YC-005",
+          "ST-02-YC-006",
+          "ST-02-YC-007",
+          "ST-02-YC-008",
+          "ST-02-YC-009",
+          "ST-02-YC-010",
+          "ST-02-YC-011",
+          "ST-02-YC-012"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Hiển thị đầy đủ hồ sơ hợp lệ",
+        "precondition": "API #04 trả success=true, DESIGN_RESOURCE_RETRIEVED và UserProfile hợp lệ. Ca này chưa được chạy.",
+        "data": "full_name, email, role=STUDENT, status=ACTIVE, avatar_url HTTPS hợp lệ.",
+        "steps": [
+          "Mở trang và đợi phản hồi.",
+          "Đối chiếu tên, email, nhãn vai trò/trạng thái và ảnh đại diện.",
+          "Kiểm tra các trường API khác không xuất hiện."
+        ],
+        "expected": "Hiển thị tên/email, “Học viên”, “Đang hoạt động” và ảnh từ URL HTTPS; không hiện id, phone hoặc dấu thời gian.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/models.py",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.spec.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-004",
+        "requirement_ids": [
+          "ST-02-YC-010",
+          "ST-02-YC-011",
+          "ST-02-YC-028"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Ánh xạ role/status không chuẩn",
+        "precondition": "API trả hồ sơ có role/status khác các enum đang được ánh xạ. Ca này chưa được chạy.",
+        "data": "Ví dụ role=MENTOR,status=DELETED; lần khác role=\" học viên \",status=\" suspended \".",
+        "steps": [
+          "Mở trang với từng hồ sơ thử.",
+          "Quan sát nhãn role và status.",
+          "Xác nhận yêu cầu được cấp quyền bởi token, không phải trường dữ liệu DB."
+        ],
+        "expected": "Role được loại khoảng trắng đầu/cuối và chuyển thành chữ hoa; STUDENT hiện Học viên, giá trị khác Chưa xác định. Status ACTIVE/SUSPENDED hiện nhãn đã định nghĩa; giá trị khác Chưa xác định. Giá trị DB không tự thay quyền JWT hoặc chặn trang.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-005",
+        "requirement_ids": [
+          "ST-02-YC-006",
+          "ST-02-YC-012"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Ảnh đại diện hợp lệ và phương án dự phòng",
+        "precondition": "Có phản hồi hồ sơ hợp lệ với avatar_url thay đổi. Ca này chưa được chạy.",
+        "data": "Thử https, http, null, URL sai và javascript: URL.",
+        "steps": [
+          "Mở trang lần lượt với từng avatar_url.",
+          "Kiểm tra thuộc tính src hoặc SVG thay thế.",
+          "Kiểm tra không gọi API tải lên."
+        ],
+        "expected": "Chỉ URL tuyệt đối http/https được gắn src. Null hoặc URL không hợp lệ/giao thức khác dùng SVG trang trí; không gọi #13.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-006",
+        "requirement_ids": [
+          "ST-02-YC-005",
+          "ST-02-YC-006",
+          "ST-02-YC-015"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Từ chối phản hồi thiếu trường bắt buộc",
+        "precondition": "API trả thành công cấu trúc bao phản hồi nhưng dữ liệu thiếu trường hoặc kiểu không đúng. Ca này chưa được chạy.",
+        "data": "Thiếu id/full_name/email/status/phone/avatar_url/dấu thời gian; ID không an toàn; ngày không đọc được.",
+        "steps": [
+          "Mở trang với từng phản hồi sai.",
+          "Quan sát vùng hồ sơ.",
+          "Tìm dữ liệu sai trong DOM."
+        ],
+        "expected": "IsStudentProfile từ chối dữ liệu; không hiển thị hồ sơ một phần; hiện thông điệp chung cùng role=alert và nút thử tải lại.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-007",
+        "requirement_ids": [
+          "ST-02-YC-005",
+          "ST-02-YC-015",
+          "ST-02-YC-016"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Xử lý cấu trúc bao phản hồi hoặc mã thành công sai",
+        "precondition": "API trả success=false hoặc businessCode khác DESIGN_RESOURCE_RETRIEVED. Ca này chưa được chạy.",
+        "data": "cấu trúc bao phản hồi lỗi không chứa dữ liệu; cấu trúc bao phản hồi thành công có code sai.",
+        "steps": [
+          "Mở trang với mỗi trường hợp.",
+          "Quan sát cảnh báo và nút thử lại.",
+          "Kiểm tra payload thô không xuất hiện."
+        ],
+        "expected": "Cấu trúc bao phản hồi false cho thông điệp an toàn; businessCode/dữ liệu không đạt điều kiện vào nhánh lỗi chung. Không hiển thị hồ sơ hoặc phần thân yêu cầu lỗi thô.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-008",
+        "requirement_ids": [
+          "ST-02-YC-015",
+          "ST-02-YC-016",
+          "ST-02-YC-031"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Lỗi mạng/máy chủ và thử tải lại",
+        "precondition": "Lần GET đầu trả 503 hoặc lỗi kết nối; lần sau trả hồ sơ hợp lệ. Ca này chưa được chạy.",
+        "data": "Dùng lỗi 503/0 sau đó phản hồi hợp lệ.",
+        "steps": [
+          "Mở trang và chờ trạng thái lỗi.",
+          "Ghi thông điệp hiển thị.",
+          "Bấm Thử tải lại.",
+          "Theo dõi số GET #04."
+        ],
+        "expected": "Hiển thị câu báo lỗi mạng an toàn; thao tác gọi lại #04. Khi thành công, trang hiện hồ sơ hợp lệ; không đánh dấu ca đạt khi chưa chạy.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-009",
+        "requirement_ids": [
+          "ST-02-YC-017",
+          "ST-02-YC-018"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "401 sau khi làm mới và 403",
+        "precondition": "API #04 trả 401 lần đầu rồi vẫn 401 sau làm mới; tình huống riêng trả 403. Ca này chưa được chạy.",
+        "data": "Dữ liệu lỗi do môi trường kiểm thử mô phỏng.",
+        "steps": [
+          "Mở trang với trường hợp 401 sau làm mới.",
+          "Quan sát phiên và tuyến đích.",
+          "Lặp lại với 403."
+        ],
+        "expected": "401 kích hoạt tối đa một nhánh làm mới theo StudentApiService; nếu còn 401 thì kết thúc phiên cục bộ và điều hướng /forbidden mang trạng thái SH-05. 403 cũng điều hướng /forbidden. Không để lộ token.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-client/src/app/layouts/student/student-layout.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-010",
+        "requirement_ids": [
+          "ST-02-YC-004",
+          "ST-02-YC-007",
+          "ST-02-YC-013"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra ranh giới trường dữ liệu",
+        "precondition": "API trả đủ hồ sơ cùng trường thừa password_hash/bio/permissions. Ca này chưa được chạy.",
+        "data": "UserProfile giả gồm cả trường dữ liệu ngoài danh sách cho phép.",
+        "steps": [
+          "Nạp phản hồi thử.",
+          "Kiểm tra JSON do API mô hình dữ liệu phát ra và nội dung DOM.",
+          "Tìm ID, phone, dấu thời gian, password/token, bio, permissions trên trang."
+        ],
+        "expected": "Máy chủ mô hình dữ liệu chỉ phát danh sách cho phép UserProfile; password_hash và trường dữ liệu thừa bị bỏ. Trang chỉ hiển thị tên/email/role/status/ảnh đại diện, không các trường còn lại. Không kết luận email không nhạy cảm; chỉ xác nhận các trường dữ liệu được chủ động hiển thị.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_04_users_me/models.py",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-011",
+        "requirement_ids": [
+          "ST-02-YC-004",
+          "ST-02-YC-025"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu claim trong token",
+        "precondition": "Có token học viên và tài liệu AC-02/danh mục API. Ca này chưa được chạy.",
+        "data": "AC-02 ghi user_id/role; mã nguồn #04 dùng sub/roles.",
+        "steps": [
+          "Đối chiếu claim yêu cầu trong DD với hàm xử lý #04.",
+          "Gửi token thử có sub/roles hợp lệ qua môi trường được duyệt.",
+          "Ghi phần còn lệch trong biên bản."
+        ],
+        "expected": "UTC ghi mã nguồn hiện tại dùng sub/roles và role STUDENT; không tự sửa claim contract hoặc tạo token mới cho môi trường thật.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/03-data-flow.md",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-012",
+        "requirement_ids": [
+          "ST-02-YC-013",
+          "ST-02-YC-023"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Mở sửa hồ sơ từ trạng thái thành công",
+        "precondition": "Trang đã tải hồ sơ thành công. Ca này chưa được chạy.",
+        "data": "Router /student/profile/edit đã đăng ký cho ST-03.",
+        "steps": [
+          "Bấm Chỉnh sửa hồ sơ.",
+          "Ghi tuyến và các yêu cầu API."
+        ],
+        "expected": "Liên kết hoạt động tới /student/profile/edit. ST-02 không tự gọi #13/#14; việc tải lên/lưu thuộc ST-03. Đây là sai khác với DD/điểm đánh dấu ghi nút bị khóa.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-013",
+        "requirement_ids": [
+          "ST-02-YC-019",
+          "ST-02-YC-020"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Điều hướng đầu trang",
+        "precondition": "Trang đang hiển thị. Ca này chưa được chạy.",
+        "data": "Các RouterLink /, /courses, /student/courses, /student/profile.",
+        "steps": [
+          "Bấm từng liên kết đầu trang.",
+          "Đối chiếu tuyến và trạng thái được đánh dấu hiện hành."
+        ],
+        "expected": "RouterLink mở đích đã khai báo; /student/profile đánh dấu aria-current=page. Bản mẫu href/data-path không phải điều hướng hiện hành.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/app.routes.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-014",
+        "requirement_ids": [
+          "ST-02-YC-021"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Điều hướng chân trang",
+        "precondition": "Trang đang hiển thị. Ca này chưa được chạy.",
+        "data": "RouterLink /, /courses, /student/courses.",
+        "steps": [
+          "Bấm từng liên kết chân trang.",
+          "Ghi tuyến sau mỗi lần bấm."
+        ],
+        "expected": "Chân trang mở các đường dẫn hiện hành. Liên kết Điều khoản/Chính sách trong điểm đánh dấu cũ không có trong chân trang Angular.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-015",
+        "requirement_ids": [
+          "ST-02-YC-027",
+          "ST-02-YC-003"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra bộ nhớ đệm và lần mở lại",
+        "precondition": "Hồ sơ #04 thành công; người dùng rời rồi mở lại tuyến. Ca này chưa được chạy.",
+        "data": "Theo dõi số yêu cầu và thời gian giữa các lần khởi tạo.",
+        "steps": [
+          "Mở tuyến hồ sơ lần đầu.",
+          "Rời tuyến rồi điều hướng trở lại.",
+          "Đếm GET #04 mỗi lần khởi tạo."
+        ],
+        "expected": "ST02Page gọi loadProfile() trên mỗi khởi tạo; không thấy bộ nhớ đệm/TTL/vô hiệu hóa trong trang dịch vụ. Chỉ ghi nhận số lời gọi thực tế sau khi chạy; bảng danh mục màn hình bộ nhớ đệm hồ sơ vẫn là yêu cầu chưa được đối chiếu.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-016",
+        "requirement_ids": [
+          "ST-02-YC-022",
+          "ST-02-YC-030"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Kiểm tra bố cục co giãn",
+        "precondition": "Trang hiển thị ở các chiều rộng khác nhau. Ca này chưa được chạy.",
+        "data": "Rộng hơn 820px, không quá 820px, không quá 560px, và 320px để quan sát.",
+        "steps": [
+          "Thay đổi chiều rộng viewport.",
+          "Quan sát đầu trang, nhóm điều hướng, nội dung và chân trang.",
+          "Ghi hiện tượng tràn hoặc chồng lấp nếu có."
+        ],
+        "expected": "CSS áp dụng các nhánh max-width 820px và 560px; xác nhận trực quan sau khi chạy, không suy từ ảnh tĩnh rằng đã đạt 320px.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-017",
+        "requirement_ids": [
+          "ST-02-YC-022",
+          "ST-02-YC-030"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Điều hướng bàn phím và giảm chuyển động",
+        "precondition": "Trang đã tải; cấu hình hệ thống có thể bật giảm chuyển động. Ca này chưa được chạy.",
+        "data": "Bàn phím Tab và prefers-reduced-motion bật/tắt.",
+        "steps": [
+          "Dùng Tab qua liên kết/nút.",
+          "Quan sát viền focus.",
+          "Bật giảm chuyển động rồi quan sát transition."
+        ],
+        "expected": "CSS định nghĩa outline focus-visible và tắt transition khi prefers-reduced-motion; cần xác minh trực quan, không khẳng định audit WCAG.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.css",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-018",
+        "requirement_ids": [
+          "ST-02-YC-028",
+          "ST-02-YC-029"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Dòng có status=NULL ảnh hưởng mô hình dữ liệu API",
+        "precondition": "Môi trường API thử nghiệm có bản ghi người dùng status=NULL trong schema phù hợp. Ca này chưa được chạy.",
+        "data": "DDL ứng viên cho phép NULL; UserProfile mô hình dữ liệu bắt buộc status là chuỗi.",
+        "steps": [
+          "Gọi API #04 bằng token của bản ghi thử.",
+          "Ghi HTTP/businessCode, không đưa thông tin DB thô vào báo cáo."
+        ],
+        "expected": "Theo mô hình dữ liệu trong mã nguồn, null status không qua UserProfile và thành lỗi 500 an toàn; đây là kịch bản lược đồ dữ liệu/mã nguồn cần kiểm chứng với cơ sở dữ liệu triển khai, không khẳng định đã xảy ra môi trường thật.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "infra/postgres/study-server/DB.sql",
+          "apps/study-server/app/modules/student/api_04_users_me/models.py",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-019",
+        "requirement_ids": [
+          "ST-02-YC-004",
+          "ST-02-YC-007"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Người dùng không còn trong cơ sở dữ liệu",
+        "precondition": "Token có claim hợp lệ nhưng truy vấn không tìm thấy dòng users. Ca này chưa được chạy.",
+        "data": "người dùng ID số dương hợp lệ nhưng không có dòng.",
+        "steps": [
+          "Gọi API #04 trong môi trường giả lập.",
+          "Quan sát status và thông điệp trên trang."
+        ],
+        "expected": "Máy chủ trả 401 DESIGN_AUTHENTICATION_REQUIRED khi không tìm thấy dòng người dùng; ứng dụng xử lý theo luồng 401 hiện hành. Không trả 404 để phân biệt bản ghi có tồn tại hay không.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-020",
+        "requirement_ids": [
+          "ST-02-YC-022",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu 10 điểm đánh dấu với giao diện Angular",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và mã nguồn Angular. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #1–#10 theo ST-02_markers.json.",
+        "steps": [
+          "Đối chiếu từng điểm đánh dấu với ảnh và DOM hiện hành.",
+          "Ghi rõ điểm đánh dấu không còn, thay đổi hoặc có chức năng mới.",
+          "Không thực thi code.html như ứng dụng."
+        ],
+        "expected": "Giữ ánh xạ 10 điểm đánh dấu; xác nhận ảnh gốc thiếu phần thân yêu cầu và ảnh ghép dùng HTML tĩnh. Dùng Mã nguồn Angular cho hành vi hiện hành; không đánh đồng thẻ đăng nhập/nút bị vô hiệu hóa với trang hiện hành.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/screen_annotated.png",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-clean.png",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/code.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-021",
+        "requirement_ids": [
+          "ST-02-YC-026",
+          "ST-02-YC-032"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Xác nhận vùng dữ liệu chưa có hợp đồng",
+        "precondition": "DD/danh mục API nêu bio/permissions hoặc bộ nhớ đệm. Ca này chưa được chạy.",
+        "data": "API #04 phản hồi mã nguồn/mô hình dữ liệu hiện tại.",
+        "steps": [
+          "So sánh danh mục, DD và phản hồi mô hình data.",
+          "Kiểm tra payload/ánh xạ dữ liệu phía trang."
+        ],
+        "expected": "Bio/permissions không được gửi từ API #04 và không xuất hiện trên trang. Không tạo trường dữ liệu mới; quy tắc bộ nhớ đệm/TTL vẫn chưa được triển khai.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/04-api-integration.md",
+          "docs/lists/list_api.md",
+          "apps/study-server/app/modules/student/api_04_users_me/models.py",
+          "apps/study-server/app/modules/student/api_04_users_me/query.py",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-022",
+        "requirement_ids": [
+          "ST-02-YC-028",
+          "ST-02-YC-029"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Xác định quyền từ JWT, không từ nhãn phản hồi",
+        "precondition": "Token STUDENT hợp lệ nhưng dòng có role/status khác. Ca này chưa được chạy.",
+        "data": "role DB=MENTOR hoặc status=SUSPENDED; token roles vẫn STUDENT.",
+        "steps": [
+          "Mở trang qua API #04.",
+          "Đối chiếu phản hồi label và quyền đã qua máy chủ."
+        ],
+        "expected": "API kiểm token roles trước tham số truy vấn; mã không lọc users.status hoặc so sánh role dòng với JWT. Giao diện chỉ hiển thị nhãn dòng. Chính sách khóa khi trạng thái cũ còn chờ người phụ trách.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-server/app/modules/student/api_04_users_me/query.py",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/05-business-rules.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-023",
+        "requirement_ids": [
+          "ST-02-YC-031",
+          "ST-02-YC-032"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Đối chiếu phạm vi kiểm thử hiện có",
+        "precondition": "Có ST02 đặc tả trang và API #04 kiểm thử mã nguồn. Ca này chưa được chạy.",
+        "data": "Một luồng thành công trên ứng dụng và các máy chủ điều kiện kiểm tra trong mã nguồn; không chạy.",
+        "steps": [
+          "Đọc kiểm thử hiện có và so với kế hoạch độ bao phủ.",
+          "Xác nhận trạng thái thực thi trong bảng tính."
+        ],
+        "expected": "Ghi rõ kiểm thử trang hiện có một luồng thành công; kiểm thử máy chủ kiểm tra xác thực/danh sách cho phép/lỗi. Lượt này không chạy kiểm thử, trình duyệt hay API. Tất cả ca trong bảng tính vẫn Chưa chạy.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.spec.ts",
+          "apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/07-test-cases.md",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/00-overview.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-024",
+        "requirement_ids": [
+          "ST-02-YC-005",
+          "ST-02-YC-006",
+          "ST-02-YC-015",
+          "ST-02-YC-016"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Nhãn vai trò/trạng thái dự phòng sau khi thử lại",
+        "precondition": "Lần gọi đầu lỗi; lần sau trả hồ sơ có giá trị phương án dự phòng. Ca này chưa được chạy.",
+        "data": "role=UNKNOWN, status=DELETED, avatar_url=null.",
+        "steps": [
+          "Chờ trạng thái lỗi.",
+          "Bấm Thử tải lại.",
+          "Quan sát dữ liệu sau thành công."
+        ],
+        "expected": "Thử lại gọi lại #04; phản hồi hợp lệ thay trạng thái lỗi, nhãn role/status là Chưa xác định và ảnh đại diện dùng SVG. Không sử dụng dữ liệu hồ sơ lỗi trước đó như kết quả hiện tại.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-MH-025",
+        "requirement_ids": [
+          "ST-02-YC-017",
+          "ST-02-YC-018",
+          "ST-02-YC-032"
+        ],
+        "target_id": "ST-02",
+        "group": "Toàn màn hình",
+        "title": "Giới hạn bằng chứng khi chạy",
+        "precondition": "Có UTC, mã nguồn tuyến/API và DDL candidate. Ca này chưa được chạy.",
+        "data": "Không có môi trường khi chạy được kiểm chứng trong task này.",
+        "steps": [
+          "Đối chiếu mã nguồn và báo cáo static validator.",
+          "Kiểm tra trạng thái ca trong bảng tính."
+        ],
+        "expected": "Chỉ xác nhận hiện hành mã nguồn và cấu trúc UTC; không ghi ca kiểm thử đạt, API/cơ sở dữ liệu đã chạy hoặc bản chuyển đổi/môi trường thật đã được xác minh.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/00-overview.md",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/07-test-cases.md",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/04-api-integration.md",
+          "infra/postgres/study-server/DB.sql"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST-02-TC-TP-001",
+        "requirement_ids": [
+          "ST-02-YC-019",
+          "ST-02-YC-020"
+        ],
+        "target_id": "ST-02-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Biểu trưng Study2Work ở đầu trang",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #1 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Bản mẫu dùng href giữ chỗ; Angular hiện có RouterLink về /.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-002",
+        "requirement_ids": [
+          "ST-02-YC-019",
+          "ST-02-YC-020"
+        ],
+        "target_id": "ST-02-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Nhóm điều hướng chính",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #2 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Ảnh có Trang chủ, Khóa học, Khóa học của tôi và Hồ sơ cá nhân; hiện Angular dùng RouterLink thật.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-003",
+        "requirement_ids": [
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Liên kết Đăng nhập trên đầu trang",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #3 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Chỉ có trong ảnh bản mẫu; Angular hiện hiển thị nhãn tài khoản theo full_name hoặc nhãn Hồ sơ học viên.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-004",
+        "requirement_ids": [
+          "ST-02-YC-019",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề và mô tả hỗ trợ",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #4 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Bản mẫu ghi mô tả quản lý tiến độ/chứng nhận; Angular hiện ghi Xem thông tin tài khoản học viên của bạn.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-005",
+        "requirement_ids": [
+          "ST-02-YC-012",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Bề mặt thẻ hồ sơ và biểu tượng tài khoản",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #5 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Bản mẫu dùng biểu tượng account_circle tĩnh. Angular thay bằng ảnh đại diện URL an toàn hoặc SVG dự phòng.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-006",
+        "requirement_ids": [
+          "ST-02-YC-008",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề thẻ và lời giải thích đăng nhập",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #6 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Lời nhắc đăng nhập là nội dung tĩnh của HTML Stitch; Angular sau xác thực hiện tên hồ sơ. Chưa chứng minh lời nhắc đó là trạng thái API.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-007",
+        "requirement_ids": [
+          "ST-02-YC-002",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Nút Đăng nhập trong thẻ",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #7 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "HTML bản mẫu dùng href giữ chỗ. Angular hiện không hiển thị nút đăng nhập trong vùng hồ sơ; phiên chưa đăng nhập được StudentLayout xử lý ở khung cha.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/layouts/student/student-layout.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-008",
+        "requirement_ids": [
+          "ST-02-YC-022",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Nút Chỉnh sửa hồ sơ bị khóa",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #8 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Bản mẫu có nút bị vô hiệu hóa. Angular hiện hiển thị liên kết hoạt động /student/profile/edit sau khi hồ sơ tải thành công.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-009",
+        "requirement_ids": [
+          "ST-02-YC-021"
+        ],
+        "target_id": "ST-02-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Liên kết thương hiệu ở chân trang",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #9 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Bản mẫu dùng href giữ chỗ; Angular hiện RouterLink về /.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-010",
+        "requirement_ids": [
+          "ST-02-YC-021",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Nhóm liên kết chân trang",
+        "precondition": "Có ảnh có đánh số và ảnh ghép và DOM Angular để đối chiếu; không thực thi HTML bản mẫu. Ca này chưa được chạy.",
+        "data": "điểm đánh dấu #10 trong ST-02_markers.json; ảnh ghép là bản xem tĩnh, không phải khi chạy.",
+        "steps": [
+          "Mở đúng điểm đánh dấu trên ảnh chú thích.",
+          "Đối chiếu nhãn/vị trí với nguồn điểm đánh dấu và DD.",
+          "Tìm phần tử tương ứng trong Angular; ghi nhận khác biệt, không đánh dấu Pass khi chưa chạy."
+        ],
+        "expected": "Danh sách bản mẫu khác Angular: bản hiện tại có Trang chủ, Khóa học, Khóa học của tôi.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02_markers.json",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/images/screen-numbered.png",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-011",
+        "requirement_ids": [
+          "ST-02-YC-001"
+        ],
+        "target_id": "ST-02-SRC-EL-001",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Root màn hình hồ sơ",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Phần tử gốc có data-screen-id=ST-02; trang tự hiển thị đầu trang và chân trang trong tuyến khung giao diện tùy chỉnh.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-012",
+        "requirement_ids": [
+          "ST-02-YC-019",
+          "ST-02-YC-020"
+        ],
+        "target_id": "ST-02-SRC-EL-002",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Biểu trưng và liên kết trang chủ",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Study2Work là RouterLink về / và có aria-label trang chủ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-013",
+        "requirement_ids": [
+          "ST-02-YC-020"
+        ],
+        "target_id": "ST-02-SRC-EL-003",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Điều hướng chính và trạng thái hiện hành",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "RouterLink tới /, /courses, /student/courses và /student/profile; hồ sơ có aria-current=page.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-014",
+        "requirement_ids": [
+          "ST-02-YC-008"
+        ],
+        "target_id": "ST-02-SRC-EL-004",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: nhãn tài khoản",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Dùng full_name từ hồ sơ; nếu chưa có giá trị thì hiện Hồ sơ học viên.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-015",
+        "requirement_ids": [
+          "ST-02-YC-019"
+        ],
+        "target_id": "ST-02-SRC-EL-005",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề và mô tả trang",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Hiển thị Hồ sơ cá nhân cùng mô tả Xem thông tin tài khoản học viên của bạn.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-016",
+        "requirement_ids": [
+          "ST-02-YC-014"
+        ],
+        "target_id": "ST-02-SRC-EL-006",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Khối hồ sơ và trạng thái bận",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Section có aria-labelledby và aria-busy phản ánh loading(); bề mặt trang chứa nội dung thành công/lỗi/tải.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-017",
+        "requirement_ids": [
+          "ST-02-YC-014"
+        ],
+        "target_id": "ST-02-SRC-EL-007",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Thông báo đang tải",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Khi loading=true, hiện Đang tải hồ sơ học viên… với role=status.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-018",
+        "requirement_ids": [
+          "ST-02-YC-015",
+          "ST-02-YC-017",
+          "ST-02-YC-018"
+        ],
+        "target_id": "ST-02-SRC-EL-008",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề lỗi và cảnh báo",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Khi lỗi có giá trị, hiện Chưa thể tải hồ sơ và nội dung role=alert.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-019",
+        "requirement_ids": [
+          "ST-02-YC-016"
+        ],
+        "target_id": "ST-02-SRC-EL-009",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Nút Thử tải lại",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Nút gọi retry() và nạp lại API #04.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-020",
+        "requirement_ids": [
+          "ST-02-YC-012"
+        ],
+        "target_id": "ST-02-SRC-EL-010",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: ảnh đại diện thật hoặc hình SVG dự phòng",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "URL chỉ dùng khi isSafeHttpUrl chấp nhận http/https; trường null hoặc URL không an toàn dùng SVG trang trí.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-021",
+        "requirement_ids": [
+          "ST-02-YC-008"
+        ],
+        "target_id": "ST-02-SRC-EL-011",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Tên học viên",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "H2 lấy full_name; cùng giá trị được dùng ở nhãn tài khoản.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-022",
+        "requirement_ids": [
+          "ST-02-YC-009",
+          "ST-02-YC-013"
+        ],
+        "target_id": "ST-02-SRC-EL-012",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Địa chỉ email",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Hiển thị email dạng văn bản dưới nhãn Địa chỉ email.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-023",
+        "requirement_ids": [
+          "ST-02-YC-010",
+          "ST-02-YC-028"
+        ],
+        "target_id": "ST-02-SRC-EL-013",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Nhãn vai trò",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "STUDENT sau chuẩn hóa hiển thị Học viên; giá trị khác hiển thị Chưa xác định.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-024",
+        "requirement_ids": [
+          "ST-02-YC-011",
+          "ST-02-YC-028"
+        ],
+        "target_id": "ST-02-SRC-EL-014",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Nhãn trạng thái tài khoản",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "ACTIVE hiển thị Đang hoạt động; SUSPENDED hiển thị Tạm khóa; giá trị khác hiển thị Chưa xác định. Không chặn truy cập theo status DB.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-025",
+        "requirement_ids": [
+          "ST-02-YC-022",
+          "ST-02-YC-023"
+        ],
+        "target_id": "ST-02-SRC-EL-015",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Liên kết Chỉnh sửa hồ sơ",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Liên kết hiện hành tới /student/profile/edit; khác nút bị vô hiệu hóa trong điểm đánh dấu #8. API #13/#14 thuộc trang ST-03.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-026",
+        "requirement_ids": [
+          "ST-02-YC-021"
+        ],
+        "target_id": "ST-02-SRC-EL-016",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Thương hiệu và điều hướng chân trang",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Hiện logo về / cùng các liên kết /, /courses, /student/courses.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-027",
+        "requirement_ids": [
+          "ST-02-YC-030"
+        ],
+        "target_id": "ST-02-SRC-EL-017",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Bố cục linh hoạt theo chiều rộng",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "Đầu trang chuyển cách xếp ở max-width 820px; phần thân/chân trang chuyển padding/xếp cột ở 560px.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-TP-028",
+        "requirement_ids": [
+          "ST-02-YC-030"
+        ],
+        "target_id": "ST-02-SRC-EL-018",
+        "group": "Thành phần",
+        "title": "Đối chiếu thành phần: Viền focus và giảm chuyển động",
+        "precondition": "Mở /student/profile trong môi trường kiểm thử được duyệt với dữ liệu hồ sơ giả. Ca này chưa được chạy.",
+        "data": "Hồ sơ giả do người kiểm thử kiểm soát; không dùng thông tin cá nhân thật.",
+        "steps": [
+          "Mở trang ở trạng thái phù hợp.",
+          "Kiểm tra nhãn, liên kết, thuộc tính trợ năng hoặc nội dung thành công/lỗi.",
+          "Đối chiếu mã nguồn hiện hành và ghi bằng chứng sau khi thực thi."
+        ],
+        "expected": "CSS dùng outline khi focus-visible; prefers-reduced-motion tắt transition cho các điều khiển.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST-02-TC-SK-001",
+        "requirement_ids": [
+          "ST-02-YC-001",
+          "ST-02-YC-002",
+          "ST-02-YC-003",
+          "ST-02-YC-004"
+        ],
+        "target_id": "ST-02-EV-001",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Mở tuyến và nạp hồ sơ",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "Học viên mở /student/profile khi StudentLayout cho phép tuyến con.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "ST02Page gọi profile() khi khởi tạo. StudentApiService lấy Bearer từ phiên, API #04 xác thực role STUDENT rồi truy vấn users theo sub. Trang kiểm cấu trúc bao phản hồi, mã thành công và StudentProfile; khi hợp lệ chuyển sang trạng thái hồ sơ. Không có quy tắc bộ nhớ đệm trong trang.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts",
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py",
+          "apps/study-server/app/modules/student/api_04_users_me/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-002",
+        "requirement_ids": [
+          "ST-02-YC-019",
+          "ST-02-YC-020"
+        ],
+        "target_id": "ST-02-EV-002",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Điều hướng từ thương hiệu hoặc đầu trang",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "Bấm logo hoặc một liên kết trong nhóm điều hướng đầu trang.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "RouterLink mở /, /courses, /student/courses hoặc /student/profile; tuyến hiện tại nhận trạng thái được đánh dấu hiện hành. Điều này khác href giữ chỗ của bản mẫu. Không gửi API #04 chỉ do bấm nhóm điều hướng ngoài tuyến hồ sơ.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.css"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-003",
+        "requirement_ids": [
+          "ST-02-YC-002",
+          "ST-02-YC-024"
+        ],
+        "target_id": "ST-02-EV-003",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Liên kết đăng nhập trong bản mẫu",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "Người dùng bấm điểm đánh dấu #3 hoặc #7 trên HTML/ảnh cũ.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "Hai liên kết đăng nhập là thành phần bản mẫu, không xuất hiện trong ST02Page hiện hành. Phiên chưa đăng nhập được StudentLayout xử lý ở khung cha; không khẳng định bấm điểm đánh dấu này có tuyến hoặc giữ returnTo.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-02_ho-so-ca-nhan/code.html",
+          "apps/study-client/src/app/layouts/student/student-layout.html",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-004",
+        "requirement_ids": [
+          "ST-02-YC-022",
+          "ST-02-YC-023"
+        ],
+        "target_id": "ST-02-EV-004",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Mở màn hình sửa hồ sơ",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "Học viên bấm liên kết Chỉnh sửa hồ sơ khi hồ sơ đã tải thành công.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "Mã nguồn Angular hiện tại hiển thị thẻ liên kết RouterLink /student/profile/edit. Liên kết không bị vô hiệu hóa; tuyến ST-03 sở hữu API #13/#14. DD/điểm đánh dấu cũ ghi nút bị vô hiệu hóa và không có hàm xử lý. Ghi sai khác; không gọi thao tác ghi dữ liệu ở ST-02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-005",
+        "requirement_ids": [
+          "ST-02-YC-021"
+        ],
+        "target_id": "ST-02-EV-005",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Điều hướng ở chân trang",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "Bấm thương hiệu hoặc một liên kết ở chân trang.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "RouterLink hiện hành mở /, /courses hoặc /student/courses. Bản mẫu có thêm Điều khoản sử dụng và Chính sách bảo mật với href giữ chỗ; hai đích này không có trong chân trang hiện hành.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/02-events.md",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/docs/dd_screens/ST-02-HoSoCaNhan/06-navigation.md"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-006",
+        "requirement_ids": [
+          "ST-02-YC-005",
+          "ST-02-YC-006",
+          "ST-02-YC-007",
+          "ST-02-YC-008",
+          "ST-02-YC-009",
+          "ST-02-YC-010",
+          "ST-02-YC-011",
+          "ST-02-YC-013",
+          "ST-02-YC-028"
+        ],
+        "target_id": "ST-02-EV-006",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Ánh xạ phản hồi hồ sơ hợp lệ",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "API #04 trả cấu trúc bao phản hồi thành công.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "Trang yêu cầu businessCode DESIGN_RESOURCE_RETRIEVED và isStudentProfile(data). Hiển thị full_name/email; chuyển role thành Học viên hoặc Chưa xác định; chuyển status thành Đang hoạt động/Tạm khóa/Chưa xác định; ảnh đại diện dùng URL http/https hợp lệ hoặc SVG. Không hiển thị id, phone, dấu thời gian, bio, permissions hoặc password_hash.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/models.py",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-007",
+        "requirement_ids": [
+          "ST-02-YC-015",
+          "ST-02-YC-016"
+        ],
+        "target_id": "ST-02-EV-007",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Xử lý lỗi và thử lại",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "API trả lỗi HTTP/mạng, cấu trúc bao phản hồi không thành công hoặc dữ liệu không qua bộ kiểm tra.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "Hiển thị thông điệp an toàn trong role=alert và nút Thử tải lại. Nút gọi lại profile() #04. Lỗi không được diễn giải thành hồ sơ rỗng; phản hồi thô/chi tiết DB không được hiển thị.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-008",
+        "requirement_ids": [
+          "ST-02-YC-012"
+        ],
+        "target_id": "ST-02-EV-008",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Chọn ảnh đại diện hoặc hình thay thế",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "hồ sơ thành công có avatar_url hoặc trường null/URL không được hỗ trợ.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "IsSafeHttpUrl chấp nhận URL tuyệt đối dùng http: hoặc https:. Trường null, URL sai cú pháp hoặc giao thức khác làm avatarUrl() trả null; mẫu HTML hiện SVG trang trí. Không tải tệp hoặc gọi API #13 tại ST-02.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+          "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-profile.guard.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Đã xác nhận"
+      },
+      {
+        "id": "ST-02-TC-SK-009",
+        "requirement_ids": [
+          "ST-02-YC-017",
+          "ST-02-YC-018"
+        ],
+        "target_id": "ST-02-EV-009",
+        "group": "Sự kiện",
+        "title": "Kiểm tra sự kiện: Làm mới phiên hoặc từ chối quyền",
+        "precondition": "Dùng phiên và dữ liệu giả trong môi trường kiểm thử được duyệt; điều kiện kích hoạt được thiết lập. Ca này chưa được chạy.",
+        "data": "API #04 trả 401 hoặc 403.",
+        "steps": [
+          "Kích hoạt đúng điều kiện sự kiện.",
+          "Theo dõi giao diện, yêu cầu và tuyến liên quan.",
+          "Đối chiếu với mã nguồn hiện hành, rồi ghi bằng chứng sau khi chạy."
+        ],
+        "expected": "Với #04, StudentApiService thử làm mới sau 401; nếu lỗi vẫn là 401, xóa phiên cục bộ và điều hướng /forbidden với sh05Error/sh05ReturnTo an toàn. 403 cũng đưa /forbidden. Không suy rằng mọi 401 đều là cổng kiểm tra tuyến của ST02; ghi nhận theo dịch vụ hiện tại.",
+        "api_ids": [
+          "ST-02-API-001"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/core/http/student-api.service.ts",
+          "apps/study-client/src/app/core/auth/student-session.service.ts",
+          "apps/study-client/src/app/layouts/student/student-layout.ts",
+          "apps/study-server/app/modules/student/api_04_users_me/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Đã xác nhận"
+      }
+    ]
+  }
+}

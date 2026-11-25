@@ -1,0 +1,3331 @@
+{
+  "metadata": {
+    "screen_id": "ST-23",
+    "screen_name": "Danh sách thảo luận",
+    "module": "Study — Khu vực người học",
+    "route": "/student/discussions",
+    "actor": "Người học có phiên Bearer JWT, vai trò người học theo catalog; môi trường triển khai chưa xác minh.",
+    "version": "1.0 — Kế hoạch kiểm thử chấp nhận",
+    "dd_version": "0.2; cập nhật nguồn thiết kế 2026-11-21; mã nguồn đối chiếu 2026-11-25",
+    "dd_status": "DD ST-23 còn BLOCKED; API #39 ở trạng thái Bản nháp — cần xác nhận với bảy câu hỏi mở. Phần ghi chú nguồn cũ đã lỗi thời; tuyến, dịch vụ gọi API và hàm xử lý hiện có trong mã nguồn.",
+    "runtime_status": "Mã nguồn hiện đăng ký tuyến Angular ST23, dịch vụ gọi API API #39, tuyến và module Study Server. Chưa xác minh trình duyệt, môi trường triển khai, lược đồ đang chạy hoặc dữ liệu thật; chưa thấy kiểm thử tập trung #39 theo tên tệp.",
+    "author": "Codex — lập hồ sơ UTC",
+    "reviewer": "Chưa xác định trong DD",
+    "approver": "Chưa xác định trong DD",
+    "date": "2026-11-25",
+    "source_name": "DD ST-23/API #39, danh sách yêu cầu màn hình, 15 điểm đánh dấu kết xuất tĩnh, Angular ST23 và Study Server API #39 được đối chiếu đến 2026-11-25.",
+    "release_readiness": "Chưa đủ điều kiện phê duyệt: DD/API còn câu hỏi mở, thiết kế trạng thái có dữ liệu chưa được duyệt, còn sai khác tiêu đề/lược đồ và nguồn DD cũ–mới; môi trường chạy chưa xác minh.",
+    "baseline_authorization": "Dùng DD hiện có làm nguồn kỳ vọng nhưng giữ nguyên trạng thái BLOCKED/Draft; không tự đóng các câu hỏi hoặc coi nguồn hiện hành là quyết định sản phẩm.",
+    "discrepancy_note": "DD/API bản cũ ghi tuyến và API #39 chưa nối; phần cập nhật ST-23 và mã nguồn hiện có tuyến `/student/discussions`, dịch vụ gọi GET #39, hàm xử lý/truy vấn và xác thực người học. Mã nguồn gửi course_id/trang; không gửi sắp xếp. Môi trường chạy/lược đồ thật chưa xác minh. Ảnh Stitch chỉ thể hiện kết xuất tĩnh rỗng; Angular có danh sách, lọc, điều hướng, lỗi và phân trang."
+  },
+  "overall": {
+    "objective": "Người học xem các chủ đề thảo luận thuộc phạm vi được phép, lọc theo khóa và chuyển sang tạo chủ đề hoặc mở chi tiết khi contract/tuyến được duyệt.",
+    "inputs": "Tuyến `/student/discussions`; Angular hiện đọc truy vấn `courseId`; dịch vụ gửi API #39 với `page` và `course_id` tùy chọn. Catalog còn khai báo `sort` nhưng Ứng dụng phía giao diện không gửi. Yêu cầu không có thân yêu cầu, tham số đường dẫn, `size` hoặc `user_id`.",
+    "outputs": "Catalog mô tả `ApiEnvelope<Page<Discussion>>`. Mã nguồn hiện trả chủ đề gốc, tác giả, `title`, `content`, trạng thái và bình luận trực tiếp; `size=20`, tổng và số trang. Trang hiện hiển thị tác giả, nhãn hoạt động, tiêu đề, nội dung, số phản hồi và phân trang. Không khẳng định lược đồ/phản hồi đã chạy.",
+    "main_flow": "Mở tuyến → đọc `courseId` → bật tải → gọi GET #39 bằng dịch vụ người học → kiểm tra khung phản hồi/trang/chủ đề → hiển thị danh sách/rỗng/lỗi. Khi lệch số lượng/danh sách, giữ dòng và cảnh báo; khi trang rỗng vượt tổng, hiện tại tự tải trang cuối.",
+    "states": [
+      "Đang tải",
+      "Danh sách hợp lệ",
+      "Rỗng sau phản hồi thành công",
+      "Lỗi API/truyền tải/định dạng",
+      "Mã khóa học tuyến/biểu mẫu không hợp lệ",
+      "Số lượng và danh sách lệch — giữ dòng, ẩn phân trang, cho tải lại",
+      "Trang yêu cầu vượt trang cuối — thử tải trang cuối"
+    ],
+    "preconditions": "DD ST-23 còn BLOCKED, API #39 còn bảy câu hỏi; các ca giữ Chờ xác nhận và Chưa chạy. Chỉ dùng dữ liệu kiểm thử giả sau khi có môi trường kiểm thử được duyệt. Mã nguồn hiện có nhưng môi trường chạy, môi trường triển khai, lược đồ và dữ liệu thật chưa xác minh.",
+    "security": "Trang thuộc nhóm người học; máy chủ hiện xác thực Bearer/vai trò người học và lấy user_id từ danh tính xác thực. Truy vấn hiện giới hạn theo lượt ghi danh hoạt động; không nhận mã định danh người dùng từ Ứng dụng phía giao diện. Quy tắc khóa không thuộc quyền vẫn là câu hỏi mở.",
+    "out_of_scope": "Không chạy app/API/DB hoặc kiểm thử trình duyệt; không phê duyệt sắp xếp, chính sách phân trang, quy tắc hiển thị, phạm vi bình luận, tiêu đề nguồn, truy vấn errors, lược đồ đang chạy, thiết kế trạng thái có dữ liệu hoặc bàn giao ST-24; không gộp API #10 đánh giá công khai vào thảo luận."
+  },
+  "apis": [
+    {
+      "id": "#39",
+      "method": "GET",
+      "path": "/api/v1/discussions",
+      "event_ids": [
+        "ST23-EV-01",
+        "ST23-EV-02",
+        "ST23-EV-03",
+        "ST23-EV-04",
+        "ST23-EV-05",
+        "ST23-EV-06"
+      ],
+      "request": "Catalog: Bearer JWT vai trò người học; truy vấn tùy chọn `course_id:int64`, `page:int32`, `sort:string`; không thân yêu cầu/đường dẫn/kích thước. Giao diện hiện chỉ gửi `page` và `course_id` khi có bộ lọc; `sort` bị lược.",
+      "response": "Catalog: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Page<Discussion>>`. Mã nguồn hiện trả trang gồm items/pagination; kích thước cố định 20, total từ truy vấn đếm, total_pages=ceil(total/20) hoặc 0. Item gồm mã định danh, course_id, tiêu đề, nội dung, tác giả, trạng thái, bình luận; DDL lưu trong repository thiếu tiêu đề.",
+      "errors": "Catalog chỉ định 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`. Mã nguồn hiện map course_id/trang sai sang 500; sắp xếp được nhận nhưng bỏ qua. Không thêm 400/404/422 vào chuẩn.",
+      "auth": "Bearer JWT vai trò người học; mã nguồn hiện dùng danh tính xác thực xác thực và lọc lượt ghi danh hoạt động cho khóa của chủ đề. Không nhận user_id từ yêu cầu. Quy tắc omitted-course/access vẫn cần xác nhận.",
+      "design_status": "DD API #39 Bản nháp — cần xác nhận; bảy câu hỏi mở. tuyến/module/dịch vụ gọi API hiện có trong mã nguồn; môi trường chạy chưa xác minh.",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/39_discussions/02_Overview.md; apps/study-server/docs/dd/39_discussions/03_Request.md; apps/study-server/docs/dd/39_discussions/04_Response.md; apps/study-server/docs/dd/39_discussions/05_Data_Mapping.md; apps/study-server/docs/dd/39_discussions/06_Error.md; apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py; apps/study-server/app/modules/student/api_39_discussions/validate.py; apps/study-server/app/modules/student/_shared/discussions.py; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ST-23-YC-001",
+      "description": "ST-23 là màn hình đọc danh sách chủ đề thảo luận theo AC-19; không tạo hoặc sửa chủ đề trong lần tải danh sách.",
+      "group": "Mục tiêu và phạm vi",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+      "notes": "Mã nguồn trang gọi GET #39; thao tác tạo chuyển sang ST-24 và do màn hình đó phụ trách.",
+      "action": "Xác minh mỗi lần tải chỉ gọi API đọc #39, không gọi POST #40.",
+      "oracle": "Không phát sinh thay đổi dữ liệu từ trang danh sách; thao tác tạo chỉ điều hướng sang ST-24.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-002",
+      "description": "Danh mục đề xuất tuyến `/student/discussions` cho người học; mã nguồn hiện đăng ký `ST23Page` trong nhóm người học.",
+      "group": "Tuyến và vai trò",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Mã nguồn có tuyến và component; chưa xác minh trình duyệt hay môi trường triển khai.",
+      "action": "Đối chiếu tuyến, component và nhóm xác thực trước khi thực hiện ca trên môi trường được duyệt.",
+      "oracle": "Khai báo tuyến `discussions` trỏ tới `ST23Page`; ghi riêng việc môi trường thực tế chưa được kiểm tra.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-23-YC-003",
+      "description": "Danh mục chỉ định GET #39, Bearer JWT vai trò người học và các tham số truy vấn đã công bố.",
+      "group": "Gọi API và quyền truy cập",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/39_discussions/02_Overview.md; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-server/app/modules/student/api_39_discussions/validate.py; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "Dịch vụ hiện gọi `API_039`; máy chủ hiện lấy danh tính từ token và lọc chủ đề theo lượt ghi danh `ACTIVE`.",
+      "action": "Kiểm tra yêu cầu giả lập không có `user_id`; không gộp API đánh giá công khai #10.",
+      "oracle": "Yêu cầu dùng GET `/discussions`, Bearer do dịch vụ dùng chung gắn; danh tính không lấy từ truy vấn/thân yêu cầu.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-004",
+      "description": "Catalog #39 cho phép `course_id`, `page`, `sort`; không khai báo thân yêu cầu, tham số đường dẫn hoặc `size`.",
+      "group": "Tham số yêu cầu",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/39_discussions/03_Request.md; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/api/v1.py",
+      "notes": "Màn hình hiện chỉ gửi `page` và `course_id` khi có bộ lọc; không đọc hoặc gửi `sort`.",
+      "action": "Đối chiếu truy vấn do dịch vụ ST-23 tạo; không thêm `size`, `page_size` hay trường tự nghĩ.",
+      "oracle": "Có `page`; chỉ có `course_id` khi chọn lọc; không có `sort`, `size`, thân yêu cầu hoặc mã định danh người dùng.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-005",
+      "description": "Danh sách yêu cầu yêu cầu lọc theo khóa học; mã nguồn có ô mã khóa học và ánh xạ tuyến truy vấn `courseId` sang API truy vấn `course_id`.",
+      "group": "Lọc theo khóa học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "API hiện giới hạn kết quả theo `course_id` nếu có và theo khóa người dùng đã ghi danh `ACTIVE`. Quyền truy cập theo khóa vẫn là câu hỏi mở trong DD.",
+      "action": "Dùng mã khóa học giả hợp lệ; theo dõi reset trang, truy vấn URL và yêu cầu #39.",
+      "oracle": "Khi bộ lọc hợp lệ được áp dụng, trang về trang 1 và yêu cầu gửi `course_id` đúng; không đưa mã khóa học mẫu vào kết quả như dữ liệu thật.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-006",
+      "description": "Nguồn hiện từ chối tuyến truy vấn hoặc nội dung nhập không phải số nguyên dương an toàn.",
+      "group": "Kiểm tra mã khóa học phía giao diện",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": "Tuyến truy vấn sai hủy yêu cầu đang chờ, xóa danh sách/phân trang và hiện lỗi riêng; nhập sai cũng xóa dữ liệu cũ và không gửi yêu cầu mới.",
+      "action": "Thử `courseId` bằng 0, số âm, số thập phân, chữ và số vượt miền an toàn bằng dữ liệu giả.",
+      "oracle": "Hiện thông báo mã khóa học chưa hợp lệ; không hiển thị kết quả cũ như dữ liệu mới và không gửi #39.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-007",
+      "description": "Nguồn hiện có nút xóa bộ lọc khi đã chọn khóa học.",
+      "group": "Xóa bộ lọc",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+      "notes": "Thao tác xóa đặt `courseId` về rỗng, reset trang rồi tải danh sách không có `course_id`.",
+      "action": "Chọn bộ lọc giả rồi bấm Xóa bộ lọc.",
+      "oracle": "Tham số tuyến `courseId` được bỏ; yêu cầu kế tiếp chỉ gửi `page` và không gửi `course_id`.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-008",
+      "description": "Danh sách yêu cầu đề cập sắp xếp nhưng chưa định nghĩa giá trị/mặc định; bộ chọn sắp xếp không có trong trang hiện tại.",
+      "group": "Sắp xếp",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "Máy chủ nhận `sort_raw` nhưng truy vấn luôn sắp xếp `created_at DESC, id DESC`; dịch vụ ST-23 không gửi `sort`.",
+      "action": "Không dựng bộ chọn hay coi nhãn trong DD là sắp xếp đã được duyệt; giữ chờ quyết định.",
+      "oracle": "Ghi nhận không có điều khiển sắp xếp và không có tham số `sort` trong yêu cầu hiện tại; không kết luận sắp xếp do người dùng chọn.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-009",
+      "description": "API DD còn mở mặc định, giới hạn và cách tính trang; mã nguồn hiện dùng trang mặc định 1, kích thước cố định 20.",
+      "group": "Phân trang",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "Ứng dụng phía giao diện và server hiện cùng yêu cầu `size=20`; yêu cầu chỉ gửi `page`, không gửi kích thước.",
+      "action": "Dùng phản hồi giả có 21 chủ đề để đối chiếu hai trang, không gọi API thật.",
+      "oracle": "Trang đầu gửi `page=1`; trang sau gửi `page=2`; mỗi trang tối đa 20 dòng. Ghi rõ đây là hiện trạng mã nguồn, chưa phải quyết định DD đã duyệt.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-010",
+      "description": "Catalog mô tả HTTP 200 `DESIGN_RESOURCE_RETRIEVED` và `ApiEnvelope<Page<Discussion>>`.",
+      "group": "Khung phản hồi thành công",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/39_discussions/04_Response.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": "Trang kiểm tra `success`, `businessCode`, cấu trúc danh sách và `PageMeta` trước khi hiển thị.",
+      "action": "Dùng phản hồi thành công giả đúng cấu trúc; thử riêng business code hoặc khung phản hồi sai.",
+      "oracle": "Chỉ phản hồi có `DESIGN_RESOURCE_RETRIEVED` và trang hợp lệ mới vào trạng thái danh sách/rỗng.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-011",
+      "description": "Mã máy chủ hiện truy vấn chủ đề gốc có trạng thái `ACTIVE`; đây là hiện trạng, không đóng câu hỏi về quy tắc hiển thị trong API DD.",
+      "group": "Phạm vi chủ đề trong kết quả",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_39_discussions/query.py; apps/study-server/app/modules/student/api_39_discussions/view.py",
+      "notes": "Truy vấn đếm và truy vấn danh sách cùng lọc `parent_id IS NULL` và `status='ACTIVE'`.",
+      "action": "Dùng dữ liệu kiểm thử giả có chủ đề gốc, câu trả lời và trạng thái khác nhau; đối chiếu kết quả suy ra từ mã nguồn.",
+      "oracle": "Chỉ các dòng được API trả về mới được kết xuất; không suy luận chính sách hiển thị `ACTIVE` đã được người phụ trách duyệt.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-012",
+      "description": "Mã nguồn hiện yêu cầu người dùng có lượt ghi danh `ACTIVE` cho khóa của mỗi chủ đề; khi bỏ `course_id`, truy vấn xét các khóa người dùng đã ghi danh.",
+      "group": "Quyền theo khóa đã ghi danh",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_39_discussions/query.py; apps/study-server/app/modules/student/api_39_discussions/validate.py",
+      "notes": "DD Q-01 chưa chốt scope và phản hồi khi khóa không thuộc phạm vi. Truy vấn hiện lọc kết quả, không tạo 403 riêng cho khóa không khớp.",
+      "action": "Đối chiếu dữ liệu kiểm thử giả người học có/không có lượt ghi danh; giữ đây là quan sát mã nguồn.",
+      "oracle": "Không trả chủ đề từ khóa không có lượt ghi danh phù hợp theo truy vấn hiện tại; không coi 200 rỗng là quyết định quyền đã được phê duyệt.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-013",
+      "description": "Mã nguồn hiện hiển thị tên tác giả, trạng thái cố định “Đang hoạt động”, tiêu đề, nội dung và số bình luận.",
+      "group": "Chiếu nội dung chủ đề",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+      "notes": "Ứng dụng phía giao diện chỉ kiểm tra `title`, `content`, `author`, `status`, `comments`; không hiển thị ảnh đại diện hay thời gian tạo. Nhãn khóa học là chữ cố định, không phải tên khóa thật.",
+      "action": "Đối chiếu từng thành phần hiển thị với dữ liệu kiểm thử giả và mẫu Angular; không lấy nội dung từ ảnh tĩnh làm data.",
+      "oracle": "Mỗi dòng khớp các trường hiện có; nhãn cố định không được diễn giải thành dữ liệu khóa học hoặc trạng thái máy chủ khác.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-014",
+      "description": "Catalog yêu cầu `Discussion.title`; API DD ghi chưa có cột `discussions.title` trong DDL lưu trữ đã kiểm tra.",
+      "group": "Nguồn trường tiêu đề",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/39_discussions/04_Response.md; apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_39_discussions/query.py; infra/postgres/study-server/DB.sql",
+      "notes": "Truy vấn hiện đọc `d.title`, nhưng lược đồ thực tế chưa xác minh; không suy tiêu đề từ `content`.",
+      "action": "Dùng phản hồi giả có `title` rõ ràng; ghi nhận đối chiếu DDL/mã nguồn như sai khác cần người phụ trách giải quyết.",
+      "oracle": "Không biến `content` thành `title`; không tuyên bố lược đồ đang chạy có cột `title`.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-015",
+      "description": "API DD còn mở việc #39 có trả bình luận trực tiếp hay để #42 tải riêng; mã nguồn hiện trả các bình luận con trực tiếp trạng thái `ACTIVE`.",
+      "group": "Bình luận trong danh sách",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+      "notes": "Mỗi dòng chỉ hiển thị số phần tử `comments`; không kết xuất nội dung bình luận. Truy vấn đọc bình luận riêng theo từng chủ đề, theo thứ tự thời gian tăng dần và mã định danh tăng dần.",
+      "action": "Dùng dữ liệu kiểm thử giả có 0 và nhiều bình luận; xác minh số hiển thị, không suy điều khoản hiển thị đã được duyệt.",
+      "oracle": "Số phản hồi bằng `comments.length`; nội dung bình luận không xuất hiện trong danh sách hiện tại.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-016",
+      "description": "Trang từ chối phản hồi nếu thiếu `items`/`pagination`, sai `page`, `size`, tổng, số trang hoặc có hơn 20 dòng.",
+      "group": "Kiểm tra cấu trúc trang",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts; apps/study-server/docs/dd/39_discussions/04_Response.md",
+      "notes": "`total_pages` hiện phải bằng `ceil(total/20)` hoặc 0 khi tổng bằng 0; tổng không bắt buộc bằng số dòng do hai truy vấn độc lập.",
+      "action": "Tạo phản hồi giả lần lượt vi phạm từng bất biến; không dùng dữ liệu thật.",
+      "oracle": "Trang sai định dạng chuyển sang lỗi; chênh lệch số dòng/tổng được xử lý riêng để cảnh báo, không nhầm với shape sai.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-017",
+      "description": "Máy chủ hiện đọc số tổng và các dòng bằng hai truy vấn riêng; Ứng dụng phía giao diện tính số dòng kỳ vọng theo trang và cảnh báo khi lệch.",
+      "group": "Số lượng và danh sách lệch nhau",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "Khi lệch, trang giữ lại dòng đã nhận, ẩn thông tin phân trang có thể cũ và thay thông báo rỗng bằng cảnh báo có nút tải lại.",
+      "action": "Dùng phản hồi giả tổng khác số dòng ở trang hiện tại, gồm cả có dòng và không có dòng.",
+      "oracle": "Không bỏ các dòng hợp lệ; không hiện trạng thái rỗng giả; không cho đổi trang tới khi tải lại đồng bộ.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-018",
+      "description": "Nếu phản hồi hợp lệ không có dòng và trang yêu cầu vượt `max(total_pages,1)`, Ứng dụng phía giao diện hiện tự lùi tới trang cuối hợp lệ rồi tải lại.",
+      "group": "Phục hồi trang vượt giới hạn",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+      "notes": "Đây là hành vi hiện tại; DD API chưa chốt quy tắc trang ngoài miền.",
+      "action": "Tạo phản hồi giả trang 5, tổng 45, `total_pages=3`, danh sách rỗng; quan sát lần tải lại trang 3.",
+      "oracle": "Trang điều chỉnh về trang cuối theo metadata hợp lệ; không tự coi cách phục hồi là hợp đồng đã được duyệt.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-019",
+      "description": "Danh sách yêu cầu có trạng thái rỗng; Ứng dụng phía giao diện chỉ hiện rỗng sau phản hồi thành công hợp lệ, không tải, không lỗi và không lệch số lượng/danh sách.",
+      "group": "Trạng thái rỗng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+      "notes": "Nội dung trong HTML Stitch là ảnh mẫu tĩnh; hiện Angular có câu rỗng riêng và nút tạo chủ đề.",
+      "action": "Dùng phản hồi thành công giả `items=[]`, tổng 0, `total_pages=0`.",
+      "oracle": "Hiện “Chưa có chủ đề thảo luận.”; lỗi hoặc sai lệch không được xem là rỗng.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-020",
+      "description": "Catalog #39 chỉ khai báo lỗi 401, 403, 500; trang hiện tách lỗi HTTP/khung phản hồi/shape khỏi thành công rỗng.",
+      "group": "Lỗi tách khỏi rỗng",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+      "notes": "HTTP 401/403/500, lỗi truyền tải và phản hồi sai không được kết xuất như danh sách rỗng.",
+      "action": "Dùng lỗi giả riêng cho từng nhóm; không gọi máy chủ triển khai.",
+      "oracle": "Hiện vùng `role=alert`; không hiện nội dung rỗng hoặc dữ liệu mẫu sau lỗi.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-021",
+      "description": "API DD/catalog có 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`.",
+      "group": "Ánh xạ quyền và lỗi dịch vụ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-server/docs/dd/39_discussions/06_Error.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts; apps/study-server/app/modules/student/api_39_discussions/validate.py",
+      "notes": "Ứng dụng phía giao diện ánh xạ 401/403/500 sang thông báo tiếng Việt; lỗi truy vấn `course_id`/`page` hiện được server trả 500, chưa phải quy tắc được duyệt.",
+      "action": "Thử trạng thái theo catalog bằng giả lập; ghi lỗi truy vấn chỉ theo mã nguồn riêng.",
+      "oracle": "Mã catalog giữ đúng; trạng thái lỗi không bị đổi thành 200 rỗng hoặc thêm mã lỗi mới.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-022",
+      "description": "Nguồn hiện có nút tải lại ở lỗi và sai lệch; thao tác mới xóa dữ liệu/phân trang cũ, bật tải và gọi lại yêu cầu.",
+      "group": "Tải lại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+      "notes": "`switchMap` thay yêu cầu trước; hủy yêu cầu khi truy vấn khóa học sai hoặc component bị hủy.",
+      "action": "Tạo lỗi/sai lệch giả, bấm tải lại và quan sát trạng thái trong lúc chờ.",
+      "oracle": "Nút tải lại gọi #39 với filter/trang hiện hành; kết quả cũ không được xem như phản hồi mới.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-023",
+      "description": "Validator hiện map `course_id` hoặc `page` không parse/ngoài miền sang HTTP 500 `DESIGN_INTERNAL_ERROR`; `sort` được nhận nhưng bỏ qua.",
+      "group": "Hành vi truy vấn sai phía máy chủ",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/docs/dd/39_discussions/06_Error.md; apps/study-server/app/modules/student/api_39_discussions/validate.py; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "API DD Q-06 chưa quyết định cách parse và catalog không khai báo 400/422.",
+      "action": "Ghi nhận kết quả chỉ theo mã nguồn trong hồ sơ; không gọi trực tiếp API thật và không dùng hành vi hiện tại làm chuẩn đối chiếu đã duyệt.",
+      "oracle": "Không thêm 400/422 vào bộ chuẩn; giữ sai khác mã nguồn–DD cho tới khi contract được cập nhật.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-024",
+      "description": "F07/danh sách yêu cầu mong muốn mở chủ đề sang ST-25; mã nguồn hiện điều hướng bằng mã định danh an toàn từ dòng API.",
+      "group": "Mở chủ đề sang ST-25",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Danh sách không gọi API #42; màn ST-25 sở hữu tải chi tiết. Quyền truy cập chủ đề vẫn cần xác nhận.",
+      "action": "Dùng dòng giả có mã định danh dương an toàn; chọn “Mở thảo luận”.",
+      "oracle": "Điều hướng `/student/discussions/{discussionId}` bằng mã định danh của dòng; không dùng mã định danh tự nhập hoặc gọi #42 tại ST-23.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-025",
+      "description": "Danh sách yêu cầu mong muốn nút tạo; mã nguồn hiện điều hướng tới ST-24 và chuyển `courseId` nếu đang lọc.",
+      "group": "Tạo chủ đề sang ST-24",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/student.route.ts; docs/lists/list_api.md",
+      "notes": "ST-23 không gửi POST #40. Catalog #40 đang có bất nhất kiểu `content:int64` so với nội dung văn bản; thuộc blocker của luồng ST-24.",
+      "action": "Chọn “Tạo chủ đề” ở đầu trang hoặc trạng thái rỗng; theo dõi URL.",
+      "oracle": "Chỉ điều hướng tới `/student/discussions/new`; không tạo chủ đề hay gọi #40 tại trang danh sách.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-23-YC-026",
+      "description": "Tài sản Stitch có đầu trang, chân trang và liên kết quay về `/student/courses`; Angular ST-23 dùng thanh điều hướng phân cấp `/student` và tuyến có khung giao diện `blank`.",
+      "group": "Thanh điều hướng phân cấp và bố cục hiện tại",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/student.route.ts",
+      "notes": "Hai biểu hiện khác nhau; ảnh tĩnh không chứng minh khung giao diện hoặc liên kết chạy trong ứng dụng.",
+      "action": "Đối chiếu hình mẫu, tệp HTML đi kèm, mẫu giao diện Angular và cấu hình tuyến; không nhập hai bố cục thành một chuẩn đối chiếu.",
+      "oracle": "Ghi nhận đúng thanh điều hướng phân cấp/mẫu giao diện hiện tại và giữ sai khác thiết kế ở Chờ xác nhận.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-23-YC-027",
+      "description": "DD/danh sách yêu cầu phân biệt thảo luận học viên với đánh giá khóa học công khai GS-05/API #10.",
+      "group": "Không gộp đánh giá công khai",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/04-api-integration.md; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-client/src/app/core/constant/api.constants.ts",
+      "notes": "Dịch vụ hiện chỉ gọi API #39; không gọi #10, không quy đổi chủ đề thành đánh giá/rating.",
+      "action": "Đối chiếu yêu cầu và dòng hiển thị với dữ liệu kiểm thử giả thảo luận; kiểm tra không dùng API #10.",
+      "oracle": "Không xuất hiện điểm đánh giá, rating hoặc nội dung từ API #10 trong ST-23.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-028",
+      "description": "API dùng danh tính từ Bearer; yêu cầu của màn không gửi `user_id`.",
+      "group": "Bảo vệ danh tính người học",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "docs/lists/list_api.md; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/modules/student/api_39_discussions/validate.py; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "Truy vấn máy chủ dùng `user_id` lấy từ danh tính xác thực xác thực và lọc lượt ghi danh; chưa xác minh môi trường chạy hoặc DB trực tiếp.",
+      "action": "Dùng phiên và dữ liệu giả; đối chiếu URL/thân yêu cầu và truy vấn nguồn.",
+      "oracle": "Không có `user_id` trên truy vấn/thân yêu cầu; không dùng tài khoản hoặc dữ liệu cá nhân thật.",
+      "priority": "Cao",
+      "api_ids": []
+    },
+    {
+      "id": "ST-23-YC-029",
+      "description": "Bản DD lịch sử ghi giao diện/API chưa nối; phần đối chiếu cập nhật 2026-11-21 cùng mã nguồn hiện tại cho thấy tuyến, dịch vụ gọi API, hàm xử lý và truy vấn đã có.",
+      "group": "Sai khác DD và mã nguồn hiện hành",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/04-api-integration.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-client/src/app/features/student/student.route.ts; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py",
+      "notes": "Không coi ghi chú cũ là hiện trạng; cũng không suy từ mã nguồn rằng môi trường triển khai đã chạy.",
+      "action": "Đối chiếu nội dung hiện hành của DD với Angular/Study Server nguồn; giữ `RUNTIME NOT VERIFIED`.",
+      "oracle": "UTC mô tả tuyến/API đã có trong mã nguồn và tách rõ trạng thái môi trường chưa xác minh.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-030",
+      "description": "DDL trong repository cho phép `course_id`/`user_id` null và không có `title`; phản hồi #39 lại yêu cầu trường cần thiết.",
+      "group": "Ranh giới lược đồ và dữ liệu thật",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/docs/dd/39_discussions/05_Data_Mapping.md; apps/study-server/app/modules/student/api_39_discussions/query.py; infra/postgres/study-server/DB.sql",
+      "notes": "Mã nguồn hiện truy vấn `d.title`; lược đồ triển khai và dữ liệu thật chưa xác minh.",
+      "action": "Không suy ra migration hoặc trạng thái live; giữ Q-05/Q-07 mở.",
+      "oracle": "Ghi rõ sai khác giữa DDL lưu trong repository và cấu trúc phản hồi; không tuyên bố API chạy được.",
+      "priority": "Cao",
+      "api_ids": [
+        "#39"
+      ]
+    },
+    {
+      "id": "ST-23-YC-031",
+      "description": "Mã nguồn đã nối không chứng minh hành vi chạy trong trình duyệt, API triển khai hoặc lược đồ thật.",
+      "group": "Kiểm thử và môi trường",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-server/docs/dd/39_discussions/VERIFICATION_REPORT.md; apps/study-server/tests/modules/student/; apps/study-client/src/app/features/student/student.route.ts; apps/study-server/app/api/v1.py",
+      "notes": "Không tìm thấy kiểm thử tập trung API #39 theo tên tệp; mọi ca trong workbook bắt đầu ở `Chưa chạy`.",
+      "action": "Chỉ thực hiện kiểm định tài liệu; chờ môi trường và contract được duyệt trước khi chạy ca.",
+      "oracle": "Không ghi Pass/Fail cho app/API/DB; báo cáo validator chỉ xác nhận tài liệu.",
+      "priority": "Cao",
+      "api_ids": []
+    }
+  ],
+  "elements": [
+    {
+      "id": "ST-23-EL-001",
+      "marker": "#1 / ST23-EL-01",
+      "name": "Thương hiệu Study2Work và biểu trưng",
+      "type": "Thương hiệu/biểu trưng",
+      "position": "Đầu trang, bên trái",
+      "properties": "Có trong ảnh kết xuất tĩnh; trang Angular ST-23 không dựng đầu trang này.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+    },
+    {
+      "id": "ST-23-EL-002",
+      "marker": "#2 / ST23-EL-02",
+      "name": "Điều hướng chính của người học",
+      "type": "Điều hướng",
+      "position": "Đầu trang",
+      "properties": "Các liên kết trong mẫu tĩnh là tĩnh; đích và phiên chưa được xác minh.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+    },
+    {
+      "id": "ST-23-EL-003",
+      "marker": "#3 / ST23-EL-03",
+      "name": "Thanh thanh điều hướng phân cấp đơn vị",
+      "type": "Thanh điều hướng phân cấp",
+      "position": "Ngay dưới đầu trang",
+      "properties": "Nội dung trong ảnh tĩnh, không lấy từ API #39; không có trong mẫu giao diện Angular ST-23.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_markers.json; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+    },
+    {
+      "id": "ST-23-EL-004",
+      "marker": "#4 / ST23-EL-04",
+      "name": "Thanh điều hướng phân cấp của trang",
+      "type": "Thanh điều hướng phân cấp",
+      "position": "Trên tiêu đề",
+      "properties": "Mẫu tĩnh dùng liên kết `#`; Angular hiện dùng liên kết `/student` và nhãn “Danh sách thảo luận”.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-23-EL-005",
+      "marker": "#5 / ST23-EL-05",
+      "name": "Tiêu đề danh sách thảo luận",
+      "type": "Tiêu đề",
+      "position": "Đầu vùng nội dung",
+      "properties": "Có trong kết xuất tĩnh và mẫu giao diện Angular; không gắn với tiêu đề khóa học.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png; apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+    },
+    {
+      "id": "ST-23-EL-006",
+      "marker": "#6 / ST23-EL-06",
+      "name": "Thẻ trạng thái rỗng trong ảnh",
+      "type": "Thẻ nội dung",
+      "position": "Giữa vùng nội dung",
+      "properties": "Thẻ trắng của mẫu tĩnh; điều kiện hiển thị thật phải dựa trên phản hồi thành công hợp lệ.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+    },
+    {
+      "id": "ST-23-EL-007",
+      "marker": "#7 / ST23-EL-07",
+      "name": "Biểu tượng thảo luận rỗng",
+      "type": "Biểu tượng trang trí",
+      "position": "Giữa thẻ rỗng",
+      "properties": "Chỉ là biểu tượng tĩnh; không mang dữ liệu hoặc thao tác.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+    },
+    {
+      "id": "ST-23-EL-008",
+      "marker": "#8 / ST23-EL-08",
+      "name": "Tiêu đề trạng thái rỗng trong ảnh",
+      "type": "Nhãn",
+      "position": "Trong thẻ rỗng",
+      "properties": "Nội dung hiển thị tĩnh không chứng minh máy chủ trả `items=[]`; Angular hiện có nội dung rỗng khác.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+    },
+    {
+      "id": "ST-23-EL-009",
+      "marker": "#9 / ST23-EL-09",
+      "name": "Mô tả trạng thái rỗng trong ảnh",
+      "type": "Nội dung",
+      "position": "Dưới tiêu đề rỗng",
+      "properties": "Câu “đang được đồng bộ” không có nguồn API/tiến trình; không dùng làm chuẩn cho lỗi.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png"
+    },
+    {
+      "id": "ST-23-EL-010",
+      "marker": "#10 / ST23-EL-10",
+      "name": "Liên kết quay về khóa học",
+      "type": "Liên kết điều hướng",
+      "position": "Dưới mô tả rỗng",
+      "properties": "HTML tĩnh trỏ `/student/courses`; Angular hiện không có nút này trong mẫu giao diện ST-23.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+    },
+    {
+      "id": "ST-23-EL-011",
+      "marker": "#11 / ST23-EL-11",
+      "name": "Thương hiệu và mô tả chân trang",
+      "type": "Thương hiệu/nội dung",
+      "position": "Chân trang, bên trái",
+      "properties": "Nhóm chữ/biểu trưng chỉ có trong kết xuất tĩnh; không phải dữ liệu API.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+    },
+    {
+      "id": "ST-23-EL-012",
+      "marker": "#12 / ST23-EL-12",
+      "name": "Liên kết chương trình ở chân trang",
+      "type": "Nhóm liên kết",
+      "position": "Chân trang, cột chương trình",
+      "properties": "Một liên kết dùng `/student/courses`, các liên kết khác dùng `#`; đích chưa xác minh.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html"
+    },
+    {
+      "id": "ST-23-EL-013",
+      "marker": "#13 / ST23-EL-13",
+      "name": "Liên kết cộng đồng và hỗ trợ",
+      "type": "Nhóm liên kết",
+      "position": "Chân trang",
+      "properties": "Các đích trong mẫu tĩnh là `#`; không có API hỗ trợ thuộc ST-23.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html"
+    },
+    {
+      "id": "ST-23-EL-014",
+      "marker": "#14 / ST23-EL-14",
+      "name": "Thông tin liên hệ",
+      "type": "Thông tin tĩnh",
+      "position": "Chân trang, cột bên phải",
+      "properties": "Địa chỉ/điện thoại/email trong ảnh là chữ tĩnh; không có nguồn cấu hình/API ST-23.",
+      "event_ids": [],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png"
+    },
+    {
+      "id": "ST-23-EL-015",
+      "marker": "#15 / ST23-EL-15",
+      "name": "Bản quyền và liên kết pháp lý",
+      "type": "Dải thông tin",
+      "position": "Cuối trang",
+      "properties": "Liên kết pháp lý trong mẫu tĩnh phần lớn dùng `#`; không có tuyến được xác nhận.",
+      "event_ids": [
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html"
+    },
+    {
+      "id": "ST-23-SRC-EL-001",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Khung trang và thanh điều hướng phân cấp Angular",
+      "type": "Khung trang",
+      "position": "Đầu vùng nội dung",
+      "properties": "Trang hiện có thanh điều hướng phân cấp tới `/student`; tuyến được khai báo với khung giao diện `blank`. Chưa xác minh trình duyệt.",
+      "event_ids": [
+        "ST23-EV-01",
+        "ST23-EV-09"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-002",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Tiêu đề và mô tả trang hiện tại",
+      "type": "Tiêu đề/nội dung",
+      "position": "Đầu trang Angular",
+      "properties": "Hiển thị “Diễn đàn học tập”, “Danh sách thảo luận” và mô tả; không lấy từ API.",
+      "event_ids": [
+        "ST23-EV-01"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+    },
+    {
+      "id": "ST-23-SRC-EL-003",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Nút tạo chủ đề ở tiêu đề",
+      "type": "Nút điều hướng",
+      "position": "Bên phải tiêu đề",
+      "properties": "Đi tới ST-24; truyền `courseId` hiện chọn; không gọi POST #40 tại ST-23.",
+      "event_ids": [
+        "ST23-EV-08"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-004",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Biểu mẫu lọc theo mã khóa học",
+      "type": "Biểu mẫu",
+      "position": "Dưới tiêu đề",
+      "properties": "Nhập mã khóa học, cho phép để trống; tham số tuyến `courseId` và API `course_id` có cách viết khác nhau.",
+      "event_ids": [
+        "ST23-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-005",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Ô nhập mã khóa học",
+      "type": "Ô nhập số",
+      "position": "Trong biểu mẫu lọc",
+      "properties": "`type=number`, `min=1`; mã nguồn vẫn tự kiểm tra số nguyên dương an toàn.",
+      "event_ids": [
+        "ST23-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-006",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Nút áp dụng bộ lọc",
+      "type": "Nút gửi biểu mẫu",
+      "position": "Trong biểu mẫu lọc",
+      "properties": "Gọi `applyCourseFilter`; reset trang 1 và tải lại hoặc cập nhật truy vấn tuyến.",
+      "event_ids": [
+        "ST23-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-007",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Nút xóa bộ lọc",
+      "type": "Nút thao tác",
+      "position": "Hiện khi đã có khóa được chọn",
+      "properties": "Xóa `courseId`, đưa trang về 1 và tải danh sách không lọc khóa.",
+      "event_ids": [
+        "ST23-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-008",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Thông báo đang tải",
+      "type": "Thông báo trạng thái",
+      "position": "Khu vực nội dung",
+      "properties": "Hiện khi yêu cầu bắt đầu, có `role=status`; xóa nội dung cũ trước khi tải.",
+      "event_ids": [
+        "ST23-EV-01",
+        "ST23-EV-02"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-009",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Vùng lỗi và nút tải lại",
+      "type": "Thông báo lỗi",
+      "position": "Khu vực nội dung",
+      "properties": "Hiện `role=alert`; lỗi không biến thành rỗng; ẩn nút tải lại khi truy vấn khóa học sai.",
+      "event_ids": [
+        "ST23-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-010",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Cảnh báo số lượng và danh sách lệch",
+      "type": "Cảnh báo trạng thái",
+      "position": "Khu vực nội dung",
+      "properties": "Giữ dòng trả về, ẩn thông tin trang có thể cũ; hiện nút tải lại.",
+      "event_ids": [
+        "ST23-EV-03",
+        "ST23-EV-10"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py"
+    },
+    {
+      "id": "ST-23-SRC-EL-011",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Trạng thái rỗng hiện tại",
+      "type": "Thẻ trạng thái",
+      "position": "Khu vực nội dung",
+      "properties": "Chỉ hiện khi tải xong, không lỗi, không lệch và danh sách rỗng; kèm nút tạo chủ đề.",
+      "event_ids": [
+        "ST23-EV-03",
+        "ST23-EV-08"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-012",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Danh sách chủ đề",
+      "type": "Danh sách",
+      "position": "Khu vực nội dung",
+      "properties": "Lặp qua `discussions`; mỗi dòng theo mã định danh; trang không hiển thị mục trong khi tải/lỗi.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-013",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Dòng tác giả và trạng thái",
+      "type": "Thông tin phụ của dòng",
+      "position": "Trên tiêu đề chủ đề",
+      "properties": "Tên tác giả lấy từ API; nhãn “Đang hoạt động” là chữ cố định trong mẫu giao diện.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-014",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Tiêu đề, nội dung và số phản hồi",
+      "type": "Nội dung dòng",
+      "position": "Trong mỗi chủ đề",
+      "properties": "Hiển thị `title`, `content`, `comments.length`; không hiện avatar, thời gian hay nội dung bình luận.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/shared/models/student-api.models.ts; apps/study-server/app/modules/student/_shared/discussions.py"
+    },
+    {
+      "id": "ST-23-SRC-EL-015",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Nút mở chủ đề",
+      "type": "Liên kết điều hướng",
+      "position": "Bên phải mỗi dòng",
+      "properties": "Dùng mã định danh an toàn từ phản hồi để mở ST-25; mã định danh sai thì hiện nhãn không thể mở.",
+      "event_ids": [
+        "ST23-EV-07"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-016",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Điều khiển phân trang",
+      "type": "Điều hướng phân trang",
+      "position": "Cuối danh sách",
+      "properties": "Nút Trước/Sau bị vô hiệu tại biên; bị ẩn khi tổng và dòng lệch.",
+      "event_ids": [
+        "ST23-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-017",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Nhãn trang và tổng",
+      "type": "Thông tin phân trang",
+      "position": "Giữa hai nút trang",
+      "properties": "Hiện `page`, `total_pages || 1` và `total`; tổng có thể cũ khi hai truy vấn lệch.",
+      "event_ids": [
+        "ST23-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-018",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Trạng thái truy vấn khóa học sai",
+      "type": "Trạng thái lỗi lọc",
+      "position": "Khu vực nội dung",
+      "properties": "Tuyến truy vấn sai hủy yêu cầu, xóa danh sách/phân trang, hiện thông báo và không cho tải lại.",
+      "event_ids": [
+        "ST23-EV-01",
+        "ST23-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+    },
+    {
+      "id": "ST-23-SRC-EL-019",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Bộ kiểm tra cấu trúc trang",
+      "type": "Bộ kiểm tra dữ liệu",
+      "position": "Trước khi hiển thị",
+      "properties": "Kiểm tra `businessCode`, metadata `page/size/total/total_pages`, tối đa 20 dòng và từng Discussion.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-020",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Bộ kiểm tra từng chủ đề",
+      "type": "Bộ kiểm tra dữ liệu",
+      "position": "Trước khi kết xuất dòng",
+      "properties": "Yêu cầu mã định danh khóa/chủ đề an toàn, tiêu đề/nội dung chuỗi, `status=ACTIVE`, tác giả và mảng bình luận hợp lệ.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-021",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Phát hiện lệch số dòng",
+      "type": "Bộ kiểm tra đồng bộ",
+      "position": "Sau khi nhận trang",
+      "properties": "Tính số dòng theo `min(size,max(total-offset,0))`; khác biệt bật `snapshotMismatch`.",
+      "event_ids": [
+        "ST23-EV-03"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+    },
+    {
+      "id": "ST-23-SRC-EL-022",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Phục hồi trang ngoài giới hạn",
+      "type": "Luồng phục hồi phân trang",
+      "position": "Sau phản hồi rỗng",
+      "properties": "Nếu trang yêu cầu vượt trang cuối tính từ phản hồi, lùi đến `max(total_pages,1)` rồi gọi lại.",
+      "event_ids": [
+        "ST23-EV-03",
+        "ST23-EV-06"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+    },
+    {
+      "id": "ST-23-SRC-EL-023",
+      "marker": "Chỉ có trong mã nguồn hiện tại",
+      "name": "Hủy yêu cầu cũ",
+      "type": "Điều phối yêu cầu",
+      "position": "Khi đổi truy vấn/hủy component",
+      "properties": "`switchMap` thay yêu cầu trước; truy vấn khóa học sai hủy yêu cầu đang chờ; hủy đăng ký khi component bị hủy.",
+      "event_ids": [
+        "ST23-EV-02",
+        "ST23-EV-04"
+      ],
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+    }
+  ],
+  "events": [
+    {
+      "id": "ST23-EV-01",
+      "name": "Mở danh sách và đọc ngữ cảnh khóa học",
+      "trigger": "Vào `/student/discussions`, có thể kèm truy vấn `courseId`.",
+      "element_ids": [
+        "ST-23-SRC-EL-001",
+        "ST-23-SRC-EL-003",
+        "ST-23-EL-001"
+      ],
+      "api_ids": [
+        "#39"
+      ],
+      "processing": "Tuyến hiện đọc `courseId`; giá trị an toàn đặt filter và trang 1 rồi tải #39. Giá trị sai hủy yêu cầu, xóa dữ liệu và hiện lỗi. Chưa xác minh môi trường chạy.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST23-EV-02",
+      "name": "Tải danh sách bằng API #39",
+      "trigger": "Khởi tạo trang, áp dụng filter hoặc bấm tải lại.",
+      "element_ids": [
+        "ST-23-EL-008",
+        "ST-23-SRC-EL-008",
+        "ST-23-EL-004",
+        "ST-23-EL-005"
+      ],
+      "api_ids": [
+        "#39"
+      ],
+      "processing": "Dịch vụ gửi GET với `page` và `course_id` nếu có; gắn Bearer qua dịch vụ người học dùng chung; không gửi `sort`, `size`, thân yêu cầu hoặc `user_id`.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/04-api-integration.md; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/api/v1.py"
+    },
+    {
+      "id": "ST23-EV-03",
+      "name": "Kiểm tra phản hồi và chọn trạng thái",
+      "trigger": "API #39 trả phản hồi hoặc truyền tải/API báo lỗi.",
+      "element_ids": [
+        "ST-23-EL-009",
+        "ST-23-EL-010",
+        "ST-23-EL-011",
+        "ST-23-EL-012",
+        "ST-23-EL-013",
+        "ST-23-EL-014",
+        "ST-23-SRC-EL-004",
+        "ST-23-SRC-EL-005",
+        "ST-23-SRC-EL-006",
+        "ST-23-SRC-EL-007"
+      ],
+      "api_ids": [
+        "#39"
+      ],
+      "processing": "Ứng dụng phía giao diện kiểm tra `success`/``businessCode``, `PageMeta` và các chủ đề. Trang hợp lệ được hiển thị; phản hồi sai thành lỗi; lệch số lượng/danh sách giữ dòng và ẩn phân trang; trang ngoài miền có thể tự tải lại trang cuối.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py"
+    },
+    {
+      "id": "ST23-EV-04",
+      "name": "Áp dụng bộ lọc khóa học",
+      "trigger": "Nhập mã khóa học rồi gửi biểu mẫu lọc.",
+      "element_ids": [
+        "ST-23-EL-004",
+        "ST-23-EL-005",
+        "ST-23-EL-006",
+        "ST-23-EL-007",
+        "ST-23-SRC-EL-003",
+        "ST-23-SRC-EL-008"
+      ],
+      "api_ids": [
+        "#39"
+      ],
+      "processing": "Ứng dụng phía giao diện kiểm tra số nguyên dương an toàn, reset trang 1 và thay truy vấn tuyến; yêu cầu gửi `course_id`. Nếu xóa lọc, truy vấn bị bỏ. Không tự chốt quyền khóa trong DD.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+    },
+    {
+      "id": "ST23-EV-05",
+      "name": "Chọn cách sắp xếp",
+      "trigger": "Danh sách yêu cầu đề cập sắp xếp nhưng trang hiện không có bộ chọn.",
+      "element_ids": [
+        "ST-23-SRC-EL-001",
+        "ST-23-SRC-EL-008"
+      ],
+      "api_ids": [
+        "#39"
+      ],
+      "processing": "Không gửi `sort`; máy chủ hiện bỏ qua `sort_raw` và luôn sắp xếp ngày/mã định danh giảm dần. Giá trị sắp xếp và mặc định vẫn chờ người phụ trách xác nhận.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/query.py"
+    },
+    {
+      "id": "ST23-EV-06",
+      "name": "Chuyển trang",
+      "trigger": "Bấm Trước hoặc Sau khi danh sách đã đồng bộ.",
+      "element_ids": [
+        "ST-23-SRC-EL-001",
+        "ST-23-SRC-EL-002",
+        "ST-23-SRC-EL-006",
+        "ST-23-SRC-EL-007"
+      ],
+      "api_ids": [
+        "#39"
+      ],
+      "processing": "Nút bị chặn ở biên; thay `page` và tải lại bằng filter hiện hành. Nếu danh sách lệch tổng thì nút phân trang bị ẩn.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+    },
+    {
+      "id": "ST23-EV-07",
+      "name": "Mở chủ đề sang ST-25",
+      "trigger": "Bấm “Mở thảo luận” trên một dòng hợp lệ.",
+      "element_ids": [
+        "ST-23-EL-014"
+      ],
+      "api_ids": [],
+      "processing": "Trang dùng mã định danh an toàn từ phản hồi để điều hướng `/student/discussions/{discussionId}`; ST-25 sở hữu tải chi tiết, ST-23 không gọi #42.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST23-EV-08",
+      "name": "Tạo chủ đề sang ST-24",
+      "trigger": "Bấm “Tạo chủ đề” ở đầu trang hoặc trạng thái rỗng.",
+      "element_ids": [
+        "ST-23-EL-003",
+        "ST-23-EL-010"
+      ],
+      "api_ids": [],
+      "processing": "Trang điều hướng `/student/discussions/new` và chuyển `courseId` nếu có filter; không gọi POST #40 hay tạo bản ghi tại ST-23.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST23-EV-09",
+      "name": "Dùng thanh điều hướng phân cấp và điều hướng ngoài trang",
+      "trigger": "Bấm thanh điều hướng phân cấp Angular hoặc kiểm tra liên kết của ảnh tĩnh.",
+      "element_ids": [
+        "ST-23-EL-001",
+        "ST-23-EL-002",
+        "ST-23-EL-003",
+        "ST-23-EL-004",
+        "ST-23-EL-010",
+        "ST-23-EL-011",
+        "ST-23-EL-012",
+        "ST-23-EL-013",
+        "ST-23-EL-014",
+        "ST-23-EL-015"
+      ],
+      "api_ids": [],
+      "processing": "Angular hiện chỉ có thanh điều hướng phân cấp `/student`; đầu trang/chân trang của ảnh kết xuất tĩnh không thuộc mẫu giao diện trang. Các liên kết `#` không được xem là tuyến.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/student.route.ts"
+    },
+    {
+      "id": "ST23-EV-10",
+      "name": "Xử lý lỗi xác thực, API, mạng và dữ liệu",
+      "trigger": "API hoặc dịch vụ phát sinh lỗi trong lúc tải/lọc/trang.",
+      "element_ids": [
+        "ST-23-EL-009",
+        "ST-23-SRC-EL-003",
+        "ST-23-SRC-EL-008"
+      ],
+      "api_ids": [
+        "#39"
+      ],
+      "processing": "Giữ lỗi riêng với rỗng; ánh xạ message; truy vấn khóa học sai không có nút thử lại; lỗi khác có thể tải lại với filter/trang hiện hành.",
+      "design_status": "Chờ xác nhận",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html; apps/study-client/src/app/features/student/shared/models/student-api-errors.ts; apps/study-server/app/modules/student/api_39_discussions/validate.py"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "ST-23-BL-001",
+      "description": "DD và hiện trạng mã nguồn không cùng thời điểm: DD cũ mô tả giao diện/API chưa nối; phần đối chiếu 2026-11-21 và mã nguồn hiện có tuyến ST-23, dịch vụ gọi API và API #39.",
+      "impact": "Dễ nhầm kế hoạch với hành vi hiện tại hoặc cho rằng môi trường đã chạy.",
+      "decision": "Chốt bản DD được duyệt; giữ riêng trạng thái nguồn đã có và môi trường chạy chưa xác minh.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/04-api-integration.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/api/v1.py; apps/study-server/app/modules/student/api_39_discussions/view.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-23-BL-002",
+      "description": "Bảy câu hỏi API #39 còn mở: Q-01…Q-07 về quyền, truy vấn bỏ course_id, phân trang/sắp xếp, bình luận, trạng thái hiển thị, nguồn tiêu đề, parse và nullability.",
+      "impact": "Chưa có chuẩn đối chiếu nghiệp vụ đầy đủ cho bộ lọc, trang, sắp xếp, quy tắc hiển thị và phản hồi.",
+      "decision": "Chủ sở hữu API cập nhật DD/catalog; đến lúc đó giữ các ca ở Chờ xác nhận.",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/docs/dd/39_discussions/03_Request.md; apps/study-server/docs/dd/39_discussions/04_Response.md",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-23-BL-003",
+      "description": "Thiết kế trạng thái có dữ liệu chưa có: Ảnh gốc gần như trống; kết xuất tĩnh chỉ có trạng thái rỗng. Angular hiện có lọc, danh sách, lỗi và phân trang.",
+      "impact": "Không thể khẳng định có dữ liệu thiết kế khớp giao diện hiện tại hoặc invent controls từ ảnh.",
+      "decision": "Người phụ trách sản phẩm duyệt trạng thái có dữ liệu, lọc/sắp xếp, tạo, lỗi và phân trang.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen.png; apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png; apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-23-BL-004",
+      "description": "Nguồn trường tiêu đề và lược đồ: Catalog yêu cầu `title`; truy vấn hiện đọc `d.title`; DDL lưu trong repository không có cột tiêu đề và cho phép null course/user mã định danh.",
+      "impact": "Môi trường DB nếu cùng DDL có thể không đáp ứng phản hồi; lược đồ đang chạy chưa xác minh.",
+      "decision": "Chốt nguồn tiêu đề, nullability và cấu trúc DB thật; không suy tiêu đề từ nội dung.",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/docs/dd/39_discussions/05_Data_Mapping.md; apps/study-server/app/modules/student/api_39_discussions/query.py; infra/postgres/study-server/DB.sql",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-23-BL-005",
+      "description": "Sắp xếp và kiểm tra truy vấn chưa khớp: Catalog cho `sort`; Ứng dụng phía giao diện không gửi; server bỏ sắp xếp. `course_id`/`page` sai hiện map 500 nhưng catalog không định nghĩa 400/422.",
+      "impact": "Hành vi mã nguồn hiện tại chưa phải hợp đồng được phê duyệt.",
+      "decision": "Người phụ trách chốt allowlist/mặc định/parse/range và cập nhật catalog; giữ chuẩn đối chiếu chỉ theo mã nguồn.",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/03_Request.md; apps/study-server/docs/dd/39_discussions/06_Error.md; apps/study-client/src/app/features/student/ST23/pages/st23-page.ts; apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-server/app/modules/student/api_39_discussions/validate.py",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-23-BL-006",
+      "description": "Ranh giới bình luận và trạng thái: API #39 hiện trả bình luận con trực tiếp hoạt động; DD Q-03/Q-04 còn mở về nội dung phản hồi và quy tắc hiển thị/trạng thái.",
+      "impact": "Nội dung phản hồi lớn, nhãn “Đang hoạt động” cố định có thể vượt ý nghĩa trạng thái đã duyệt.",
+      "decision": "Chốt danh sách/detail phạm vi, danh sách giá trị, quy tắc hiển thị và thứ tự với API #42.",
+      "source_ref": "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md; apps/study-server/app/modules/student/api_39_discussions/query.py; apps/study-server/app/modules/student/api_39_discussions/view.py; apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-23-BL-007",
+      "description": "Bàn giao sang ST-24 phụ thuộc contract #40: Nút tại ST-23 chỉ điều hướng; catalog #40 có `content:int64` dù nội dung chủ đề là văn bản.",
+      "impact": "Không thể nghiệm thu trọn luồng tạo từ danh sách theo kiểu nội dung hiện tại.",
+      "decision": "Chốt tuyến/context và kiểu thân yêu cầu ở DD #40; ST-23 không gửi POST #40.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md; apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md; docs/lists/list_api.md; apps/study-client/src/app/features/student/student.route.ts; apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+      "status": "Chưa giải quyết"
+    },
+    {
+      "id": "ST-23-BL-008",
+      "description": "Môi trường chạy và kiểm thử tập trung chưa xác minh: tuyến/API hiện có trong mã nguồn nhưng chưa xác minh trình duyệt, môi trường triển khai, lược đồ đang chạy hoặc dữ liệu thật; không thấy tên kiểm thử tập trung #39.",
+      "impact": "Không có bằng chứng chạy để đánh dấu các ca đạt.",
+      "decision": "Giữ ca `Chưa chạy`; xác minh môi trường và kiểm thử sau khi contract được duyệt.",
+      "source_ref": "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md; apps/study-server/docs/dd/39_discussions/VERIFICATION_REPORT.md; apps/study-client/src/app/features/student/student.route.ts; apps/study-server/app/api/v1.py; apps/study-server/tests/modules/student/",
+      "status": "Chưa giải quyết"
+    }
+  ],
+  "test_cases": {
+    "screen": [
+      {
+        "id": "ST-23-TC-MH-001",
+        "requirement_ids": [
+          "ST-23-YC-001",
+          "ST-23-YC-002",
+          "ST-23-YC-003"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Mở tuyến và khởi tạo danh sách",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "tuyến `/student/discussions`, phiên người học giả; phản hồi #39 đang chờ.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Tuyến hiện đăng ký ST23Page; trang đọc truy vấn và bắt đầu trạng thái tải trước khi gọi dịch vụ. Mã nguồn không chứng minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-client/src/app/core/constant/api.constants.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-002",
+        "requirement_ids": [
+          "ST-23-YC-003",
+          "ST-23-YC-004",
+          "ST-23-YC-026",
+          "ST-23-YC-027"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Gửi đúng truy vấn khi tải ban đầu",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Không có truy vấn khóa học; trang ban đầu bằng 1.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Yêu cầu GET #39 gửi `page=1`, không có `course_id`, `sort`, `size`, thân yêu cầu hoặc `user_id`; Bearer do StudentApiService xử lý. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-client/src/app/core/constant/api.constants.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-003",
+        "requirement_ids": [
+          "ST-23-YC-009",
+          "ST-23-YC-010",
+          "ST-23-YC-011",
+          "ST-23-YC-012",
+          "ST-23-YC-013",
+          "ST-23-YC-014",
+          "ST-23-YC-015",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Hiển thị trang có chủ đề hợp lệ",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Phản hồi giả `success=true`, `businessCode`=DESIGN_RESOURCE_RETRIEVED; một trang 20 dòng trở xuống; mỗi dòng có tác giả/trạng thái hoạt động/bình luận.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trang nhận metadata hợp lệ; hiển thị tiêu đề, nội dung, tên tác giả, nhãn hoạt động và số phản hồi. Không hiển thị thời gian/ảnh đại diện hoặc dữ liệu thật. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-004",
+        "requirement_ids": [
+          "ST-23-YC-005",
+          "ST-23-YC-011"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Lọc theo khóa học hợp lệ",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Người dùng nhập mã khóa học giả 25 rồi bấm Lọc; trang hiện tại là 2.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Tuyến truy vấn `courseId=25`; trang reset về 1; yêu cầu #39 có `course_id=25` và `page=1`. Quyền access vẫn là câu hỏi mở. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-005",
+        "requirement_ids": [
+          "ST-23-YC-005",
+          "ST-23-YC-006"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Từ chối mã khóa học nhập sai",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Nhập `1.5`, `-2`, chữ hoặc số vượt miền nguyên an toàn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Hiện thông báo mã khóa học không hợp lệ; yêu cầu đang chờ bị hủy, dữ liệu cũ bị xóa và không gọi #39 với giá trị sai. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-006",
+        "requirement_ids": [
+          "ST-23-YC-006",
+          "ST-23-YC-007"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Xóa bộ lọc khóa học",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Đang lọc `courseId=25`; bấm Xóa bộ lọc.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Truy vấn `courseId` được bỏ, trang về 1; yêu cầu sau không có `course_id`. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-007",
+        "requirement_ids": [
+          "ST-23-YC-008"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ sắp xếp ở trạng thái chưa được xác nhận",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Thêm thử truy vấn tuyến `sort=created_at_asc`; giao diện không có bộ chọn sắp xếp.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trang không đọc/chuyển sắp xếp vào yêu cầu; API nguồn hiện bỏ qua sắp xếp. Không kết luận thứ tự được người dùng chọn; quyết định còn mở. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py",
+          "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-008",
+        "requirement_ids": [
+          "ST-23-YC-008",
+          "ST-23-YC-009",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chuyển sang trang kế tiếp",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Phản hồi giả tổng 21, trang 1, kích thước 20, total_pages 2; bấm Sau.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nút Sau gọi tải trang 2 và gửi `page=2`; không gửi `size`. Mã nguồn hiện dùng kích thước 20, chưa phải quyết định đã duyệt. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-009",
+        "requirement_ids": [
+          "ST-23-YC-009",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Chặn chuyển trang ở biên",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ở trang 1 bấm Trước; ở trang cuối bấm Sau.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nút tương ứng ở trạng thái disabled; không phát sinh yêu cầu trang ngoài biên. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-010",
+        "requirement_ids": [
+          "ST-23-YC-009",
+          "ST-23-YC-018"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tự tải lại trang cuối khi trang yêu cầu đã vượt tổng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Yêu cầu page=5; phản hồi giả rỗng, total=45, total_pages=3.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Ứng dụng phía giao diện hiện lùi về page=3 và gọi lại cùng filter; không hiện rỗng từ phản hồi page=5. Hành vi trang ngoài miền chưa được API DD chốt. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md",
+          "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-011",
+        "requirement_ids": [
+          "ST-23-YC-014",
+          "ST-23-YC-019",
+          "ST-23-YC-024"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Hiển thị trạng thái rỗng có điều kiện",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Phản hồi thành công giả `items=[]`, page=1, kích thước=20, total=0, total_pages=0.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Chỉ hiện “Chưa có chủ đề thảo luận.” khi không tải/lỗi/lệch; có nút Tạo chủ đề. Không suy ra trạng thái đồng bộ từ mẫu tĩnh. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-012",
+        "requirement_ids": [
+          "ST-23-YC-020"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tách lỗi xác thực khỏi rỗng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Phản hồi giả HTTP 401, `businessCode` DESIGN_AUTHENTICATION_REQUIRED.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Hiện thông báo lỗi tiếng Việt trong `role=alert`; không hiện thẻ rỗng hoặc chủ đề mẫu. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-013",
+        "requirement_ids": [
+          "ST-23-YC-020"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tách lỗi quyền khỏi rỗng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Phản hồi giả HTTP 403, `businessCode` DESIGN_ACCESS_DENIED.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Hiện lỗi quyền theo mapper; không diễn giải thành không có chủ đề. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-014",
+        "requirement_ids": [
+          "ST-23-YC-020"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tách lỗi hệ thống khỏi rỗng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Phản hồi giả HTTP 500, `businessCode` DESIGN_INTERNAL_ERROR.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Hiện lỗi dịch vụ với nút tải lại; không hiển thị danh sách rỗng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-015",
+        "requirement_ids": [
+          "ST-23-YC-020"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Xử lý lỗi mạng hoặc truyền tải",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "giả lập dịch vụ phát lỗi trạng thái 0/truyền tải; không gọi môi trường thật.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Hiện thông báo kết nối không thành công và nút tải lại; dữ liệu không bị ghi nhận là thành công. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-016",
+        "requirement_ids": [
+          "ST-23-YC-021"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Tải lại sau lỗi",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Đang có lỗi giả; bấm Tải lại thảo luận.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trang xóa lỗi và state cũ, bật đang tải rồi gọi lại #39 với filter/trang hiện hành. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-017",
+        "requirement_ids": [
+          "ST-23-YC-010",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Từ chối business code hoặc `PageMeta` sai",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dữ liệu giả lập phản hồi thành công có `businessCode` sai, thông tin trang sai, `size` khác 20, `total` âm hoặc `total_pages` sai.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trang vào lỗi định dạng, không kết xuất danh sách; bất biến 20 là hiện trạng mã nguồn và cần được xác nhận trong DD. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-server/docs/dd/39_discussions/04_Response.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-018",
+        "requirement_ids": [
+          "ST-23-YC-013",
+          "ST-23-YC-014",
+          "ST-23-YC-015",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Từ chối bản ghi chủ đề sai cấu trúc",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Mỗi dữ liệu kiểm thử giả lần lượt có mã định danh/course_id sai, tiêu đề/nội dung không phải chuỗi, trạng thái khác hoạt động, tác giả/bình luận sai kiểu.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Guard trang hiện từ chối phản hồi; không kết xuất bản ghi lỗi. Không suy danh sách giá trị trạng thái khác từ dữ liệu giả. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-server/docs/dd/39_discussions/04_Response.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-019",
+        "requirement_ids": [
+          "ST-23-YC-015",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Từ chối bình luận lồng sai cấu trúc",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "dữ liệu kiểm thử giả có `comments` không phải mảng hoặc bình luận thiếu mã định danh/tác giả/nội dung/created_at dạng chuỗi.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Guard hiện từ chối phản hồi; nội dung lỗi không được hiển thị như bình luận hợp lệ. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-server/app/modules/student/_shared/discussions.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-020",
+        "requirement_ids": [
+          "ST-23-YC-008",
+          "ST-23-YC-009",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Hiển thị tổng và trang khi dữ liệu đồng nhất",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "dữ liệu kiểm thử giả page=1, kích thước=20, total=21, total_pages=2, đúng 20 dòng.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nhãn hiển thị trang 1/2 và tổng 21; hai nút phân trang hoạt động theo biên. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-021",
+        "requirement_ids": [
+          "ST-23-YC-017",
+          "ST-23-YC-019",
+          "ST-23-YC-021"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Giữ dòng và ẩn phân trang khi số lượng/danh sách lệch",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "dữ liệu kiểm thử giả page=1,kích thước=20,total=25,total_pages=2 nhưng chỉ có 3 dòng.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Cảnh báo đồng bộ xuất hiện; 3 dòng vẫn hiển thị; trạng thái rỗng và nút phân trang bị ẩn; có thể tải lại. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-022",
+        "requirement_ids": [
+          "ST-23-YC-017",
+          "ST-23-YC-019"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không hiện rỗng giả khi số lượng khác 0 nhưng trang trả rỗng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "dữ liệu kiểm thử giả page=1,kích thước=20,total=10,total_pages=1,items=[]; shape còn lại hợp lệ.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Hiện cảnh báo lệch số lượng/danh sách thay vì câu rỗng; không có nút phân trang ở trạng thái lệch. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-023",
+        "requirement_ids": [
+          "ST-23-YC-013",
+          "ST-23-YC-014",
+          "ST-23-YC-015",
+          "ST-23-YC-023",
+          "ST-23-YC-024"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Mở chủ đề từ dòng danh sách",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "dữ liệu kiểm thử giả có một mã định danh chủ đề dương an toàn; bấm Mở thảo luận.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điều hướng sang `/student/discussions/{id}` bằng mã định danh phản hồi; không gọi #42 trước khi vào ST-25. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-024",
+        "requirement_ids": [
+          "ST-23-YC-001",
+          "ST-23-YC-024"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Mở màn tạo chủ đề",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Bấm Tạo chủ đề ở đầu trang hoặc thẻ rỗng khi đang lọc khóa 25.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điều hướng `/student/discussions/new`; chuyển `courseId=25`; không gửi POST #40 từ ST-23. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts",
+          "docs/lists/list_api.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-025",
+        "requirement_ids": [
+          "ST-23-YC-002",
+          "ST-23-YC-025",
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Đối chiếu thanh điều hướng phân cấp và bố cục",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "So sánh kết xuất tĩnh, tệp HTML đi kèm, mẫu giao diện Angular và cấu hình tuyến.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Ảnh có đầu trang/chân trang và liên kết `/student/courses`; Angular hiện dùng thanh điều hướng phân cấp `/student`, khung giao diện `blank`, không có đầu trang/chân trang trong mẫu giao diện. Giữ là sai khác, không gộp chuẩn đối chiếu. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-026",
+        "requirement_ids": [
+          "ST-23-YC-001",
+          "ST-23-YC-003",
+          "ST-23-YC-026",
+          "ST-23-YC-027"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không gọi API đánh giá công khai",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Theo dõi yêu cầu giả trong lúc mở danh sách thảo luận.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Chỉ dịch vụ #39 của ST-23 được gọi; không gọi API #10 và không kết xuất rating/đánh giá. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-client/src/app/core/constant/api.constants.ts",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-027",
+        "requirement_ids": [
+          "ST-23-YC-003",
+          "ST-23-YC-011",
+          "ST-23-YC-027",
+          "ST-23-YC-030"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không gửi định danh người học từ giao diện",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Kiểm tra URL/truy vấn/thân yêu cầu của yêu cầu giả; danh tính xác thực trong dữ liệu kiểm thử giả được tách biệt.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Yêu cầu không chứa `user_id`; truy vấn server lấy người dùng từ token. Không kiểm tra riêng tư trên môi trường thật. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/validate.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-028",
+        "requirement_ids": [
+          "ST-23-YC-022",
+          "ST-23-YC-029",
+          "ST-23-YC-030",
+          "ST-23-YC-031"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Ghi riêng lỗi truy vấn hiện hành và trạng thái môi trường chạy",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "giả lập trực tiếp giá trị `course_id`/`page` sai; đối chiếu tuyến/API nguồn và DDL lưu trong repository.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Mã nguồn hiện map parse/range sai thành 500 và bỏ qua sắp xếp; catalog chưa khai báo 400/422; lược đồ/môi trường chạy/kiểm thử chưa xác minh. Không ghi Pass cho ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-server/app/modules/student/api_39_discussions/validate.py",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py",
+          "docs/lists/list_api.md",
+          "infra/postgres/study-server/DB.sql",
+          "apps/study-server/tests/modules/student/",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/00-overview.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-MH-029",
+        "requirement_ids": [
+          "ST-23-YC-010",
+          "ST-23-YC-014",
+          "ST-23-YC-030"
+        ],
+        "target_id": "ST-23",
+        "group": "Kiểm thử toàn màn hình",
+        "title": "Không tự tạo tiêu đề từ nội dung",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "dữ liệu kiểm thử giả phản hồi có tiêu đề và nội dung khác nhau; DDL repository không có cột tiêu đề.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trang hiển thị trường `title` do API trả; không thay bằng `content`; môi trường DB thật chưa xác minh. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py",
+          "infra/postgres/study-server/DB.sql",
+          "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "elements": [
+      {
+        "id": "ST-23-TC-TP-001",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-001",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Thương hiệu Study2Work và biểu trưng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #1 / ST23-EL-01 khớp nhóm “Thương hiệu Study2Work và biểu trưng” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-002",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-002",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Điều hướng chính của người học",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #2 / ST23-EL-02 khớp nhóm “Điều hướng chính của người học” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-003",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-003",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Thanh thanh điều hướng phân cấp đơn vị",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #3 / ST23-EL-03 khớp nhóm “Thanh thanh điều hướng phân cấp đơn vị” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_markers.json",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-004",
+        "requirement_ids": [
+          "ST-23-YC-028",
+          "ST-23-YC-025"
+        ],
+        "target_id": "ST-23-EL-004",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: thanh điều hướng phân cấp của trang",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #4 / ST23-EL-04 khớp nhóm “thanh điều hướng phân cấp của trang” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-005",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-005",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề danh sách thảo luận",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #5 / ST23-EL-05 khớp nhóm “Tiêu đề danh sách thảo luận” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-006",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-006",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Thẻ trạng thái rỗng trong ảnh",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #6 / ST23-EL-06 khớp nhóm “Thẻ trạng thái rỗng trong ảnh” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-007",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-007",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Biểu tượng thảo luận rỗng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #7 / ST23-EL-07 khớp nhóm “Biểu tượng thảo luận rỗng” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-008",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-008",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề trạng thái rỗng trong ảnh",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #8 / ST23-EL-08 khớp nhóm “Tiêu đề trạng thái rỗng trong ảnh” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-009",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-009",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Mô tả trạng thái rỗng trong ảnh",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #9 / ST23-EL-09 khớp nhóm “Mô tả trạng thái rỗng trong ảnh” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-010",
+        "requirement_ids": [
+          "ST-23-YC-028",
+          "ST-23-YC-025"
+        ],
+        "target_id": "ST-23-EL-010",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Liên kết quay về khóa học",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #10 / ST23-EL-10 khớp nhóm “Liên kết quay về khóa học” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-011",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-011",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Thương hiệu và mô tả chân trang",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #11 / ST23-EL-11 khớp nhóm “Thương hiệu và mô tả chân trang” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_annotated.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-012",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-012",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Liên kết chương trình ở chân trang",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #12 / ST23-EL-12 khớp nhóm “Liên kết chương trình ở chân trang” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-013",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-013",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Liên kết cộng đồng và hỗ trợ",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #13 / ST23-EL-13 khớp nhóm “Liên kết cộng đồng và hỗ trợ” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-014",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-014",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Thông tin liên hệ",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #14 / ST23-EL-14 khớp nhóm “Thông tin liên hệ” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen_rendered.png"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-015",
+        "requirement_ids": [
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-EL-015",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Bản quyền và liên kết pháp lý",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Ảnh kết xuất tĩnh và marker nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điểm đánh dấu #15 / ST23-EL-15 khớp nhóm “Bản quyền và liên kết pháp lý” trong ảnh kết xuất; đây là tài sản tĩnh, chưa xác nhận trong ứng dụng. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html"
+        ],
+        "priority": "Trung bình",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-016",
+        "requirement_ids": [
+          "ST-23-YC-002",
+          "ST-23-YC-025"
+        ],
+        "target_id": "ST-23-SRC-EL-001",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Khung trang và thanh điều hướng phân cấp Angular",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Khung trang và thanh điều hướng phân cấp Angular: Trang hiện có thanh điều hướng phân cấp tới `/student`; tuyến được khai báo với khung giao diện `blank`. Chưa xác minh trình duyệt. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-017",
+        "requirement_ids": [
+          "ST-23-YC-002",
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST-23-SRC-EL-002",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề và mô tả trang hiện tại",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Tiêu đề và mô tả trang hiện tại: Hiển thị “Diễn đàn học tập”, “Danh sách thảo luận” và mô tả; không lấy từ API. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-018",
+        "requirement_ids": [
+          "ST-23-YC-024",
+          "ST-23-YC-001"
+        ],
+        "target_id": "ST-23-SRC-EL-003",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Nút tạo chủ đề ở tiêu đề",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nút tạo chủ đề ở tiêu đề: Đi tới ST-24; truyền `courseId` hiện chọn; không gọi POST #40 tại ST-23. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-019",
+        "requirement_ids": [
+          "ST-23-YC-005",
+          "ST-23-YC-006"
+        ],
+        "target_id": "ST-23-SRC-EL-004",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Biểu mẫu lọc theo mã khóa học",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Biểu mẫu lọc theo mã khóa học: Nhập mã khóa học, cho phép để trống; tham số tuyến `courseId` và API `course_id` có cách viết khác nhau. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-020",
+        "requirement_ids": [
+          "ST-23-YC-005",
+          "ST-23-YC-006"
+        ],
+        "target_id": "ST-23-SRC-EL-005",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Ô nhập mã khóa học",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Ô nhập mã khóa học: `type=number`, `min=1`; mã nguồn vẫn tự kiểm tra số nguyên dương an toàn. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-021",
+        "requirement_ids": [
+          "ST-23-YC-005",
+          "ST-23-YC-008"
+        ],
+        "target_id": "ST-23-SRC-EL-006",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Nút áp dụng bộ lọc",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nút áp dụng bộ lọc: Gọi `applyCourseFilter`; reset trang 1 và tải lại hoặc cập nhật truy vấn tuyến. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-022",
+        "requirement_ids": [
+          "ST-23-YC-007"
+        ],
+        "target_id": "ST-23-SRC-EL-007",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Nút xóa bộ lọc",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nút xóa bộ lọc: Xóa `courseId`, đưa trang về 1 và tải danh sách không lọc khóa. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-023",
+        "requirement_ids": [
+          "ST-23-YC-003",
+          "ST-23-YC-020"
+        ],
+        "target_id": "ST-23-SRC-EL-008",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Thông báo đang tải",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Thông báo đang tải: Hiện khi yêu cầu bắt đầu, có `role=status`; xóa nội dung cũ trước khi tải. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-024",
+        "requirement_ids": [
+          "ST-23-YC-020",
+          "ST-23-YC-021",
+          "ST-23-YC-022"
+        ],
+        "target_id": "ST-23-SRC-EL-009",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Vùng lỗi và nút tải lại",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Vùng lỗi và nút tải lại: Hiện `role=alert`; lỗi không biến thành rỗng; ẩn nút tải lại khi truy vấn khóa học sai. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-025",
+        "requirement_ids": [
+          "ST-23-YC-017"
+        ],
+        "target_id": "ST-23-SRC-EL-010",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Cảnh báo số lượng và danh sách lệch",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Cảnh báo số lượng và danh sách lệch: Giữ dòng trả về, ẩn thông tin trang có thể cũ; hiện nút tải lại. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-026",
+        "requirement_ids": [
+          "ST-23-YC-019",
+          "ST-23-YC-024"
+        ],
+        "target_id": "ST-23-SRC-EL-011",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Trạng thái rỗng hiện tại",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trạng thái rỗng hiện tại: Chỉ hiện khi tải xong, không lỗi, không lệch và danh sách rỗng; kèm nút tạo chủ đề. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-027",
+        "requirement_ids": [
+          "ST-23-YC-012",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23-SRC-EL-012",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Danh sách chủ đề",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Danh sách chủ đề: Lặp qua `discussions`; mỗi dòng theo mã định danh; trang không hiển thị mục trong khi tải/lỗi. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-028",
+        "requirement_ids": [
+          "ST-23-YC-012"
+        ],
+        "target_id": "ST-23-SRC-EL-013",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Dòng tác giả và trạng thái",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Dòng tác giả và trạng thái: Tên tác giả lấy từ API; nhãn “Đang hoạt động” là chữ cố định trong mẫu giao diện. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-029",
+        "requirement_ids": [
+          "ST-23-YC-013",
+          "ST-23-YC-014",
+          "ST-23-YC-015"
+        ],
+        "target_id": "ST-23-SRC-EL-014",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Tiêu đề, nội dung và số phản hồi",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Tiêu đề, nội dung và số phản hồi: Hiển thị `title`, `content`, `comments.length`; không hiện avatar, thời gian hay nội dung bình luận. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+          "apps/study-server/app/modules/student/_shared/discussions.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-030",
+        "requirement_ids": [
+          "ST-23-YC-023"
+        ],
+        "target_id": "ST-23-SRC-EL-015",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Nút mở chủ đề",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nút mở chủ đề: Dùng mã định danh an toàn từ phản hồi để mở ST-25; mã định danh sai thì hiện nhãn không thể mở. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-031",
+        "requirement_ids": [
+          "ST-23-YC-008",
+          "ST-23-YC-016",
+          "ST-23-YC-017",
+          "ST-23-YC-018"
+        ],
+        "target_id": "ST-23-SRC-EL-016",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Điều khiển phân trang",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Điều khiển phân trang: Nút Trước/Sau bị vô hiệu tại biên; bị ẩn khi tổng và dòng lệch. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-032",
+        "requirement_ids": [
+          "ST-23-YC-008",
+          "ST-23-YC-017",
+          "ST-23-YC-018"
+        ],
+        "target_id": "ST-23-SRC-EL-017",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Nhãn trang và tổng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nhãn trang và tổng: Hiện `page`, `total_pages || 1` và `total`; tổng có thể cũ khi hai truy vấn lệch. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-033",
+        "requirement_ids": [
+          "ST-23-YC-006"
+        ],
+        "target_id": "ST-23-SRC-EL-018",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Trạng thái truy vấn khóa học sai",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trạng thái truy vấn khóa học sai: tuyến truy vấn sai hủy yêu cầu, xóa danh sách/phân trang, hiện thông báo và không cho tải lại. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-034",
+        "requirement_ids": [
+          "ST-23-YC-010",
+          "ST-23-YC-016"
+        ],
+        "target_id": "ST-23-SRC-EL-019",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Bộ kiểm tra cấu trúc trang",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Bộ kiểm tra cấu trúc trang: Kiểm tra `businessCode`, metadata `page/size/total/total_pages`, tối đa 20 dòng và từng Discussion. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-035",
+        "requirement_ids": [
+          "ST-23-YC-012",
+          "ST-23-YC-013",
+          "ST-23-YC-015"
+        ],
+        "target_id": "ST-23-SRC-EL-020",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Bộ kiểm tra từng chủ đề",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Bộ kiểm tra từng chủ đề: Yêu cầu mã định danh khóa/chủ đề an toàn, tiêu đề/nội dung chuỗi, `status=ACTIVE`, tác giả và mảng bình luận hợp lệ. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/shared/models/student-api.models.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-036",
+        "requirement_ids": [
+          "ST-23-YC-016",
+          "ST-23-YC-017"
+        ],
+        "target_id": "ST-23-SRC-EL-021",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Phát hiện lệch số dòng",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Phát hiện lệch số dòng: Tính số dòng theo `min(size,max(total-offset,0))`; khác biệt bật `snapshotMismatch`. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-037",
+        "requirement_ids": [
+          "ST-23-YC-009",
+          "ST-23-YC-018"
+        ],
+        "target_id": "ST-23-SRC-EL-022",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Phục hồi trang ngoài giới hạn",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Phục hồi trang ngoài giới hạn: Nếu trang yêu cầu vượt trang cuối tính từ phản hồi, lùi đến `max(total_pages,1)` rồi gọi lại. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-TP-038",
+        "requirement_ids": [
+          "ST-23-YC-003",
+          "ST-23-YC-005",
+          "ST-23-YC-006"
+        ],
+        "target_id": "ST-23-SRC-EL-023",
+        "group": "Kiểm thử thành phần",
+        "title": "Đối chiếu thành phần: Hủy yêu cầu cũ",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Dùng dữ liệu kiểm thử giả; đối chiếu trạng thái hiện có trong mẫu giao diện/mã nguồn.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Hủy yêu cầu cũ: `switchMap` thay yêu cầu trước; truy vấn khóa học sai hủy yêu cầu đang chờ; hủy đăng ký khi component bị hủy. Chỉ ghi nhận mã nguồn; chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ],
+    "events": [
+      {
+        "id": "ST-23-TC-SK-001",
+        "requirement_ids": [
+          "ST-23-YC-002",
+          "ST-23-YC-005",
+          "ST-23-YC-006"
+        ],
+        "target_id": "ST23-EV-01",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Mở danh sách và đọc ngữ cảnh khóa học",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Vào `/student/discussions`, có thể kèm truy vấn `courseId`.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Tuyến hiện đọc `courseId`; giá trị an toàn đặt filter và trang 1 rồi tải #39. Giá trị sai hủy yêu cầu, xóa dữ liệu và hiện lỗi. Chưa xác minh môi trường chạy. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-002",
+        "requirement_ids": [
+          "ST-23-YC-001",
+          "ST-23-YC-003",
+          "ST-23-YC-004",
+          "ST-23-YC-027"
+        ],
+        "target_id": "ST23-EV-02",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Tải danh sách bằng API #39",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Khởi tạo trang, áp dụng filter hoặc bấm tải lại. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Dịch vụ gửi GET với `page` và `course_id` nếu có; gắn Bearer qua dịch vụ người học dùng chung; không gửi `sort`, `size`, thân yêu cầu hoặc `user_id`. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/04-api-integration.md",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-server/app/api/v1.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-003",
+        "requirement_ids": [
+          "ST-23-YC-010",
+          "ST-23-YC-012",
+          "ST-23-YC-013",
+          "ST-23-YC-014",
+          "ST-23-YC-015",
+          "ST-23-YC-016",
+          "ST-23-YC-017",
+          "ST-23-YC-018",
+          "ST-23-YC-019",
+          "ST-23-YC-020"
+        ],
+        "target_id": "ST23-EV-03",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Kiểm tra phản hồi và chọn trạng thái",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "API #39 trả phản hồi hoặc truyền tải/API báo lỗi.",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Ứng dụng phía giao diện kiểm tra `success`/``businessCode``, `PageMeta` và các chủ đề. Trang hợp lệ được hiển thị; phản hồi sai thành lỗi; lệch số lượng/danh sách giữ dòng và ẩn phân trang; trang ngoài miền có thể tự tải lại trang cuối. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-004",
+        "requirement_ids": [
+          "ST-23-YC-005",
+          "ST-23-YC-006",
+          "ST-23-YC-007",
+          "ST-23-YC-011"
+        ],
+        "target_id": "ST23-EV-04",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Áp dụng bộ lọc khóa học",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Nhập mã khóa học rồi gửi biểu mẫu lọc. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Ứng dụng phía giao diện kiểm tra số nguyên dương an toàn, reset trang 1 và thay truy vấn tuyến; yêu cầu gửi `course_id`. Nếu xóa lọc, truy vấn bị bỏ. Không tự chốt quyền khóa trong DD. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-005",
+        "requirement_ids": [
+          "ST-23-YC-008"
+        ],
+        "target_id": "ST23-EV-05",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Chọn cách sắp xếp",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "danh sách yêu cầu đề cập sắp xếp nhưng trang hiện không có bộ chọn. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Không gửi `sort`; máy chủ hiện bỏ qua `sort_raw` và luôn sắp xếp ngày/mã định danh giảm dần. Giá trị sắp xếp và mặc định vẫn chờ người phụ trách xác nhận. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-server/docs/dd/39_discussions/OPEN_QUESTIONS.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/view.py",
+          "apps/study-server/app/modules/student/api_39_discussions/query.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-006",
+        "requirement_ids": [
+          "ST-23-YC-009",
+          "ST-23-YC-017",
+          "ST-23-YC-018"
+        ],
+        "target_id": "ST23-EV-06",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Chuyển trang",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Bấm Trước hoặc Sau khi danh sách đã đồng bộ. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Nút bị chặn ở biên; thay `page` và tải lại bằng filter hiện hành. Nếu danh sách lệch tổng thì nút phân trang bị ẩn. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/data-access/st23-discussions.service.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-007",
+        "requirement_ids": [
+          "ST-23-YC-023"
+        ],
+        "target_id": "ST23-EV-07",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Mở chủ đề sang ST-25",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Bấm “Mở thảo luận” trên một dòng hợp lệ. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trang dùng mã định danh an toàn từ phản hồi để điều hướng `/student/discussions/{discussionId}`; ST-25 sở hữu tải chi tiết, ST-23 không gọi #42. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-008",
+        "requirement_ids": [
+          "ST-23-YC-024"
+        ],
+        "target_id": "ST23-EV-08",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Tạo chủ đề sang ST-24",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Bấm “Tạo chủ đề” ở đầu trang hoặc trạng thái rỗng. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Trang điều hướng `/student/discussions/new` và chuyển `courseId` nếu có filter; không gọi POST #40 hay tạo bản ghi tại ST-23. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-009",
+        "requirement_ids": [
+          "ST-23-YC-025",
+          "ST-23-YC-028"
+        ],
+        "target_id": "ST23-EV-09",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Dùng thanh điều hướng phân cấp và điều hướng ngoài trang",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "Bấm thanh điều hướng phân cấp Angular hoặc kiểm tra liên kết của ảnh tĩnh. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Angular hiện chỉ có thanh điều hướng phân cấp `/student`; đầu trang/chân trang của ảnh kết xuất tĩnh không thuộc mẫu giao diện trang. Các liên kết `#` không được xem là tuyến. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/01-ui-elements.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/06-navigation.md",
+          "apps/study-client/docs/screen_stitch/03_student/ST-23_danh-sach-thao-luan/code.html",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/student.route.ts"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      },
+      {
+        "id": "ST-23-TC-SK-010",
+        "requirement_ids": [
+          "ST-23-YC-006",
+          "ST-23-YC-020",
+          "ST-23-YC-021",
+          "ST-23-YC-022"
+        ],
+        "target_id": "ST23-EV-10",
+        "group": "Kiểm thử sự kiện",
+        "title": "Kiểm tra sự kiện: Xử lý lỗi xác thực, API, mạng và dữ liệu",
+        "precondition": "Chỉ dùng dữ liệu kiểm thử giả trong môi trường thử nghiệm được duyệt; chưa gọi ứng dụng/API/DB thật. Ca ở trạng thái Chưa chạy.",
+        "data": "API hoặc dịch vụ phát sinh lỗi trong lúc tải/lọc/trang. ",
+        "steps": [
+          "Chuẩn bị dữ liệu kiểm thử giả và trạng thái ban đầu theo ca.",
+          "Thực hiện thao tác đã nêu hoặc cung cấp phản hồi giả; không gửi dữ liệu lên môi trường thật.",
+          "Đối chiếu kết quả với hiện trạng mã nguồn và DD; ghi kết quả chỉ khi ca được chạy trong môi trường đã duyệt."
+        ],
+        "expected": "Giữ lỗi riêng với rỗng; ánh xạ message; truy vấn khóa học sai không có nút thử lại; lỗi khác có thể tải lại với filter/trang hiện hành. Kết quả chờ xác nhận theo DD; ca chưa chạy.",
+        "api_ids": [
+          "#39"
+        ],
+        "source_refs": [
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/02-events.md",
+          "apps/study-client/docs/dd_screens/ST-23-DanhSachThaoLuan/03-data-flow.md",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.ts",
+          "apps/study-client/src/app/features/student/ST23/pages/st23-page.html",
+          "apps/study-client/src/app/features/student/shared/models/student-api-errors.ts",
+          "apps/study-server/app/modules/student/api_39_discussions/validate.py"
+        ],
+        "priority": "Cao",
+        "design_status": "Chờ xác nhận"
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-12_DanhSachBaiHocQuanTri.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 622,
+  "loi": [],
+  "execution_audit": {
+    "case_count": 98,
+    "not_run": 98,
+    "filled_execution_cells": 0,
+    "row_check_formulas": 98,
+    "requirement_case_trace_pairs": 212,
+    "expected_requirement_case_trace_pairs": 212,
+    "stale_ad04_strings": 0,
+    "stale_ad11_strings": 0,
+    "prototype_marker_elements": 42,
+    "source_only_elements": 20
+  },
+  "visual_review": {
+    "status": "NOT_RENDERED",
+    "reason": "Workbook rendering runtime is unavailable: LibreOffice/soffice and artifact_tool are not installed."
+  },
+  "release_state": "PLAN_ONLY_DD_BLOCKED"
+}

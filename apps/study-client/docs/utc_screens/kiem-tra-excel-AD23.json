@@ -1,0 +1,32 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-23_DieuTraKiemDuyetThaoLuan.xlsx",
+  "hop_le_ve_cau_truc": true,
+  "loi": [],
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 414,
+  "so_dong_ca": 138,
+  "so_dropdown_trang_thai": 3,
+  "tat_ca_ca_o_trang_thai_chua_chay": true,
+  "cot_ket_qua_thuc_te_den_ngay_chay_de_trong": true,
+  "cong_thuc_nam_dung_cot_U_den_W": true,
+  "so_nguon_sha256_da_xac_minh": 50,
+  "coverage": {
+    "yeu_cau": 20,
+    "yeu_cau_co_ca": 20,
+    "marker_stitch": 45,
+    "thanh_phan": 73,
+    "thanh_phan_co_ca": 73,
+    "su_kien": 9,
+    "su_kien_co_ca": 34,
+    "blocker": 8
+  },
+  "gate_phe_duyet": false,
+  "ly_do_chua_duyet": "DD BLOCKED; 8 blocker đang mở; chưa có reviewer/approver được xác nhận; ca chưa chạy.",
+  "preview_rendered": false,
+  "preview_note": "Môi trường thiếu artifact_tool; OOXML fallback parse được và qua kiểm tra tĩnh, chưa render preview."
+}

@@ -1,0 +1,28 @@
+{
+  "tep": "apps/study-client/docs/utc_screens/UTC_AD-09_ThayDoiTrangThaiXoaKhoa.xlsx",
+  "trang_tinh": [
+    "01. Bìa",
+    "02. Tổng quan",
+    "03. Thành phần",
+    "04. Sự kiện"
+  ],
+  "so_cong_thuc": 622,
+  "loi": [],
+  "hop_le": true,
+  "execution_audit": {
+    "case_count": 83,
+    "not_run": 83,
+    "filled_execution_cells": 0,
+    "row_check_formulas": 83,
+    "requirement_case_trace_pairs": 251,
+    "expected_requirement_case_trace_pairs": 251,
+    "stale_ad04_strings": 0,
+    "prototype_marker_elements": 38,
+    "source_only_elements": 14
+  },
+  "visual_review": {
+    "status": "NOT_RENDERED",
+    "reason": "No LibreOffice/soffice or artifact_tool runtime is available in this environment."
+  },
+  "release_state": "PLAN_ONLY_DD_BLOCKED"
+}
