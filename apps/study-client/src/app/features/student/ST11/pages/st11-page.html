@@ -28,20 +28,57 @@
   @if (!loading() && !error() && lesson(); as item) {
     <section class="api-stack">
       <article class="api-card lesson-player-card">
-        <div class="lesson-player-placeholder">
-          <span aria-hidden="true">▷</span
-          ><strong>Video bài học hiện chưa khả dụng</strong>
-          <p>
-            Bạn vẫn có thể xem phần nội dung và tài liệu đi kèm bên dưới.
-          </p>
-        </div>
+        @if (safeVideoUrl(); as videoUrl) {
+          <video class="lesson-video-player" controls preload="metadata" [src]="videoUrl">
+            Trình duyệt của bạn không hỗ trợ phát video trực tiếp.
+          </video>
+        } @else {
+          <div class="lesson-player-placeholder">
+            <span aria-hidden="true">▷</span>
+            <strong>Bài học này không có video đính kèm</strong>
+            <p>Bạn có thể xem phần nội dung văn bản và tài liệu đi kèm bên dưới.</p>
+          </div>
+        }
         <div class="api-actions">
+          <button
+            class="api-button"
+            type="button"
+            [disabled]="progressBusy() || progressSaved()"
+            (click)="markCompleted()"
+          >
+            {{
+              progressBusy()
+                ? 'Đang lưu tiến độ…'
+                : progressSaved()
+                  ? 'Đã hoàn thành bài học ✓'
+                  : 'Đánh dấu hoàn thành'
+            }}
+          </button>
           <a
             class="api-button secondary"
             [routerLink]="['/student/lessons', lessonId(), 'resources']"
             >Tài liệu kèm bài học</a
           >
+          @if (nextLesson(); as next) {
+            @if (nextLessonId(); as nextId) {
+              <a class="api-button secondary" [routerLink]="['/student/lessons', nextId, 'start']">
+                Bài tiếp theo: {{ next.title }} →
+              </a>
+            }
+          }
         </div>
+        @if (progressSaved()) {
+          <p class="api-message" role="status">Đã ghi nhận hoàn thành bài học (100%).</p>
+        }
+        @if (progressError()) {
+          <p class="api-error" role="alert">{{ progressError() }}</p>
+        }
+        @if (!nextLoading() && nextEndOfCourse()) {
+          <p class="api-muted">Đây là bài học cuối cùng trong khóa học này.</p>
+        }
+        @if (nextError()) {
+          <p class="api-muted">{{ nextError() }}</p>
+        }
       </article>
       <article class="api-card">
         <h2>Nội dung bài học</h2>
@@ -51,10 +88,6 @@
           <p class="api-muted">Bài học chưa có nội dung văn bản.</p>
         }
       </article>
-      <aside class="api-message lesson-progress-gate" role="status">
-        <strong>Theo dõi tiến độ và bài học tiếp theo hiện chưa khả dụng.</strong>
-        <p>Bài học sẽ không được tự đánh dấu hoàn thành.</p>
-      </aside>
     </section>
   }
 </main>

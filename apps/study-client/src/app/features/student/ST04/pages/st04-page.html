@@ -20,8 +20,15 @@
       </nav>
 
       <div class="enrollment-auth-links" aria-label="Tài khoản">
-        <a routerLink="/login">Đăng nhập</a>
-        <a class="enrollment-auth-links__register" routerLink="/register">Đăng ký</a>
+        @if (session.isAuthenticated()) {
+          <a routerLink="/student/profile">{{ session.profile()?.full_name || 'Học viên' }}</a>
+          <button class="enrollment-return-button enrollment-return-button--secondary" type="button" (click)="logout()">
+            Đăng xuất
+          </button>
+        } @else {
+          <a routerLink="/login">Đăng nhập</a>
+          <a class="enrollment-auth-links__register" routerLink="/register">Đăng ký</a>
+        }
       </div>
     </div>
   </header>
@@ -97,7 +104,11 @@
         }
         <p>Khóa học này có học phí và cần thanh toán trước khi ghi danh.</p>
         @if (course(); as currentCourse) {
-          <a class="enrollment-return-button" [routerLink]="['/student/checkout', currentCourse.id]">
+          <a
+            class="enrollment-return-button"
+            [routerLink]="['/student/checkout', currentCourse.id]"
+            (click)="goToCheckout(currentCourse.id)"
+          >
             Tiếp tục thanh toán
           </a>
         }

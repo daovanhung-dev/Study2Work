@@ -76,13 +76,30 @@
               <p class="student-overview__eyebrow">TIẾN ĐỘ</p>
               <h2 id="overview-progress-title">Tiến độ tổng quan</h2>
             </div>
-            <span class="student-overview__status student-overview__status--limited">Chưa khả dụng</span>
+            <a routerLink="/student/progress">Chi tiết tiến độ</a>
           </div>
-          <div class="student-overview__message api-message">
-            <strong>Chưa thể hiển thị tiến độ tổng hợp.</strong>
-            <p>Thông tin tiến độ sẽ xuất hiện tại đây khi dữ liệu học tập được đồng bộ.</p>
-            <a routerLink="/student/progress">Mở trang tiến độ</a>
-          </div>
+          @if (progressLoading()) {
+            <p class="student-overview__message api-message" role="status">Đang tải tiến độ…</p>
+          }
+          @if (progressError()) {
+            <div class="student-overview__error api-error" role="group" aria-label="Lỗi tải tiến độ">
+              <p role="alert">{{ progressError() }}</p>
+              <button class="api-button secondary" type="button" (click)="retryProgress()">
+                Thử tải lại tiến độ
+              </button>
+            </div>
+          }
+          @if (!progressLoading() && !progressError() && progress(); as summary) {
+            <div class="student-overview__message api-message">
+              <strong>Hoàn thành {{ summary.overall_progress_percent }}%</strong>
+              <p>
+                {{ summary.completed_lessons }}/{{ summary.total_lessons }} bài học ·
+                {{ summary.active_courses }} khóa đang học ·
+                {{ summary.completed_courses }} khóa hoàn thành
+              </p>
+              <a routerLink="/student/progress">Mở trang tiến độ</a>
+            </div>
+          }
         </section>
 
         <section class="student-overview__widget api-card" aria-labelledby="overview-achievements-title">

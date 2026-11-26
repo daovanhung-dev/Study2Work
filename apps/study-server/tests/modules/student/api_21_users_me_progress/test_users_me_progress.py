@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
 
 import app.modules.student.api_21_users_me_progress.view as view_module
@@ -22,24 +21,29 @@ class FakeSession:
         self.rollback_count += 1
 
 
-def make_user() -> dict[str, Any]:
-    """Tạo dữ liệu người dùng giả lập."""
-    created_at = datetime(2026, 9, 15, 12, 0, tzinfo=UTC)
-    return {
-        "id": 1001,
-        "full_name": "Nguyen Van A",
-        "email": "student@example.com",
-        "role": "STUDENT",
-        "avatar_url": None,
-        "phone": None,
-        "status": "ACTIVE",
-        "created_at": created_at,
-        "updated_at": created_at,
-    }
+def make_progress_rows() -> list[dict[str, Any]]:
+    """Tạo dữ liệu tiến độ từng khóa học giả lập."""
+    return [
+        {
+            "course_id": 1,
+            "course_name": "FastAPI Backend",
+            "enrollment_status": "ACTIVE",
+            "total_lessons": 2,
+            "completed_lessons": 1,
+        },
+        {
+            "course_id": 2,
+            "course_name": "Vue 3 Frontend",
+            "enrollment_status": "COMPLETED",
+            "total_lessons": 2,
+            "completed_lessons": 2,
+        },
+    ]
 
 
 def override_db(session: FakeSession):
     """Dependency override cho database session."""
+
     def dependency():
         yield session
 
@@ -55,14 +59,14 @@ def test_user_progress_success(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Kiểm tra trường hợp thành công trả về HTTP 200 DESIGN_RESOURCE_RETRIEVED."""
+    """Kiểm tra trường hợp thành công trả về tổng hợp tiến độ HTTP 200."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         view_module,
-        "find_current_user",
-        lambda db, *, user_id: make_user(),
+        "find_user_course_progress",
+        lambda db, *, user_id, course_id=None: make_progress_rows(),
     )
 
     response = client.get(
@@ -77,8 +81,13 @@ def test_user_progress_success(
     payload = response.json()
     assert payload["success"] is True
     assert payload["businessCode"] == "DESIGN_RESOURCE_RETRIEVED"
-    assert payload["data"]["id"] == 1001
-    assert payload["data"]["role"] == "STUDENT"
+    assert payload["data"]["total_enrolled_courses"] == 2
+    assert payload["data"]["active_courses"] == 1
+    assert payload["data"]["completed_courses"] == 1
+    assert payload["data"]["total_lessons"] == 4
+    assert payload["data"]["completed_lessons"] == 3
+    assert payload["data"]["overall_progress_percent"] == 75.0
+    assert len(payload["data"]["courses"]) == 2
 
 
 def test_user_progress_missing_auth(client: TestClient) -> None:
@@ -116,28 +125,30 @@ def test_user_progress_forbidden_role(
     assert payload["businessCode"] == "DESIGN_ACCESS_DENIED"
 
 
-def test_user_progress_user_not_found(
+def test_user_progress_empty_courses(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Kiểm tra khi không tìm thấy user trong DB trả về HTTP 401."""
+    """Kiểm tra khi học viên chưa ghi danh khóa học nào trả về 0% và danh sách rỗng."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         view_module,
-        "find_current_user",
-        lambda db, *, user_id: None,
+        "find_user_course_progress",
+        lambda db, *, user_id, course_id=None: [],
     )
 
     response = client.get(
         "/api/v1/users/me/progress",
         headers={"Authorization": "Bearer valid-token"},
     )
-    assert response.status_code == 401
+    assert response.status_code == 200
     payload = response.json()
-    assert payload["success"] is False
-    assert payload["businessCode"] == "DESIGN_AUTHENTICATION_REQUIRED"
+    assert payload["success"] is True
+    assert payload["data"]["total_enrolled_courses"] == 0
+    assert payload["data"]["overall_progress_percent"] == 0.0
+    assert payload["data"]["courses"] == []
 
 
 def test_user_progress_db_failure(
@@ -149,10 +160,10 @@ def test_user_progress_db_failure(
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
 
-    def raise_error(db, *, user_id):
+    def raise_error(db, *, user_id, course_id=None):
         raise RuntimeError("DB connection failure")
 
-    monkeypatch.setattr(view_module, "find_current_user", raise_error)
+    monkeypatch.setattr(view_module, "find_user_course_progress", raise_error)
 
     response = client.get(
         "/api/v1/users/me/progress",
@@ -163,4 +174,3 @@ def test_user_progress_db_failure(
     assert payload["success"] is False
     assert payload["businessCode"] == "DESIGN_INTERNAL_ERROR"
     assert session.rollback_count == 1
-

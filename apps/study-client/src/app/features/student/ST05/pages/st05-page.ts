@@ -4,6 +4,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 import { catchError, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 
+import { StudentSessionService } from '../../../../core/auth/student-session.service';
 import type { ApiEnvelope } from '../../../../core/http/api-envelope';
 import type { GuestPublicCoursePage } from '../../../guest/shared/models/guest-course.models';
 import { GS03CourseDetailService } from '../../../guest/GS03/data-access/gs03-course-detail.service';
@@ -19,8 +20,10 @@ export class ST05Page {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly courseDetail = inject(GS03CourseDetailService);
+  readonly session = inject(StudentSessionService);
 
   readonly state = signal<CheckoutState>('loading');
+  readonly courseId = signal<string>('');
 
   constructor() {
     this.route.paramMap
@@ -28,6 +31,7 @@ export class ST05Page {
         map((params) => params.get('courseId') ?? ''),
         distinctUntilChanged(),
         switchMap((courseId) => {
+          this.courseId.set(courseId);
           if (!courseId) return of<CheckoutState>('not-found');
 
           this.state.set('loading');
@@ -39,6 +43,10 @@ export class ST05Page {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((state) => this.state.set(state));
+  }
+
+  logout(): void {
+    this.session.endLocalSession();
   }
 
   private mapCourseResponse(response: ApiEnvelope<GuestPublicCoursePage>): CheckoutState {

@@ -188,3 +188,10 @@ h1 {
     transition: none;
   }
 }
+
+.lesson-video-player {
+  width: 100%;
+  max-height: 480px;
+  border-radius: 12px;
+  background: #0f172a;
+}

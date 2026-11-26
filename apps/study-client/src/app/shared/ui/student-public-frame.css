@@ -102,6 +102,50 @@
   background: var(--ocean-primary);
 }
 
+.student-public-frame__notice {
+  display: inline-flex;
+  width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.student-public-frame__profile {
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.student-public-frame__avatar {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--surface);
+  background: var(--ocean-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.student-public-frame__logout {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  background: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.student-public-frame__logout:hover {
+  border-color: var(--ocean-primary);
+  color: var(--ocean-primary);
+}
+
 .student-public-frame__content {
   display: flex;
   flex: 1 0 auto;

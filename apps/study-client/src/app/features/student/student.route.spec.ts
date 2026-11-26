@@ -45,7 +45,7 @@ describe('studentRoutes', () => {
     );
 
     expect(enrollmentRoute?.component).toBe(ST04Page);
-    expect(enrollmentRoute?.data).toEqual({ apiIds: [8, 15], shell: 'custom' });
+    expect(enrollmentRoute?.data).toEqual({ apiIds: [8, 15, 19, 20], shell: 'custom' });
   });
 
   it('maps ST-05 to course and order APIs while keeping order creation gated', () => {

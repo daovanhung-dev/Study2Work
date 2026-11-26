@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -16,16 +14,28 @@ class ProgressQuery(BaseModel):
     aggregate: str | None = None
 
 
-class UserProfile(BaseModel):
+class CourseProgressItem(BaseModel):
+    """Tiến độ tóm tắt của học viên trong một khóa học đã ghi danh."""
+
     model_config = ConfigDict(extra="ignore")
 
-    id: int
-    full_name: str
-    email: str
-    role: str
-    avatar_url: str | None = None
-    phone: str | None = None
-    status: str
-    created_at: datetime
-    updated_at: datetime
+    course_id: int
+    course_name: str
+    enrollment_status: str
+    total_lessons: int
+    completed_lessons: int
+    progress_percent: float
 
+
+class OverallProgressSummary(BaseModel):
+    """Dữ liệu tổng hợp tiến độ học tập toàn khóa của học viên hiện tại."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    total_enrolled_courses: int
+    active_courses: int
+    completed_courses: int
+    total_lessons: int
+    completed_lessons: int
+    overall_progress_percent: float
+    courses: list[CourseProgressItem]

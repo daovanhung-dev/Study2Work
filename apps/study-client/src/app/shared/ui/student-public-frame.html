@@ -10,10 +10,35 @@
         <a routerLink="/courses" routerLinkActive="active">Khóa học</a>
         <a routerLink="/student/courses" routerLinkActive="active">Khóa học của tôi</a>
         <a routerLink="/student/progress" routerLinkActive="active">Tiến độ</a>
+        @if (session.isAuthenticated()) {
+          <a routerLink="/student/discussions" routerLinkActive="active">Thảo luận</a>
+        }
       </nav>
       <div class="student-public-frame__account">
-        <a routerLink="/login">Đăng nhập</a>
-        <a class="register-link" routerLink="/register">Đăng ký</a>
+        @if (session.isAuthenticated()) {
+          <a
+            class="student-public-frame__notice"
+            routerLink="/student/notifications"
+            aria-label="Thông báo"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </a>
+          <a class="student-public-frame__profile" routerLink="/student/profile">
+            <span class="student-public-frame__avatar" aria-hidden="true">{{
+              session.profile()?.full_name?.slice(0, 1) || 'H'
+            }}</span>
+            <span>{{ session.profile()?.full_name || 'Học viên' }}</span>
+          </a>
+          <button class="student-public-frame__logout" type="button" (click)="logout()">
+            Đăng xuất
+          </button>
+        } @else {
+          <a routerLink="/login">Đăng nhập</a>
+          <a class="register-link" routerLink="/register">Đăng ký</a>
+        }
       </div>
     </div>
   </header>
@@ -28,8 +53,13 @@
       <nav aria-label="Điều hướng cuối trang">
         <a routerLink="/">Trang chủ</a>
         <a routerLink="/courses">Khóa học</a>
-        <a routerLink="/login">Đăng nhập</a>
-        <a routerLink="/register">Đăng ký</a>
+        @if (session.isAuthenticated()) {
+          <a routerLink="/student/profile">Hồ sơ cá nhân</a>
+          <a routerLink="/student/notifications">Thông báo</a>
+        } @else {
+          <a routerLink="/login">Đăng nhập</a>
+          <a routerLink="/register">Đăng ký</a>
+        }
       </nav>
     </div>
   </footer>

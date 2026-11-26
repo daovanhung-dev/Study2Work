@@ -6,15 +6,76 @@
     <div>
       <p class="api-eyebrow">Tiến độ học tập</p>
       <h1>Tổng quan tiến độ</h1>
-      <p>Theo dõi các khóa học và thành tích đã được ghi nhận.</p>
+      <p>Theo dõi tiến độ các khóa học và thành tích đã được ghi nhận.</p>
     </div>
   </header>
-  <section class="api-card progress-api-gate">
-    <p class="api-eyebrow">Tổng quan tiến độ</p>
-    <h2>Chưa có dữ liệu tiến độ</h2>
-    <p>Tiến độ tổng hợp hiện chưa khả dụng.</p>
-    <a class="api-button secondary" routerLink="/student/courses">Khóa học của tôi</a>
+
+  <section class="api-card progress-overview">
+    <div class="api-heading">
+      <div>
+        <p class="api-eyebrow">Tổng hợp học tập</p>
+        <h2>Tiến độ toàn khóa</h2>
+      </div>
+      <a class="api-button secondary" routerLink="/student/courses">Khóa học của tôi</a>
+    </div>
+
+    @if (progressLoading()) {
+      <section class="api-message" role="status"><strong>Đang tải tiến độ học tập…</strong></section>
+    }
+    @if (progressError()) {
+      <section class="api-error" role="alert">
+        <p>{{ progressError() }}</p>
+        <button class="api-button secondary" type="button" (click)="retryProgress()">
+          Tải lại tiến độ
+        </button>
+      </section>
+    }
+    @if (!progressLoading() && !progressError() && progress(); as summary) {
+      <dl class="api-grid">
+        <div>
+          <dt>Tỷ lệ hoàn thành chung</dt>
+          <dd><strong>{{ summary.overall_progress_percent }}%</strong></dd>
+        </div>
+        <div>
+          <dt>Bài học đã hoàn thành</dt>
+          <dd><strong>{{ summary.completed_lessons }} / {{ summary.total_lessons }}</strong></dd>
+        </div>
+        <div>
+          <dt>Khóa đang học</dt>
+          <dd><strong>{{ summary.active_courses }}</strong></dd>
+        </div>
+        <div>
+          <dt>Khóa đã hoàn thành</dt>
+          <dd><strong>{{ summary.completed_courses }}</strong></dd>
+        </div>
+      </dl>
+
+      @if (summary.courses.length === 0) {
+        <p class="api-muted">Bạn chưa ghi danh khóa học nào.</p>
+      } @else {
+        <ul class="api-list">
+          @for (course of summary.courses; track course.course_id) {
+            <li>
+              <div>
+                @if (safeCourseId(course.course_id); as courseId) {
+                  <a [routerLink]="['/student/progress', courseId]">
+                    <strong>{{ course.course_name }}</strong>
+                  </a>
+                } @else {
+                  <strong>{{ course.course_name }}</strong>
+                }
+                <p class="api-meta">
+                  {{ enrollmentStatusLabel(course.enrollment_status) }} ·
+                  {{ course.completed_lessons }}/{{ course.total_lessons }} bài ({{ course.progress_percent }}%)
+                </p>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
   </section>
+
   <section class="api-card achievements-summary">
     <div class="api-heading">
       <div>

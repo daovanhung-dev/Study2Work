@@ -7,6 +7,7 @@ import { StudentNotificationsService } from '../../shared/data-access/student-no
 import type {
   StudentAchievement,
   StudentCourseSummary,
+  StudentOverallProgress,
   StudentPage,
 } from '../../shared/models/student-api.models';
 
@@ -20,6 +21,10 @@ export class ST01OverviewService {
     return this.api.request<StudentPage<StudentCourseSummary>>(STUDY_SERVER_APIS.API_020, {
       params,
     });
+  }
+
+  overallProgress() {
+    return this.api.request<StudentOverallProgress>(STUDY_SERVER_APIS.API_021);
   }
 
   achievements() {

@@ -30,7 +30,7 @@ export class ST08Page implements OnInit {
   readonly courses = signal<StudentCourseSummary[]>([]);
   readonly pagination = signal<StudentPagination | null>(null);
   readonly page = signal(1);
-  readonly filter = signal<'all' | 'active'>('all');
+  readonly filter = signal<'all' | 'active' | 'completed'>('all');
   readonly snapshotMismatch = signal(false);
 
   ngOnInit(): void {
@@ -45,21 +45,21 @@ export class ST08Page implements OnInit {
     this.pagination.set(null);
     const requestedPage = this.page();
     const requestedFilter = this.filter();
+    const statusParam =
+      requestedFilter === 'active'
+        ? 'ACTIVE'
+        : requestedFilter === 'completed'
+          ? 'COMPLETED'
+          : undefined;
     const generation = ++this.loadGeneration;
-    this.data.courses(requestedPage, requestedFilter === 'active' ? 'ACTIVE' : undefined).subscribe({
+    this.data.courses(requestedPage, statusParam).subscribe({
       next: (response) => {
         if (generation !== this.loadGeneration) return;
         const issue = envelopeIssue(response);
         if (issue) this.error.set(issue);
         else if (response.businessCode !== 'DESIGN_RESOURCE_RETRIEVED') {
           this.error.set('Chưa thể tải khóa học. Vui lòng thử lại.');
-        } else if (
-          !isStudentCoursePage(
-            response.data,
-            requestedPage,
-            requestedFilter === 'active' ? 'ACTIVE' : undefined,
-          )
-        ) {
+        } else if (!isStudentCoursePage(response.data, requestedPage, statusParam)) {
           this.error.set('Danh sách khóa học chưa đúng định dạng. Hãy tải lại trang.');
         } else {
           const lastAvailablePage = Math.max(response.data.pagination.total_pages, 1);
@@ -90,7 +90,7 @@ export class ST08Page implements OnInit {
     this.load();
   }
 
-  changeFilter(filter: 'all' | 'active'): void {
+  changeFilter(filter: 'all' | 'active' | 'completed'): void {
     if (this.filter() === filter) return;
     this.filter.set(filter);
     this.page.set(1);
@@ -102,7 +102,11 @@ export class ST08Page implements OnInit {
   }
 
   enrollmentStatusLabel(status: string): string {
-    return status === 'ACTIVE' ? 'Đang học' : 'Trạng thái đang được xác nhận';
+    const normalized = status.trim().toUpperCase();
+    if (normalized === 'ACTIVE') return 'Đang học';
+    if (normalized === 'COMPLETED') return 'Đã hoàn thành';
+    if (normalized === 'CANCELLED') return 'Đã hủy';
+    return 'Trạng thái đang được xác nhận';
   }
 
   courseStatusLabel(status: string | null | undefined): string {

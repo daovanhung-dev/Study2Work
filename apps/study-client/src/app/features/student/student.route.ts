@@ -122,7 +122,7 @@ export const studentRoutes: Routes = [
       {
         path: 'progress/:courseId',
         component: ST21Page,
-        data: { apiIds: [37], shell: 'blank' },
+        data: { apiIds: [37], shell: 'portal' },
       },
       {
         path: 'progress',
@@ -147,7 +147,7 @@ export const studentRoutes: Routes = [
       {
         path: 'discussions',
         component: ST23Page,
-        data: { apiIds: [39], shell: 'blank' },
+        data: { apiIds: [39], shell: 'portal' },
       },
       {
         path: 'notifications',

@@ -12,6 +12,19 @@ describe('ST01Page', () => {
   it('renders only validated active-course, achievement and unread-notification data', async () => {
     const data = {
       activeCourses: vi.fn(() => of(envelope(page([course], 20, 1)))),
+      overallProgress: vi.fn(() =>
+        of(
+          envelope({
+            total_enrolled_courses: 1,
+            active_courses: 1,
+            completed_courses: 0,
+            total_lessons: 2,
+            completed_lessons: 1,
+            overall_progress_percent: 50,
+            courses: [],
+          }),
+        ),
+      ),
       achievements: vi.fn(() => of(envelope(page([achievement], 1, 1)))),
       unreadNotifications: vi.fn(() => of(envelope(page([notification], 20, 1)))),
     };

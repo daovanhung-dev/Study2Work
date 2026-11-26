@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+
+import { StudentSessionService } from '../../core/auth/student-session.service';
 
 @Component({
   imports: [RouterLink, RouterLinkActive],
@@ -7,4 +9,10 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './student-public-frame.html',
   styleUrl: './student-public-frame.css',
 })
-export class StudentPublicFrame {}
+export class StudentPublicFrame {
+  readonly session = inject(StudentSessionService);
+
+  logout(): void {
+    this.session.endLocalSession();
+  }
+}

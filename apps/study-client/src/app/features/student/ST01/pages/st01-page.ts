@@ -18,6 +18,7 @@ import type {
   StudentAchievement,
   StudentCourseSummary,
   StudentNotification,
+  StudentOverallProgress,
 } from '../../shared/models/student-api.models';
 import { toSafeStudyId } from '../../shared/models/student-api.models';
 import { StudentPublicFrame } from '../../../../shared/ui/student-public-frame';
@@ -34,6 +35,9 @@ export class ST01Page implements OnInit {
   readonly coursesError = signal<string | null>(null);
   readonly coursesSnapshotMismatch = signal(false);
   readonly courses = signal<StudentCourseSummary[]>([]);
+  readonly progressLoading = signal(true);
+  readonly progressError = signal<string | null>(null);
+  readonly progress = signal<StudentOverallProgress | null>(null);
   readonly achievementsLoading = signal(true);
   readonly achievementsError = signal<string | null>(null);
   readonly achievementsSnapshotMismatch = signal(false);
@@ -46,12 +50,17 @@ export class ST01Page implements OnInit {
 
   ngOnInit(): void {
     this.loadCourses();
+    this.loadProgress();
     this.loadAchievements();
     this.loadNotifications();
   }
 
   retryCourses(): void {
     this.loadCourses();
+  }
+
+  retryProgress(): void {
+    this.loadProgress();
   }
 
   retryAchievements(): void {
@@ -88,6 +97,31 @@ export class ST01Page implements OnInit {
       error: (error: unknown) => {
         this.coursesError.set(studentApiErrorMessage(error));
         this.coursesLoading.set(false);
+      },
+    });
+  }
+
+  private loadProgress(): void {
+    this.progressLoading.set(true);
+    this.progressError.set(null);
+    this.progress.set(null);
+    this.data.overallProgress().subscribe({
+      next: (response) => {
+        const issue = envelopeIssue(response);
+        if (issue) this.progressError.set(issue);
+        else if (
+          response.businessCode !== 'DESIGN_RESOURCE_RETRIEVED' ||
+          typeof response.data?.overall_progress_percent !== 'number'
+        ) {
+          this.progressError.set('Chưa thể tải tiến độ tổng hợp. Vui lòng thử lại.');
+        } else {
+          this.progress.set(response.data);
+        }
+        this.progressLoading.set(false);
+      },
+      error: (error: unknown) => {
+        this.progressError.set(studentApiErrorMessage(error));
+        this.progressLoading.set(false);
       },
     });
   }

@@ -24,7 +24,10 @@ describe('ST03Page', () => {
     };
     await TestBed.configureTestingModule({
       imports: [ST03Page],
-      providers: [provideRouter([]), { provide: ST03ProfileService, useValue: data }],
+      providers: [
+        provideRouter([{ path: 'student/profile', component: ST03Page }]),
+        { provide: ST03ProfileService, useValue: data },
+      ],
     }).compileComponents();
   });
 

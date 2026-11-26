@@ -14,7 +14,10 @@ import {
   tap,
 } from 'rxjs';
 
-import { StudentSessionError } from '../../../../core/auth/student-session.service';
+import {
+  StudentSessionError,
+  StudentSessionService,
+} from '../../../../core/auth/student-session.service';
 import type { ApiEnvelope } from '../../../../core/http/api-envelope';
 import type {
   GuestPublicCourse,
@@ -57,6 +60,7 @@ export class ST04Page {
   private readonly destroyRef = inject(DestroyRef);
   private readonly courseDetail = inject(GS03CourseDetailService);
   private readonly enrollmentApi = inject(ST04EnrollmentService);
+  readonly session = inject(StudentSessionService);
   private readonly retryCheck$ = new Subject<void>();
   private routeGeneration = 0;
 
@@ -84,6 +88,16 @@ export class ST04Page {
 
   retryCheck(): void {
     this.retryCheck$.next();
+  }
+
+  goToCheckout(courseId: number): void {
+    const safeId = toSafeCourseId(courseId);
+    if (safeId === null) return;
+    void this.router.navigate(['/student/checkout', String(safeId)]);
+  }
+
+  logout(): void {
+    this.session.endLocalSession();
   }
 
   enrollForFree(): void {

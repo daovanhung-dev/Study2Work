@@ -207,3 +207,22 @@ export function toSafeStudyNumber(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) ? parsed : null;
 }
+
+export interface StudentOverallCourseProgress {
+  course_id: number;
+  course_name: string;
+  enrollment_status: string;
+  total_lessons: number;
+  completed_lessons: number;
+  progress_percent: number;
+}
+
+export interface StudentOverallProgress {
+  total_enrolled_courses: number;
+  active_courses: number;
+  completed_courses: number;
+  total_lessons: number;
+  completed_lessons: number;
+  overall_progress_percent: number;
+  courses: StudentOverallCourseProgress[];
+}

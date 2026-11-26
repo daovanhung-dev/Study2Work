@@ -26,6 +26,14 @@
       >
         Đang học
       </button>
+      <button
+        type="button"
+        [class.active]="filter() === 'completed'"
+        [attr.aria-pressed]="filter() === 'completed'"
+        (click)="changeFilter('completed')"
+      >
+        Đã hoàn thành
+      </button>
     </nav>
 
     @if (loading()) {
@@ -58,7 +66,15 @@
             <path d="M10 34a5 5 0 0 1 5-5h22M18 17h12M18 22h9" />
           </svg>
         </div>
-        <h2 id="my-courses-empty-title">{{ filter() === 'active' ? 'Chưa có khóa học đang học.' : 'Bạn chưa đăng ký khóa học nào.' }}</h2>
+        <h2 id="my-courses-empty-title">
+          {{
+            filter() === 'active'
+              ? 'Chưa có khóa học đang học.'
+              : filter() === 'completed'
+                ? 'Chưa có khóa học đã hoàn thành.'
+                : 'Bạn chưa đăng ký khóa học nào.'
+          }}
+        </h2>
         <p>Các khóa học của bạn sẽ xuất hiện tại đây.</p>
         <a class="api-button" routerLink="/courses">Khám phá khóa học</a>
       </section>
@@ -92,6 +108,10 @@
               @if (course.enrollment_status === 'ACTIVE' && safeCourseId(course.course_id); as courseId) {
                 <a class="my-courses__continue api-button" [routerLink]="['/student/courses', courseId]">
                   Xem tổng quan khóa học <span aria-hidden="true">→</span>
+                </a>
+              } @else if (course.enrollment_status === 'COMPLETED' && safeCourseId(course.course_id); as courseId) {
+                <a class="my-courses__continue api-button secondary" [routerLink]="['/student/progress', courseId]">
+                  Xem tiến độ khóa học <span aria-hidden="true">→</span>
                 </a>
               } @else {
                 <span class="my-courses__unavailable">Chưa thể tiếp tục khóa học này</span>
