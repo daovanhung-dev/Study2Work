@@ -1,7 +1,13 @@
 <article class="course-card">
   <a class="course-card__link" [routerLink]="['/courses', course.id]">
-    @if (course.thumbnail_url) {
-      <img class="course-cover" [src]="course.thumbnail_url" alt="" loading="lazy" />
+    @if (course.thumbnail_url && !imageFailed()) {
+      <img
+        class="course-cover"
+        [src]="course.thumbnail_url"
+        alt=""
+        loading="lazy"
+        (error)="onImageError()"
+      />
     } @else {
       <div class="course-cover course-cover--empty" aria-hidden="true">
         <study-icon name="book" />

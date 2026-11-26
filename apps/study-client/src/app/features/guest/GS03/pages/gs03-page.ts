@@ -62,6 +62,8 @@ export class GS03Page {
   readonly state = signal<DetailState>({ status: 'loading' });
   readonly selectedTab = signal<CourseDetailTab>('overview');
   readonly curriculumState = signal<GuestCurriculumState>({ status: 'idle' });
+  readonly courseImageFailed = signal(false);
+  readonly mentorAvatarFailed = signal(false);
   private activeCourseId = '';
 
   constructor() {
@@ -69,6 +71,8 @@ export class GS03Page {
       .pipe(
         tap(() => {
           this.state.set({ status: 'loading' });
+          this.courseImageFailed.set(false);
+          this.mentorAvatarFailed.set(false);
           this.curriculumCourseIds.next(null);
         }),
         switchMap((courseId) => {
@@ -137,6 +141,14 @@ export class GS03Page {
 
   retryCourse(): void {
     if (this.activeCourseId) this.detailCourseIds.next(this.activeCourseId);
+  }
+
+  onCourseImageError(): void {
+    this.courseImageFailed.set(true);
+  }
+
+  onMentorAvatarError(): void {
+    this.mentorAvatarFailed.set(true);
   }
 
   retryCurriculum(): void {

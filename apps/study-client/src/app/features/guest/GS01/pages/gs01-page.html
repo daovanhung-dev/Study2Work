@@ -42,7 +42,9 @@
             <span>Sắp xếp</span>
             <select [value]="selectedSort()" (change)="onSortChange($event)">
               @for (option of sortOptions; track option.value) {
-                <option [value]="option.value">{{ option.label }}</option>
+                <option [value]="option.value" [selected]="option.value === selectedSort()">
+                  {{ option.label }}
+                </option>
               }
             </select>
           </label>

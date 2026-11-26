@@ -37,6 +37,10 @@ describe('GS07Page', () => {
     harness.fixture.detectChanges();
 
     const root = harness.routeNativeElement as HTMLElement;
+    expect(root.querySelector('.resource-header__eyebrow')?.textContent?.trim()).toBe(
+      'Tài nguyên khóa học',
+    );
+    expect(root.textContent).not.toContain('GS-07');
     expect(root.textContent).toContain('Bài đọc công khai');
     const openLink = root.querySelector<HTMLAnchorElement>('.resource-action[target="_blank"]');
     expect(openLink?.href).toBe('https://cdn.example.test/resources/7.pdf');

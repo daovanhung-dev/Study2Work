@@ -308,6 +308,45 @@ describe('GS03Page', () => {
     harness.fixture.detectChanges();
     expect(root.textContent).toContain('Kiến thức nền tảng');
   });
+
+  it('falls back to placeholders when course cover and mentor avatar fail to load', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/courses/42', GS03Page);
+
+    http
+      .expectOne('/api/v1/courses/42')
+      .flush(
+        successEnvelope(
+          coursePage([
+            {
+              ...course(42),
+              thumbnail_url: 'https://cdn.example.com/course-broken.png',
+              mentor: {
+                id: 7,
+                full_name: 'Nguyen Van Mentor',
+                avatar_url: 'https://cdn.example.com/avatar-broken.png',
+              },
+            },
+          ]),
+        ),
+      );
+    harness.fixture.detectChanges();
+
+    const root = harness.routeNativeElement as HTMLElement;
+    const coverImg = root.querySelector<HTMLImageElement>('img.course-image');
+    const avatarImg = root.querySelector<HTMLImageElement>('img.mentor-avatar');
+    expect(coverImg).not.toBeNull();
+    expect(avatarImg).not.toBeNull();
+
+    coverImg!.dispatchEvent(new Event('error'));
+    avatarImg!.dispatchEvent(new Event('error'));
+    harness.fixture.detectChanges();
+
+    expect(root.querySelector('img.course-image')).toBeNull();
+    expect(root.querySelector('.course-image--empty')).not.toBeNull();
+    expect(root.querySelector('img.mentor-avatar')).toBeNull();
+    expect(root.querySelector('.mentor-avatar--empty')).not.toBeNull();
+  });
 });
 
 function course(id: number): GuestPublicCourse {

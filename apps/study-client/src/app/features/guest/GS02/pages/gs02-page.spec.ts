@@ -67,6 +67,8 @@ describe('GS02Page', () => {
     harness.fixture.detectChanges();
 
     const root = harness.routeNativeElement as HTMLElement;
+    expect(root.querySelector('study-guest-site-layout header.site-header')).not.toBeNull();
+    expect(root.querySelector('study-guest-site-layout footer.site-footer')).not.toBeNull();
     expect(root.querySelector('[data-screen-id="GS02"]')).not.toBeNull();
     expect(root.textContent).toContain('React cơ bản');
     expect(root.textContent).toContain('Nguyen Van Mentor');
@@ -348,6 +350,32 @@ describe('GS02Page', () => {
     harness.fixture.detectChanges();
     expect(page.snapshotMismatch()).toBe(false);
     expect(root.querySelector('.pagination')).toBeNull();
+  });
+
+  it('falls back to placeholder cover when search result thumbnail fails to load', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/courses/search?q=react', GS02Page);
+
+    http
+      .expectOne((candidate) => candidate.params.get('q') === 'react')
+      .flush(
+        successEnvelope(
+          coursePage({
+            items: [{ ...course(101, 'React cơ bản'), thumbnail_url: 'https://cdn.example.com/broken.png' }],
+            pagination: { page: 1, size: 20, total: 1, total_pages: 1 },
+          }),
+        ),
+      );
+    harness.fixture.detectChanges();
+
+    const root = harness.routeNativeElement as HTMLElement;
+    const img = root.querySelector<HTMLImageElement>('img.course-cover');
+    expect(img).not.toBeNull();
+    img!.dispatchEvent(new Event('error'));
+    harness.fixture.detectChanges();
+
+    expect(root.querySelector('img.course-cover')).toBeNull();
+    expect(root.querySelector('.course-cover--empty')).not.toBeNull();
   });
 });
 

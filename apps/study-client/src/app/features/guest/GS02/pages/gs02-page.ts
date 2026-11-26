@@ -9,12 +9,13 @@ import {
   isGuestPublicCoursePage,
   isGuestResourceSuccessEnvelope,
 } from '../../shared/models/guest-course.models';
+import { GuestSiteLayout } from '../../shared/ui/guest-site-layout';
 import { GS02SearchService } from '../data-access/gs02-search.service';
 import { normalizeGS02Query, type GS02SearchState } from '../models/gs02-search.models';
 import { GS02CourseCard } from '../ui/gs02-course-card';
 
 @Component({
-  imports: [GS02CourseCard, StudyIcon],
+  imports: [GuestSiteLayout, GS02CourseCard, StudyIcon],
   selector: 'study-gs02-page',
   styleUrl: './gs02-page.css',
   templateUrl: './gs02-page.html',

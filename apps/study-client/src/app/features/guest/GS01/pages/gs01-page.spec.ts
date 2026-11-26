@@ -198,6 +198,12 @@ describe('GS01Page', () => {
     );
     harness.fixture.detectChanges();
 
+    expect(
+      (harness.routeNativeElement as HTMLElement).querySelector<HTMLSelectElement>(
+        '.sort-control select',
+      )?.value,
+    ).toBe('name:asc');
+
     (harness.routeNativeElement as HTMLElement)
       .querySelector<HTMLButtonElement>('.pagination button:last-child')!
       .click();
@@ -251,6 +257,32 @@ describe('GS01Page', () => {
     const path = new URL(TestBed.inject(Location).path(), 'http://localhost');
     expect(path.pathname).toBe('/courses/search');
     expect(path.searchParams.get('q')).toBe('React');
+  });
+
+  it('falls back to placeholder cover when course thumbnail fails to load', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/courses', GS01Page);
+    http.expectOne('/api/v1/categories').flush(successEnvelope(categoryPage([])));
+    http
+      .expectOne((request) => request.url === '/api/v1/courses')
+      .flush(
+        successEnvelope(
+          coursePage({
+            items: [{ ...course(101, 'React cơ bản'), thumbnail_url: 'https://cdn.example.com/broken.png' }],
+            pagination: pagination({ page: 1, size: 20, total: 1, total_pages: 1 }),
+          }),
+        ),
+      );
+    harness.fixture.detectChanges();
+
+    const root = harness.routeNativeElement as HTMLElement;
+    const img = root.querySelector<HTMLImageElement>('img.course-cover');
+    expect(img).not.toBeNull();
+    img!.dispatchEvent(new Event('error'));
+    harness.fixture.detectChanges();
+
+    expect(root.querySelector('img.course-cover')).toBeNull();
+    expect(root.querySelector('.course-cover--empty')).not.toBeNull();
   });
 });
 

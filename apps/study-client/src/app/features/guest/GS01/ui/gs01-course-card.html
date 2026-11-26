@@ -4,8 +4,14 @@
     [routerLink]="['/courses', course.id]"
     [attr.aria-label]="'Xem chi tiết khóa học: ' + course.title"
   >
-    @if (course.thumbnail_url) {
-      <img class="course-cover" [src]="course.thumbnail_url" alt="" loading="lazy" />
+    @if (course.thumbnail_url && !imageFailed()) {
+      <img
+        class="course-cover"
+        [src]="course.thumbnail_url"
+        alt=""
+        loading="lazy"
+        (error)="onImageError()"
+      />
     } @else {
       <span class="course-cover course-cover--empty" aria-hidden="true">
         <study-icon name="book" />

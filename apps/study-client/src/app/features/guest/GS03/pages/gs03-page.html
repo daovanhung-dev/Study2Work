@@ -102,11 +102,12 @@
           role="tabpanel"
           aria-labelledby="gs03-tab-overview"
         >
-          @if (detail.course.thumbnail_url) {
+          @if (detail.course.thumbnail_url && !courseImageFailed()) {
             <img
               class="course-image"
               [src]="detail.course.thumbnail_url"
               [alt]="'Ảnh khóa học ' + detail.course.title"
+              (error)="onCourseImageError()"
             />
           } @else {
             <div class="course-image course-image--empty" aria-hidden="true">
@@ -127,8 +128,13 @@
             <section class="mentor-section" aria-labelledby="gs03-mentor-heading">
               <h2 id="gs03-mentor-heading">Giảng viên</h2>
               <div class="mentor-card">
-                @if (detail.course.mentor.avatar_url) {
-                  <img class="mentor-avatar" [src]="detail.course.mentor.avatar_url" alt="" />
+                @if (detail.course.mentor.avatar_url && !mentorAvatarFailed()) {
+                  <img
+                    class="mentor-avatar"
+                    [src]="detail.course.mentor.avatar_url"
+                    alt=""
+                    (error)="onMentorAvatarError()"
+                  />
                 } @else {
                   <span class="mentor-avatar mentor-avatar--empty" aria-hidden="true">
                     <study-icon name="person" />
