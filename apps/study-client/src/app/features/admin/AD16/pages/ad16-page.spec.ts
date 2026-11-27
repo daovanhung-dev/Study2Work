@@ -106,6 +106,8 @@ describe('AD16Page', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     const select = root.querySelector<HTMLSelectElement>('#quiz-course')!;
+    expect(select.required).toBe(true);
+    expect(select.value).toBe('');
     select.value = '42';
     select.dispatchEvent(new Event('change', { bubbles: true }));
     setInput(root, 'input[name="title"]', 'Biology review');

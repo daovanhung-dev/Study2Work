@@ -4,7 +4,7 @@
 
 | Area | Path | Stack/role |
 |---|---|---|
-| Study Web | `apps/study-client/` | Angular 22 standalone SPA with root readiness, SH-02/SH-03 presentation routes, Student ST-11–ST-26 and Admin AD-01–AD-25 route groups. Selected Admin GET callers use `AdminApiService`; Guest/Mentor route groups are absent. Study production routing/deployment remains unverified. |
+| Study Web | `apps/study-client/` | Angular 22 standalone SPA with a router-outlet root and composed Shared SH-01–SH-07, Guest GS-01–GS-03/GS-07 (GS-04–GS-06 tabs), Student ST-01–ST-26, Mentor ME-01–ME-18, and Admin AD-01–AD-25 groups. Screen-specific callers use the relevant API client. Study production routing/deployment remains unverified. |
 | Study API | `apps/study-server/` | FastAPI + Python + sync SQLAlchemy core; current composition import được |
 | Work mobile | `apps/work-client/mobile/` | Hai Flutter app độc lập; direct Neon SQL + SQLite cache |
 | Work web | `apps/work-client/web/` | React + TypeScript + Vite |
@@ -38,7 +38,7 @@ fixture addresses are separate dependencies and retain their existing values.
 
 ```text
 Study web  -> generic `StudyApiService` -> relative `/api/v1` -> Study API
-             (local Angular dev proxy targets `127.0.0.1:3003`; selected Admin GET callers use Bearer `AdminApiService`; Guest/Mentor groups and their callers are absent; Study OpenAPI placeholder; production routing unverified)
+             (local Angular dev proxy targets `127.0.0.1:3003`; Guest, Student, Mentor and Admin route groups are composed and caller wiring varies by screen/gate; Study OpenAPI placeholder; production routing unverified)
 Work web   -> relative `/api/v1` -> Work Express JSON API
 Work mobile -> Neon PostgreSQL qua `postgres` + local SQLite cache
 Work mobile -> Gemini HTTP API cho `AIService`

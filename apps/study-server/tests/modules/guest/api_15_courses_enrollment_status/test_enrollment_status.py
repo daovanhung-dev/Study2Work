@@ -28,6 +28,13 @@ def override_db(session: FakeSession):
     return dependency
 
 
+def mock_student_auth(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.modules.guest.api_15_courses_enrollment_status.validate.validate_current_user_request",
+        lambda authorization, *, role="STUDENT", trace_id: (1001, ["STUDENT"]),
+    )
+
+
 def sample_enrollment_row() -> dict[str, Any]:
     return {
         "id": 501,
@@ -69,8 +76,12 @@ def test_get_enrollment_status_course_not_found(
         "find_course_by_id",
         lambda db, *, course_id: None,
     )
+    mock_student_auth(monkeypatch)
 
-    response = client.get("/api/v1/courses/999/enrollment-status")
+    response = client.get(
+        "/api/v1/courses/999/enrollment-status",
+        headers={"Authorization": "Bearer fake-valid-token"},
+    )
     assert response.status_code == 404
     payload = response.json()
     assert payload["success"] is False
@@ -95,8 +106,12 @@ def test_get_enrollment_status_enrollment_not_found(
         "find_enrollment",
         lambda db, *, course_id, user_id=None: None,
     )
+    mock_student_auth(monkeypatch)
 
-    response = client.get("/api/v1/courses/1/enrollment-status")
+    response = client.get(
+        "/api/v1/courses/1/enrollment-status",
+        headers={"Authorization": "Bearer fake-valid-token"},
+    )
     assert response.status_code == 404
     payload = response.json()
     assert payload["success"] is False
@@ -120,10 +135,14 @@ def test_get_enrollment_status_success(
         "find_enrollment",
         lambda db, *, course_id, user_id=None: sample_enrollment_row(),
     )
+    mock_student_auth(monkeypatch)
 
     response = client.get(
         "/api/v1/courses/101/enrollment-status",
-        headers={"X-Trace-Id": "00000000-0000-0000-0000-000000000015"},
+        headers={
+            "Authorization": "Bearer fake-valid-token",
+            "X-Trace-Id": "00000000-0000-0000-0000-000000000015",
+        },
     )
     assert response.status_code == 200
     payload = response.json()
@@ -148,8 +167,12 @@ def test_get_enrollment_status_database_error_rolls_back(
         raise SQLAlchemyError("DB error")
 
     monkeypatch.setattr(enrollment_view, "find_course_by_id", fail_course)
+    mock_student_auth(monkeypatch)
 
-    response = client.get("/api/v1/courses/1/enrollment-status")
+    response = client.get(
+        "/api/v1/courses/1/enrollment-status",
+        headers={"Authorization": "Bearer fake-valid-token"},
+    )
     assert response.status_code == 500
     assert session.rollback_count == 1
     payload = response.json()

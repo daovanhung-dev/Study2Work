@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -21,7 +20,7 @@ import type { StudentSubmission } from '../../shared/models/student-api.models';
 import { toSafeStudyId, toSafeStudyNumber } from '../../shared/models/student-api.models';
 
 @Component({
-  imports: [DatePipe, RouterLink],
+  imports: [RouterLink],
   selector: 'study-st19-page',
   styleUrls: [
     '../../shared/ui/student-api-page.css',
@@ -63,10 +62,6 @@ export class ST19Page implements OnInit {
 
   retrySubmission(): void {
     this.retrySubmission$.next();
-  }
-
-  isGraded(status: string): boolean {
-    return status.toUpperCase() === 'GRADED';
   }
 
   submissionStatusLabel(status: string): string {

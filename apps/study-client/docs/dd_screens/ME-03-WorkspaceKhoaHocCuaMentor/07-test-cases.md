@@ -1,6 +1,13 @@
 # ME-03 — Test Cases
 
-> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
+> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite. Current checkout evidence is recorded in §0. The original plan status below does not prove complete AC-22/AC-26 acceptance or runtime readiness.
+
+## 0. Current client implementation verification — 2026-11-27
+
+- `ME03Page` calls #46/#49/#65 through the current Mentor session/API transport. The three requests are GET-only; #49/#65 retain server-side direct-owner authorization.
+- `src/app/features/mentor/ME03/pages/me03-page.spec.ts` has five routed HTTP-backed tests for the authenticated request paths, supported Content/progress projections, invalid route IDs, cross-panel fail-closed handling on access denial, malformed-success validation errors, and actual failed-envelope messages.
+- Focused command `npm test -- --include=src/app/features/mentor/ME03/pages/me03-page.spec.ts` passes 5/5; full Study Web suite passes 104 spec files/375 tests.
+- This local client coverage does not resolve ME03-B01–B09, approve the local #65 response/formula, or verify browser, live API/database, or deployment behavior.
 
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |

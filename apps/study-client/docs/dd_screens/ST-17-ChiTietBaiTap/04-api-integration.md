@@ -7,10 +7,11 @@
 ST-17 calls #33 with Student Bearer, follows assignment ID changes, cancels
 stale reads, validates the success code/ID/response shape and offers retry.
 The current #33 query reads by assignment ID after role authentication; it does
-not check enrollment/ownership, publication or deadline. The client renders
-only returned assignment fields and does not infer eligibility or attached
-files. Runtime and tests were not verified; source-DD tables below retain
-historical contract assumptions.
+not check enrollment/ownership, publication or deadline. The page currently
+renders the returned title and optional description only. It hides due date,
+maximum score, course identity and the ST-18 submission CTA while their display
+and eligibility rules remain unresolved. Runtime and tests remain unverified;
+source-DD tables below retain historical contract assumptions.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |

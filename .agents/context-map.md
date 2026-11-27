@@ -214,8 +214,8 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/` (Angular 22 standalone SPA with root readiness; SH-02 presentation at /login, SH-03 registration via #01 at /register, and SH-04 static information at /register/verification (no #02 caller or handoff), Guest GS-01–GS-03 at `/courses`, `/courses/search` and `/courses/:courseId` with #05–#08 callers; GS03 mounts the GS04 curriculum tab at `?tab=curriculum` and calls #09 after #08 succeeds; Student ST-11–ST-26 and Admin AD-01–AD-25 route groups; selected Admin GET callers; 103 typed API descriptors plus source-only R-X01; other Guest behavior and Mentor routes/callers remain absent)
-- Current GS-07 slice: `/resources/:resourceId` mounts a contract-blocked gate only; no route ID is consumed and no API #12 caller/actions are wired. Full access/URL policy and runtime remain unresolved.
+- Source root: `apps/study-client/` (Angular 22 standalone SPA with a router-outlet root; Shared SH-01–SH-07, Guest GS-01–GS-03/GS-07 with GS-04–GS-06 tabs owned by GS-03, Student ST-01–ST-26, Mentor ME-01–ME-18, and Admin AD-01–AD-25 route groups; 105 numeric API descriptors plus source-only refresh route R-X01; caller wiring and gates vary by screen)
+- Current GS-07 slice: `/resources/:resourceId` consumes and validates the route ID, calls #12 through public or Student API transport based on session, validates resource fields and HTTP(S) URLs, and renders access/error states. MIME-specific preview and URL-expiry UI plus live runtime remain unresolved.
 - Status: `VERIFIED_WITH_UNWIRED_COMPONENTS`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
@@ -235,8 +235,12 @@ selected Admin screen callers use `AdminApiService`. `API_009` is registered
 implementation and architecture work. Do not infer feature behavior from
 design documents. Recheck `apps/study-client/` when a task depends on
 implementation details. The former readiness component remains in source but
-is not routed: `/` is Shared SH-01. Shared has explicit SH-06 `/not-found`; the app root wildcard routes unknown paths there, and GS-03 #08 detail 404 uses the same generic state while preserving separate 500 and #09 curriculum-error handling. Shared also has gate-only SH-07 `/operations/:operationId`; SH-07 does not call API #18 and
-generic tracking remains contract-blocked.
+is not routed: `/` is Shared SH-01. Shared has explicit SH-06 `/not-found`; the
+app root wildcard routes unknown paths there, and GS-03 #08 detail 404 uses the
+same generic state while preserving separate 500 and #09 curriculum-error
+handling. Shared SH-07 `/operations/:operationId` calls API #18 for valid
+operation UUIDs and currently projects notification-dispatch states only;
+generic payment/export lifecycle tracking remains out of scope.
 
 #### `web-work/work-web` subcontext
 

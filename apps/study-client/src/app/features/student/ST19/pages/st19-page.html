@@ -7,7 +7,6 @@
     <div>
       <p class="api-eyebrow">Bài đã nộp</p>
       <h1>Chi tiết bài nộp</h1>
-      <p>Biên nhận và phản hồi cho bài tập của bạn.</p>
     </div>
     @if (submission(); as item) {
       <span class="api-pill">{{ submissionStatusLabel(item.status) }}</span>
@@ -33,63 +32,13 @@
             <dt>Trạng thái</dt>
             <dd>{{ submissionStatusLabel(item.status) }}</dd>
           </div>
-          <div>
-            <dt>Đã nộp</dt>
-            <dd>{{ item.submitted_at | date: 'medium' }}</dd>
-          </div>
-          <div>
-            <dt>Điểm</dt>
-            <dd>
-              @if (isGraded(item.status)) {
-                {{ item.score ?? 'Chưa có điểm cho bài nộp này' }}
-              } @else {
-                Chưa có điểm cho bài nộp này
-              }
-            </dd>
-          </div>
-          <div>
-            <dt>Bài tập</dt>
-            <dd>Bài tập</dd>
-          </div>
         </dl>
       </article>
-      @if (!isGraded(item.status)) {
-        <section class="api-message" role="status">
-          <strong>Trạng thái: {{ submissionStatusLabel(item.status) }}</strong>
-          <span>Điểm và phản hồi sẽ hiển thị sau khi bài được chấm.</span>
-        </section>
-      }
       @if (item.content) {
         <article class="api-card">
           <h2>Nội dung đã nộp</h2>
           <p class="submission-content">{{ item.content }}</p>
         </article>
-      }
-      @if (item.files.length) {
-        <article class="api-card">
-          <h2>Tệp đính kèm</h2>
-          <ul class="api-list">
-            @for (file of item.files; track file.id) {
-              <li>
-                <strong>{{ file.name }}</strong>
-              </li>
-            }
-          </ul>
-          <p class="api-muted">Liên kết tải tệp hiện chưa khả dụng.</p>
-        </article>
-      }
-      @if (isGraded(item.status) && item.feedback) {
-        <article class="api-card">
-          <h2>Phản hồi</h2>
-          <p class="submission-content">{{ item.feedback }}</p>
-        </article>
-      }
-      @if (!item.content && !item.files.length && !item.feedback) {
-        <section class="api-message">
-          <div>
-            <strong>Chưa có nội dung, tệp hoặc nhận xét để hiển thị.</strong>
-          </div>
-        </section>
       }
       <div class="api-actions">
         <a class="api-button secondary" [routerLink]="['/student/assignments', item.assignment_id]">

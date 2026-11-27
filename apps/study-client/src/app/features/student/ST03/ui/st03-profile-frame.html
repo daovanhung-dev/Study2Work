@@ -1,0 +1,56 @@
+<header class="profile-edit-header">
+  <div class="profile-edit-header__content">
+    <a class="profile-edit-brand" routerLink="/" aria-label="Study2Work LMS — trang chủ">
+      <span class="profile-edit-brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="m2.5 9 9.5-5 9.5 5-9.5 5-9.5-5Z" />
+          <path d="M6.5 11.2v5.2c3.7 2.7 7.3 2.7 11 0v-5.2M21.5 9v6" />
+        </svg>
+      </span>
+      <span class="profile-edit-brand__copy"><strong>Study2Work</strong><small>LMS</small></span>
+    </a>
+
+    <nav class="profile-edit-navigation" aria-label="Điều hướng chính">
+      <a routerLink="/" routerLinkActive="profile-edit-navigation__link--active">Trang chủ</a>
+      <span aria-disabled="true">Khóa học của tôi</span>
+      <a routerLink="/student/progress" routerLinkActive="profile-edit-navigation__link--active">
+        Tiến độ
+      </a>
+      <a
+        routerLink="/student/discussions"
+        routerLinkActive="profile-edit-navigation__link--active"
+        >Thảo luận</a
+      >
+      <a
+        routerLink="/student/notifications"
+        routerLinkActive="profile-edit-navigation__link--active"
+        >Thông báo</a
+      >
+    </nav>
+
+    <div class="profile-edit-account" role="group" aria-label="Tài khoản học viên">
+      <span class="profile-edit-account__copy">
+        <strong>{{ fullName ?? 'Tài khoản' }}</strong><small>Học viên</small>
+      </span>
+      <span class="profile-edit-account__avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M5 20c.6-3.4 3.1-5.2 7-5.2s6.4 1.8 7 5.2" />
+        </svg>
+      </span>
+    </div>
+  </div>
+</header>
+
+<ng-content />
+
+<footer class="profile-edit-footer">
+  <div class="profile-edit-footer__content">
+    <p>Study2Work</p>
+    <nav aria-label="Điều hướng cuối trang">
+      <span>Điều khoản dịch vụ</span>
+      <span>Chính sách bảo mật</span>
+      <span>Trợ giúp</span>
+    </nav>
+  </div>
+</footer>

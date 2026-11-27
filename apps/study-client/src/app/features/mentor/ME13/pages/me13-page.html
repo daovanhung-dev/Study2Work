@@ -36,7 +36,7 @@
       <p class="mentor-state">API #46 chưa trả khóa học nào do bạn sở hữu.</p>
       <button type="button" class="mentor-button mentor-button--light" (click)="loadCourses()">Tải lại</button>
     } @else if (courses().length) {
-      <div class="mentor-pagination" aria-label="Phân trang khóa học">
+      <nav class="mentor-pagination" aria-label="Phân trang khóa học">
         <button
           type="button"
           class="mentor-button mentor-button--light"
@@ -50,7 +50,7 @@
           [disabled]="coursePage() >= courseTotalPages() || coursesLoading()"
           (click)="loadCourses(coursePage() + 1)"
         >Trang sau</button>
-      </div>
+      </nav>
     }
   </section>
 

@@ -1,9 +1,9 @@
-study-st05-page {
+:host {
   display: block;
   min-height: 100vh;
 }
 
-study-st05-page .checkout-screen {
+:host .checkout-screen {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
@@ -11,23 +11,23 @@ study-st05-page .checkout-screen {
   background: var(--page-background);
 }
 
-study-st05-page .checkout-header {
+:host .checkout-header {
   z-index: 1;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   box-shadow: 0 1px 8px color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
-study-st05-page .checkout-header__content,
-study-st05-page .checkout-breadcrumb,
-study-st05-page .checkout-main,
-study-st05-page .checkout-footer__content {
+:host .checkout-header__content,
+:host .checkout-breadcrumb,
+:host .checkout-main,
+:host .checkout-footer__content {
   width: min(100%, 1280px);
   margin-inline: auto;
   padding-inline: clamp(16px, 2.5vw, 32px);
 }
 
-study-st05-page .checkout-header__content {
+:host .checkout-header__content {
   display: flex;
   min-height: 64px;
   align-items: center;
@@ -35,8 +35,8 @@ study-st05-page .checkout-header__content {
   gap: 24px;
 }
 
-study-st05-page .checkout-brand,
-study-st05-page .checkout-footer__brand {
+:host .checkout-brand,
+:host .checkout-footer__brand {
   flex: 0 0 auto;
   color: var(--ocean-primary);
   font-size: 21px;
@@ -45,13 +45,13 @@ study-st05-page .checkout-footer__brand {
   text-decoration: none;
 }
 
-study-st05-page .checkout-brand {
+:host .checkout-brand {
   display: inline-flex;
   align-items: center;
   gap: 9px;
 }
 
-study-st05-page .checkout-brand__mark {
+:host .checkout-brand__mark {
   display: grid;
   width: 38px;
   height: 38px;
@@ -62,7 +62,7 @@ study-st05-page .checkout-brand__mark {
   background: var(--ocean-primary);
 }
 
-study-st05-page .checkout-brand__mark svg {
+:host .checkout-brand__mark svg {
   width: 22px;
   height: 22px;
   stroke: currentColor;
@@ -71,18 +71,18 @@ study-st05-page .checkout-brand__mark svg {
   stroke-width: 1.7;
 }
 
-study-st05-page .checkout-brand__text {
+:host .checkout-brand__text {
   display: flex;
   flex-direction: column;
   line-height: 1;
 }
 
-study-st05-page .checkout-brand__text strong {
+:host .checkout-brand__text strong {
   font-size: 20px;
   font-weight: 750;
 }
 
-study-st05-page .checkout-brand__text small {
+:host .checkout-brand__text small {
   margin-top: 3px;
   color: var(--success);
   font-size: 11px;
@@ -90,17 +90,17 @@ study-st05-page .checkout-brand__text small {
   letter-spacing: 0.06em;
 }
 
-study-st05-page .checkout-navigation,
-study-st05-page .checkout-auth-links {
+:host .checkout-navigation,
+:host .checkout-auth-links {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: clamp(6px, 1.4vw, 22px);
 }
 
-study-st05-page .checkout-navigation a,
-study-st05-page .checkout-navigation span,
-study-st05-page .checkout-auth-links a {
+:host .checkout-navigation a,
+:host .checkout-navigation span,
+:host .checkout-auth-links a {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -112,26 +112,26 @@ study-st05-page .checkout-auth-links a {
   white-space: nowrap;
 }
 
-study-st05-page .checkout-navigation a:hover,
-study-st05-page .checkout-auth-links a:hover {
+:host .checkout-navigation a:hover,
+:host .checkout-auth-links a:hover {
   color: var(--ocean-primary);
 }
 
-study-st05-page .checkout-navigation a.checkout-navigation__link--active {
+:host .checkout-navigation a.checkout-navigation__link--active {
   color: var(--ocean-primary);
   font-weight: 750;
 }
 
-study-st05-page .checkout-navigation span[aria-disabled='true'] {
+:host .checkout-navigation span[aria-disabled='true'] {
   color: var(--text-muted);
 }
 
-study-st05-page .checkout-auth-links {
+:host .checkout-auth-links {
   flex: 0 0 auto;
   gap: 10px;
 }
 
-study-st05-page .checkout-auth-links .checkout-auth-links__register {
+:host .checkout-auth-links .checkout-auth-links__register {
   min-height: 40px;
   padding: 8px 16px;
   border-radius: 8px;
@@ -140,23 +140,23 @@ study-st05-page .checkout-auth-links .checkout-auth-links__register {
   box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 12%, transparent);
 }
 
-study-st05-page .checkout-auth-links .checkout-auth-links__register:hover {
+:host .checkout-auth-links .checkout-auth-links__register:hover {
   background: var(--ocean-hover);
 }
 
-study-st05-page .checkout-main {
+:host .checkout-main {
   display: flex;
   flex: 1 0 auto;
   flex-direction: column;
   padding-bottom: 48px;
 }
 
-study-st05-page .checkout-breadcrumb-bar {
+:host .checkout-breadcrumb-bar {
   background: color-mix(in srgb, var(--ocean-soft) 58%, var(--surface));
   box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 5%, transparent);
 }
 
-study-st05-page .checkout-breadcrumb {
+:host .checkout-breadcrumb {
   display: flex;
   min-height: 56px;
   align-items: center;
@@ -165,7 +165,7 @@ study-st05-page .checkout-breadcrumb {
   font-size: 13px;
 }
 
-study-st05-page .checkout-breadcrumb a {
+:host .checkout-breadcrumb a {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -174,11 +174,11 @@ study-st05-page .checkout-breadcrumb a {
   text-decoration: none;
 }
 
-study-st05-page .checkout-breadcrumb a:hover {
+:host .checkout-breadcrumb a:hover {
   color: var(--ocean-primary);
 }
 
-study-st05-page .checkout-breadcrumb a svg {
+:host .checkout-breadcrumb a svg {
   width: 17px;
   height: 17px;
   stroke: currentColor;
@@ -187,12 +187,12 @@ study-st05-page .checkout-breadcrumb a svg {
   stroke-width: 1.8;
 }
 
-study-st05-page .checkout-breadcrumb > span[aria-current='page'] {
+:host .checkout-breadcrumb > span[aria-current='page'] {
   color: var(--text-primary);
   font-weight: 650;
 }
 
-study-st05-page .checkout-status-card {
+:host .checkout-status-card {
   display: flex;
   width: min(100%, 576px);
   min-height: 332px;
@@ -207,7 +207,7 @@ study-st05-page .checkout-status-card {
   text-align: center;
 }
 
-study-st05-page .checkout-status-card__icon {
+:host .checkout-status-card__icon {
   display: grid;
   width: 64px;
   height: 64px;
@@ -219,7 +219,7 @@ study-st05-page .checkout-status-card__icon {
   background: var(--ocean-soft);
 }
 
-study-st05-page .checkout-status-card__icon svg {
+:host .checkout-status-card__icon svg {
   width: 32px;
   height: 32px;
   stroke: currentColor;
@@ -228,7 +228,7 @@ study-st05-page .checkout-status-card__icon svg {
   stroke-width: 1.9;
 }
 
-study-st05-page .checkout-status-card h1 {
+:host .checkout-status-card h1 {
   margin: 0 0 3px;
   color: var(--text-primary);
   font-size: 23px;
@@ -237,7 +237,7 @@ study-st05-page .checkout-status-card h1 {
   line-height: 1.35;
 }
 
-study-st05-page .checkout-status-card h2 {
+:host .checkout-status-card h2 {
   margin: 0 0 9px;
   color: var(--text-primary);
   font-size: 18px;
@@ -245,7 +245,7 @@ study-st05-page .checkout-status-card h2 {
   line-height: 1.45;
 }
 
-study-st05-page .checkout-status-card p {
+:host .checkout-status-card p {
   max-width: 448px;
   margin: 0 0 24px;
   color: var(--text-muted);
@@ -253,7 +253,7 @@ study-st05-page .checkout-status-card p {
   line-height: 1.6;
 }
 
-study-st05-page .checkout-return-button {
+:host .checkout-return-button {
   display: inline-flex;
   min-height: 48px;
   align-items: center;
@@ -270,11 +270,11 @@ study-st05-page .checkout-return-button {
   transition: background-color 140ms ease;
 }
 
-study-st05-page .checkout-return-button:hover {
+:host .checkout-return-button:hover {
   background: var(--ocean-hover);
 }
 
-study-st05-page .checkout-return-button svg {
+:host .checkout-return-button svg {
   width: 20px;
   height: 20px;
   flex: 0 0 auto;
@@ -284,13 +284,13 @@ study-st05-page .checkout-return-button svg {
   stroke-width: 1.9;
 }
 
-study-st05-page .checkout-footer {
+:host .checkout-footer {
   margin-top: auto;
   border-top: 1px solid var(--border);
   background: color-mix(in srgb, var(--ocean-soft) 70%, var(--surface));
 }
 
-study-st05-page .checkout-footer__content {
+:host .checkout-footer__content {
   display: flex;
   min-height: 72px;
   align-items: center;
@@ -298,24 +298,24 @@ study-st05-page .checkout-footer__content {
   gap: 16px;
 }
 
-study-st05-page .checkout-footer__brand {
+:host .checkout-footer__brand {
   display: inline-flex;
   align-items: center;
   gap: 9px;
   font-size: 20px;
 }
 
-study-st05-page .checkout-footer__brand .checkout-brand__mark {
+:host .checkout-footer__brand .checkout-brand__mark {
   width: 32px;
   height: 32px;
 }
 
-study-st05-page .checkout-footer__brand .checkout-brand__mark svg {
+:host .checkout-footer__brand .checkout-brand__mark svg {
   width: 19px;
   height: 19px;
 }
 
-study-st05-page .checkout-footer nav {
+:host .checkout-footer nav {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -323,7 +323,7 @@ study-st05-page .checkout-footer nav {
   gap: 6px 22px;
 }
 
-study-st05-page .checkout-footer nav a {
+:host .checkout-footer nav a {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -332,24 +332,24 @@ study-st05-page .checkout-footer nav a {
   text-decoration: none;
 }
 
-study-st05-page .checkout-footer nav a:hover {
+:host .checkout-footer nav a:hover {
   color: var(--ocean-primary);
 }
 
-study-st05-page a:focus-visible {
+:host a:focus-visible {
   outline: 3px solid var(--ocean-primary);
   outline-offset: 3px;
   border-radius: 5px;
 }
 
 @media (max-width: 900px) {
-  study-st05-page .checkout-header__content {
+  :host .checkout-header__content {
     flex-wrap: wrap;
     gap: 6px 14px;
     padding-block: 8px;
   }
 
-  study-st05-page .checkout-navigation {
+  :host .checkout-navigation {
     order: 1;
     width: 100%;
     overflow-x: auto;
@@ -357,49 +357,49 @@ study-st05-page a:focus-visible {
 }
 
 @media (max-width: 600px) {
-  study-st05-page .checkout-main {
+  :host .checkout-main {
     padding-bottom: 24px;
   }
 
-  study-st05-page .checkout-breadcrumb {
+  :host .checkout-breadcrumb {
     min-height: 52px;
     gap: 6px;
     font-size: 12px;
   }
 
-  study-st05-page .checkout-status-card {
+  :host .checkout-status-card {
     min-height: 0;
     margin: 28px auto 24px;
     padding: 26px 20px;
   }
 
-  study-st05-page .checkout-status-card h1 {
+  :host .checkout-status-card h1 {
     font-size: 21px;
   }
 
-  study-st05-page .checkout-status-card h2 {
+  :host .checkout-status-card h2 {
     font-size: 16px;
   }
 
-  study-st05-page .checkout-return-button {
+  :host .checkout-return-button {
     width: 100%;
   }
 
-  study-st05-page .checkout-footer__content {
+  :host .checkout-footer__content {
     align-items: flex-start;
     flex-direction: column;
     justify-content: center;
     padding-block: 16px;
   }
 
-  study-st05-page .checkout-footer nav {
+  :host .checkout-footer nav {
     justify-content: flex-start;
     gap: 0 16px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  study-st05-page .checkout-return-button {
+  :host .checkout-return-button {
     transition: none;
   }
 }

@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Builder create/update với dirty/draft-loss guard cần được chốt; AD-15 là entry, AD-17 là statistics handoff theo AC-35.
-- Gate/status: **R** local #88/#89 route/module/query/model/validator/test source; API DDs remain Draft. Angular route và safe draft page đã có; page chưa gọi API. **DD BLOCKED; IMPLEMENTATION PARTIAL:** thiếu GET detail/question set, #89 body discrepancy, question/choice editor và course option mapping; field/range rules, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation còn mở; **RUNTIME NOT VERIFIED**
+- Gate/status: **R** local #73/#88/#89 route/module/query/model/validator/test source; API DDs remain Draft. Angular create mode loads course pages through #73 and submits #88 with its catalog-defined outer `{config:string, questions:string}` body; the nested JSON fields/types remain `DERIVED`. Edit remains locked because no detail/question-set read is available. **DD BLOCKED; IMPLEMENTATION PARTIAL:** #89 body discrepancy, nested question/choice rules, field/range rules, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation remain open; **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

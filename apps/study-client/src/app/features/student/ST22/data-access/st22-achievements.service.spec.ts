@@ -1,0 +1,31 @@
+import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
+import { StudentApiService } from '../../../../core/http/student-api.service';
+import { ST22AchievementsService } from './st22-achievements.service';
+
+describe('ST22AchievementsService', () => {
+  let request: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    request = vi.fn().mockReturnValue(of({ success: true, data: {} }));
+
+    await TestBed.configureTestingModule({
+      providers: [
+        ST22AchievementsService,
+        { provide: StudentApiService, useValue: { request } },
+      ],
+    }).compileComponents();
+  });
+
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('calls API #38 without a client-supplied user identity', () => {
+    TestBed.inject(ST22AchievementsService).achievements().subscribe();
+
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request.mock.calls[0]).toEqual([STUDY_SERVER_APIS.API_038]);
+  });
+});

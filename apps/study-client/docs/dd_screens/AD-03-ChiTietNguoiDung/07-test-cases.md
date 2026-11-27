@@ -2,6 +2,12 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+## Current local verification — 2026-11-27
+
+- `src/app/features/admin/AD03/pages/ad03-page.spec.ts` passes 4/4. The routed cases verify the authenticated #69 path and profile projection, invalid-ID/no-request behavior, HTTP 500 error state, rejection of a non-#69 success code, and disabled AD-04/AD-05 controls.
+- The tests use Angular's HTTP testing backend and a mocked Admin login. They prove local client behavior only; API #69 server tests, live database/browser/deployment behavior, and policy acceptance were not verified here.
+- Full Study Web suite after this addition: 101 spec files and 360 tests pass.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|
@@ -47,10 +53,10 @@
 2. **Schema:** local query nhắm legacy BIGINT `users`; live DB/deployment chưa xác minh, V1-PILOT dùng UUID model khác.
 3. **PII and lifecycle:** email/phone masking, role/status enum, deleted/anonymized user visibility và audit requirements chưa chốt.
 4. **Audit panel:** không có nguồn history/log/count/retention trong #69; các claim “0 bản ghi”, 180 ngày, automatic monitoring, RBAC Strict Audit và Nghị định cần nguồn/owner.
-5. **Frontend/runtime:** Route, page và API #69 caller có trong Angular source hiện tại. Host/deployment và runtime chưa được xác minh.
+5. **Frontend/runtime:** Route, page, API #69 caller, and four passing routed page tests exist in Angular source. Host/deployment and browser runtime remain unverified.
 6. **Visual consistency:** prototype dùng Plus Jakarta Sans/cobalt treatment; Study Web guide yêu cầu semantic ocean-blue tokens và Inter/system sans-serif. Cần design review khi wire.
 
-**Kết quả:** API #69 `SOURCE-BACKED LOCALLY (R)`; route/page/API #69 caller `SOURCE PRESENT`; screen `DD BLOCKED` và acceptance còn bị chặn bởi permission, PII, audit, schema, cùng visual review; `RUNTIME NOT VERIFIED`. Phần đồng bộ này chỉ cập nhật trạng thái source cho AD-03.
+**Kết quả:** API #69 `SOURCE-BACKED LOCALLY (R)`; route/page/caller and local page-test evidence are present. Screen `DD BLOCKED`; acceptance remains gated by permission, PII, audit, schema, and visual review; `RUNTIME NOT VERIFIED`.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 

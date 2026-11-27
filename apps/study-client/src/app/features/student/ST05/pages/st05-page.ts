@@ -13,6 +13,7 @@ type CheckoutState = 'loading' | 'unavailable' | 'not-found' | 'error';
 @Component({
   imports: [RouterLink, RouterLinkActive],
   selector: 'study-st05-page',
+  styleUrl: './st05-page.css',
   templateUrl: './st05-page.html',
 })
 export class ST05Page {

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AD17ApiService } from '../data-access/ad17-api.service';
@@ -8,8 +8,10 @@ import { adminRouteState, loadedMetrics } from '../../admin-screen-state';
 import { renderQuizStatistics } from '../../admin-screen-renderers';
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   imports: [RouterLink, StudyIcon],
   selector: 'study-ad17-page',
+  styleUrl: './ad17-page.css',
   templateUrl: './ad17-page.html',
 })
 export class AD17Page {

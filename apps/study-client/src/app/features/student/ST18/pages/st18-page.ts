@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -47,11 +47,19 @@ export class ST18Page implements OnInit {
   readonly assignment = signal<StudentAssignment | null>(null);
   readonly loading = signal(true);
   readonly busy = signal(false);
+  readonly operationStage = signal<'uploading' | 'submitting' | null>(null);
   readonly error = signal<string | null>(null);
   readonly content = signal('');
   readonly file = signal<File | null>(null);
   readonly uploadedAsset = signal<StudentUploadAsset | null>(null);
   readonly outcomeUnknownAssignmentId = signal<string | null>(null);
+  readonly outcomeUnknownStage = signal<'upload' | 'submission' | null>(null);
+  readonly isOutcomeUnknown = computed(
+    () =>
+      this.assignmentId() !== null &&
+      this.outcomeUnknownAssignmentId() === this.assignmentId() &&
+      this.outcomeUnknownStage() !== null,
+  );
   readonly createdSubmission = signal<CreatedSubmission | null>(null);
 
   ngOnInit(): void {
@@ -130,12 +138,13 @@ export class ST18Page implements OnInit {
       return;
     }
 
+    this.operationStage.set('uploading');
     this.data.upload(file, assignment.course_id).subscribe({
       next: (response) => {
         const uploadId = toSafeStudyNumber(response.data?.id);
         if (!response.success) {
           this.setErrorFor(assignmentId, 'Chưa thể tải tệp lên. Vui lòng thử lại.');
-          this.busy.set(false);
+          this.finishOperation();
           return;
         }
         if (
@@ -144,8 +153,9 @@ export class ST18Page implements OnInit {
           !isStudentUploadAsset(response.data)
         ) {
           this.outcomeUnknownAssignmentId.set(assignmentId);
+          this.outcomeUnknownStage.set('upload');
           this.setErrorFor(assignmentId, 'Upload chưa trả về xác nhận hợp lệ; không gửi lại để tránh tải trùng.');
-          this.busy.set(false);
+          this.finishOperation();
           return;
         }
         if (this.assignmentId() === assignmentId) this.uploadedAsset.set(response.data);
@@ -154,9 +164,10 @@ export class ST18Page implements OnInit {
       error: (error: unknown) => {
         if (error instanceof HttpErrorResponse && error.status === 0) {
           this.outcomeUnknownAssignmentId.set(assignmentId);
+          this.outcomeUnknownStage.set('upload');
         }
         this.setErrorFor(assignmentId, studentApiErrorMessage(error));
-        this.busy.set(false);
+        this.finishOperation();
       },
     });
   }
@@ -200,11 +211,12 @@ export class ST18Page implements OnInit {
     content: string,
     uploadId: number | null,
   ): void {
+    this.operationStage.set('submitting');
     this.data.submit(assignmentId, content || null, uploadId).subscribe({
       next: (response) => {
         if (!response.success) {
           this.setErrorFor(assignmentId, 'Chưa thể gửi bài. Vui lòng kiểm tra nội dung và thử lại.');
-          this.busy.set(false);
+          this.finishOperation();
           return;
         }
         const submissionId = toSafeStudyId(response.data?.id);
@@ -214,13 +226,14 @@ export class ST18Page implements OnInit {
           !isStudentSubmission(response.data, assignmentId)
         ) {
           this.outcomeUnknownAssignmentId.set(assignmentId);
+          this.outcomeUnknownStage.set('submission');
           this.setErrorFor(assignmentId, 'Chưa thể xác nhận bài đã được gửi. Nút gửi đã khóa để tránh gửi trùng.');
-          this.busy.set(false);
+          this.finishOperation();
           return;
         }
 
         this.createdSubmission.set({ assignmentId, submissionId });
-        this.busy.set(false);
+        this.finishOperation();
         if (this.destroyRef.destroyed || this.assignmentId() !== assignmentId) return;
         void this.router
           .navigate(['/student/submissions', submissionId])
@@ -232,15 +245,21 @@ export class ST18Page implements OnInit {
       error: (error: unknown) => {
         if (error instanceof HttpErrorResponse && error.status === 0) {
           this.outcomeUnknownAssignmentId.set(assignmentId);
+          this.outcomeUnknownStage.set('submission');
         }
         this.setErrorFor(assignmentId, studentApiErrorMessage(error));
-        this.busy.set(false);
+        this.finishOperation();
       },
     });
   }
 
   private setErrorFor(assignmentId: string, message: string): void {
     if (this.assignmentId() === assignmentId) this.error.set(message);
+  }
+
+  private finishOperation(): void {
+    this.operationStage.set(null);
+    this.busy.set(false);
   }
 }
 

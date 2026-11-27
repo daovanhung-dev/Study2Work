@@ -99,13 +99,13 @@
           </table>
         </div>
         @if (viewState?.status === 'loaded' && viewState.pagination && viewState.pagination.totalPages > 0) {
-          <div class="pagination" aria-label="Phân trang danh sách">
+          <nav class="pagination" aria-label="Phân trang danh sách">
             <span>Trang {{ viewState.pagination.page }} / {{ viewState.pagination.totalPages }} · {{ viewState.pagination.total }} mục</span>
             <div>
               <button class="button button--quiet" type="button" (click)="pageChange.emit(viewState.pagination.page - 1)" [disabled]="viewState.pagination.page <= 1">Trước</button>
               <button class="button button--quiet" type="button" (click)="pageChange.emit(viewState.pagination.page + 1)" [disabled]="viewState.pagination.page >= viewState.pagination.totalPages">Sau</button>
             </div>
-          </div>
+          </nav>
         }
       </section>
     }

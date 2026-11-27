@@ -1,0 +1,134 @@
+<div class="profile-edit-content">
+  <section class="profile-edit-card profile-edit-form-card" aria-labelledby="profile-edit-form-title">
+    <h2 id="profile-edit-form-title">Thông tin hồ sơ học viên</h2>
+    <p class="profile-edit-description">
+      Bạn có thể cập nhật họ tên, số điện thoại và ảnh đại diện. Email chỉ được xem.
+    </p>
+
+    @if (profileLoading) {
+      <p class="profile-edit-profile-state" role="status">Đang tải hồ sơ học viên…</p>
+    } @else if (profileError) {
+      <div class="profile-edit-profile-state profile-edit-profile-state--error" role="alert">
+        <p>{{ profileError }}</p>
+        <button type="button" class="profile-edit-retry" (click)="retryRequested.emit()">
+          Thử tải lại hồ sơ
+        </button>
+      </div>
+    }
+
+    <form class="profile-edit-form" novalidate (submit)="saveSubmitted.emit($event)">
+      <div class="profile-edit-field">
+        <div class="profile-edit-field__heading">
+          <label for="st03-full-name">Họ và tên <span aria-hidden="true">*</span></label>
+          <span class="profile-edit-badge profile-edit-badge--api">Có thể chỉnh sửa</span>
+        </div>
+        <input
+          id="st03-full-name"
+          name="full_name"
+          type="text"
+          autocomplete="name"
+          [value]="fullName"
+          maxlength="150"
+          required
+          [disabled]="profileLoading || saving || refreshingAfterSave || savedAwaitingRefresh || !profile"
+          (input)="fullNameChanged.emit($event)"
+          aria-describedby="st03-full-name-help"
+        />
+        <p class="profile-edit-help" id="st03-full-name-help">Nhập từ 1 đến 150 ký tự.</p>
+      </div>
+
+      <div class="profile-edit-field">
+        <div class="profile-edit-field__heading">
+          <label for="st03-email">Địa chỉ Email</label>
+          <span class="profile-edit-badge">Chỉ xem</span>
+        </div>
+        <div class="profile-edit-input-wrap">
+          <input
+            id="st03-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            [value]="profile?.email ?? ''"
+            placeholder=""
+            readonly
+          />
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="5" y="10" width="14" height="11" rx="2" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+          </svg>
+        </div>
+        <p class="profile-edit-help">Email không thể chỉnh sửa tại đây.</p>
+      </div>
+
+      <div class="profile-edit-field profile-edit-field--blocked">
+        <div class="profile-edit-field__heading">
+          <label for="st03-phone">Số điện thoại</label>
+          <span class="profile-edit-badge profile-edit-badge--api">Có thể chỉnh sửa</span>
+        </div>
+        <input
+          id="st03-phone"
+          name="phone"
+          type="tel"
+          autocomplete="tel"
+          [value]="phone"
+          maxlength="20"
+          [disabled]="profileLoading || saving || refreshingAfterSave || savedAwaitingRefresh || !profile"
+          (input)="phoneChanged.emit($event)"
+        />
+        <p class="profile-edit-help">Có thể để trống. Tối đa 20 ký tự.</p>
+      </div>
+
+      <div class="profile-edit-field profile-edit-field--blocked">
+        <div class="profile-edit-field__heading">
+          <label for="st03-bio">Tiểu sử</label>
+          <span class="profile-edit-badge profile-edit-badge--danger">Chỉ xem</span>
+        </div>
+        <textarea
+          id="st03-bio"
+          name="bio"
+          rows="3"
+          placeholder="Tiểu sử hiện chỉ có thể xem."
+          disabled
+        ></textarea>
+        <p class="profile-edit-warning">
+          <span aria-hidden="true">ⓘ</span>
+          Tiểu sử hiện chỉ để xem. Bạn chưa thể chỉnh sửa tại đây.
+        </p>
+      </div>
+
+      <div class="profile-edit-actions">
+        <a class="profile-edit-button profile-edit-button--secondary" routerLink="/student/profile">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
+          </svg>
+          Quay lại hồ sơ cá nhân
+        </a>
+        <button
+          class="profile-edit-button profile-edit-save"
+          type="submit"
+          [disabled]="!canSave"
+          aria-describedby="st03-save-note"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 5h12l2 2v12H5zM8 5v6h8V5M8 19v-5h8v5" />
+          </svg>
+          {{ saving ? 'Đang lưu…' : 'Lưu thay đổi' }}
+        </button>
+      </div>
+      <p class="profile-edit-save-note" id="st03-save-note">
+        @if (refreshingAfterSave) {
+          Đang tải lại hồ sơ đã lưu…
+        } @else if (savedAwaitingRefresh) {
+          Hồ sơ đã lưu. Tải lại dữ liệu để xác nhận trước khi quay về.
+        } @else {
+          Sau khi lưu, hồ sơ sẽ được tải lại để xác nhận thay đổi.
+        }
+      </p>
+      @if (saveError) {
+        <div class="profile-edit-profile-state profile-edit-profile-state--error" role="alert">
+          <p>{{ saveError }}</p>
+        </div>
+      }
+    </form>
+  </section>
+</div>

@@ -92,13 +92,13 @@
         }
 
         @if (pagination(); as page) {
-          <div class="pagination-controls" aria-label="Phân trang người nhận">
+          <nav class="pagination-controls" aria-label="Phân trang người nhận">
             <span>Trang {{ page.page }} / {{ page.total_pages }} · {{ page.total }} tài khoản</span>
             <div>
               <button type="button" class="secondary-button" [disabled]="page.page <= 1 || recipientsLoading()" (click)="loadRecipients(page.page - 1)">Trước</button>
               <button type="button" class="secondary-button" [disabled]="page.page >= page.total_pages || recipientsLoading()" (click)="loadRecipients(page.page + 1)">Sau</button>
             </div>
-          </div>
+          </nav>
         }
       </fieldset>
 

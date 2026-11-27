@@ -1,6 +1,13 @@
 # ME-02 — Test Cases
 
-> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
+> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite. Current checkout evidence is recorded in §0. The original plan status below is historical and does not prove full AC-21 acceptance or runtime readiness.
+
+## 0. Current client implementation verification — 2026-11-27
+
+- `ME02Page` is source-wired to API #46 through `ME02CoursesService`, `MentorApiService` and `StudyApiService`.
+- `src/app/features/mentor/ME02/pages/me02-page.spec.ts` has five routed HTTP-backed tests for the authenticated #46 GET, supported Course projection, initial loading, approved status query, empty out-of-range recovery, invalid projection rejection, and HTTP failure/retry.
+- Focused command `npm test -- --include=src/app/features/mentor/ME02/pages/me02-page.spec.ts` passes 5/5; full Study Web suite passes 103 spec files/370 tests.
+- These client mocks do not close ME02-B01–B10, validate assignment scope, prove live API/database behavior, or establish browser/deployment readiness.
 
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |

@@ -3,6 +3,7 @@
 ## Current caller reconciliation — 2026-11-21
 - The #46 response guard does not infer `items.length <= total`; the backend obtains `total` and the page items with separate statements. It still checks fixed page 1/size 100, response item types, and `total_pages` derived from the returned count.
 - The #47 caller now exits immediately when a create request is in flight. This is a local duplicate-submit guard; no server idempotency behavior is claimed.
+- Routed local tests (2026-11-27) verify authenticated #46 load/retry, #34 multipart `file`/`purpose=LECTURE`/`course_id` fields and response mapping, the exact #47 body and ME-05 navigation, invalid route rejection, and fail-closed ambiguous upload/create outcomes. These HTTP mocks do not verify deployed API, DB or storage.
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 

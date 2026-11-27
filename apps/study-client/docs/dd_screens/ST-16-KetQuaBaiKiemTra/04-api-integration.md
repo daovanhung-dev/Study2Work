@@ -2,16 +2,16 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-20
+## Current caller status — 2026-11-27
 
 ST-16 calls #32 using Student Bearer. The page handles route ID changes, cancels
 stale reads, validates `DESIGN_RESOURCE_RETRIEVED` and the returned attempt ID,
 and offers retry. Current #32 source checks authenticated ownership and returns
-question IDs only. It emits `score` only for `GRADED`; it does not return
-feedback or question-level grading details. The handler computes `passed`, but
-the response model omits that field. The page does not infer pass/fail or
-display answer details. Runtime and tests were not verified; the source-DD
-excerpt below is historical design evidence.
+question IDs only. It emits `score` and the handler-computed `passed` only for
+`GRADED`; it does not return feedback or question-level grading details. The
+page displays the score but does not render `passed` or answer details while the
+disclosure and visual design decisions remain open. Runtime was not verified;
+the source-DD excerpt below is historical design evidence.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -22,7 +22,7 @@ excerpt below is historical design evidence.
 
 - API refs trong inventory: #32
 - Orchestration/data notes: GET #32 sau accepted #31; pending hiển thị trạng thái, không suy ra score=0; `GRADED` không tự nghĩa là pass; chỉ render field được phép theo response/disclosure policy.
-- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #32 route/view/query/model and caller exist; authenticated Student ownership is enforced via `user_id` in both queries, and owner mismatch maps to 404. Response contains question IDs only, score only for `GRADED`, and no feedback/correctness/per-question score; `passed` is computed in the handler but dropped by the model. DD questions about score/disclosure, state labels, screenshot detail and CTA destinations remain open; legacy BIGINT vs V1-PILOT UUID schemas differ.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #32 route/view/query/model and caller exist; authenticated Student ownership is enforced via `user_id` in both queries, and owner mismatch maps to 404. Response contains question IDs only, score and computed `passed` only for `GRADED`, and no feedback/correctness/per-question score. ST-16 displays the score but does not display `passed`; DD questions about score/pass disclosure, state labels, screenshot detail and CTA destinations remain open; legacy BIGINT vs V1-PILOT UUID schemas differ.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.4. API #32 contract và giới hạn
@@ -35,7 +35,7 @@ excerpt below is historical design evidence.
 | Query/body | Không khai báo | Không thêm query/body/Content-Type. |
 | Success | HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; `ApiEnvelope<QuizAttempt>` | Current source route returns this code. |
 | Errors | Current source returns 401/404/500; a missing or foreign attempt maps to 404. | DD catalog also describes 403; current source does not distinguish foreign ownership. |
-| Current response projection | `id`, `quiz_id`, `status`, `started_at`, optional `submitted_at`/`score`, and `answers[]` containing `question_id`. | `score` is returned only for `GRADED`; current model drops `passed`, choices, correctness, answer text, and per-question score. |
+| Current response projection | `id`, `quiz_id`, `status`, `started_at`, optional `submitted_at`/`score`/`passed`, and `answers[]` containing `question_id`. | `score` and computed `passed` are returned only for `GRADED`; the client does not render `passed`. Choices, correctness, answer text, and per-question score are not returned. |
 
 API #32 DD `Draft — Needs Confirmation` nêu Q-32-01…06: ownership/masking; availability và score khi `PENDING_GRADE`; tiết lộ correctness/điểm câu; feedback field; answer shape/order; path/error mapping. AC-16 có “feedback” nhưng response schema và candidate tables không có feedback. Không tự thêm field hoặc API khác để lấp khoảng trống.
 

@@ -19,8 +19,10 @@ describe('SH02Page', () => {
     expect(root.querySelector('h1')?.textContent?.trim()).toBe('Đăng nhập');
     expect(email?.required).toBe(true);
     expect(email?.type).toBe('email');
+    expect(email?.autocomplete).toBe('username');
     expect(password?.required).toBe(true);
     expect(password?.type).toBe('password');
+    expect(password?.autocomplete).toBe('current-password');
     expect(submit?.disabled).toBe(false);
   });
 

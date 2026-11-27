@@ -2,18 +2,24 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-20
+## Current caller status — 2026-11-27
 
 ST-13 calls #28 through Student Bearer, follows `quizId` changes, cancels stale
 reads, and validates the exact success code, quiz shape and ID. The explicit
 Start action calls #29 once; it requires `DESIGN_RESOURCE_CREATED`, an
 `IN_PROGRESS` attempt and matching `quiz_id`, then routes using the returned
 attempt ID. If client navigation fails after creation, the page retains a link
-to that attempt. #28 checks Student role but not course enrollment or quiz
-status; #29 checks Student, quiz existence and active-attempt conflict but
-does not check enrollment or quiz published/open state. Tests/browser/runtime
-were not run or verified. The detailed DD/API excerpts below preserve the
-original declared design.
+to that attempt. After status-0, 409, 5xx, or unreadable/mismatched #29 results,
+the current page locks Start for that quiz in memory to avoid a blind duplicate
+request. API #29 commits before constructing the success response and does not
+return an existing attempt ID on 409, so this guard cannot recover across reloads.
+#28 checks Student role but not course enrollment or quiz status; #29 checks
+Student, quiz existence and active-attempt conflict but does not check enrollment
+or quiz published/open state. Six routed page tests and two service mapping tests
+cover local source behavior; the Study Web suite passes 93 spec files / 333 tests
+and the production build succeeds. Browser, live API/database, and deployment
+runtime were not verified. The detailed DD/API excerpts below preserve the
+original declared design and unresolved #29 caller/order discrepancy.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -23,7 +29,7 @@ original declared design.
 ## 2. Contract / source detail
 
 - API refs trong inventory: #28
-- Orchestration/data notes: current source uses GET #28 on entry and POST #29 only after explicit Start. Original ST-13/F05/ST-14 call-site/order disagreement remains in expected design; current code is not an owner approval.
+- Orchestration/data notes: current source uses GET #28 on entry and POST #29 only after explicit Start. Original ST-13/F05/ST-14 call-site/order disagreement remains in expected design; current code is not an owner approval. Ambiguous create outcomes lock the current page instance, but there is no API idempotency key or existing-attempt-ID recovery contract.
 - BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** client caller is wired, but server does not enforce enrollment or quiz-open eligibility; #29 conflict cannot resume an existing attempt because response has no existing attempt ID; UI still lacks history/limits/proctoring behavior claimed by the mockup.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 

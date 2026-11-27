@@ -4,7 +4,7 @@
 
 > Current source update (2026-11-17): SH-01 is mounted at `/` in Shared and calls public APIs #05/#06 independently. Local desktop/mobile route rendering is verified; the dev API proxy returned 502 for both calls, so live data/DB and deployment remain unverified. DD and API approval gates remain open.
 >
-> Shared/Auth update (2026-11-17): SH-04 is source-wired at `/register/verification` as a static information gate. SH-03 exposes a user-controlled link after a validated #01 response; neither ID nor email is handed to SH-04, and SH-04 does not call #02. Browser rendering remains to be verified.
+> Shared/Auth update (2026-11-27): SH-03 calls #01 and, after a created response, offers an explicit action that passes the returned user ID/email through a one-use in-memory handoff to `/register/verification`; the values are not placed in the URL or persistent browser storage. SH-04 calls public API #02 only after an explicit click. Current #02 uses a stub provider that accepts the request without sending email or creating a verification token/link. The Study Web automated suite passes, while live API/DB and deployment behavior remain unverified.
 >
 > Student update (2026-11-17): ST-02 is source-wired at `/student/profile` inside StudentLayout. It calls API #04 read-only through StudentApiService and displays only `full_name`/`email`; the edit action remains disabled. Authenticated browser/live API/DB runtime is unverified.
 >

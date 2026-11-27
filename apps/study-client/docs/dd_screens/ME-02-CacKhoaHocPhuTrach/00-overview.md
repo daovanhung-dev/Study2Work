@@ -6,9 +6,9 @@
 | Module | Mentor |
 | Route | `/mentor/courses` — source-wired in `mentor.route.ts`; runtime not verified |
 | Actor/role | Mentor đã đăng nhập; `MentorLayout` và API #46 source-backed, runtime chưa xác minh |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — ownership/assignment, unsupported filters, KPI và một số route/action chưa đủ quyết định để triển khai đầy đủ.<br>; **Implementation status:** `PARTIAL_SOURCE` — route, #46 caller, response validation, cancellation, states và source-backed card/pagination are implemented; mockup-only requirements remain gated.<br>; **Runtime status:** `RUNTIME NOT VERIFIED` — không chạy frontend/API/DB production trong task này. |
+| DD status | `DD BLOCKED` — ownership/assignment, unsupported filters, KPI và một số route/action chưa đủ quyết định để triển khai đầy đủ.<br>`Implementation: PARTIAL_SOURCE` — route, #46 caller, response validation, cancellation, states, source-backed card/pagination, and local routed regressions exist; mockup-only requirements remain gated.<br>`Runtime: RUNTIME NOT VERIFIED` — browser, deployed API/DB and production runtime have not been exercised. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-21 |
+| Version / last updated | 0.3 / 2026-11-27 |
 | Nguồn đối chiếu | [ME-02.md](../../screen_stitch/04_mentor/ME-02_cac-khoa-hoc-phu-trach/ME-02.md), [ME-02_PLAN.md](../../screen_stitch/04_mentor/ME-02_cac-khoa-hoc-phu-trach/ME-02_PLAN.md), [ME-02_markers.json](../../screen_stitch/04_mentor/ME-02_cac-khoa-hoc-phu-trach/ME-02_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -52,11 +52,12 @@
 > **Implementation status:** `PARTIAL_SOURCE` — route/page/#46 caller exist; typed response checks, stale-request cancellation, loading/error/empty handling, safe thumbnail presentation and server pagination are source-backed. Unsupported screenshot requirements remain blocked.<br>
 > **Runtime status:** `RUNTIME NOT VERIFIED` — không chạy frontend/API/DB production trong task này.
 
-### Current source reconciliation (2026-11-21)
+### Current source reconciliation (2026-11-27)
 
 - `/mentor/courses` is registered in `apps/study-client/src/app/features/mentor/mentor.route.ts` under `MentorLayout`; `ME02Page` calls `ME02CoursesService.list`, which uses `MentorApiService` and API #46. The route/session/deployment was not exercised at runtime.
 - The page sends page/size 20 and optional exact `DRAFT|PUBLISHED`; validates the success envelope, business code, Course projection, requested pagination metadata and status filter; cancels stale requests; and recovers an empty out-of-range page by refetching the last valid page (or page 1 for an empty collection).
 - Cards render the #46 title, description, optional safe thumbnail, source status and numeric ID; the Workspace CTA links to the registered ME-03 route. Search, level, semester and sort filters, aggregate KPIs, grading/content/report actions, assigned-course scope and currency-formatted price remain unavailable or unresolved.
+- Five routed client tests use the real Mentor session/API transport with an HTTP test backend. They verify the authenticated #46 GET and supported fields, loading/status filtering, out-of-range recovery/empty state, invalid Course rejection, and HTTP error/retry. The focused spec passes 5/5 and the Study Web suite passes 103 spec files/370 tests. This is mocked client coverage, not full AC-21 acceptance, browser, live API/database or deployment verification.
 - The DD-source excerpt below preserves the earlier design-time snapshot; where its old `UNWIRED` statements conflict with the current source, use this reconciliation for current behavior. The AC-21 assignment expectation remains unresolved against #46's direct-owner-only query.
 
 ## Trích đoạn tổng quan từ DD nguồn

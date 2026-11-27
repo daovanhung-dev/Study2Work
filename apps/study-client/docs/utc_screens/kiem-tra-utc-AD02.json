@@ -1,112 +1,16 @@
 {
-  "screen_id": "AD-02",
-  "report_version": "1.1",
-  "created_date": "2026-11-23",
-  "release_status": "BẢN KẾ HOẠCH UTC — CHỜ XÁC NHẬN",
-  "officially_approved": false,
-  "executable_for_acceptance": false,
-  "decision": "Người dùng chỉ định AD-02 DD v0.5 hiện có là tài liệu chuẩn dù trạng thái là BLOCKED. UTC được truy vết theo đúng revision đó; các quyết định còn mở vẫn chặn phát hành chính thức và nghiệm thu theo release gate của skill.",
-  "user_statement": "Người dùng xác nhận tất cả DD đã được duyệt, sau đó làm rõ AD-02 DD hiện tại dù BLOCKED chính là nguồn chuẩn. Không diễn giải hai câu này thành việc đóng các blocker hoặc xác minh runtime/schema.",
-  "validation": {
-    "hop_le_ve_cau_truc": true,
-    "du_dieu_kien_phe_duyet": false,
-    "thong_tin": [
-      "18 yêu cầu, 50 thành phần, 14 sự kiện, 2 API",
-      "12 ca toàn màn hình, 50 ca thành phần, 14 ca sự kiện",
-      "Tổng ca: 76; yêu cầu được truy vết: 18/18"
-    ],
-    "loi": [],
-    "canh_bao": [
-      "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
-    ]
-  },
-  "workbook_validation": {
-    "tep": "/home/daovh/develop/Study2Work/apps/study-client/docs/utc_screens/UTC_AD-02_DanhSachNguoiDung.xlsx",
-    "trang_tinh": [
-      "01. Bìa",
-      "02. Tổng quan",
-      "03. Thành phần",
-      "04. Sự kiện"
-    ],
-    "so_cong_thuc": 622,
-    "loi": [],
-    "hop_le": true
-  },
-  "workbook_validation_report": "apps/study-client/docs/utc_screens/kiem-tra-excel-AD02.json",
-  "visual_review": {
-    "status": "NOT_RENDERED",
-    "result": "Workbook checker pass nhưng chưa có Excel-capable renderer để xem bố cục trực quan."
-  },
-  "blockers": [
-    {
-      "id": "AD02-BL-001",
-      "description": "Claim JWT ADMIN đang làm fallback cho quyền user-management; tenant/scope policy chưa được owner phê duyệt.",
-      "impact": "Không thể xác nhận actor có quyền xem danh sách hoặc tạo user theo AC-31.",
-      "decision": "Owner xác nhận permission, tenant boundary và mapping claim cho AD-02.",
-      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §3; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
-      "status": "Chưa giải quyết"
-    },
-    {
-      "id": "AD02-BL-002",
-      "description": "API #68 còn Draft; role/status là string exact-match nhưng enum và mapping nhãn UI chưa chốt.",
-      "impact": "Không thể xác nhận bộ lọc prototype hoặc test đầy đủ tập role/status.",
-      "decision": "Owner cung cấp enum/value set và nhãn được duyệt; không tự map instructor/locked.",
-      "source_ref": "apps/study-server/docs/dd/68_admin_users_list/02_Overview.md; OPEN_QUESTIONS.md",
-      "status": "Chưa giải quyết"
-    },
-    {
-      "id": "AD02-BL-003",
-      "description": "Placeholder prototype hứa tìm mã user nhưng API #68 chỉ tìm full_name/email.",
-      "impact": "Tiêu chí tìm kiếm và copy của màn hình đang lệch nhau.",
-      "decision": "Owner xác nhận bỏ ID khỏi copy hoặc phê duyệt contract tìm ID.",
-      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #16; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-02",
-      "status": "Chưa giải quyết"
-    },
-    {
-      "id": "AD02-BL-004",
-      "description": "Email/phone là PII; audit access, deleted/suspended visibility, lifecycle và null/omit policy chưa chốt.",
-      "impact": "Không thể chốt hiển thị profile và tập dữ liệu user trong test.",
-      "decision": "Owner phê duyệt PII, logging/audit và lifecycle visibility policy.",
-      "source_ref": "apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
-      "status": "Chưa giải quyết"
-    },
-    {
-      "id": "AD02-BL-005",
-      "description": "Reset/page URL policy và hiển thị pagination khi total_pages=0 vẫn có khác biệt giữa screenshot, inventory và source.",
-      "impact": "Không thể chốt ca lọc/reset/empty page/back-forward.",
-      "decision": "Product/design owner chốt URL canonicalization, reset về page 1 và cách trình bày empty page.",
-      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/02-events.md EV-04–EV-05; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/03-data-flow.md §3",
-      "status": "Chưa giải quyết"
-    },
-    {
-      "id": "AD02-BL-006",
-      "description": "Local #68/#105 truy vấn legacy BIGINT users; live schema/migration và V1-PILOT UUID model chưa đối chiếu.",
-      "impact": "Không xác minh được tương thích môi trường thật hoặc deployment.",
-      "decision": "DB/API owner xác nhận schema live, migration và môi trường đích.",
-      "source_ref": "apps/study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2",
-      "status": "Chưa giải quyết"
-    },
-    {
-      "id": "AD02-BL-007",
-      "description": "Authenticated browser, live API/DB và deployment chưa được xác minh; UI hiện khác screenshot ở palette/typeface và vài thành phần.",
-      "impact": "Chưa thể phát hành bộ ca để thực thi như tiêu chí đã duyệt.",
-      "decision": "Design owner duyệt screenshot/source discrepancy; QA chạy trên môi trường được xác định sau khi DD được chốt.",
-      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md §5; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/05-business-rules.md §2; .agents/web-study/design.md",
-      "status": "Chưa giải quyết"
-    },
-    {
-      "id": "AD02-BL-008",
-      "description": "Chưa xác định owner/reviewer/approver cho DD và chưa có chữ ký phê duyệt; health/sync/audit/RBAC/export/help claims không có contract.",
-      "impact": "Không đạt điều kiện phát hành UTC chính thức có thể thực thi.",
-      "decision": "Gán owner/reviewer/approver và quyết định các thành phần không có nguồn trước khi đổi trạng thái phát hành.",
-      "source_ref": "apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/00-overview.md metadata; apps/study-client/docs/dd_screens/AD-02-DanhSachNguoiDung/01-ui-elements.md #3, #7, #14, #21, #27, #32–38",
-      "status": "Chưa giải quyết"
-    }
+  "hop_le_ve_cau_truc": true,
+  "du_dieu_kien_phe_duyet": false,
+  "thong_tin": [
+    "18 yêu cầu, 50 thành phần, 14 sự kiện, 2 API",
+    "12 ca toàn màn hình, 50 ca thành phần, 14 ca sự kiện",
+    "Tổng ca: 76; yêu cầu được truy vết: 18/18"
   ],
-  "artifacts": [
-    "apps/study-client/docs/utc_screens/utc-spec-AD02.json",
-    "apps/study-client/docs/utc_screens/UTC_AD-02_DanhSachNguoiDung.xlsx",
-    "apps/study-client/docs/utc_screens/kiem-tra-utc-AD02.json",
-    "apps/study-client/docs/utc_screens/kiem-tra-excel-AD02.json"
+  "loi": [],
+  "canh_bao": [
+    "AD02-TC-EL-017: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "AD02-TC-EL-019: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "AD02-TC-EL-050: DD chờ xác nhận nhưng kỳ vọng có thể bị hiểu là đã chốt",
+    "CÓ ĐIỀU KIỆN CHẶN PHÁT HÀNH: chỉ dùng như bộ UTC DỰ KIẾN; không tự phê duyệt ca chờ xác nhận DD."
   ]
 }

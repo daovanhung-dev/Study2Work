@@ -113,18 +113,18 @@ notes; historical no-caller statements below are design-time evidence.
 
 ### ST24-EV-09 — Tạo topic mới (expected, trigger chưa có)
 
-- **Trigger / loại:** Submit/create dự kiến; **không có button/form submit trigger trong screenshot hoặc current HTML**.
+- **Trigger / loại:** Submit/create dự kiến; screenshot và companion prototype `code.html` không có button/form submit trigger. Current Angular ST-24 does contain a submit form; the implementation differs from the design assets and blocked event target.
 - **Điều kiện:** Student đã đăng nhập và course participation được xác nhận; title/body hợp lệ theo contract đã duyệt; UI cần có CTA được approve.
 - **Input:** Catalog body đúng kiểu `{course_id:int64, title:string, content:int64}`. UI editor cung cấp text, chưa map được sang `content:int64`; course/title/data options cũng chưa hoàn thiện.
-- **Xử lý:** (1) không thêm CTA hay gọi API ở trạng thái hiện tại; (2) khi blockers được giải quyết, kiểm tra required fields/type theo contract; (3) dùng Student Bearer; (4) chỉ khi có implementation được duyệt mới POST `/api/v1/discussions`; (5) chờ HTTP 201 `DESIGN_RESOURCE_CREATED`; (6) response `ApiEnvelope<Page<Discussion>>` có title/author/comments/Page mapping chưa được chốt; (7) inventory kỳ vọng về ST-23 và refresh #39 nhưng redirect-versus-fetch sequence chưa xác định.
-- **API:** #40 catalog là design declaration, runtime `NOT_FOUND`. Không có path/query; request fields ở trên; `meta`/`traceId` theo API guidelines. Không có retry/idempotency/double-submit policy được nguồn hóa.
-- **Output:** Expected topic creation and list refresh only after contract/runtime implementation. Current screen cannot submit; no persisted data or next state verified.
+- **Xử lý:** DD target: (1) không thêm CTA hay gọi API cho đến khi blockers được giải quyết; (2) sau phê duyệt, kiểm tra required fields/type theo contract; (3) dùng Student Bearer; (4) POST `/api/v1/discussions`; (5) chờ HTTP 201 `DESIGN_RESOURCE_CREATED`; (6) response `ApiEnvelope<Page<Discussion>>` có title/author/comments/Page mapping chưa được chốt; (7) inventory kỳ vọng về ST-23 và refresh #39 nhưng redirect-versus-fetch sequence chưa xác định. Current Angular source already calls #40 and then #39; this discrepancy is not treated as product approval.
+- **API:** Catalog #40 is design evidence; current Study Server route/view/query/model source exists, while deployed API runtime is unverified. Không có path/query; request fields ở trên; `meta`/`traceId` theo API guidelines. Không có retry/idempotency/double-submit policy được nguồn hóa.
+- **Output:** DD expects topic creation/list refresh only after contract/runtime approval. Current Angular page can call #40/#39 locally; deployed persistence and approved behavior are not verified.
 - **Ngoại lệ:** 401, 403, 422, 500 đúng catalog. Không thêm 404/409. Transport/timeout/parse failure không phải business code; rollback/partial transaction và safe retry chưa xác định.
 
 ### ST24-EV-10 — Quay lại ST-23 và header navigation
 
 - **Trigger / loại:** Click breadcrumb, forum nav hoặc HTML fallback link.
-- **Điều kiện:** Route `/student/discussions` cần được đăng ký trong Study Web.
+- **Điều kiện:** DD requires route `/student/discussions`; the current Angular source registers it, but deployed navigation remains unverified.
 - **Input:** Prototype href; HTML unavailable state có back link `/student/discussions`. Không có course ID, return URL hoặc saved draft contract.
 - **Xử lý:** (1) treat `#` anchors là placeholder; (2) inventory nối ST-23 ↔ ST-24; (3) không tự thêm unsaved-changes modal, query state hoặc browser back policy; (4) sau success, refresh #39 như inventory kỳ vọng chỉ sau khi sequence được duyệt.
 - **API:** Không có API trên navigation event. API #39 refresh sau create là expected inventory step riêng, hiện chưa runnable.
@@ -134,11 +134,11 @@ notes; historical no-caller statements below are design-time evidence.
 ### ST24-EV-11 — Validation/auth/API/transport errors
 
 - **Trigger / loại:** Local form validation hoặc response/transport failure trong EV-09 (nếu event được triển khai).
-- **Điều kiện:** Chỉ phát sinh khi có form/API implementation; catalog #40 là declaration, hiện chưa có Student route hoặc request execution.
+- **Điều kiện:** DD treats this as a future form/API event; current Angular source already has a form and request execution. Catalog and current-source behavior remain discrepant.
 - **Input:** Required/type fields theo catalog; 401/403/422/500 catalog responses; transport/timeout/parse error.
 - **Xử lý:** (1) giữ auth failure, access denial, validation, server và transport states riêng; (2) không map lỗi thành `created` hoặc form-unavailable empty state; (3) không thêm title max=150, tag/upload errors hay course-not-found codes; (4) không retry, rollback hay preserve-draft theo giả định; (5) error UI/copy/action cần design.
 - **API:** Chỉ catalog #40: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`; 201 là success. #40 DD không khai báo 404/409/503.
-- **Output:** Expected `invalid`/`error` state theo inventory, nhưng UI hiện không có feedback. No runtime state transition verified.
+- **Output:** Expected `invalid`/`error` states remain under-specified. Current Angular page exposes local form/API error feedback and locks an ambiguous create result; deployed runtime and final error copy are unverified.
 - **Ngoại lệ:** Field-level validation mapping, transaction rollback, duplicate submit, abort/unmount và retry policy là open decisions.
 
 ## Trace links

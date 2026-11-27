@@ -16,7 +16,7 @@
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải đề bài…</strong></section>
   }
-  @if (error()) {
+  @if (error() && !isOutcomeUnknown()) {
     <section class="api-error" role="alert">
       <p>{{ error() }}</p>
       @if (!assignment()) {
@@ -59,7 +59,17 @@
           </p>
         }
         @if (uploadedAsset(); as asset) {
-          <p class="api-success">Đã tải tệp {{ asset.name }} lên. Bấm nộp để gửi bài.</p>
+          @if (createdSubmission()?.assignmentId !== assignmentId()) {
+            <p class="api-success" role="status">
+              @if (busy()) {
+                Đã tải tệp {{ asset.name }} lên. Đang gửi bài.
+              } @else if (isOutcomeUnknown() && outcomeUnknownStage() === 'submission') {
+                Đã tải tệp {{ asset.name }} lên.
+              } @else {
+                Đã tải tệp {{ asset.name }} lên. Bấm nộp để gửi bài.
+              }
+            </p>
+          }
         }
         <p class="api-muted">Bạn có thể đính kèm một tệp cho bài nộp này.</p>
         <button
@@ -72,11 +82,19 @@
             createdSubmission()?.assignmentId === assignmentId()
           "
         >
-          {{ busy() ? 'Đang tải tệp và gửi bài…' : 'Nộp bài' }}
+          @if (busy()) {
+            {{ operationStage() === 'uploading' ? 'Đang tải tệp…' : 'Đang gửi bài…' }}
+          } @else {
+            Nộp bài
+          }
         </button>
-        @if (outcomeUnknownAssignmentId() === assignmentId()) {
-          <p class="api-error">
-            Chưa thể xác nhận bài đã được gửi. Nút gửi đã khóa để tránh gửi trùng.
+        @if (isOutcomeUnknown()) {
+          <p class="api-error" role="alert">
+            @if (outcomeUnknownStage() === 'upload') {
+              Upload chưa trả về xác nhận hợp lệ; không gửi lại để tránh tải trùng.
+            } @else {
+              Chưa thể xác nhận bài đã được gửi. Nút gửi đã khóa để tránh gửi trùng.
+            }
           </p>
         }
       </form>

@@ -2,6 +2,11 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+## Current local verification — 2026-11-27
+
+- `src/app/features/admin/AD13/pages/ad13-page.spec.ts` passes 5/5. It covers the authenticated #83 path, supported Lesson fields, plain-text rendering of content, invalid route IDs without a request, malformed Lesson projection rejection, HTTP 500 state, wrong business-code rejection, unavailable resource/metric states and the disabled AD-14 action.
+- The test uses Angular HTTP mocks and a mocked Admin login. The full Study Web suite passes 102 spec files / 365 tests. Live API, database, browser and deployment behavior remain unverified.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|
@@ -57,7 +62,7 @@
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.
 
-## 4. Current executable test evidence (2026-11-16)
+## 4. Historical executable test evidence (2026-11-16)
 
 - Angular AD-12/AD-13 focused specs: 2 files, 6 tests passed. Covers safe-ID navigation from the #82 list, rejecting unsafe JavaScript int64 IDs, #83 field rendering, escaped lesson content, no media embedding and no fabricated resource counts.
 - Study Server API #83 focused tests: 15 passed using fake database sessions. They verify local auth/path/query/envelope/error behavior, not live PostgreSQL, schema or deployment.

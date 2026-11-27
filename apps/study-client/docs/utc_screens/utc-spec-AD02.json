@@ -737,7 +737,6 @@
     },
     {
       "id": "AD-02-EL-039",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Khung hộp thoại tạo tài khoản",
       "type": "Hộp thoại bổ sung dạng modal",
       "position": "Trạng thái bổ sung · lớp phủ",
@@ -751,7 +750,6 @@
     },
     {
       "id": "AD-02-EL-040",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Trường họ và tên",
       "type": "Trường bắt buộc",
       "position": "Hộp thoại tạo tài khoản",
@@ -765,7 +763,6 @@
     },
     {
       "id": "AD-02-EL-041",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Trường email",
       "type": "Trường bắt buộc",
       "position": "Hộp thoại tạo tài khoản",
@@ -779,7 +776,6 @@
     },
     {
       "id": "AD-02-EL-042",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Trường mật khẩu khởi tạo",
       "type": "Trường mật khẩu",
       "position": "Hộp thoại tạo tài khoản",
@@ -793,7 +789,6 @@
     },
     {
       "id": "AD-02-EL-043",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Trường chọn vai trò tạo mới",
       "type": "Danh sách lựa chọn",
       "position": "Hộp thoại tạo tài khoản",
@@ -807,7 +802,6 @@
     },
     {
       "id": "AD-02-EL-044",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Nút đóng hộp thoại",
       "type": "Nút đóng",
       "position": "Hộp thoại · đầu",
@@ -820,7 +814,6 @@
     },
     {
       "id": "AD-02-EL-045",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Nút hủy tạo tài khoản",
       "type": "Nút hủy",
       "position": "Hộp thoại · cuối",
@@ -833,7 +826,6 @@
     },
     {
       "id": "AD-02-EL-046",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Nút gửi và trạng thái đang tạo",
       "type": "Nút gửi/trạng thái",
       "position": "Hộp thoại · cuối",
@@ -846,7 +838,6 @@
     },
     {
       "id": "AD-02-EL-047",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Vùng thông báo lỗi trong hộp thoại",
       "type": "Thông báo lỗi",
       "position": "Hộp thoại · phía trên biểu mẫu",
@@ -860,7 +851,6 @@
     },
     {
       "id": "AD-02-EL-048",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Thông báo tạo tài khoản thành công",
       "type": "Thông báo trạng thái",
       "position": "Đầu nội dung",
@@ -873,7 +863,6 @@
     },
     {
       "id": "AD-02-EL-049",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Dòng người dùng và thao tác tương ứng",
       "type": "Dữ liệu bảng/liên kết",
       "position": "Bảng · từng dòng",
@@ -887,7 +876,6 @@
     },
     {
       "id": "AD-02-EL-050",
-      "marker": "Bổ sung 2026-11-22",
       "name": "Vùng trạng thái tải/lỗi/không nhất quán",
       "type": "Vùng trạng thái",
       "position": "Bảng · theo trạng thái",

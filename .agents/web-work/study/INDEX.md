@@ -1,5 +1,15 @@
 # Study Web context index
 
+## Current local verification — 2026-11-27
+
+The Study Web suite passes 105 spec files / 380 tests. The production build
+passes with a 474.39 kB initial bundle (95.97 kB estimated transfer) and 18
+component-style budget warnings, including Mentor shared styles at 4.02 kB and
+ST-25 at 5.16 kB; ST-26 is below its component warning budget. These are local
+source and mock checks only.
+Authenticated browser, live API/database, and deployment behavior remain
+unverified.
+
 ## Current Shared screen status — 2026-11-21
 
 SH-02–SH-07 are source-wired to the approved scope and score 100% under the
@@ -14,24 +24,29 @@ Web tests pass 36/36; browser, live API/DB and deployment remain unverified.
 Older task snapshots below are historical where they disagree with this
 current status; generic API #18 lifecycle/results remain out of scope.
 
-## Current Mentor screen status — 2026-11-21
+## Current Mentor screen status — 2026-11-27
 
 ME-01–ME-18 score 100% under the static DD-safe rubric: source-backed UI/UX,
 states and API caller mapping are complete, with unsupported behavior visibly
-limited or gated. Focused Mentor verification passes 6 spec files / 12 tests.
+limited or gated. Focused Mentor verification passes 11 spec files / 35 tests.
 ME-01 validates #46/#54/#58 independently and previews four rows per widget;
-#54 uses its fixed 20-row page without an unsupported `size` query. ME-04's
-template compiles. ME-14 consumes the ME-13 history handoff once, validates
+#54 uses its fixed 20-row page without an unsupported `size` query. ME-04 has
+five routed tests for #46 load/retry, #34 upload mapping, #47 creation/navigation,
+invalid IDs and ambiguous-write guards. ME-14 consumes the ME-13 history handoff once, validates
 #63's accepted 202 Operation UUID before SH-07 navigation, and blocks blind
 resend after an ambiguous outcome because #63 has no idempotency key. #63 has
 no `course_id`, so the exact selected course cannot be bound server-side.
 Source/contract gaps for content mutations, grading, support resolution,
-notification delivery, and richer analytics remain gated. The focused Admin
-suite now passes 25 spec files / 99 tests. Production build compiles templates
-and is blocked only by the out-of-scope ST03 component CSS budget; AD16 and
-AD20 have no component-style budget errors. The initial bundle remains over
-its warning threshold. An authenticated browser fixture, live API/DB,
-migration deployment and production runtime remain unavailable.
+notification delivery, and richer analytics remain gated. The last separately
+recorded Admin run, before the AD-03 page spec, passed 25 spec files / 99 tests;
+the current full Study Web suite passes 105 spec files / 380 tests. AD-13 now
+has five routed page tests for #83 detail and the gated AD-14 action; ME-02 has
+five routed page tests for #46 list behavior, and ME-03 has five for #46/#49/#65
+workspace loading and response guards. The latest
+production build succeeds with a 474.39 kB initial bundle and 18 component
+style warnings, none over the 8 kB error budget. An authenticated browser
+fixture, live API/DB, migration deployment and production runtime remain
+unverified.
 
 ## Current source status
 
@@ -87,9 +102,11 @@ requires 201 and AD-20 requires 202 before showing success or navigating.
 AD-01–AD-25 are 100% complete under the static DD-safe
 UI/UX/state/logic/API mapping rubric; unsupported writes, reports, campaigns
 and exports remain unavailable or disabled. This score does not imply
-product-contract or runtime completion. The previously recorded focused Admin
-suite has 25 spec files / 99 tests; the current AD-01 focused suite passes 6
-tests on 2026-11-22. AD-01 is source-wired to API #101 for four selected-period
+product-contract or runtime completion. The last separately recorded focused
+Admin run, before the AD-03 page spec, passed 25 spec files / 99 tests; the
+current full Study Web suite passes 105 spec files / 380 tests and includes
+four AD-03 and five AD-13 routed cases. The current AD-01 focused suite passes 6 tests on
+2026-11-22. AD-01 is source-wired to API #101 for four selected-period
 record counts, with a 30-day inclusive Vietnam-date default, period controls
 and refresh. Its activity and server-health areas remain unavailable, and
 live DB/deployment behavior is unverified. AD-24/25 routes/pages also exist,
@@ -97,7 +114,7 @@ but their report/export callers remain absent. AD-02 has its own
 #68-backed user list and exposes only the source-supported keyword, role, status
 and page filters. Its row renderer localizes known ACTIVE/SUSPENDED/DELETED
 values while preserving exact-string filter values; unknown statuses use a
-neutral label. User int64 IDs use precision-safe display, and only positive JavaScript safe-integer values link to AD-03 and expose the AD-04 edit / AD-05 account-action routes in the seventh table column. Those are navigation handoffs only; mutation controls remain gated in their destination screens. AD-03 keeps edit/status action buttons disabled while permission and mutation contracts are open, and labels its #69 badge from loading/loaded/error state. AD-02 Add opens the source-backed API #105 dialog; export/help remain disabled, and role/status filters remain exact-string inputs because the complete option sets are not source-confirmed. AD-01 through
+neutral label. User int64 IDs use precision-safe display, and only positive JavaScript safe-integer values link to AD-03 and expose the AD-04 edit / AD-05 account-action routes in the seventh table column. Those are navigation handoffs only; mutation controls remain gated in their destination screens. AD-03 keeps edit/status action buttons disabled while permission and mutation contracts are open, and labels its #69 badge from loading/loaded/error state. Its routed page spec passes 4/4 for the authenticated #69 request, malformed-ID/error handling, wrong business-code rejection and disabled mutations. AD-13's routed page spec passes 5/5 for #83 field validation/rendering, safe content display, route/error handling and the locked AD-14 action. These are mocked client tests only. AD-02 Add opens the source-backed API #105 dialog; export/help remain disabled, and role/status filters remain exact-string inputs because the complete option sets are not source-confirmed. AD-01 through
 AD-25 use page-specific layouts; no routed Admin page imports
 `AdminScreenSurface` (its only Admin import is in its own unit spec).
 AD-04/05/06/08/09/10/12/14/15/16/17/18/19/20/21/22/23/24 have host-prefixed page stylesheets registered globally in Angular; AD-07/13 share a host-scoped detail stylesheet registered in Angular. AD-01 retains component-scoped page styles. AD-02 keeps heading/filter styles in its component CSS and uses `study-ad02-page`-prefixed global CSS for table/empty states. `src/styles.css` provides the Admin-scoped `.page-width` container (AD-01 is 1540px at desktop; other pages are 1520px; tablet/mobile widths are shared). `AdminLayout` uses five primary navigation groups, routes notifications from its bell control, scopes the blue LMS shell palette to the Admin host, and omits the shared shell breadcrumb path while retaining its session-status row; identity comes from the authenticated profile and no service-health/unread state is inferred. AD-01/02 provide their page-specific breadcrumbs. AD-02 reads, filters and refreshes through source-backed API #68 and creates through API #105; its client validates the exact success code/UserProfile Page/pagination, preserves rows on separate COUNT/LIST mismatch, hides stale totals/paging, retries the applied URL query and recovers empty out-of-range pages. Admin routes and
@@ -293,38 +310,64 @@ entry and allows #23 only after explicit Start, exact success/lesson identity,
 and `PUBLISHED`; stale reads are cancelled before ST-11 handoff. The #22 source
 does not filter lesson status and #23 does not independently check publication.
 ST-11 calls #24 after handoff and provides validated loading/error/retry states;
-the player and #25/#27 remain gated. #24 checks published lesson/course and
+the player and #25/#27 remain gated. Five routed page tests cover the #24
+response guards, gated player/progress UI and retry; one service test verifies
+the exact `lesson_id` request mapping. #24 checks published lesson/course and
 ACTIVE/COMPLETED enrollment. ST-12 validates #26's `resources[]` and passes
 selected resource context to GS-07/#12. #26 checks ACTIVE enrollment and
 published lesson/course, but the checked-in `resources` table has no confirmed
-writer (#47 writes `lesson_uploads`).
+writer (#47 writes `lesson_uploads`). Five routed ST-12 page tests cover list,
+empty, retry, resource-ID handoff and no direct-URL exposure; one service test
+verifies the #26 request mapping. The full Study Web suite passes 105 spec files
+and 380 tests. The mockup's loaded-list fidelity and API catalog response shape
+remain open.
 
-ST-13 calls #28 on entry and #29 only after explicit Start; ID and continuation
-state are checked. ST-14 calls #28/#30, serializes answer writes and reconciles
-local choices from the response. The client sends `choice_ids[]` while the
-catalog declares `answer(s):string`; there is no answer-read API or authoritative
-timer. ST-15 calls #31 after explicit confirmation and offers #32 after an
+ST-13 calls #28 on entry and #29 only after explicit Start; page/service specs
+verify request mapping, valid attempt handoff, and a per-quiz in-memory Start
+lock after status-0/409/5xx or malformed create outcomes. API #29 commits before
+success-response construction and its 409 response has no existing attempt ID,
+so the lock does not provide recovery across reloads. ST-14 calls #28/#30, serializes answer writes and reconciles
+local choices from the response. Routed page and service specs verify #28/#30
+request mapping, pending/success/mismatched response states, and #28 retry. The
+client sends `choice_ids[]` while the catalog declares `answer(s):string`; there
+is no answer-read API or authoritative timer. ST-15 calls #31 after explicit
+confirmation and offers #32 after an
 ambiguous/closed outcome; ST-16 reads #32 and renders a score only for `GRADED`.
-These quiz APIs remain Draft in backend source, so ownership/order, answer
-recovery, timer, feedback/question detail and pass decisions stay gated.
+API #32 currently returns a computed `passed` value for GRADED attempts, but
+ST-16 does not render it while the DD disclosure decision remains open.
+ST-15 page/service specs verify explicit confirmation, accepted-response
+navigation, pending duplicate suppression, ambiguous #31 outcomes and the
+`attempt_id` mapping. These quiz API DDs remain Draft, so ownership/order,
+answer recovery, timer, feedback/question detail and pass decisions stay gated.
 
-ST-17 reads #33. ST-18 separates #34 upload success from #35 submission, and
-ST-19 reads #36 and shows score/feedback only for `GRADED`; unknown file details
-and URLs stay hidden. #33/#35/#36 remain Draft and server eligibility/disclosure
-contracts are incomplete. ST-20 shows recorded #38 awards and does not invent
-#21 progress; it handles COUNT/LIST mismatch with retry. ST-21 shows #37
-ACTIVE-enrollment aggregate counts/percentage/`has_content`, not a lesson
-timeline. ST-22 uses only #38 awards and does not synthesize certificates.
+ST-17 reads #33. ST-18 separates #34 upload success from #35 submission. Its
+six routed page tests cover ambiguous outcomes, announced upload success and
+operation-stage feedback; three service tests verify the #33/#34/#35 request
+mapping. ST-19 reads #36 and
+currently renders only the returned status and optional
+submitted text; timestamp, score, feedback and file metadata stay hidden while
+timezone, disclosure and asset-mapping rules remain open. #33/#35/#36 remain
+Draft and server eligibility/disclosure contracts are incomplete. ST-20 shows recorded #38 awards and does not invent
+#21 progress; it handles COUNT/LIST mismatch with retry. Its routed page spec
+checks the unavailable aggregate gate, returned award fields, mismatch recovery
+and retry. ST-21 shows #37 ACTIVE-enrollment aggregate counts/percentage/
+`has_content`, not a lesson timeline. ST-22 uses only #38 awards and does not
+synthesize certificates; its page spec covers the award projection, unavailable
+certificate action, mismatch recovery and request retry.
 
 ST-23 calls #39 with course/page filters; current source returns ACTIVE root
 threads in fixed 20-item pages and ignores sort. It validates page state,
 recovers empty out-of-range pages and preserves rows/retry on COUNT/LIST mismatch.
-ST-24 uses ACTIVE #20 course options, #40 create and #39 refresh; it blocks blind
-replay after ambiguous writes. #40 accepts `content:string` although catalog says
+ST-24 uses ACTIVE #20 course options, #40 create and #39 refresh; its page spec
+checks required-field gating and returns to the selected course list only after
+the #40 result is valid and #39 includes the created row. It blocks blind replay
+after ambiguous writes. #40 accepts `content:string` although catalog says
 `int64`. ST-25 uses owner/enrollment-scoped #42/#41, validates the exact thread
 projection and offers read-only #42 reload after an ambiguous reply; #41 also
-accepts string content despite the catalog declaration. Screenshot-only controls
-remain unsupported.
+accepts string content despite the catalog declaration. Its page spec covers
+thread rendering, trimmed #41 reply followed by #42 refresh, thread retry after
+load failure, and locked resubmission after an ambiguous transport error.
+Screenshot-only controls remain unsupported.
 
 ST-26 calls #43–#45. #43 lists direct and recipient-addressable notifications
 in 20-item pages, #44 marks one addressable notification read, and #45 marks all
@@ -333,14 +376,20 @@ addressable unread rows and returns `updated_count`. Migration 016 defines
 `Page<Notification>`. The client formats valid `created_at` timestamps for
 `vi-VN`, uses semantic `<time>`, marks loading with `aria-busy`, announces
 unread-count changes, recovers an out-of-range page and keeps notification
-deep-links gated. These source-backed states and safeguards complete static
-screen coverage; runtime remains unverified. Mentor pages call
+deep-links gated. The ST-26 page spec covers list loading, #44/#45 success
+feedback with #43 refresh, safe retry and the absence of title-derived links.
+The ST-26 component stylesheet is below its configured warning budget. These
+source-backed states and safeguards complete static screen coverage; runtime remains unverified. Mentor pages call
 their source-backed APIs; ME-03 follows changed course IDs, cancels stale
 requests, validates #46/#49/#65 response shapes and renders the #49 content
 tree and #65 aggregate roster independently. It renders optional #65 Student
 avatars only for HTTPS/same-origin URLs with an initials fallback. #65 remains a local
 `Page<MentorStudentProgress>` projection that differs from the catalog, and
-direct-owner scope may differ from assigned-course expectations. ME-04 calls
+direct-owner scope may differ from assigned-course expectations. Five routed
+HTTP-backed ME-03 tests cover its authenticated #46/#49/#65 calls, route guard,
+access-denial fail-closed behavior and response validation. Invalid success
+responses use validation copy while failed envelopes retain their server
+message. The #65 contract and live runtime remain unresolved. ME-04 calls
 #46 (first 100 courses), shared #34 upload with `purpose=LECTURE`, and #47 with
 T041-approved Markdown `content:string` and ordered upload IDs; its textarea
 also inserts basic Markdown emphasis, headings, lists, quotes and code syntax,
@@ -349,7 +398,7 @@ separate #46 COUNT/LIST totals to differ and blocks duplicate #47 submit while
 the write is pending. Successful creation opens ME-05/#48. Direct-owner authorization and immediate
 `PUBLISHED` status are source-backed. Assigned courses, upload cleanup,
 WYSIWYG/preview/lifecycle fields and live/browser runtime remain open; focused
-Mentor tests pass 6 spec files / 12 tests. Other Mentor actions stay gated where
+Mentor tests pass 11 spec files / 35 tests. Other Mentor actions stay gated where
 source contracts do not support the DD. Do not infer
 authorization from route metadata; live API/schema/browser runtime remains
 unverified.
@@ -362,7 +411,10 @@ out-of-range page. Cards use only #46 fields, including a safe optional
 thumbnail; page size remains 20 and status labels map only `DRAFT`/
 `PUBLISHED`. The screen now scores 100% under the static DD-safe rubric;
 assignment-versus-direct-owner scope and unsupported search/level/sort/KPI/
-actions remain open. Runtime is unverified; focused Mentor tests pass.
+actions remain open. Its five routed HTTP-backed page tests verify the
+authenticated #46 request, supported fields, status filter, out-of-range
+recovery, validation and retry. Runtime is unverified; focused Mentor tests
+pass 11 spec files / 35 tests.
 
 ME-05 is registered at `/mentor/lectures/:lectureId` and calls #48 through
 `MentorApiService`. The page cancels stale route reads, validates the success
@@ -429,7 +481,10 @@ paging or live updates. The screen now scores 100% under the static DD-safe
 rubric; runtime and local migration deployment remain unverified.
 
 ME-12 follows route changes and validates #59/#60 envelope codes, request
-identity and nested messages/attachments. Text-only #60 replies
+identity and nested messages/attachments. Six routed page tests cover loading,
+safe attachment display, blank and confirmed replies, ambiguous-result reload,
+resolved-state gating, and invalid IDs; two service tests verify the exact
+#59/#60 request mappings. Text-only #60 replies
 use the backend-validated empty attachment array; an ambiguous reply cannot be
 resent until #59 reloads and reconciles the thread. #61 success requires
 `RESOLVED`, but its ME12 caller remains disabled until the readiness/satisfaction

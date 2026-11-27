@@ -49,11 +49,11 @@
           }
         </dl>
       } @else {
-        <div class="identity-list identity-list--unavailable" aria-label="Thông tin chưa tải">
+        <dl class="identity-list identity-list--unavailable" aria-label="Thông tin chưa tải">
           @for (field of identityFields; track field.label) {
             <div class="identity-row"><dt>{{ field.label }}</dt><dd>—</dd></div>
           }
-        </div>
+        </dl>
       }
       <p class="source-note">Nguồn hiện không cung cấp nhật ký kiểm toán, lịch sử phiên hoặc trạng thái đồng bộ.</p>
     </section>

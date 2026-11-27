@@ -1,8 +1,8 @@
 # ME-12 — Test Cases
 
-## Current source state — 2026-11-21
+## Current source state — 2026-11-27
 
-ME12 page source calls #59/#60 with reactive detail reads, exact success-code/ID/status validation, and no blind duplicate reply after an uncertain result; #61 is intentionally not called until the readiness/satisfaction and confirmation rules are approved. No ME12 frontend test was run. Backend source/tests do not verify deployed storage/migration or resolve open lifecycle, attachment-upload and SLA decisions.
+ME12 page source calls #59/#60 with reactive detail reads, exact success-code/ID/status validation, and no blind duplicate reply after an uncertain result; #61 is intentionally not called until the readiness/satisfaction and confirmation rules are approved. Six routed page tests and two service mapping tests pass; the full Study Web suite passes 100 spec files / 356 tests. These are local mock/source checks and do not verify browser or deployed runtime. Backend source/tests do not verify deployed storage/migration or resolve open lifecycle, attachment-upload and SLA decisions.
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
@@ -50,16 +50,16 @@ ME12 page source calls #59/#60 with reactive detail reads, exact success-code/ID
 
 | Claim/requirement | Source of truth | Current evidence/status |
 |---|---|---|
-| ME-12 identity, route proposal, related screen, API sequence/states | apps/study-client/docs/list_screen.md row 52; F09 | Expected design; no app route source. |
+| ME-12 identity, route proposal, related screen, API sequence/states | apps/study-client/docs/list_screen.md row 52; F09 | Expected design; current route/page source wires #59/#60 and keeps #61 gated. Browser/runtime remains unverified. |
 | Mentor support decision | apps/study-server/docs/diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio AC-24 and UC24 | Expected AC: owned request; resolve if learner is satisfied, otherwise keep OPEN. AC does not specify modal, message minimum or full lifecycle. |
-| ME-11 ID handoff | apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11.md and API #58 models | Expected data[].id handoff; static UI does not execute it. |
-| Screen content and current controls | This folder's screen.png and code.html | Static prototype; no script, request, socket, form handler or route binding. |
+| ME-11 ID handoff | apps/study-client/docs/screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11.md and API #58 models | Expected data[].id handoff; current route receives requestId. Authenticated browser handoff remains unverified. |
+| Screen content and current controls | This folder's screen.png/code.html plus Study Client ME12 page | Static prototype is not runtime evidence; current page has routed #59 read and #60 reply states, covered by six local page tests. Loaded design remains open. |
 | #59 detail request/response/ownership/thread order | apps/study-server/app/api/v1.py; app/modules/mentor/api_59_mentor_support_request_detail/{models,validate,query,view}.py; _shared/support_request_projection.py | Local route/source/test evidence; exact contract remains Draft and local data assumptions are DERIVED. |
 | #60 reply body/validation/transaction | apps/study-server/app/api/v1.py; app/modules/mentor/api_60_mentor_support_reply/{models,validate,query,view}.py; tests/modules/mentor/api_60_mentor_support_reply/test_mentor_support_reply.py | Local implementation; no max length/idempotency; permits post-resolve/cancelled reply. Fake DB tests do not prove deployed database behavior. |
 | #61 resolve state/transaction | apps/study-server/app/api/v1.py; app/modules/mentor/api_61_mentor_support_resolve/{models,validate,query,view}.py; tests/modules/mentor/api_61_mentor_support_resolve/test_mentor_support_resolve.py | Local implementation; lifecycle is DERIVED and differs from AC detail. |
 | API contract decisions | apps/study-server/docs/dd/59_mentor_support_request_detail, 60_mentor_support_reply, 61_mentor_support_resolve and each OPEN_QUESTIONS.md | All Draft — Needs Confirmation. |
 | Local database schema evidence | infra/postgres/study-server/migrations/008_support_requests.sql and Study Server DB DDL | Checked-in local schema only; live schema/deployment unverified. |
-| Study Web runtime status | .agents/context-manifest.json scopes.web-work.subcontexts.study-web; apps/study-client tree | study-web is UNWIRED; no tracked app package/router/source. |
+| Study Web runtime status | apps/study-client route/page/service source and focused ME12 specs | #59/#60 are source-wired and locally tested; #61 has no page caller. Browser/live API/database/storage/deployment remain NOT VERIFIED. |
 
 ### F.3. Open decisions / blockers
 
@@ -77,12 +77,12 @@ ME12 page source calls #59/#60 with reactive detail reads, exact success-code/ID
 
 ### F.4. Final status decision
 
-DD BLOCKED because material presentation and business decisions remain open. IMPLEMENTATION BLOCKED because Study Web is UNWIRED and required lifecycle/attachment/UI contracts are unresolved. RUNTIME NOT VERIFIED because no runnable Study Web app or live API/database evidence exists in this scope.
+DD BLOCKED because material presentation and business decisions remain open. IMPLEMENTATION PARTIAL: the route/page and #59/#60 callers exist and have local regression coverage; #61 and the loaded-thread/attachment design remain gated. RUNTIME NOT VERIFIED because browser, live API/database, storage and deployment evidence is absent.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
 > CẦN_XÁC_NHẬN: Plan nguồn không có section verification/test được nhận diện.
 
 
-- Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
-- Không chạy app test trong task chuyển đổi tài liệu.
+- Runtime status: `RUNTIME NOT VERIFIED`; the local page/service tests above do not claim deployed behavior.
+- The original asset-conversion task did not run app tests; current source tests are recorded in the dated section above.

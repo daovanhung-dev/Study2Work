@@ -86,11 +86,11 @@
         </p>
         @if (viewState().pagination; as pagination) {
           @if (pagination.totalPages > 0) {
-            <div class="pagination-controls" aria-label="Phân trang báo cáo thảo luận">
+            <nav class="pagination-controls" aria-label="Phân trang báo cáo thảo luận">
               <button type="button" (click)="changePage(pagination.page - 1)" [disabled]="pagination.page <= 1"><study-icon name="chevron" /> Trước</button>
               <span>Trang {{ pagination.page }}</span>
               <button type="button" (click)="changePage(pagination.page + 1)" [disabled]="pagination.page >= pagination.totalPages">Sau <study-icon name="chevron" /></button>
-            </div>
+            </nav>
           }
         }
       </div>

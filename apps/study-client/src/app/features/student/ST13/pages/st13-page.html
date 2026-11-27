@@ -62,7 +62,7 @@
         <button
           class="api-button"
           type="button"
-          [disabled]="starting() || createdAttemptQuizId() === quizId()"
+          [disabled]="starting() || createdAttemptQuizId() === quizId() || startBlockedQuizId() === quizId()"
           (click)="start()"
         >
           {{ starting() ? 'Đang tạo lượt làm…' : 'Bắt đầu làm bài' }}

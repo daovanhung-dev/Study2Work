@@ -1,17 +1,20 @@
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { ST03ProfileService } from '../data-access/st03-profile.service';
 import { studentApiErrorMessage } from '../../shared/models/student-api-errors';
 import { isSafeHttpUrl, isStudentProfile } from '../../shared/models/student-profile.guard';
+import { ST03ProfileAvatarPanel } from '../ui/st03-profile-avatar-panel';
+import { ST03ProfileDetailsForm } from '../ui/st03-profile-details-form';
+import { ST03ProfileFrame } from '../ui/st03-profile-frame';
 import type { StudentProfile } from '../../shared/models/student-api.models';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 
 @Component({
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, ST03ProfileFrame, ST03ProfileAvatarPanel, ST03ProfileDetailsForm],
   selector: 'study-st03-page',
   styleUrl: './st03-page.css',
   templateUrl: './st03-page.html',

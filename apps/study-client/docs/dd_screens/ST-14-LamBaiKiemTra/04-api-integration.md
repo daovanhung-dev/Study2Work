@@ -2,7 +2,7 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-20
+## Current caller status — 2026-11-27
 
 ST-14 calls #28 for quiz/question details and #30 after a choice change; ST-13
 owns #29 in current source. ST-14 follows both route IDs, cancels stale #28
@@ -11,8 +11,13 @@ identity/state/answer response, and uses the API's returned answer set as the
 current client state. #30's body uses `choice_ids[]`, while catalog says
 `answer(s):string`; this remains a discrepancy. No GET attempt/answers endpoint
 or authoritative timer exists, so reload cannot restore answers and no
-countdown is run. Current source and runtime evidence are separate from the
-original DD excerpt below; tests/browser/runtime were not run or verified.
+countdown is run. The focused client service spec verifies #28/#30 path/body
+mapping; the routed page spec verifies quiz load/retry, no #29 creation in this
+screen, pending/success response handling, and rollback after a mismatched
+attempt response. The full local Study Web suite passes 91 spec files/325 tests.
+These are mocked/local checks; browser, live API, database, and deployment
+behavior remain unverified. The original DD excerpt below remains expected
+design evidence and is not reconciled to current source behavior.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |

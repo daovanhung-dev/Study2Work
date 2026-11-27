@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AD23ApiService } from '../data-access/ad23-api.service';
@@ -9,8 +9,10 @@ import { adminRouteState, loadedFields } from '../../admin-screen-state';
 import { renderDiscussionComments, renderDiscussionFields } from '../../admin-screen-renderers';
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   imports: [RouterLink, StudyIcon],
   selector: 'study-ad23-page',
+  styleUrl: './ad23-page.css',
   templateUrl: './ad23-page.html',
 })
 export class AD23Page {

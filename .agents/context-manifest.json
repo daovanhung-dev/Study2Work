@@ -1164,7 +1164,6 @@
             "apps/study-client/src/app/shared/ui/study-icon.ts",
             "apps/study-client/src/app/shared/ui/study-icon.html",
             "apps/study-client/src/app/shared/ui/study-icon.css",
-            "apps/study-client/src/app/features/auth/.gitkeep",
             "apps/study-client/src/app/features/guest/guest.route.ts",
             "apps/study-client/src/app/features/guest/GS07/data-access/README.md",
             "apps/study-client/src/app/features/guest/GS07/data-access/gs07-resource.service.ts",

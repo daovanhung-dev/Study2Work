@@ -1,9 +1,9 @@
-study-st06-page {
+:host {
   display: block;
   min-height: 100vh;
 }
 
-study-st06-page .payment-screen {
+:host .payment-screen {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
@@ -11,21 +11,21 @@ study-st06-page .payment-screen {
   background: var(--page-background);
 }
 
-study-st06-page .payment-header {
+:host .payment-header {
   z-index: 1;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   box-shadow: 0 1px 8px color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
-study-st06-page .payment-header__content,
-study-st06-page .payment-main,
-study-st06-page .payment-footer__content {
+:host .payment-header__content,
+:host .payment-main,
+:host .payment-footer__content {
   width: min(100%, 1280px);
   margin-inline: auto;
   padding-inline: clamp(16px, 2.5vw, 32px);
 }
 
-study-st06-page .payment-header__content {
+:host .payment-header__content {
   display: flex;
   min-height: 64px;
   align-items: center;
@@ -33,8 +33,8 @@ study-st06-page .payment-header__content {
   gap: 24px;
 }
 
-study-st06-page .payment-brand,
-study-st06-page .payment-footer__brand {
+:host .payment-brand,
+:host .payment-footer__brand {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
@@ -46,7 +46,7 @@ study-st06-page .payment-footer__brand {
   text-decoration: none;
 }
 
-study-st06-page .payment-brand__mark {
+:host .payment-brand__mark {
   display: grid;
   width: 38px;
   height: 38px;
@@ -57,7 +57,7 @@ study-st06-page .payment-brand__mark {
   background: var(--ocean-primary);
 }
 
-study-st06-page .payment-brand__mark svg {
+:host .payment-brand__mark svg {
   width: 22px;
   height: 22px;
   stroke: currentColor;
@@ -66,18 +66,18 @@ study-st06-page .payment-brand__mark svg {
   stroke-width: 1.7;
 }
 
-study-st06-page .payment-brand__text {
+:host .payment-brand__text {
   display: flex;
   flex-direction: column;
   line-height: 1;
 }
 
-study-st06-page .payment-brand__text strong {
+:host .payment-brand__text strong {
   font-size: 20px;
   font-weight: 750;
 }
 
-study-st06-page .payment-brand__text small {
+:host .payment-brand__text small {
   margin-top: 3px;
   color: var(--sky-accent);
   font-size: 11px;
@@ -85,16 +85,16 @@ study-st06-page .payment-brand__text small {
   letter-spacing: 0.06em;
 }
 
-study-st06-page .payment-navigation,
-study-st06-page .payment-auth-links {
+:host .payment-navigation,
+:host .payment-auth-links {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: clamp(6px, 1.4vw, 22px);
 }
 
-study-st06-page .payment-navigation a,
-study-st06-page .payment-auth-links a {
+:host .payment-navigation a,
+:host .payment-auth-links a {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -106,18 +106,18 @@ study-st06-page .payment-auth-links a {
   white-space: nowrap;
 }
 
-study-st06-page .payment-navigation a:hover,
-study-st06-page .payment-auth-links a:hover,
-study-st06-page .payment-navigation a.payment-navigation__link--active {
+:host .payment-navigation a:hover,
+:host .payment-auth-links a:hover,
+:host .payment-navigation a.payment-navigation__link--active {
   color: var(--ocean-primary);
 }
 
-study-st06-page .payment-auth-links {
+:host .payment-auth-links {
   flex: 0 0 auto;
   gap: 10px;
 }
 
-study-st06-page .payment-auth-links .payment-auth-links__register {
+:host .payment-auth-links .payment-auth-links__register {
   min-height: 40px;
   padding: 8px 16px;
   border-radius: 8px;
@@ -125,14 +125,14 @@ study-st06-page .payment-auth-links .payment-auth-links__register {
   background: var(--ocean-primary);
 }
 
-study-st06-page .payment-main {
+:host .payment-main {
   display: flex;
   flex: 1 0 auto;
   flex-direction: column;
   padding-bottom: 48px;
 }
 
-study-st06-page .payment-breadcrumb {
+:host .payment-breadcrumb {
   display: flex;
   min-height: 56px;
   align-items: center;
@@ -141,7 +141,7 @@ study-st06-page .payment-breadcrumb {
   font-size: 13px;
 }
 
-study-st06-page .payment-breadcrumb a {
+:host .payment-breadcrumb a {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -149,21 +149,21 @@ study-st06-page .payment-breadcrumb a {
   text-decoration: none;
 }
 
-study-st06-page .payment-breadcrumb a:hover {
+:host .payment-breadcrumb a:hover {
   color: var(--ocean-primary);
 }
 
-study-st06-page .payment-breadcrumb [aria-current='page'] {
+:host .payment-breadcrumb [aria-current='page'] {
   color: var(--ocean-primary);
   font-weight: 700;
 }
 
-study-st06-page .payment-page-title {
+:host .payment-page-title {
   padding: 14px 0 20px;
   border-bottom: 1px solid var(--border);
 }
 
-study-st06-page .payment-page-title h1 {
+:host .payment-page-title h1 {
   margin: 0;
   color: var(--text-primary);
   font-size: clamp(30px, 4vw, 40px);
@@ -172,7 +172,7 @@ study-st06-page .payment-page-title h1 {
   line-height: 1.2;
 }
 
-study-st06-page .payment-status-card {
+:host .payment-status-card {
   display: flex;
   width: min(100%, 512px);
   min-height: 328px;
@@ -187,7 +187,7 @@ study-st06-page .payment-status-card {
   text-align: center;
 }
 
-study-st06-page .payment-status-card__icon {
+:host .payment-status-card__icon {
   display: grid;
   width: 64px;
   height: 64px;
@@ -199,7 +199,7 @@ study-st06-page .payment-status-card__icon {
   background: var(--ocean-soft);
 }
 
-study-st06-page .payment-status-card__icon svg {
+:host .payment-status-card__icon svg {
   width: 32px;
   height: 32px;
   stroke: currentColor;
@@ -208,7 +208,7 @@ study-st06-page .payment-status-card__icon svg {
   stroke-width: 1.9;
 }
 
-study-st06-page .payment-status-card h2 {
+:host .payment-status-card h2 {
   margin: 0 0 32px;
   color: var(--text-primary);
   font-size: 23px;
@@ -217,26 +217,26 @@ study-st06-page .payment-status-card h2 {
   line-height: 1.35;
 }
 
-study-st06-page .payment-status-card p {
+:host .payment-status-card p {
   max-width: 448px;
   margin: 0;
   color: var(--text-muted);
   line-height: 1.6;
 }
 
-study-st06-page .payment-status-card .payment-status-card__headline {
+:host .payment-status-card .payment-status-card__headline {
   margin-bottom: 8px;
   color: var(--text-primary);
   font-size: 17px;
   font-weight: 500;
 }
 
-study-st06-page .payment-status-card__description {
+:host .payment-status-card__description {
   margin-bottom: 28px !important;
   font-size: 14px;
 }
 
-study-st06-page .payment-return-button {
+:host .payment-return-button {
   display: inline-flex;
   min-height: 48px;
   align-items: center;
@@ -253,11 +253,11 @@ study-st06-page .payment-return-button {
   transition: background-color 140ms ease;
 }
 
-study-st06-page .payment-return-button:hover {
+:host .payment-return-button:hover {
   background: var(--ocean-hover);
 }
 
-study-st06-page .payment-return-button svg {
+:host .payment-return-button svg {
   width: 20px;
   height: 20px;
   stroke: currentColor;
@@ -266,12 +266,12 @@ study-st06-page .payment-return-button svg {
   stroke-width: 1.9;
 }
 
-study-st06-page .payment-footer {
+:host .payment-footer {
   margin-top: auto;
   background: color-mix(in srgb, var(--ocean-soft) 70%, var(--surface));
 }
 
-study-st06-page .payment-footer__content {
+:host .payment-footer__content {
   display: flex;
   min-height: 72px;
   align-items: center;
@@ -279,21 +279,21 @@ study-st06-page .payment-footer__content {
   gap: 16px;
 }
 
-study-st06-page .payment-footer__brand {
+:host .payment-footer__brand {
   font-size: 20px;
 }
 
-study-st06-page .payment-footer__brand .payment-brand__mark {
+:host .payment-footer__brand .payment-brand__mark {
   width: 32px;
   height: 32px;
 }
 
-study-st06-page .payment-footer__brand .payment-brand__mark svg {
+:host .payment-footer__brand .payment-brand__mark svg {
   width: 19px;
   height: 19px;
 }
 
-study-st06-page .payment-footer nav {
+:host .payment-footer nav {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -301,7 +301,7 @@ study-st06-page .payment-footer nav {
   gap: 6px 22px;
 }
 
-study-st06-page .payment-footer nav a {
+:host .payment-footer nav a {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -310,24 +310,24 @@ study-st06-page .payment-footer nav a {
   text-decoration: none;
 }
 
-study-st06-page .payment-footer nav a:hover {
+:host .payment-footer nav a:hover {
   color: var(--ocean-primary);
 }
 
-study-st06-page a:focus-visible {
+:host a:focus-visible {
   outline: 3px solid var(--ocean-primary);
   outline-offset: 3px;
   border-radius: 5px;
 }
 
 @media (max-width: 900px) {
-  study-st06-page .payment-header__content {
+  :host .payment-header__content {
     flex-wrap: wrap;
     gap: 6px 14px;
     padding-block: 8px;
   }
 
-  study-st06-page .payment-navigation {
+  :host .payment-navigation {
     order: 1;
     width: 100%;
     overflow-x: auto;
@@ -335,46 +335,46 @@ study-st06-page a:focus-visible {
 }
 
 @media (max-width: 600px) {
-  study-st06-page .payment-main {
+  :host .payment-main {
     padding-bottom: 24px;
   }
 
-  study-st06-page .payment-breadcrumb {
+  :host .payment-breadcrumb {
     min-height: 52px;
     gap: 6px;
     font-size: 12px;
   }
 
-  study-st06-page .payment-status-card {
+  :host .payment-status-card {
     min-height: 0;
     margin: auto 0;
     padding: 26px 20px;
   }
 
-  study-st06-page .payment-status-card h2 {
+  :host .payment-status-card h2 {
     margin-bottom: 22px;
     font-size: 21px;
   }
 
-  study-st06-page .payment-return-button {
+  :host .payment-return-button {
     width: 100%;
   }
 
-  study-st06-page .payment-footer__content {
+  :host .payment-footer__content {
     align-items: flex-start;
     flex-direction: column;
     justify-content: center;
     padding-block: 16px;
   }
 
-  study-st06-page .payment-footer nav {
+  :host .payment-footer nav {
     justify-content: flex-start;
     gap: 0 16px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  study-st06-page .payment-return-button {
+  :host .payment-return-button {
     transition: none;
   }
 }

@@ -102,11 +102,29 @@ export class ST16Page implements OnInit {
       this.error.set('Chưa thể tải kết quả bài kiểm tra. Vui lòng thử lại.');
       return;
     }
-    if (!isStudentQuizResult(response.data) || toSafeStudyId(response.data.id) !== result.attemptId) {
+    const data: unknown = response.data;
+    if (!isRecord(data)) {
+      this.error.set('Chưa thể tải kết quả bài kiểm tra. Vui lòng thử lại.');
+      return;
+    }
+    const returnedAttemptId = toSafeStudyId(data['id']);
+    if (!returnedAttemptId) {
+      this.error.set('Chưa thể tải kết quả bài kiểm tra. Vui lòng thử lại.');
+      return;
+    }
+    if (returnedAttemptId !== result.attemptId) {
       this.error.set('Kết quả không khớp với bài kiểm tra này. Hãy tải lại trang.');
       return;
     }
-    this.result.set(response.data);
+    if (data['status'] !== 'PENDING_GRADE' && data['status'] !== 'GRADED') {
+      this.error.set('Trạng thái kết quả bài kiểm tra chưa được hỗ trợ. Vui lòng thử lại sau.');
+      return;
+    }
+    if (!isStudentQuizResult(data)) {
+      this.error.set('Chưa thể tải kết quả bài kiểm tra. Vui lòng thử lại.');
+      return;
+    }
+    this.result.set(data);
   }
 }
 
@@ -117,8 +135,8 @@ interface ResultLoad {
 }
 
 function isStudentQuizResult(value: unknown): value is StudentQuizAttempt {
-  if (typeof value !== 'object' || value === null) return false;
-  const attempt = value as Record<string, unknown>;
+  if (!isRecord(value)) return false;
+  const attempt = value;
   return (
     toSafeStudyId(attempt['id']) !== null &&
     toSafeStudyId(attempt['quiz_id']) !== null &&
@@ -139,4 +157,8 @@ function isStudentQuizResult(value: unknown): value is StudentQuizAttempt {
       return toSafeStudyId((answer as Record<string, unknown>)['question_id']) !== null;
     })
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

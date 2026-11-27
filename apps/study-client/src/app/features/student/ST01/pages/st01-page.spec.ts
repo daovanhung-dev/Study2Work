@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
-import { describe, expect, it, vi } from 'vitest';
+import { Subject, of } from 'rxjs';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { StudentPage } from '../../shared/models/student-api.models';
 import type { StudentCourseSummary, StudentAchievement, StudentNotification } from '../../shared/models/student-api.models';
@@ -9,6 +9,8 @@ import { ST01OverviewService } from '../data-access/st01-overview.service';
 import { ST01Page } from './st01-page';
 
 describe('ST01Page', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
   it('renders only validated active-course, achievement and unread-notification data', async () => {
     const data = {
       activeCourses: vi.fn(() => of(envelope(page([course], 20, 1)))),
@@ -34,7 +36,99 @@ describe('ST01Page', () => {
     expect(data.achievements).toHaveBeenCalledOnce();
     expect(data.unreadNotifications).toHaveBeenCalledOnce();
   });
+
+  it('announces independent API errors and retries only the selected widget', async () => {
+    const courseFailure = new Subject<unknown>();
+    const achievementFailure = new Subject<unknown>();
+    const notificationFailure = new Subject<unknown>();
+    const data = {
+      activeCourses: vi
+        .fn()
+        .mockReturnValueOnce(courseFailure)
+        .mockReturnValueOnce(of(envelope(page([course], 20, 1)))),
+      achievements: vi
+        .fn()
+        .mockReturnValueOnce(achievementFailure)
+        .mockReturnValueOnce(of(envelope(page([achievement], 1, 1)))),
+      unreadNotifications: vi
+        .fn()
+        .mockReturnValueOnce(notificationFailure)
+        .mockReturnValueOnce(of(envelope(page([notification], 20, 1)))),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [ST01Page],
+      providers: [provideRouter([]), { provide: ST01OverviewService, useValue: data }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ST01Page);
+    fixture.detectChanges();
+    courseFailure.error(new Error('Course request failed.'));
+    achievementFailure.error(new Error('Achievement request failed.'));
+    notificationFailure.error(new Error('Notification request failed.'));
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const courseWidget = findWidget(root, 'overview-courses-title');
+    const achievementWidget = findWidget(root, 'overview-achievements-title');
+    const notificationWidget = findWidget(root, 'overview-notifications-title');
+
+    expectAlertAndRetry(courseWidget, 'Thử tải lại khóa học');
+    expectAlertAndRetry(achievementWidget, 'Thử tải lại thành tích');
+    expectAlertAndRetry(notificationWidget, 'Thử tải lại');
+    expect(root.querySelectorAll('[role="alert"]')).toHaveLength(3);
+
+    findButton(courseWidget, 'Thử tải lại khóa học').click();
+    fixture.detectChanges();
+
+    expect(data.activeCourses).toHaveBeenCalledTimes(2);
+    expect(data.achievements).toHaveBeenCalledOnce();
+    expect(data.unreadNotifications).toHaveBeenCalledOnce();
+    expect(courseWidget.querySelector('[role="alert"]')).toBeNull();
+    expect(courseWidget.textContent).toContain('Lập trình Web');
+    expect(achievementWidget.querySelector('[role="alert"]')).not.toBeNull();
+    expect(notificationWidget.querySelector('[role="alert"]')).not.toBeNull();
+
+    findButton(achievementWidget, 'Thử tải lại thành tích').click();
+    fixture.detectChanges();
+
+    expect(data.activeCourses).toHaveBeenCalledTimes(2);
+    expect(data.achievements).toHaveBeenCalledTimes(2);
+    expect(data.unreadNotifications).toHaveBeenCalledOnce();
+    expect(achievementWidget.querySelector('[role="alert"]')).toBeNull();
+    expect(achievementWidget.textContent).toContain('Học tập đều đặn');
+    expect(notificationWidget.querySelector('[role="alert"]')).not.toBeNull();
+
+    findButton(notificationWidget, 'Thử tải lại').click();
+    fixture.detectChanges();
+
+    expect(data.activeCourses).toHaveBeenCalledTimes(2);
+    expect(data.achievements).toHaveBeenCalledTimes(2);
+    expect(data.unreadNotifications).toHaveBeenCalledTimes(2);
+    expect(notificationWidget.querySelector('[role="alert"]')).toBeNull();
+    expect(notificationWidget.textContent).toContain('Lịch học tuần này');
+  });
 });
+
+function findWidget(root: HTMLElement, headingId: string): HTMLElement {
+  const widget = root.querySelector(`[aria-labelledby="${headingId}"]`);
+  if (!(widget instanceof HTMLElement)) throw new Error(`ST-01 widget ${headingId} is missing.`);
+  return widget;
+}
+
+function expectAlertAndRetry(widget: HTMLElement, retryLabel: string): void {
+  const alert = widget.querySelector('[role="alert"]');
+  expect(alert?.textContent?.trim()).toBeTruthy();
+  expect(findButton(widget, retryLabel)).toBeInstanceOf(HTMLButtonElement);
+}
+
+function findButton(root: HTMLElement, label: string): HTMLButtonElement {
+  const button = Array.from(root.querySelectorAll('button')).find((candidate) =>
+    candidate.textContent?.includes(label),
+  );
+  if (!(button instanceof HTMLButtonElement)) throw new Error(`ST-01 button ${label} is missing.`);
+  return button;
+}
 
 const course: StudentCourseSummary = {
   course_id: 42,

@@ -214,12 +214,16 @@ export class ME03Page implements OnInit {
       return;
     }
     const response = result.response;
+    const invalidResponseMessage = 'Study Server trả về cây nội dung không hợp lệ.';
+    if (!response?.success) {
+      this.contentError.set(response?.message || invalidResponseMessage);
+      return;
+    }
     if (
-      !response?.success ||
       response.businessCode !== 'DESIGN_RESOURCE_RETRIEVED' ||
       !isCourseContentList(response.data, id)
     ) {
-      this.contentError.set(response?.message || 'Study Server trả về cây nội dung không hợp lệ.');
+      this.contentError.set(invalidResponseMessage);
       return;
     }
     this.content.set(response.data);
@@ -234,12 +238,16 @@ export class ME03Page implements OnInit {
       return;
     }
     const response = result.response;
+    const invalidResponseMessage = 'Study Server trả về tiến độ không hợp lệ.';
+    if (!response?.success) {
+      this.progressError.set(response?.message || invalidResponseMessage);
+      return;
+    }
     if (
-      !response?.success ||
       response.businessCode !== 'DESIGN_RESOURCE_RETRIEVED' ||
       !isProgressPage(response.data)
     ) {
-      this.progressError.set(response?.message || 'Study Server trả về tiến độ không hợp lệ.');
+      this.progressError.set(invalidResponseMessage);
       return;
     }
     this.progress.set(response.data.items);

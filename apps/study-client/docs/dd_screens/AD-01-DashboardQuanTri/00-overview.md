@@ -6,7 +6,7 @@
 | Module | Admin |
 | Route | `/admin` — current Admin router maps this route to `AD01Page` inside `AdminLayout`; runtime deployment chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); current source: **IMPLEMENTATION PARTIAL** (routed unavailable-data dashboard, no #101 caller) · **Runtime:** `RUNTIME NOT VERIFIED`; API #101 and report-specific permission/date/KPI contracts remain blocked. |
+| DD status | Draft (package được chuyển đổi); current source: **IMPLEMENTATION PARTIAL** (AD-01 calls #101 and renders its source-backed count metrics; KPI/date/UI approval and report-specific permission remain blocked) · **Runtime:** `RUNTIME NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-01.md](../../screen_stitch/05_admin/AD-01_dashboard-quan-tri/AD-01.md), [AD-01_PLAN.md](../../screen_stitch/05_admin/AD-01_dashboard-quan-tri/AD-01_PLAN.md), [AD-01_markers.json](../../screen_stitch/05_admin/AD-01_dashboard-quan-tri/AD-01_markers.json), [list_screen.md](../../list_screen.md) |
@@ -31,15 +31,15 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/partial/no-data/error |
-| Current source | `admin.routes.ts`, `AdminLayout`, `AD01Page`, `AD01_API_BOUNDARY` | `/admin` is source-routed; AdminLayout gates the page on an in-memory Admin session; metrics/date controls remain unavailable because #101 is `UNWIRED` |
+| Current source | `admin.routes.ts`, `AdminLayout`, `AD01Page`, `AD01ReportService`, #101 route/module | `/admin` is source-routed; AdminLayout gates the page on an in-memory Admin session; the page calls #101 and renders validated returned count metrics for its selected date range. The DD remains blocked on whether these KPIs/presets satisfy the approved design. |
 | Runtime | Worklog/context Study Web | `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-01 source screen.png](../../screen_stitch/05_admin/AD-01_dashboard-quan-tri/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-01_dashboard-quan-tri/screen_annotated.png))
 - Luồng: GET #101 với from/to; không tự bịa KPI từ bảng nếu BE chưa trả.
-- Current source: Admin route/layout/page and three safe shortcut links are wired; #101 has no Study Server route/module/query/model/test. No report caller, date state, KPI data or audit/service-health source exists. API permission, KPI/date semantics and audit/status sources remain unresolved.
-- Priority: P1; Gate/source status: **D**; **BLOCK:** #101 source and report contract remain unavailable.
+- Current source: the route/layout/page and three safe shortcut links are wired. `AD01Page` calls #101, computes inclusive Vietnam-calendar date ranges for three presets, validates the report envelope/period/four metric keys, and renders returned counts. #101 route/module/query/model/validator/test sources exist locally. Audit/service-health data is not supplied. API DD/metric semantics, preset approval, report-specific permission, and live runtime remain unresolved.
+- Priority: P1; Gate/source status: **R / IMPLEMENTATION PARTIAL**; **BLOCK:** #101 DD and UI/KPI mapping remain pending confirmation despite local source wiring.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -47,11 +47,11 @@
 
 ## Trạng thái và ranh giới bằng chứng
 
-> Current-source note (2026-11-20): the Study Web Admin route/layout/page exists. The layout accepts an in-memory Admin session from #03 only when the profile role is `ADMIN`; AD01Page displays unavailable report/service/audit states and has no #101 caller. The API descriptor marks #101 `UNWIRED`. Any later excerpt saying the app/router/page or Admin session is absent is historical.
+> Current-source note (2026-11-27): the Study Web Admin route/layout/page and #101 caller exist locally. The layout accepts an in-memory Admin session from #03 only when the profile role is `ADMIN`; API #101 also enforces the `ADMIN` role. AD01Page currently requests and renders four source-backed record counts for an inclusive date range. The original source excerpt below predates this implementation and is historical where it says the route, caller, date controls, or API #101 source are absent. Report-specific permission and KPI/date/preset approval remain open.
 
 # AD-01 — Dashboard quản trị
 
-> **DD status:** `DD BLOCKED` for report/KPI behavior · **Implementation:** `PARTIAL` (routed unavailable-data dashboard; #101 caller absent) · **Runtime:** `RUNTIME NOT VERIFIED`
+> **DD status:** `DD BLOCKED` for report/KPI behavior · **Implementation:** `PARTIAL` (#101 caller and source exist; design mapping and authorization remain open) · **Runtime:** `RUNTIME NOT VERIFIED`
 > Screen UI DD, không phải bằng chứng API/client đã chạy. Mockup và API #101 còn các contract gap ngăn mapping KPI, ngày báo cáo, identity và status an toàn.
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -65,7 +65,7 @@
 | Actor | `Admin`. AC-38 yêu cầu Admin có quyền xem report/analytics. API catalog #101 khai báo Bearer JWT, role Admin. Report-specific permission policy chưa được xác nhận. |
 | Route đề xuất | `/admin`; inventory route, không phải route runtime đã đăng ký. |
 | Điều kiện vào | Phiên Admin hợp lệ và được phép truy cập dashboard; cần định nghĩa nguồn principal/profile. Không có Study Web router hoặc Admin profile route hiện hành. |
-| API nghiệp vụ | API #101 `GET /api/v1/admin/reports/summary`; direct contract xem dưới đây. API hiện là `DESIGN_ONLY`, không có route/module/query/model/test. |
+| API nghiệp vụ | API #101 `GET /api/v1/admin/reports/summary`; direct design contract xem dưới đây. Current local route/module/query/model/validator/test sources and a Web caller exist; API DD remains `Draft — Needs Confirmation`. |
 | Handoff | AD-02 users, AD-06 courses, AD-10 moderation là ba quick link trong HTML. Inventory cũng liên kết AD-24; AC-38 tiếp tục #102, và có thể gọi #103 export. Không có bằng chứng các route UI này đã hoạt động. |
 | Kết quả | Khi có contract và client mapping được duyệt, dashboard hiển thị report theo kỳ. Không có side effect được xác nhận; #101 được mô tả là read-only trong API DD. |
 
@@ -86,11 +86,11 @@ API #101 DD hiện `Draft — Needs Confirmation`. Bốn metric `user_records_cr
 
 | Chủ đề | Expected behavior | Current evidence |
 |---|---|---|
-| Dashboard load | Admin mở `/admin`, chọn kỳ và nhận #101 summary theo AC-38. | Current `/admin` route renders AD01Page inside AdminLayout after an in-memory Admin login session; no #101 caller exists and report data remains unavailable. |
-| KPI | Inventory muốn tổng quan học viên/khóa/tác động/KPI. API #101 chỉ có generic `metrics[]`. | Bốn card chỉ hiện `--`; không có map/API response. KPI names/formulas không xác định. |
-| Khoảng ngày | Inventory yêu cầu #101 với `from`/`to`. | Ba button Hôm nay/7 ngày/30 ngày disabled; không có query/default mapping. |
+| Dashboard load | Admin mở `/admin`, chọn kỳ và nhận #101 summary theo AC-38. | Current `/admin` route renders AD01Page inside AdminLayout after an in-memory Admin login session; the page calls #101 on load and after period/refresh actions. Live API/DB is unverified. |
+| KPI | Inventory muốn tổng quan học viên/khóa/tác động/KPI. API #101 currently returns four created-record counts. | The page validates and renders the #101 user/course/enrollment/discussion counts. They do not establish the screenshot's learner-impact/activity KPIs; metric mapping remains unapproved. |
+| Khoảng ngày | Inventory yêu cầu #101 với `from`/`to`. | Three active presets compute inclusive calendar dates in `Asia/Ho_Chi_Minh` and send both bounds. The API also defaults omitted bounds to an inclusive trailing 30-day range; preset/default approval remains open. |
 | Admin identity | Trang là Admin portal. | AdminLayout displays `full_name`/`role` from the validated #03 login response held in `AdminSessionService`; no separate `/admin/me` endpoint exists. |
-| Admin authorization | AC-38 yêu cầu quyền report; API #101 khai báo role Admin. | AdminLayout verifies the `ADMIN` role for the shell; no #101 route or report-specific permission rule exists to validate access to report data. |
+| Admin authorization | AC-38 yêu cầu quyền report; API #101 khai báo role Admin. | AdminLayout verifies the `ADMIN` role for the shell and #101 applies the shared `ADMIN` role guard. A separate report/analytics permission rule is not established. |
 | Audit và health | Mockup hiển thị activity, security, DB/auth/queue status và các claim tuân thủ. | Không thuộc `Report` #101; trạng thái trong HTML là static. `/health/ready` chỉ báo dependency configured, không probe database. Không có route Admin audit list gắn với dashboard được tìm thấy. |
 
 ### Asset và design evidence

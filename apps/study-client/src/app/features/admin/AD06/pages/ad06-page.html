@@ -51,7 +51,7 @@
     <div class="filter-footer">
       <div class="filter-status">
         <p id="filters-heading"><strong>Bộ lọc chưa được bật</strong><span>Status và mentor cần giá trị được duyệt; category hiện trả lỗi 422.</span></p>
-        <p class="filter-summary" aria-label="Tiêu chí lọc đang áp dụng">
+        <p class="filter-summary">
           <span>Tiêu chí lọc đang áp dụng:</span>
           <strong>Không có bộ lọc nào được gửi cùng yêu cầu API #73.</strong>
         </p>
@@ -118,11 +118,11 @@
         }
       </p>
       @if (!snapshotMismatch() && !isOutOfRange) {
-        <div class="pagination-controls" aria-label="Phân trang khóa học">
+        <nav class="pagination-controls" aria-label="Phân trang khóa học">
           <button type="button" [disabled]="previousDisabled" (click)="changePage((viewState().pagination?.page ?? 1) - 1)"><study-icon name="chevron" /> Trang trước</button>
           <span aria-live="polite">{{ pageCount }}</span>
           <button type="button" [disabled]="nextDisabled" (click)="changePage((viewState().pagination?.page ?? 0) + 1)">Trang sau <study-icon name="chevron" /></button>
-        </div>
+        </nav>
       }
     </div>
   </section>

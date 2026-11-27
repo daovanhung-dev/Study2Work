@@ -19,7 +19,7 @@
 ## Current implementation (2026-11-21)
 - The route and page are present. ME-04 calls #46 with `page=1,size=100`, uploads selected files through #34 as `purpose=LECTURE`, submits the returned IDs and Markdown `content:string` to #47, then opens ME-05 using the returned lecture ID. #46 performs separate COUNT and LIST queries; the client validates each page field and derived `total_pages` without requiring the separately read count to be at least the returned item count. The content textarea has accessible Markdown insertion actions for emphasis, headings, lists, quotes and code; they modify the same string submitted to #47. The supported form uses a two-column desktop layout and stacks at tablet/mobile widths.
 - API #34/#47 enforce direct course ownership. #47 returns `PUBLISHED` immediately and stores content unchanged. Assigned-course access, upload cleanup, modules, preview/autosave and other mockup fields remain unsupported.
-- Client response/error checks are source-backed. No test/build/browser verification was run in the active task; live API/storage is unverified.
+- Latest local verification (2026-11-27): five routed ME-04 tests pass, and the full Study Web suite passes 105 spec files / 380 tests. The latest production build passes with a 474.39 kB initial bundle and 18 component-style warnings; the production source was unchanged by this test-only slice. Browser acceptance, live API/database and storage remain unverified.
 - Route deactivation is blocked during #34/#47 writes so a pending mutation cannot silently lose its result when leaving ME-04.
 - A second #47 submit event is ignored while a create request is already in flight; the button state remains the primary UI guard and no idempotency behavior is inferred.
 

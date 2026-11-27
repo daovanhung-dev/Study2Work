@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Điểm/trạng thái chấm và feedback nếu được trả; không lộ đáp án ngoài policy.
-- Current implementation — 2026-11-20: #32 enforces owner-scoped reads; the client validates the returned attempt and renders pending status or a GRADED score. It does not claim pass/fail because the current response model omits `passed`, and it does not show answer details or feedback that the API does not return.
+- Current implementation — 2026-11-27: #32 enforces owner-scoped reads and returns its computed `passed` value only for `GRADED`. The client validates the returned attempt, renders pending status or a GRADED score, but does not render `passed`, answer details, or feedback while disclosure policy remains open.
 - Gate/status: DD BLOCKED; full score/pass/feedback disclosure and the screenshot's detailed result design remain unresolved. Runtime is not verified; legacy BIGINT and V1-PILOT UUID attempt schemas differ.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 

@@ -1,0 +1,90 @@
+<aside class="profile-edit-aside" aria-label="Trạng thái ảnh đại diện và bảo vệ dữ liệu">
+  <section class="profile-edit-card profile-edit-avatar-card">
+    <div
+      class="profile-edit-avatar"
+      role="img"
+      [attr.aria-label]="avatarPreviewUrl ? 'Ảnh đại diện đã chọn' : 'Chưa có ảnh đại diện'"
+    >
+      @if (avatarPreviewUrl) {
+        <img [src]="avatarPreviewUrl" alt="" />
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M5 20c.6-3.4 3.1-5.2 7-5.2s6.4 1.8 7 5.2" />
+        </svg>
+      }
+    </div>
+    <h2>Tài khoản Sinh viên</h2>
+    <p class="profile-edit-caption">
+      @if (profileLoading) {
+        Đang tải hồ sơ…
+      } @else if (profile; as student) {
+        {{ student.full_name }}
+      } @else {
+        Chưa có dữ liệu hồ sơ.
+      }
+    </p>
+
+    <div class="profile-edit-asset-note">
+      <div class="profile-edit-note-heading">
+        <strong>Ảnh đại diện</strong>
+        <span>Ảnh đại diện</span>
+      </div>
+      <p>
+        Chọn ảnh PNG, JPEG hoặc WebP tối đa 5 MiB. Tải ảnh lên, sau đó lưu hồ sơ để áp dụng.
+      </p>
+    </div>
+
+    <input
+      #avatarFileInput
+      class="profile-edit-file-input"
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+      aria-label="Chọn ảnh đại diện"
+      (change)="avatarFileSelected.emit($event)"
+    />
+    <button
+      class="profile-edit-button profile-edit-upload"
+      type="button"
+      [disabled]="profileLoading || saving || refreshingAfterSave || savedAwaitingRefresh || !profile || avatarUploadState === 'reading' || avatarUploadState === 'uploading'"
+      (click)="avatarFileInput.click()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 16V4m0 0L8 8m4-4 4 4M5 14v5h14v-5" />
+      </svg>
+      Chọn ảnh
+    </button>
+    @if (avatarUploadState === 'ready') {
+      <button
+        class="profile-edit-button profile-edit-upload"
+        type="button"
+        [disabled]="saving || refreshingAfterSave || savedAwaitingRefresh"
+        (click)="uploadRequested.emit()"
+      >
+        Tải ảnh lên
+      </button>
+    } @else if (avatarUploadState === 'reading' || avatarUploadState === 'uploading') {
+      <p class="profile-edit-profile-state" role="status">
+        {{ avatarUploadState === 'reading' ? 'Đang đọc ảnh…' : 'Đang tải ảnh lên…' }}
+      </p>
+    } @else if (avatarUploadState === 'uploaded') {
+      <p class="profile-edit-profile-state" role="status">Ảnh đã tải lên. Lưu hồ sơ để áp dụng.</p>
+    }
+    @if (avatarError) {
+      <p class="profile-edit-warning" role="alert">{{ avatarError }}</p>
+    }
+  </section>
+
+  <section class="profile-edit-card profile-edit-safe-note">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3 19 6v5c0 4.7-3 7.8-7 10-4-2.2-7-5.3-7-10V6l7-3Z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+      Quyền riêng tư
+    </h2>
+    <p>
+      Hồ sơ được tải theo tài khoản đang đăng nhập. Mật khẩu và thông tin đăng nhập không hiển thị tại đây.
+    </p>
+  </section>
+</aside>

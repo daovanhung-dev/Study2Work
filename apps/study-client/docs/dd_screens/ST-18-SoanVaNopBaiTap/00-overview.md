@@ -8,7 +8,7 @@
 | Actor/role | Student Bearer; #34 and #35 validate Student role |
 | DD status | Eligibility/duplicate-recovery/visual gaps open; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED. #33–#35 and client callers exist. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-20 |
+| Version / last updated | 0.2 / 2026-11-27 |
 | Nguồn đối chiếu | [ST-18.md](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/ST-18.md), [ST-18_PLAN.md](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/ST-18_PLAN.md), [ST-18_markers.json](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/ST-18_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -16,12 +16,12 @@
 - In-scope: GET #33 → POST #34 cho từng file khi cần → thu asset reference → POST #35 → nhận submission_id. Tách trạng thái upload thành công khỏi submission thành công; F06 chưa chốt giữ draft/nội dung qua lỗi.
 - Out-of-scope: Không áp dụng giới hạn file không có trong API; live runtime chưa xác minh.
 
-### Current implementation — 2026-11-20
+### Current implementation — 2026-11-27
 
 - ST-18 loads assignment #33 reactively, validates its response, and supports retry. It permits text and at most one uploaded asset: #34 receives `file`, `purpose=SUBMISSION`, and `course_id`; #35 receives `content` and `upload_id`.
 - #34 checks ACTIVE enrollment when `course_id` is supplied; ST-18 supplies it. #35 checks Student, assignment existence, ACTIVE enrollment, deadline and ownership/course/purpose of the selected upload, then creates a new `SUBMITTED` row and returns `data.id`. The client requires `DESIGN_RESOURCE_CREATED`, matching assignment ID and `SUBMITTED` status before navigating to ST-19 using that ID. It suppresses repeat after an ambiguous outcome or accepted submission; after a page reload the ambiguity/idempotency state cannot be recovered. #34 confirmation also requires `DESIGN_RESOURCE_CREATED` and `UPLOADED` status.
 - Upload and submission are separate. The form locks fields while submitting and retains a successful upload if #35 returns a definitive error. It does not expose the upload URL.
-- #33 itself does not enforce assignment ownership/enrollment/status. #34 accepts any size/MIME in application source and returns a public-base URL. The DD's many-file/checklist/loaded screen content and visual alignment remain incomplete. Runtime/tests were not verified.
+- #33 itself does not enforce assignment ownership/enrollment/status. #34 accepts any size/MIME in application source and returns a public-base URL. The DD's many-file/checklist/loaded screen content and visual alignment remain incomplete. Six routed page tests cover ambiguous outcomes, distinct upload/submission feedback, and operation-stage copy; three service tests verify the current #33–#35 request mappings. The full Study Web suite passes 98 spec files / 348 tests. These are local mock/source checks; deployed runtime, database, and object storage remain unverified.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -50,14 +50,15 @@
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 - 2026-11-20 — Ghi nhận luồng #33/#34/#35 hiện hành, route/response validation, ambiguity guard và các policy gaps.
+- 2026-11-27 — Reconciled current-source notes with the routed page/service tests (6 page cases, 3 request-mapping cases); expected DD/API decisions and deployed-runtime gates remain open.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # ST-18 — Soạn và nộp bài tập
 
-> Các đoạn “hiện trạng/current behavior” bên dưới được giữ từ source DD cũ để truy vết; trạng thái source hiện tại là phần **Current implementation — 2026-11-20** ở trên.
+> Các đoạn source-DD bên dưới được giữ để truy vết thiết kế và quyết định lúc tạo tài liệu; trạng thái source hiện tại là phần **Current implementation — 2026-11-27** ở trên. Các ghi chú “current behavior” trong trích đoạn lịch sử không mô tả runtime/source hiện tại.
 
-> **Trạng thái nguồn hiện tại:** DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED. API #33/#34/#35 và Study Client callers exist; access and idempotency gaps remain.
+> **Trạng thái nguồn hiện tại:** DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED. API #33/#34/#35 và Study Client callers exist; access and idempotency gaps remain. Six routed page tests and three service mapping tests pass locally; deployed behavior remains unverified.
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -79,29 +80,29 @@
 ### A.2. Điều kiện vào, dữ liệu và rời màn hình
 
 - ST-17 có thể chuyển assignmentId qua route path. Inventory ST-18 yêu cầu GET #33, trong khi AC-17 đã GET #33 ở bước đọc đề bài trước đó; source không quy định cache, refetch hoặc owner của request. Đây là DISCREPANCY; DD không tự chọn.
-- API #33 catalog: GET /api/v1/assignments/{assignment_id}, Student Bearer, chỉ path assignment_id:int64; response ApiEnvelope<Assignment> với id, course_id, title, description?, due_at?, max_score; status 200/401/403/404/500. Không có Student route/module/test hiện hành; DD Draft — Needs Confirmation.
+- API #33 catalog: GET /api/v1/assignments/{assignment_id}, Student Bearer, chỉ path assignment_id:int64; response ApiEnvelope<Assignment> với id, course_id, title, description?, due_at?, max_score; status 200/401/403/404/500. Ghi chú route/module/test bị thiếu trong source-DD snapshot đã lỗi thời: Study Client hiện gọi #33 và Study Server route/source được ghi trong crosswalk; deployed runtime chưa xác minh.
 - AC-17 tiền điều kiện là Student được phép nộp và assignment còn hạn. Nhánh quá hạn/không quyền ghi 403/409; #33 catalog không có 409. Access predicate, boundary/timezone, rule trả qua #33 và #35 enforcement còn mở.
 - API #34 catalog/source hiện hành: POST /api/v1/uploads, Bearer, multipart file + purpose + optional course_id; Student dùng purpose=SUBMISSION. Response 201 ApiEnvelope<UploadAsset> gồm id, name, url, content_type, size_bytes, status. API #34 hiện nhận file nào cũng được về bytes/MIME; không có application size cap. Student course_id là optional; chỉ khi có thì route kiểm tra enrollment ACTIVE. Vì vậy text “Tối đa 50MB” và định dạng PDF/DOCX/ZIP/PNG/WEBP trong ảnh là design claim, chưa phải giới hạn server.
-- API #34 lưu object lên S3-compatible storage theo key UUID phía server, sau đó insert uploads metadata và commit. URL trả về ghép từ configured public base URL. Lỗi storage trả 503; lỗi DB rollback + best-effort delete object rồi trả 500. Test source tồn tại nhưng không chạy trong phiên này; migration, live DB, credentials, URL reachability và production behavior chưa xác minh.
-- API #35 catalog: POST /api/v1/assignments/{assignment_id}/submissions; Student Bearer; body bắt buộc text:string và file refs:string; response 201 ApiEnvelope<Submission>; errors 401/403/404/409/422/500. Catalog không chỉ rõ media type hay wire key của file refs. API DD chỉ là Draft — Needs Confirmation; route/module/test không tồn tại trong source hiện tại.
+- API #34 lưu object lên S3-compatible storage theo key UUID phía server, sau đó insert uploads metadata và commit. URL trả về ghép từ configured public base URL. Lỗi storage trả 503; lỗi DB rollback + best-effort delete object rồi trả 500. Server test source tồn tại; deployed migration, DB, credentials, URL reachability và production behavior chưa xác minh.
+- API #35 catalog: POST /api/v1/assignments/{assignment_id}/submissions; Student Bearer; body mô tả text:string và file refs:string; response 201 ApiEnvelope<Submission>; errors 401/403/404/409/422/500. Catalog không chỉ rõ media type hay wire key của file refs. Route/module và ST-18 caller hiện tồn tại; client gửi `content`/`upload_id` theo source. Contract/idempotency còn mở và chưa tìm thấy focused server test cho #35.
 - API #35 logical response dự thảo có data.id, assignment_id, user_id, content?, files:UploadAsset[], status, submitted_at, score?, feedback?. Inventory gọi ID trả về là submission_id, tạo discrepancy với data.id; assignment_submissions.file_url trong DDL chỉ có một URL và không có association table submission-upload được thấy, khác với logical files[].
-- Screenshot hiện tại là loaded form Student. code.html là Guest/unavailable fallback, dùng hash link `#/student/assignments/detail` thay cho route thiết kế có `assignmentId`; không có form, API request hay screen-specific interaction logic. File HTML vẫn có script cấu hình Tailwind và tải Tailwind/Google Fonts từ xa. Tên, URL, số điểm/checklist, timestamps, progress và files trên PNG đều là nội dung sample.
-- Study Web hiện có docs/assets và ignored `dist/index.html` chỉ có route `/`; editable source/package/Student route không có. PNG 826px cho thấy layout hai cột dày; HTML dùng max-width 1440px và remote fonts/CDN, khác target Study Web (max-width khoảng 1120px, không remote font, controls tối thiểu 44px và reflow dưới 768px). Đây là design discrepancy; chưa có runtime hành vi ST-18 được xác minh.
+- Screenshot/code.html là design-era assets; code.html mô tả Guest/unavailable fallback, không phải current Study Client implementation. Tên, URL, số điểm/checklist, timestamps, progress và files trên PNG đều là dữ liệu mẫu.
+- Study Client hiện có ST-18 route/page/service và caller #33–#35; live browser/runtime chưa xác minh. Asset 826px với layout hai cột và HTML dùng max-width 1440px/remote fonts là design evidence cần đối chiếu với responsive Study Web rules; chúng không chứng minh UI hiện hành.
 
 ### A.3. Expected behavior và current behavior
 
 **Expected behavior:** ST-18 nhận Assignment context, cho Student nhập nội dung/chọn file, gọi #34 cho từng file cần upload, rồi #35 để tạo submission. Upload thành công không đồng nghĩa submission đã thành công. Sau response thành công, luồng chuyển tới ST-19 và GET #36 theo submission ID trong inventory. AC-17 đặt GET #36 sau #35 trước node “Đã nộp”, trong khi inventory gán #36 cho ST-19; owner cần chốt screen/call boundary. F06 không chốt việc giữ nội dung/draft khi lỗi; retention là câu hỏi mở.
 
-**Current behavior:** Chỉ API #34 có route/module/provider hiện hành. API #33, #35 và #36 Student routes/modules/tests không có. Study Web ST-18 route không có. screen.png mô phỏng loaded state; code.html chỉ hiển thị fallback. Không có submission nào được tạo bởi các asset này.
+**Current behavior:** Study Client route `/student/assignments/:assignmentId/submit` gọi #33 khi mở màn hình, #34 với `file`/`purpose=SUBMISSION`/`course_id` khi có tệp, rồi #35 với `content`/`upload_id`. Page kiểm tra business code, response ID/status, khóa request sau kết quả mơ hồ trong page instance, và chỉ điều hướng sau response xác nhận; không gọi #36 trực tiếp. ST-19 sở hữu #36. Page/service specs cover these current mappings and feedback states. Client tests use mocks; server source is local evidence, while DB, S3, and deployed runtime still need production verification. API #33 eligibility, #34 size/MIME limits, #35 idempotency/recovery and DD loaded-form fidelity remain open.
 
 ### A.4. API contract, source và giới hạn
 
 | API | Contract/source hiện có | Giới hạn |
 |---|---|---|
-| #33 GET assignment | Catalog 200/401/403/404/500; Student Bearer; response Assignment có id, course_id, title, description?, due_at?, max_score. | Catalog/DD only; access/deadline/submission-rule/nullability/serialization/path errors open; route/module/test NOT_FOUND. |
-| #34 POST upload | Route/module/provider/source tests exist; Student purpose SUBMISSION; optional course_id; 201 UploadAsset; source errors 401/403/422/503/500. | No app size/MIME restrictions; optional course_id skips enrollment check when absent; public-base URL; test/live provider/schema not verified. |
-| #35 POST submission | Catalog 201 ApiEnvelope<Submission>; body text and file refs strings; errors 401/403/404/409/422/500. | DD-only; wire key, encoding, access/deadline, insert/update, idempotency and storage mapping open; route/module/test NOT_FOUND. |
-| #36 GET receipt | AC-17/catalog successor for submission detail; inventory assigns it to ST-19. | Current Student route/module/test NOT_FOUND; do not call silently from ST-18. |
+| #33 GET assignment | Catalog 200/401/403/404/500; Student Bearer; ST-18 caller maps `assignment_id`. | Client route/caller and Study Server source exist; current query does not establish enrollment/assignment eligibility. Client mapping has focused coverage; deployed access behavior is unverified. |
+| #34 POST upload | Student caller sends `file`, `purpose=SUBMISSION`, and `course_id`; server route/provider/source tests exist. | No app size/MIME restrictions; optional `course_id` skips enrollment when absent; public-base URL. Client multipart mapping is covered locally; live provider/schema/runtime unverified. |
+| #35 POST submission | Current client route maps `assignment_id` and sends `content`/`upload_id`; server route/module exists. | Catalog still describes `text`/file refs, so wire-key discrepancy is open. Server eligibility/deadline behavior exists, but idempotency/recovery and focused #35 server tests remain unresolved. Client mapping is covered locally. |
+| #36 GET receipt | ST-19 owns the current #36 caller; AC-17 still lists it before the “submitted” state. | ST-18 does not call #36. Resolve the expected handoff boundary; do not add a duplicate call silently. |
 
 ### A.5. Bảo mật và dữ liệu
 

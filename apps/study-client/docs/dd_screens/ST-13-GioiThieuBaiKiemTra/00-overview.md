@@ -8,7 +8,7 @@
 | Actor/role | Student; page dùng Student Bearer service; API #28/#29 xác thực role |
 | DD status | Draft/ownership and eligibility unresolved; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-20 |
+| Version / last updated | 0.3 / 2026-11-27 |
 | Nguồn đối chiếu | [ST-13.md](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13.md), [ST-13_PLAN.md](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_PLAN.md), [ST-13_markers.json](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -16,12 +16,12 @@
 - In-scope: GET #28 theo thiết kế; ST-13 row kỳ vọng POST #29 sau explicit Start, nhưng F05/ST-14 row/DD mâu thuẫn về screen owner và GET/POST order; ST-14 path còn yêu cầu `attemptId` trước entry nếu #29 được dời sang đó. Owner phải chốt một call-site/entry route, không gọi lặp.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
 
-### Current implementation — 2026-11-20
+### Current implementation — 2026-11-27
 
 - ST-13 has a Study Client route/page. It follows `quizId` changes, cancels stale #28 reads, validates `DESIGN_RESOURCE_RETRIEVED`, quiz payload and ID, and offers retry.
-- The explicit Start button calls #29. The page accepts only `DESIGN_RESOURCE_CREATED`, an `IN_PROGRESS` attempt with a valid ID and matching `quiz_id`; it routes to that attempt and retains a continuation link if navigation fails.
+- The explicit Start button calls #29. The page accepts only `DESIGN_RESOURCE_CREATED`, an `IN_PROGRESS` attempt with a valid ID and matching `quiz_id`; it routes to that attempt and retains a continuation link if navigation fails. It locks Start for the current quiz after a status-0, 409, 5xx, or unreadable/mismatched create result to avoid a blind duplicate request; this is in-memory only and does not recover after reload.
 - Current API #28 authenticates Student but returns any existing quiz without enrollment/status eligibility checks. #29 authenticates Student, verifies the quiz exists and prevents a second `IN_PROGRESS` attempt; it does not check course enrollment or quiz publication/open state. The call-site/order discrepancy in the original DD is not an approved resolution.
-- Current page and source Stitch are not fully aligned; eligibility/history/attempt-limit/proctoring UI is not backed by these APIs. Tests/browser/runtime were not run or verified. The source-DD excerpts below remain the expected design snapshot.
+- Current page and source Stitch are not fully aligned; eligibility/history/attempt-limit/proctoring UI is not backed by these APIs. Local routed page and service specs cover #28/#29 mapping, valid handoff, and ambiguous-create lockout; the Study Web suite passes 93 spec files / 333 tests and the production build succeeds. These checks use local source/mocks: browser, live API/database, and deployment runtime are not verified. The source-DD excerpts below remain the expected design snapshot.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -50,6 +50,7 @@
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 - 2026-11-20 — Ghi nhận #28/#29 client wiring, route-reactive read, exact response validation/recovery, và eligibility/API owner gaps hiện còn mở.
+- 2026-11-27 — Added local #28/#29 page/service regressions and an in-memory fail-closed guard for ambiguous attempt creation; call-site ownership, eligibility, durable idempotency/recovery, and runtime verification remain open.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -67,11 +68,11 @@
 | Screen ID / tên | `ST-13` — Giới thiệu bài kiểm tra (Page) |
 | Mục tiêu | Cho Student xem thông tin quiz được phép hiển thị, kiểm tra điều kiện trước khi bắt đầu, xác nhận bắt đầu và chuyển sang ST-14 khi tạo attempt thành công. |
 | Actor / quyền | Student. API catalog #28/#29 yêu cầu Bearer JWT, role `Student`; AC-16 yêu cầu Student có quyền làm quiz và quiz đang mở. Predicate, claim và nơi kiểm tra cuối cùng chưa được chốt. |
-| Route thiết kế | `/student/quizzes/:quizId`, theo [screen inventory](../../list_screen.md). Chưa có Study Web route/source để xác minh. |
+| Route thiết kế | `/student/quizzes/:quizId`, theo [screen inventory](../../list_screen.md). Current Study Client source and verification are recorded in the implementation section above. |
 | Input route | `quizId` ánh xạ tới API `quiz_id:int64!`; min/max, positivity và lỗi path parse chưa được quy định. Không tự tạo mã lỗi client/server. |
 | Màn hình trước | Inventory/F05 liên kết tới ST-13 từ luồng học/quiz, nhưng không có hợp đồng hiện tại truyền lesson/course context đủ để xác định breadcrumb. |
 | Màn hình sau | ST-14 — Làm bài kiểm tra, route thiết kế `/student/quizzes/:quizId/attempts/:attemptId`; cần `quizId` và `attemptId` hợp lệ. Screen owner/order của POST #29 còn mâu thuẫn giữa ST-13, F05 và ST-14; nếu #29 thuộc ST-14 thì entry route cần có `attemptId` trước khi attempt được tạo, nhưng chưa có route/handoff contract giải quyết điểm này. |
-| API thiết kế | GET #28 theo inventory; ST-13 row đặt POST #29 sau thao tác Start, nhưng F05/ST-14 đặt call-site/order khác. API #28/#29 đều chưa có Student route/module/test hiện hành; chờ owner chốt call-site trước implementation. |
+| API thiết kế | GET #28 theo inventory; ST-13 row đặt POST #29 sau thao tác Start, nhưng F05/ST-14 đặt call-site/order khác. Đây vẫn là discrepancy thiết kế chưa được owner chốt; caller và test hiện hành được ghi trong phần implementation phía trên. |
 | Tài sản | [PNG nguyên trạng](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen.png), [HTML](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/code.html), [PNG đánh số](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png), [marker map](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json), [SVG overlay](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers_overlay.svg), [kế hoạch](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_PLAN.md). |
 | Kết quả tải vào/ra | Tải: không có payload màn hình trước được đặc tả ngoài `quizId`. Ra ST-14: cần `quizId` và `attemptId` từ kết quả POST #29; không truyền đáp án hoặc tự sinh attempt ID. |
 

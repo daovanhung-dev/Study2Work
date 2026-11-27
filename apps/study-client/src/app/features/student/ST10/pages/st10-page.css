@@ -1,32 +1,32 @@
-study-st10-page .lesson-entitlement { display: grid; max-width: 1120px; gap: 16px; margin: auto; }
-study-st10-page .lesson-entitlement__layout { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(270px, .9fr); align-items: start; gap: 18px; }
-study-st10-page .lesson-entitlement__heading { display: flex; align-items: center; gap: 12px; margin-bottom: 17px; }
-study-st10-page .lesson-entitlement__heading-icon,
-study-st10-page .lesson-entitlement__protected-icon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 12px; color: var(--ocean-primary); background: var(--ocean-soft); font-size: 22px; }
-study-st10-page .lesson-entitlement__heading p { margin: 0 0 4px; color: var(--ocean-primary); font-size: 9px; font-weight: 800; letter-spacing: .07em; }
-study-st10-page .lesson-entitlement__badge { margin-left: auto; padding: 6px 9px; border-radius: 999px; color: var(--warning); background: color-mix(in srgb, var(--warning) 12%, var(--surface)); font-size: 9px; font-weight: 800; white-space: nowrap; }
-study-st10-page .lesson-entitlement__badge--ready,
-study-st10-page .lesson-entitlement__lesson-status { color: var(--ocean-deep); background: var(--ocean-soft); }
-study-st10-page .lesson-entitlement__check { padding: 15px; border-radius: 10px; background: color-mix(in srgb, var(--ocean-soft) 72%, var(--surface)); }
-study-st10-page .lesson-entitlement__check-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-study-st10-page .lesson-entitlement__check-title span { color: var(--ocean-primary); font-size: 9px; font-weight: 800; }
-study-st10-page .lesson-entitlement__track { height: 8px; overflow: hidden; margin: 11px 0; border-radius: 999px; background: color-mix(in srgb, var(--ocean-primary) 20%, var(--surface)); }
-study-st10-page .lesson-entitlement__track span { display: block; height: 100%; background: var(--ocean-primary); transition: width 180ms ease; }
-study-st10-page .lesson-entitlement__protected { display: flex; min-height: 225px; align-items: center; flex-direction: column; justify-content: center; gap: 9px; margin-top: 15px; border-radius: 10px; text-align: center; }
-study-st10-page .lesson-entitlement__protected h2 { margin: 0; font-size: 18px; }
-study-st10-page .lesson-entitlement__protected p { max-width: 62ch; margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
-study-st10-page .lesson-entitlement__eyebrow { color: var(--ocean-primary) !important; font-size: 9px !important; font-weight: 800; letter-spacing: .06em; }
-study-st10-page .lesson-entitlement__lesson-status { padding: 5px 9px; border-radius: 999px; font-size: 9px; font-weight: 800; }
-study-st10-page .lesson-entitlement__failure { margin-top: 15px; }
-study-st10-page .lesson-entitlement__actions { margin-top: 15px; }
-study-st10-page .lesson-entitlement__actions > span { width: 100%; color: var(--text-muted); font-size: 10px; }
-study-st10-page .lesson-entitlement__side { display: grid; gap: 13px; }
-study-st10-page .lesson-entitlement__panel ol { display: grid; gap: 8px; margin: 13px 0 0; padding: 0; list-style: none; }
-study-st10-page .lesson-entitlement__panel li { display: flex; gap: 9px; padding: 9px; border-radius: 8px; background: color-mix(in srgb, var(--ocean-soft) 72%, var(--surface)); }
-study-st10-page .lesson-entitlement__panel li > span { display: grid; width: 22px; height: 22px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: var(--ocean-primary); background: var(--surface); font-size: 9px; font-weight: 800; }
-study-st10-page .lesson-entitlement__panel li div { display: grid; gap: 3px; }
-study-st10-page .lesson-entitlement__panel li strong { font-size: 10px; }
-study-st10-page .lesson-entitlement__panel li small,
-study-st10-page .lesson-entitlement__api small { color: var(--text-muted); font-size: 9px; line-height: 1.45; }
-@media (max-width: 850px) { study-st10-page .lesson-entitlement__layout { grid-template-columns: 1fr; } }
-@media (max-width: 600px) { study-st10-page .lesson-entitlement__heading { align-items: flex-start; flex-wrap: wrap; } study-st10-page .lesson-entitlement__badge { margin-left: 0; } study-st10-page .lesson-entitlement__actions { align-items: stretch; flex-direction: column; } study-st10-page .lesson-entitlement__actions a, study-st10-page .lesson-entitlement__actions button { width: 100%; } }
+:host .lesson-entitlement { display: grid; max-width: 1120px; gap: 16px; margin: auto; }
+:host .lesson-entitlement__layout { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(270px, .9fr); align-items: start; gap: 18px; }
+:host .lesson-entitlement__heading { display: flex; align-items: center; gap: 12px; margin-bottom: 17px; }
+:host .lesson-entitlement__heading-icon,
+:host .lesson-entitlement__protected-icon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 12px; color: var(--ocean-primary); background: var(--ocean-soft); font-size: 22px; }
+:host .lesson-entitlement__heading p { margin: 0 0 4px; color: var(--ocean-primary); font-size: 9px; font-weight: 800; letter-spacing: .07em; }
+:host .lesson-entitlement__badge { margin-left: auto; padding: 6px 9px; border-radius: 999px; color: var(--warning); background: color-mix(in srgb, var(--warning) 12%, var(--surface)); font-size: 9px; font-weight: 800; white-space: nowrap; }
+:host .lesson-entitlement__badge--ready,
+:host .lesson-entitlement__lesson-status { color: var(--ocean-deep); background: var(--ocean-soft); }
+:host .lesson-entitlement__check { padding: 15px; border-radius: 10px; background: color-mix(in srgb, var(--ocean-soft) 72%, var(--surface)); }
+:host .lesson-entitlement__check-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+:host .lesson-entitlement__check-title span { color: var(--ocean-primary); font-size: 9px; font-weight: 800; }
+:host .lesson-entitlement__track { height: 8px; overflow: hidden; margin: 11px 0; border-radius: 999px; background: color-mix(in srgb, var(--ocean-primary) 20%, var(--surface)); }
+:host .lesson-entitlement__track span { display: block; height: 100%; background: var(--ocean-primary); transition: width 180ms ease; }
+:host .lesson-entitlement__protected { display: flex; min-height: 225px; align-items: center; flex-direction: column; justify-content: center; gap: 9px; margin-top: 15px; border-radius: 10px; text-align: center; }
+:host .lesson-entitlement__protected h2 { margin: 0; font-size: 18px; }
+:host .lesson-entitlement__protected p { max-width: 62ch; margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+:host .lesson-entitlement__eyebrow { color: var(--ocean-primary) !important; font-size: 9px !important; font-weight: 800; letter-spacing: .06em; }
+:host .lesson-entitlement__lesson-status { padding: 5px 9px; border-radius: 999px; font-size: 9px; font-weight: 800; }
+:host .lesson-entitlement__failure { margin-top: 15px; }
+:host .lesson-entitlement__actions { margin-top: 15px; }
+:host .lesson-entitlement__actions > span { width: 100%; color: var(--text-muted); font-size: 10px; }
+:host .lesson-entitlement__side { display: grid; gap: 13px; }
+:host .lesson-entitlement__panel ol { display: grid; gap: 8px; margin: 13px 0 0; padding: 0; list-style: none; }
+:host .lesson-entitlement__panel li { display: flex; gap: 9px; padding: 9px; border-radius: 8px; background: color-mix(in srgb, var(--ocean-soft) 72%, var(--surface)); }
+:host .lesson-entitlement__panel li > span { display: grid; width: 22px; height: 22px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: var(--ocean-primary); background: var(--surface); font-size: 9px; font-weight: 800; }
+:host .lesson-entitlement__panel li div { display: grid; gap: 3px; }
+:host .lesson-entitlement__panel li strong { font-size: 10px; }
+:host .lesson-entitlement__panel li small,
+:host .lesson-entitlement__api small { color: var(--text-muted); font-size: 9px; line-height: 1.45; }
+@media (max-width: 850px) { :host .lesson-entitlement__layout { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { :host .lesson-entitlement__heading { align-items: flex-start; flex-wrap: wrap; } :host .lesson-entitlement__badge { margin-left: 0; } :host .lesson-entitlement__actions { align-items: stretch; flex-direction: column; } :host .lesson-entitlement__actions a, :host .lesson-entitlement__actions button { width: 100%; } }

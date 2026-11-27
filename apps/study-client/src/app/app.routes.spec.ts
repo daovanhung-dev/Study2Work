@@ -12,7 +12,19 @@ import { routes } from './app.routes';
 import { AdminSessionService } from './core/auth/admin-session.service';
 import type { ApiEnvelope } from './core/http/api-envelope';
 import { AD01Page } from './features/admin/AD01/pages/ad01-page';
+import { GS01Page } from './features/guest/GS01/pages/gs01-page';
+import { GS02Page } from './features/guest/GS02/pages/gs02-page';
+import { GS03Page } from './features/guest/GS03/pages/gs03-page';
+import { GS07Page } from './features/guest/GS07/pages/gs07-page';
+import { guestResourceRoutes, guestRoutes } from './features/guest/guest.route';
 import { SH01Page } from './features/shared/SH01/pages/sh01-page';
+import { SH02Page } from './features/shared/SH02/pages/sh02-page';
+import { SH03Page } from './features/shared/SH03/pages/sh03-page';
+import { SH04Page } from './features/shared/SH04/pages/sh04-page';
+import { SH05Page } from './features/shared/SH05/pages/sh05-page';
+import { SH06Page } from './features/shared/SH06/pages/sh06-page';
+import { SH07Page } from './features/shared/SH07/pages/sh07-page';
+import { sharedRoutes } from './features/shared/shared.route';
 import { AdminLayout } from './layouts/admin/admin-layout';
 import { GuestLayout } from './layouts/guest/guest-layout';
 import { SharedLayout } from './layouts/shared/shared-layout';
@@ -29,6 +41,48 @@ describe('Study app routes', () => {
   });
 
   afterEach(() => http.verify());
+
+  it('maps all route-backed Shared and Guest screens to their current page components', () => {
+    const sharedChildren = sharedRoutes.find(
+      (route) => route.component === SharedLayout,
+    )?.children ?? [];
+    const sharedScreens = [
+      { path: 'forbidden', page: SH05Page },
+      { path: 'not-found', page: SH06Page },
+      { path: 'operations/:operationId', page: SH07Page },
+      { path: '', page: SH01Page },
+      { path: 'login', page: SH02Page },
+      { path: 'register/verification', page: SH04Page },
+      { path: 'register', page: SH03Page },
+    ];
+    expect(sharedChildren).toHaveLength(sharedScreens.length);
+    for (const screen of sharedScreens) {
+      const matches = sharedChildren.filter((route) => route.path === screen.path);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]?.component).toBe(screen.page);
+    }
+
+    const guestChildren = guestRoutes.find(
+      (route) => route.component === GuestLayout,
+    )?.children ?? [];
+    const guestScreens = [
+      { path: 'search', page: GS02Page },
+      { path: ':courseId', page: GS03Page },
+      { path: '', page: GS01Page },
+    ];
+    expect(guestChildren).toHaveLength(guestScreens.length);
+    for (const screen of guestScreens) {
+      const matches = guestChildren.filter((route) => route.path === screen.path);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]?.component).toBe(screen.page);
+    }
+
+    const resourceChildren = guestResourceRoutes.find(
+      (route) => route.component === GuestLayout,
+    )?.children ?? [];
+    expect(resourceChildren).toHaveLength(1);
+    expect(resourceChildren[0]?.component).toBe(GS07Page);
+  });
 
   it('routes unknown URLs to SH-06 without carrying the original path or query', async () => {
     const harness = await RouterTestingHarness.create();
@@ -73,32 +127,33 @@ describe('Study app routes', () => {
     harness.fixture.detectChanges();
   });
 
-  it('routes a direct GS-07 URL to the gate notice without exposing its ID or calling API #12', async () => {
+  it('routes an invalid GS-07 resource ID to a safe not-found state without calling API #12', async () => {
     const harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/resources/private-id-9001', GuestLayout);
 
     const routedRoot = harness.routeNativeElement as HTMLElement;
     expect(routedRoot.querySelector('[data-screen-id="GS07"]')).not.toBeNull();
-    expect(routedRoot.querySelector('[role="status"]')?.textContent).toContain(
-      'Chưa thể mở tài nguyên này',
+    expect(routedRoot.querySelector('[role="alert"]')?.textContent).toContain(
+      'Không tìm thấy tài liệu',
     );
     expect(routedRoot.textContent).not.toContain('private-id-9001');
     expect(routedRoot.textContent).not.toContain('Khung ứng dụng đã sẵn sàng');
-    expect(routedRoot.querySelector('main a, main button')).toBeNull();
+    expect(routedRoot.querySelector('.resource-crumbs a[href="/courses"]')).not.toBeNull();
     http.expectNone((request) => request.url.startsWith('/api/v1/resources/'));
   });
 
-  it('routes a direct SH-07 URL to the unavailable notice without exposing its path segment or calling API #18', async () => {
+  it('rejects an invalid SH-07 operation ID without calling API #18', async () => {
     const harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/operations/preview-only', SharedLayout);
 
     const routedRoot = harness.routeNativeElement as HTMLElement;
     expect(routedRoot.querySelector('[data-screen-id="SH-07"]')).not.toBeNull();
-    expect(routedRoot.querySelector('study-sh07-availability-notice')).not.toBeNull();
-    expect(routedRoot.querySelector('h1')?.textContent).toContain('Theo dõi tác vụ bất đồng bộ');
-    expect(routedRoot.textContent).toContain('Chưa thể hiển thị trạng thái tác vụ');
+    expect(routedRoot.querySelector('h1')?.textContent).toContain('Theo dõi tác vụ');
+    expect(routedRoot.querySelector('[role="alert"]')?.textContent).toContain(
+      'Mã tác vụ không hợp lệ hoặc không còn khả dụng.',
+    );
     expect(routedRoot.textContent).not.toContain('preview-only');
     http.expectNone((request) => request.url.startsWith('/api/v1/operations/'));
   });
@@ -172,14 +227,14 @@ describe('Study app routes', () => {
     expect(routedRoot.textContent).not.toContain('Khung ứng dụng đã sẵn sàng');
   });
 
-  it('renders the public SH-02 presentation at /login without calling auth APIs', async () => {
+  it('renders the SH-02 login form at /login without an initial API call', async () => {
     const harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/login', SharedLayout);
 
     expect(harness.routeNativeElement?.querySelector('study-sh02-page')).not.toBeNull();
     expect(harness.routeNativeElement?.querySelector('button[type="submit"]')?.hasAttribute('disabled'))
-      .toBe(true);
+      .toBe(false);
     http.expectNone('/api/v1/auth/login');
     http.expectNone('/api/v1/auth/refresh');
     http.expectNone('/api/v1/users/me');
@@ -199,7 +254,7 @@ describe('Study app routes', () => {
     http.expectNone('/api/v1/auth/verify-email/send');
   });
 
-  it('lets a registered user open SH-04 without passing personal data or calling API #02', async () => {
+  it('sends SH-03 registration to API #01 and explicitly requests SH-04 dispatch through API #02', async () => {
     const harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/register', SharedLayout);
@@ -227,17 +282,37 @@ describe('Study app routes', () => {
     }, { status: 201, statusText: 'Created' });
     harness.fixture.detectChanges();
 
-    expect((harness.routeNativeElement as HTMLElement)
-      .querySelector('a[href="/register/verification"]')).not.toBeNull();
-    await clickLink(harness, '/register/verification');
+    const registrationRoot = harness.routeNativeElement as HTMLElement;
+    expect(registrationRoot.querySelector('button.verification-continue')?.textContent)
+      .toContain('Tiếp tục yêu cầu xác minh email');
+    expect(registrationRoot.textContent).toContain('chưa xác nhận email đã được gửi');
+    http.expectNone('/api/v1/auth/verify-email/send');
+
+    registrationRoot.querySelector<HTMLButtonElement>('button.verification-continue')!.click();
+    await harness.fixture.whenStable();
+    harness.fixture.detectChanges();
 
     const verificationRoot = harness.routeNativeElement as HTMLElement;
     expect(TestBed.inject(Location).path()).toBe('/register/verification');
     expect(verificationRoot.querySelector('[data-screen-id="SH-04"]')).not.toBeNull();
-    expect(verificationRoot.textContent).toContain('Chưa thể xác minh email');
+    expect(verificationRoot.textContent).toContain('Chưa gửi yêu cầu');
     expect(TestBed.inject(Location).path()).not.toContain('1001');
     expect(TestBed.inject(Location).path()).not.toContain('student@example.com');
-    http.expectNone('/api/v1/auth/verify-email/send');
+
+    verificationRoot.querySelector<HTMLButtonElement>('button.verification-action')!.click();
+    const dispatch = http.expectOne('/api/v1/auth/verify-email/send');
+    expect(dispatch.request.method).toBe('POST');
+    expect(dispatch.request.body).toEqual({ user_id: 1001, email: 'student@example.com' });
+    expect(dispatch.request.headers.has('Authorization')).toBe(false);
+    dispatch.flush({
+      ...successEnvelope({ status: 'accepted' }),
+      businessCode: 'DESIGN_OPERATION_ACCEPTED',
+    }, { status: 202, statusText: 'Accepted' });
+    harness.fixture.detectChanges();
+
+    expect(verificationRoot.textContent).toContain('đã được API #02 chấp nhận');
+    expect(verificationRoot.textContent).toContain('Email chưa được gửi thật');
+    expect(verificationRoot.textContent).toContain('địa chỉ chưa được xác minh');
   });
 
   it('renders AD-01 at /admin without the root scaffold', async () => {
@@ -245,6 +320,19 @@ describe('Study app routes', () => {
     const harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/admin', AdminLayout);
+    await harness.fixture.whenStable();
+
+    const summary = http.expectOne((request) => request.url === '/api/v1/admin/reports/summary');
+    expect(summary.request.method).toBe('GET');
+    expect(summary.request.headers.get('Authorization')).toBe('Bearer test-access-token');
+    expect(summary.request.params.get('from')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(summary.request.params.get('to')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    summary.flush({ message: 'report service unavailable' }, {
+      status: 503,
+      statusText: 'Unavailable',
+    });
+    await harness.fixture.whenStable();
+    harness.fixture.detectChanges();
 
     const routedText = harness.routeNativeElement?.textContent ?? '';
     expect(routedText).toContain('Bảng điều khiển quản trị hệ thống');
@@ -266,7 +354,7 @@ describe('Study app routes', () => {
     harness.fixture.detectChanges();
 
     const routedRoot = harness.routeNativeElement as HTMLElement;
-    expect(routedRoot.querySelector('h1')?.textContent).toContain('Danh sách người dùng');
+    expect(routedRoot.querySelector('h1')?.textContent).toContain('Quản lý tài khoản người dùng');
     expect(routedRoot.querySelector('a[routerLink="/admin/users"]')?.getAttribute('aria-current')).toBe(
       'page',
     );
@@ -274,7 +362,7 @@ describe('Study app routes', () => {
     expect(routedRoot.querySelectorAll('tbody .user-record')).toHaveLength(0);
   });
 
-  it('keeps the selected user ID through the AD-02 to AD-05 route links', async () => {
+  it('opens the selected AD-03 profile and keeps AD-04/AD-05 actions gated', async () => {
     await signInAdmin();
     const harness = await RouterTestingHarness.create();
 
@@ -304,29 +392,15 @@ describe('Study app routes', () => {
     expect(screen(harness, 'AD02').textContent).toContain('User Name');
     await clickLink(harness, '/admin/users/77');
     await flushUserProfile(harness);
-    expect(screen(harness, 'AD03').textContent).toContain('Hồ sơ chi tiết tài khoản');
-
-    await clickLink(harness, '/admin/users/77/edit');
-    await flushUserProfile(harness);
-    const editScreen = screen(harness, 'AD04');
-    expect(editScreen.textContent).toContain('User ID từ đường dẫn: 77');
-    const saveButton = [...editScreen.querySelectorAll<HTMLButtonElement>('button')]
-      .find((button) => button.textContent?.includes('Lưu thay đổi'));
-    expect(saveButton?.disabled).toBe(true);
-    expectNoUserMutations();
-
-    await clickLink(harness, '/admin/users/77');
-    await flushUserProfile(harness);
-    expect(screen(harness, 'AD03').textContent).toContain('Hồ sơ chi tiết tài khoản');
-
-    await clickLink(harness, '/admin/users/77/actions');
-    await flushUserProfile(harness);
-    const actionsScreen = screen(harness, 'AD05');
-    expect(actionsScreen.textContent).toContain('User ID từ đường dẫn: 77');
-    const actionButtons = [...actionsScreen.querySelectorAll<HTMLButtonElement>('button')];
-    expect(actionButtons).toHaveLength(3);
-    expect(actionButtons.every((button) => button.disabled)).toBe(true);
-    expect(actionsScreen.querySelector<HTMLTextAreaElement>('textarea')?.disabled).toBe(true);
+    const profileScreen = screen(harness, 'AD03');
+    expect(profileScreen.textContent).toContain('Hồ sơ chi tiết tài khoản');
+    expect(profileScreen.textContent).toContain('Mã định danh người dùng');
+    const editAction = [...profileScreen.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.includes('Chỉnh sửa thông tin'));
+    const statusAction = [...profileScreen.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.includes('Khóa hoặc thay đổi trạng thái'));
+    expect(editAction?.disabled).toBe(true);
+    expect(statusAction?.disabled).toBe(true);
     expectNoUserMutations();
   });
 

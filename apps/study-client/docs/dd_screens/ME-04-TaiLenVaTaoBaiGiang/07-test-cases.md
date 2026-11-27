@@ -2,7 +2,7 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
-Current source now includes the route, page and API callers. Tests/build/browser were not run in the active task; the historical planning references below are not verification results.
+Current source includes the route, page and API callers. The separate planning reference below is not a test result. Current local verification (2026-11-27): the routed ME-04 spec passes 5/5 and the full Study Web suite passes 105 spec files / 380 tests. These client HTTP mocks do not establish browser, live API, database or storage behavior.
 
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |

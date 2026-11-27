@@ -73,7 +73,7 @@
                   <strong>{{ asset.name }}</strong>
                   <span class="mentor-meta">{{ asset.content_type }} · {{ asset.size_bytes }} bytes</span>
                 </div>
-                <span class="mentor-status" [attr.aria-label]="'Trạng thái tệp: ' + asset.status">{{ asset.status }}</span>
+                <span class="mentor-status" role="status" [attr.aria-label]="'Trạng thái tệp: ' + asset.status">{{ asset.status }}</span>
               </li>
             }
           </ul>

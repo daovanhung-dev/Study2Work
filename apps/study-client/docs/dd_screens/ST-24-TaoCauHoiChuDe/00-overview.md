@@ -103,7 +103,7 @@
 | Authentication / role | Bearer JWT; Student | Current route uses Student authentication and derives actor identity from the session; no `user_id` is accepted from the form/body. |
 | Path / query | Không có | Không thêm path/query field. |
 | Request body | `course_id:int64!`, `title:string!`, `content:int64!` | Không có `lesson_id`, `tags`, files hoặc author field trong body. Title/content UI chưa thể map đầy đủ. |
-| Success | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Page<Discussion>>` | Current source returns one created discussion with page metadata; the client validates returned ID/course/title/content before refresh. Focused tests and deployed runtime were not run/verified. |
+| Success | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Page<Discussion>>` | Current source returns one created discussion with page metadata; the client validates returned ID/course/title/content before refresh. Focused #20/#40/#39 client request-mapping tests cover local wiring; deployed runtime is unverified. |
 | Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 422 `DESIGN_VALIDATION_ERROR`; 500 `DESIGN_INTERNAL_ERROR` | Không thêm 404/409/503 hoặc business code mới. Network/timeout là transport failure, không phải catalog code. |
 | Side effect | Catalog/AC mong muốn tạo topic | Current #40 source inserts the discussion after validation; physical `title` column, live DB and deployed runtime remain unverified. |
 
@@ -114,12 +114,12 @@
 | Vấn đề | Evidence | Tác động |
 |---|---|---|
 | PNG và HTML khác state | PNG có form mẫu; HTML là unavailable fallback. | Giữ cả hai nguyên trạng; không tuyên bố HTML đang thực hiện form. |
-| Không có nút submit/save/cancel trong ảnh | Ảnh kết thúc ở vùng editor; inventory yêu cầu tạo/lưu. | Create event là expected nhưng không có trigger/control visual; CTA cần bổ sung/duyệt trước implementation. |
+| Không có nút submit/save/cancel trong ảnh | Ảnh kết thúc ở vùng editor; inventory yêu cầu tạo/lưu. | Current Angular form adds a create CTA and calls #40/#39; this differs from the design assets and remains a product/DD approval gate. |
 | Body editor không map sang catalog | Editor text; catalog yêu cầu `content:int64`. | Không thể xây request hoặc serialize text đúng contract hiện hành. |
 | Thiếu title source và response mapping | DDL không có `title`; author/comments/page/status còn Draft. | Không thể xác định response binding sau create. |
-| Course/module option source | Screenshot có course và lesson mẫu; API #40 chỉ nhận `course_id`, không có endpoint/options contract cho selectors trong ST-24. | Không giả định API lấy enrolled courses, lesson source hoặc gửi `lesson_id`. |
+| Course/module option source | Screenshot có course và lesson mẫu; current Angular page loads ACTIVE enrolled courses through #20 for the course selector. API #40 accepts only `course_id`; no lesson selector/source is implemented. | The current course picker is source-wired; lesson options and screenshot sample values remain unsupported. |
 | Tags, GFM, attachments, counter và mẫu SLA | Chỉ xuất hiện trên PNG; API #40 không có tags/files, không định nghĩa editor/parser, title max hoặc SLA/mentor data. | Không tự tạo API, validation limit, sanitization/upload flow hoặc business claim. |
-| Study Web và Student API runtime | Editable source/route và API #40 route/module/tests không có. | Không có client/server behavior, auth, persistence hay runtime result để xác minh. |
+| Study Web và Student API runtime | Current Angular route/page calls #20/#40/#39; current Study Server route/module/query sources exist for #39/#40. | Local source/tests do not verify deployed UI/API/auth/database persistence; runtime remains unverified. |
 
 **Bảo mật:** actor dự kiến là Student đã xác thực; user identity, nếu được triển khai, phải đến từ authenticated principal chứ không từ input. Course authorization phải theo policy đã duyệt; hiện chưa có predicate. Không coi static profile/semester/online/SLA literals là principal, enrollment hoặc service status thật. Không show server/network error như `created` hay empty state.
 

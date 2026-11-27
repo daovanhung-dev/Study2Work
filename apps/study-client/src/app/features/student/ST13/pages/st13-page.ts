@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -49,6 +50,7 @@ export class ST13Page implements OnInit {
   readonly quiz = signal<StudentQuiz | null>(null);
   readonly createdAttemptQuizId = signal<string | null>(null);
   readonly createdAttemptId = signal<string | null>(null);
+  readonly startBlockedQuizId = signal<string | null>(null);
 
   ngOnInit(): void {
     const quizId$ = this.route.paramMap.pipe(
@@ -83,7 +85,8 @@ export class ST13Page implements OnInit {
       !quizId ||
       this.starting() ||
       !this.quiz() ||
-      this.createdAttemptQuizId() === quizId
+      this.createdAttemptQuizId() === quizId ||
+      this.startBlockedQuizId() === quizId
     ) {
       return;
     }
@@ -94,28 +97,24 @@ export class ST13Page implements OnInit {
     this.data.start(quizId).subscribe({
       next: (response) => {
         if (!response.success) {
-          this.startError.set('Chưa thể bắt đầu bài kiểm tra. Vui lòng thử lại.');
-          this.starting.set(false);
+          this.blockStart(quizId);
           return;
         }
         if (response.businessCode !== 'DESIGN_RESOURCE_CREATED') {
-          this.startError.set('Chưa thể xác nhận lượt làm. Vui lòng thử lại.');
-          this.starting.set(false);
+          this.blockStart(quizId);
           return;
         }
         if (
           !isStudentQuizAttempt(response.data) ||
           toSafeStudyId(response.data.quiz_id) !== quizId
         ) {
-          this.startError.set('Thông tin lượt làm chưa hợp lệ. Vui lòng thử lại.');
-          this.starting.set(false);
+          this.blockStart(quizId);
           return;
         }
 
         const attemptId = toSafeStudyId(response.data.id);
         if (!attemptId) {
-          this.startError.set('Không thể mở lượt làm này. Vui lòng thử lại.');
-          this.starting.set(false);
+          this.blockStart(quizId);
           return;
         }
 
@@ -139,6 +138,13 @@ export class ST13Page implements OnInit {
           });
       },
       error: (error: unknown) => {
+        if (
+          error instanceof HttpErrorResponse &&
+          (error.status === 0 || error.status === 409 || error.status >= 500)
+        ) {
+          this.blockStart(quizId);
+          return;
+        }
         this.startError.set(
           studentApiErrorMessage(error),
         );
@@ -153,6 +159,14 @@ export class ST13Page implements OnInit {
       map((response) => ({ quizId, response, error: null })),
       catchError((error: unknown) => of({ quizId, response: null, error })),
     );
+  }
+
+  private blockStart(quizId: string): void {
+    this.startBlockedQuizId.set(quizId);
+    this.startError.set(
+      'Không xác định được lượt làm nào để tiếp tục. Nút bắt đầu đã khóa để tránh tạo lượt trùng.',
+    );
+    this.starting.set(false);
   }
 
   private applyQuizResult(result: QuizResult): void {

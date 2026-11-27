@@ -1,9 +1,9 @@
-study-st07-page {
+:host {
   display: block;
   min-height: 100vh;
 }
 
-study-st07-page .enrollment-result__crumbs {
+:host .enrollment-result__crumbs {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -13,23 +13,23 @@ study-st07-page .enrollment-result__crumbs {
   font-size: 13px;
 }
 
-study-st07-page .enrollment-result__crumbs a {
+:host .enrollment-result__crumbs a {
   color: inherit;
   text-decoration: none;
 }
 
-study-st07-page .enrollment-result__crumbs [aria-current='page'] {
+:host .enrollment-result__crumbs [aria-current='page'] {
   color: var(--text-primary);
   font-weight: 650;
 }
 
-study-st07-page .enrollment-result h1 {
+:host .enrollment-result h1 {
   margin: 0 0 28px;
   font-size: clamp(30px, 4vw, 40px);
   letter-spacing: -0.035em;
 }
 
-study-st07-page .enrollment-result__card {
+:host .enrollment-result__card {
   display: flex;
   width: min(100%, 672px);
   min-height: 390px;
@@ -45,7 +45,7 @@ study-st07-page .enrollment-result__card {
   text-align: center;
 }
 
-study-st07-page .enrollment-result__icon {
+:host .enrollment-result__icon {
   display: grid;
   width: 80px;
   height: 80px;
@@ -56,7 +56,7 @@ study-st07-page .enrollment-result__icon {
   background: var(--ocean-soft);
 }
 
-study-st07-page .enrollment-result__icon svg {
+:host .enrollment-result__icon svg {
   width: 44px;
   height: 44px;
   stroke: currentColor;
@@ -65,13 +65,13 @@ study-st07-page .enrollment-result__icon svg {
   stroke-width: 3;
 }
 
-study-st07-page .enrollment-result__card h2 {
+:host .enrollment-result__card h2 {
   margin: 0 0 12px;
   font-size: clamp(22px, 3vw, 32px);
   letter-spacing: -0.025em;
 }
 
-study-st07-page .enrollment-result__card p {
+:host .enrollment-result__card p {
   max-width: 60ch;
   margin: 0 0 28px;
   color: var(--text-muted);
@@ -79,7 +79,7 @@ study-st07-page .enrollment-result__card p {
   line-height: 1.6;
 }
 
-study-st07-page .enrollment-result__card a {
+:host .enrollment-result__card a {
   display: inline-flex;
   min-height: 48px;
   align-items: center;
@@ -91,22 +91,22 @@ study-st07-page .enrollment-result__card a {
   text-decoration: none;
 }
 
-study-st07-page a:focus-visible {
+:host a:focus-visible {
   outline: 3px solid var(--ocean-primary);
   outline-offset: 3px;
 }
 
 @media (max-width: 600px) {
-  study-st07-page .enrollment-result__card {
+  :host .enrollment-result__card {
     min-height: 420px;
     padding: 26px 20px;
   }
 
-  study-st07-page .enrollment-result__icon {
+  :host .enrollment-result__icon {
     margin-bottom: 32px;
   }
 
-  study-st07-page .enrollment-result__card p {
+  :host .enrollment-result__card p {
     font-size: 15px;
   }
 }

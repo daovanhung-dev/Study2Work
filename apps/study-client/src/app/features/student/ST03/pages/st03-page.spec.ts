@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -44,6 +44,7 @@ describe('ST03Page', () => {
   });
 
   it('saves the supported profile fields and refreshes the profile', async () => {
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ST03Page);
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;

@@ -89,9 +89,9 @@
 
 **Expected behavior theo inventory/AC:** Student mở `/student/assignments/:assignmentId`, đọc #33, và server quyết định access/deadline; khi được phép thì tiếp tục flow AC-17. UI không dùng đồng hồ phía client làm nguồn quyền nộp duy nhất.
 
-**Current behavior theo assets/source:** `screen.png` là loaded Student mockup có trạng thái Open, tiến độ/điểm, deadline, rubric, tệp đính kèm, checklist, mentor, SLA, lịch sử và CTA. `code.html` lại là Guest header với trạng thái “Thông tin bài tập hiện chưa sẵn sàng” và link `/student/courses`; HTML không có dữ liệu route, API call, form hoặc submission behavior. Các giá trị/claims trong PNG là mẫu thiết kế cho tới khi có nguồn dữ liệu được duyệt.
+**Current behavior theo source:** `screen.png` là loaded Student mockup có trạng thái Open, tiến độ/điểm, deadline, rubric, tệp đính kèm, checklist, mentor, SLA, lịch sử và CTA; các giá trị/claims đó vẫn là mẫu thiết kế. Angular route hiện gọi #33, hiển thị title và description tùy chọn, cùng loading/error/retry states. Due date, max score, course identity và CTA ST-18 đang ẩn vì format/nullability và eligibility policy chưa được duyệt. `code.html` vẫn là companion prototype cũ, không phải runtime source.
 
-Study Web hiện không có editable app source, package manifest hay Student router. Current Study Server source không có Student API #33 route/module/test. Vì vậy không thể coi PNG, HTML hoặc API DD là bằng chứng runtime.
+Current Study Server source không có Student API #33 route/module/test. Frontend caller và local UI source không chứng minh deployed API, database, authenticated browser hoặc production runtime.
 
 **Design-system discrepancy:** the 667px PNG remains a dense two-column loaded mockup with tightly packed header navigation and small copy; the companion HTML loads Plus Jakarta Sans and Material Symbols from Google Fonts plus Tailwind from a CDN and uses a 1440px content maximum. The Study Web target `.agents/web-study/design.md` calls for no remote font import, a content width around 1120px, reflow below 768px, and 44px minimum controls. The mockup/HTML are not aligned with that target and neither proves current implementation. Preserve both files and resolve the canonical state/layout before frontend work.
 

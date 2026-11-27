@@ -1,5 +1,7 @@
 # ME-03 — Events (đặc tả xử lý)
 
+> **Current source reconciliation — 2026-11-27:** the current Study Web route is registered under `MentorLayout` and calls #46 for the course title plus #49/#65 for the two workspace panels. It cancels superseded course reads, validates route IDs and response projections, and fails closed on access denial. Five routed HTTP-backed tests pass. Event details below preserve the original design-time snapshot; route-absent, unwired-refresh and mockup behavior statements there are historical. Runtime and the unresolved ME03-B01–B09 decisions remain unverified/open.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

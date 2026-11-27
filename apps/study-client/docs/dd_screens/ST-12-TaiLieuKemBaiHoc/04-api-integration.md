@@ -2,18 +2,22 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-20
+## Current caller status — 2026-11-27
 
 ST-12 calls #26 with Student Bearer, follows `lessonId` route changes, cancels
 stale reads, validates `DESIGN_RESOURCE_RETRIEVED`, response shape and matching
 lesson ID, then displays the returned resource list or empty state. Selecting
 a row passes `resourceId` and lesson return context to GS-07; GS-07 owns #12
-and applies its public/private URL policy. #26 checks Student, ACTIVE
-enrollment, and a PUBLISHED lesson/course; it returns resource metadata with
-no URL. Current API #47 writes `lesson_uploads`, while #26 reads `resources`,
-and no `resources` writer is present in checked-in server source. Runtime is
-not verified. The detailed source excerpt below preserves the original design
-snapshot.
+and applies its current PUBLIC/PRIVATE behavior. #26 checks Student, ACTIVE
+enrollment, and a PUBLISHED lesson/course; it returns ordered `resources[]`
+with `url=null`, while the catalog still declares `Lesson`. Five routed ST-12
+tests and one service mapping test pass; the full Study Web suite passes 95
+spec files/339 tests. The focused #26 server suite has ten passing tests. The
+Guest #07–#12 suite has 90 passing tests. These are local
+source/mock or fake-DB checks, not live API/database evidence. API #47 writes
+`lesson_uploads`, while #26 reads `resources`, and no `resources` writer is
+present in checked-in server source. Runtime is not verified. The detailed
+source excerpt below preserves the original design snapshot.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -25,7 +29,7 @@ snapshot.
 
 - API refs trong inventory: #26, #12
 - Orchestration/data notes: current ST-12 calls #26; selected resource IDs hand off to GS-07, where #12 is called. ST-12 does not open the list item's URL.
-- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #26 caller and route are present but the source-table producer is unresolved; API DD/cardinality and canonical schema remain open; the prototype's loaded-list design does not match the current page; live DB/runtime unverified.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #26 caller and route are present but the source-table producer is unresolved; API DD/cardinality and canonical schema remain open; the prototype's loaded-list design does not match the current page; #12 catalog/source auth and URL behavior also differ; live DB/runtime unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: I. Nguồn truy vết
@@ -34,7 +38,7 @@ snapshot.
 - API catalog: [`list_api.md`](../../../../../docs/lists/list_api.md) — #12, #26 và `Resource` schema.
 - AC-15: [`AC API index`](../../../../study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md), [`Student Learning diagram`](../../../../study-server/docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio).
 - API #26: [cover](../../../../study-server/docs/dd/26_lessons_resources/00_Cover.md), [open questions](../../../../study-server/docs/dd/26_lessons_resources/OPEN_QUESTIONS.md).
-- API #12: [current route](../../../../study-server/app/api/v1.py), [view](../../../../study-server/app/modules/guest/api_12_resources_detail/view.py), [query](../../../../study-server/app/modules/guest/api_12_resources_detail/query.py), [tests — read, not run](../../../../study-server/tests/modules/guest/api_12_resources_detail/test_resources_detail.py), [API DD](../../../../study-server/docs/dd/12_resources_detail/00_Cover.md).
+- API #12: [current route](../../../../study-server/app/api/v1.py), [view](../../../../study-server/app/modules/guest/api_12_resources_detail/view.py), [query](../../../../study-server/app/modules/guest/api_12_resources_detail/query.py), [tests — local source suite passes, deployed runtime unverified](../../../../study-server/tests/modules/guest/api_12_resources_detail/test_resources_detail.py), [API DD](../../../../study-server/docs/dd/12_resources_detail/00_Cover.md).
 - Candidate DB: [`DB.sql`](../../../../../infra/postgres/study-server/DB.sql) — không phải live-schema evidence.
 - Linked screens: [`ST-11`](../../screen_stitch/03_student/ST-11_trinh-hoc-bai-lesson-player/ST-11.md), [`GS-07`](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/GS-07.md).
 - Study Web target/status: [design guide](../../../../../.agents/web-study/design.md), [Study Web index](../../../../../.agents/web-work/study/INDEX.md).

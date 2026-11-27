@@ -39,9 +39,9 @@ source.
 
 | Thuộc tính | Theo catalog / DD hiện có | Trạng thái source |
 |---|---|---|
-| Method / path | `GET /api/v1/discussions` | API #39 chưa có route/module/query/test hiện hành; `DECLARED_NOT_RUNNABLE / NOT_FOUND`. |
-| Auth | `Authorization: Bearer <Student JWT>`; Student role | Catalog/AC-19 design; chưa có route #39 áp dụng shared Student guard. |
-| Query | `course_id?:int64`, `page?:int32`, `sort?:string`; không `size` | Field names catalog; defaults/semantics/parse/range chưa duyệt. |
+| Method / path | `GET /api/v1/discussions` | Current-source recheck (2026-11-27): Study Server registers `GET /discussions` and delegates to `get_discussions`; handler, validator, and query source exist. No focused API #39 server test or deployed runtime was verified. |
+| Auth | `Authorization: Bearer <Student JWT>`; Student role | Current `validate_discussion_list` calls `validate_current_user_request(..., role="STUDENT")`; this is local source evidence, not deployed authorization evidence. |
+| Query | `course_id?:int64`, `page?:int32`, `sort?:string`; không `size` | Current route accepts and forwards `course_id`, `page`, and `sort`; the handler validates `course_id`/`page`, defaults omitted page to 1, and uses a fixed size of 20. The current handler does not apply `sort`; the client sends only page and optional `course_id`. These facts describe local source, not an approved sort design. |
 | Body/path | Không có request body/path parameter | Catalog. |
 | Success | HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Page<Discussion>>` | Design contract; chưa runtime-verified. |
 | Discussion projection | `id:int64`, `course_id:int64`, `title:string`, `content:string`, `author:UserSummary`, `status:DiscussionStatus`, `comments:DiscussionComment[]` | Logical schema catalog. `title` không có cột trong checked-in DDL; `course_id` nullable trong DDL nhưng required trong schema; status values chưa chốt. |

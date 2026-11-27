@@ -1,8 +1,9 @@
 # ME-03 — API Integration
 
-## Current source reconciliation — 2026-11-21
+## Current source reconciliation — 2026-11-27
 
 - API #65's current `ProgressStudentSummary` includes optional `avatar_url`; its query reads `users.avatar_url` for each eligible ACTIVE Student. ME-03 now validates that field is absent, null, or a string and renders only HTTPS or same-origin HTTP avatars with `no-referrer` and an initials fallback. This display does not resolve the catalog `Page<Course>` versus local `Page<MentorStudentProgress>` discrepancy or approve the local progress formula.
+- For #49/#65, `success:false` envelopes keep their server message. Successful envelopes with a wrong business code or invalid projection now show screen-specific validation errors rather than displaying the success message as an error. Five routed HTTP-backed client tests cover the authenticated #46/#49/#65 flow, route guard, access-denial fail-closed behavior, and both response outcomes; local mocks do not verify live APIs or DB state.
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 

@@ -42,7 +42,7 @@
             <div class="me02-course-media">
               @if (thumbnailUrl(course); as thumbnail) {
                 @if (thumbnailFailed(thumbnail)) {
-                  <div class="me02-thumbnail-fallback" aria-label="Ảnh khóa học không khả dụng">Ảnh khóa học không khả dụng</div>
+                  <div class="me02-thumbnail-fallback" role="img" aria-label="Ảnh khóa học không khả dụng">Ảnh khóa học không khả dụng</div>
                 } @else {
                   <img
                     [src]="thumbnail"
@@ -53,7 +53,7 @@
                   />
                 }
               } @else {
-                <div class="me02-thumbnail-fallback" aria-label="Khóa học chưa có ảnh xem trước">Chưa có ảnh xem trước</div>
+                <div class="me02-thumbnail-fallback" role="img" aria-label="Khóa học chưa có ảnh xem trước">Chưa có ảnh xem trước</div>
               }
               <span
                 class="me02-course-status"

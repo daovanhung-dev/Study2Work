@@ -9,8 +9,10 @@ validates the exact success code/ID/payload and offers retry. #36 derives
 `user_id` from the authenticated Student and filters the query by both owner
 and submission ID; missing or foreign rows return 404. The query returns
 score/feedback only for `GRADED` and maps the legacy single `file_url` to a
-zero-or-one files array. The page does not open the returned URL and hides
-score/feedback unless status is `GRADED`. Runtime and tests were not verified.
+zero-or-one files array. The page withholds timestamp, score, feedback and file
+metadata while the DD's timezone, disclosure and asset-mapping decisions remain
+open; it renders only the returned status and optional submitted text. Runtime
+and tests remain unverified.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -20,7 +22,7 @@ score/feedback unless status is `GRADED`. Runtime and tests were not verified.
 ## 2. Contract / source detail
 
 - API refs trong inventory: #36
-- Orchestration/data notes: ST-18 passes returned `data.id` as `submissionId`; GET #36 returns only the authenticated Student's matching submission. Display score/feedback only when returned status is `GRADED`; never open file URLs here.
+- Orchestration/data notes: ST-18 passes returned `data.id` as `submissionId`; GET #36 returns only the authenticated Student's matching submission. The current UI renders only returned status and optional submitted text while score/feedback disclosure, timestamp formatting and file projection remain unresolved; never open file URLs here.
 - BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #36 route/view/query/model and caller exist; query is owner-scoped and returns a single mapped file at most; score/feedback are projected only for GRADED. `data.id`/inventory `submission_id`, status/timezone/live-schema semantics and file URL access remain open; loaded-design fields (rubric, mentor/cohort/skill/next assignment) have no API data contract; PNG/HTML states and visual target differ.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 

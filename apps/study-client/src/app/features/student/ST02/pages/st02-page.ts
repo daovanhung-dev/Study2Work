@@ -12,6 +12,7 @@ import { isSafeHttpUrl, isStudentProfile } from '../../shared/models/student-pro
 @Component({
   imports: [RouterLink, RouterLinkActive],
   selector: 'study-st02-page',
+  styleUrl: './st02-page.css',
   templateUrl: './st02-page.html',
 })
 export class ST02Page implements OnInit {

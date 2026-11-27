@@ -88,6 +88,7 @@
             <select
               id="quiz-course"
               name="course"
+              required
               [value]="selectedCourse()?.id ?? ''"
               [disabled]="isDraftLocked || courseState().status !== 'loaded'"
               (change)="updateCourse($event)">
@@ -126,13 +127,13 @@
                       <p class="inline-note">Đã ẩn khóa học có ID vượt khả năng biểu diễn chính xác của trình duyệt.</p>
                     }
                     @if (courses.totalPages > 1) {
-                      <div class="course-pagination" aria-label="Phân trang khóa học">
+                      <nav class="course-pagination" aria-label="Phân trang khóa học">
                         <span>Trang {{ courses.page }} / {{ courses.totalPages }}</span>
                         <div>
                           <button type="button" (click)="changeCoursePage(courses.page - 1)" [disabled]="courses.page <= 1">Trước</button>
                           <button type="button" (click)="changeCoursePage(courses.page + 1)" [disabled]="courses.page >= courses.totalPages">Sau</button>
                         </div>
-                      </div>
+                      </nav>
                     }
                   }
                 }
@@ -232,7 +233,7 @@
                     <option value="TRUE_FALSE">Đúng / Sai</option>
                   </select>
                 </label>
-                <div class="choice-list" [attr.aria-label]="'Các lựa chọn của câu hỏi ' + (index + 1)">
+                <div class="choice-list" role="group" [attr.aria-label]="'Các lựa chọn của câu hỏi ' + (index + 1)">
                   @if (question.choices.length === 0) {
                     <p class="inline-note">Chưa có lựa chọn. Backend hiện cho phép mảng lựa chọn rỗng.</p>
                   }

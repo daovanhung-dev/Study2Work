@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); **DD:** `BLOCKED — policy, audit source, and live-schema decisions remain open`; **Source wiring:** `PRESENT — route/page/API #69 caller`; **Acceptance:** `BLOCKED — permission, PII, audit, schema gates`; **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.3 / 2026-11-21 |
+| Version / last updated | 0.3 / 2026-11-27 |
 | Nguồn đối chiếu | [AD-03.md](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03.md), [AD-03_PLAN.md](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03_PLAN.md), [AD-03_markers.json](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -37,6 +37,11 @@
 
 - AD-04/AD-05 action buttons remain disabled while their permission, mutation-body, and lifecycle gates are open. Their reason is accessible to assistive technology; AD-03 performs no mutation.
 - The #69 badge now reflects page state (`Đang tải`, `Đã tải`, or `Lỗi tải`) instead of using one generic not-ready label. This is client request state, not a claim about backend health.
+
+### Current local page-test evidence (2026-11-27)
+
+- `src/app/features/admin/AD03/pages/ad03-page.spec.ts` passes 4/4 routed tests. It verifies the authenticated #69 path and supported profile projection, invalid route IDs without a request, server-error state, rejection of a success envelope with the wrong business code, and disabled AD-04/AD-05 actions.
+- These Angular tests use a mocked login and HTTP responses. They do not verify the live Study API, database schema, browser session, deployment, or the still-blocked permission/PII/audit decisions.
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-03 source screen.png](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/screen.png))

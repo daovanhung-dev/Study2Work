@@ -1,9 +1,9 @@
-study-st02-page {
+:host {
   display: block;
   min-height: 100vh;
 }
 
-study-st02-page .profile-screen {
+:host .profile-screen {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
@@ -11,7 +11,7 @@ study-st02-page .profile-screen {
   background: var(--surface);
 }
 
-study-st02-page .profile-header {
+:host .profile-header {
   position: sticky;
   z-index: 1;
   top: 0;
@@ -21,8 +21,8 @@ study-st02-page .profile-header {
   backdrop-filter: blur(12px);
 }
 
-study-st02-page .profile-header__content,
-study-st02-page .profile-footer__content {
+:host .profile-header__content,
+:host .profile-footer__content {
   display: flex;
   width: min(100%, 1280px);
   align-items: center;
@@ -32,12 +32,12 @@ study-st02-page .profile-footer__content {
   padding-inline: clamp(16px, 3.2vw, 40px);
 }
 
-study-st02-page .profile-header__content {
+:host .profile-header__content {
   min-height: 64px;
 }
 
-study-st02-page .profile-brand,
-study-st02-page .profile-footer__brand {
+:host .profile-brand,
+:host .profile-footer__brand {
   flex: 0 0 auto;
   color: var(--ocean-primary);
   font-size: 22px;
@@ -46,17 +46,17 @@ study-st02-page .profile-footer__brand {
   text-decoration: none;
 }
 
-study-st02-page .profile-navigation,
-study-st02-page .profile-footer__navigation {
+:host .profile-navigation,
+:host .profile-footer__navigation {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-study-st02-page .profile-navigation a,
-study-st02-page .profile-navigation__unavailable,
-study-st02-page .profile-footer__navigation a,
-study-st02-page .profile-footer__navigation span {
+:host .profile-navigation a,
+:host .profile-navigation__unavailable,
+:host .profile-footer__navigation a,
+:host .profile-footer__navigation span {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -72,19 +72,19 @@ study-st02-page .profile-footer__navigation span {
     background-color 140ms ease;
 }
 
-study-st02-page .profile-navigation a:hover,
-study-st02-page .profile-footer__navigation a:hover {
+:host .profile-navigation a:hover,
+:host .profile-footer__navigation a:hover {
   color: var(--ocean-primary);
 }
 
-study-st02-page .profile-navigation a.profile-navigation__link--active {
+:host .profile-navigation a.profile-navigation__link--active {
   color: var(--ocean-primary);
   background: var(--ocean-soft);
   font-weight: 650;
 }
 
-study-st02-page .profile-login,
-study-st02-page .profile-edit {
+:host .profile-login,
+:host .profile-edit {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -100,7 +100,7 @@ study-st02-page .profile-edit {
   white-space: nowrap;
 }
 
-study-st02-page .profile-login {
+:host .profile-login {
   color: var(--surface);
   background: var(--ocean-primary);
   box-shadow: 0 2px 5px rgb(23 50 77 / 10%);
@@ -109,7 +109,7 @@ study-st02-page .profile-login {
     transform 140ms ease;
 }
 
-study-st02-page .profile-account {
+:host .profile-account {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -121,16 +121,16 @@ study-st02-page .profile-account {
   font-weight: 650;
 }
 
-study-st02-page .profile-login:hover {
+:host .profile-login:hover {
   background: var(--ocean-hover);
 }
 
-study-st02-page .profile-login:active {
+:host .profile-login:active {
   transform: translateY(1px);
 }
 
-study-st02-page .profile-login svg,
-study-st02-page .profile-edit svg {
+:host .profile-login svg,
+:host .profile-edit svg {
   width: 19px;
   height: 19px;
   flex: 0 0 auto;
@@ -140,14 +140,14 @@ study-st02-page .profile-edit svg {
   stroke-width: 1.8;
 }
 
-study-st02-page .profile-content {
+:host .profile-content {
   width: min(100%, 1280px);
   flex: 1 0 auto;
   margin-inline: auto;
   padding: 32px clamp(16px, 3.2vw, 40px) 48px;
 }
 
-study-st02-page .profile-heading h1 {
+:host .profile-heading h1 {
   margin: 0;
   color: var(--text-primary);
   font-size: clamp(26px, 3vw, 32px);
@@ -156,14 +156,14 @@ study-st02-page .profile-heading h1 {
   line-height: 1.25;
 }
 
-study-st02-page .profile-heading p {
+:host .profile-heading p {
   margin: 10px 0 0;
   color: var(--text-muted);
   font-size: 14px;
   line-height: 1.6;
 }
 
-study-st02-page .profile-gate {
+:host .profile-gate {
   display: flex;
   width: min(100%, 672px);
   min-height: 400px;
@@ -179,11 +179,11 @@ study-st02-page .profile-gate {
   text-align: center;
 }
 
-study-st02-page .profile-gate__message--error {
+:host .profile-gate__message--error {
   color: var(--danger);
 }
 
-study-st02-page .profile-details {
+:host .profile-details {
   display: grid;
   width: min(100%, 440px);
   gap: 12px;
@@ -191,26 +191,26 @@ study-st02-page .profile-details {
   text-align: left;
 }
 
-study-st02-page .profile-details div {
+:host .profile-details div {
   padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-subtle, var(--surface));
 }
 
-study-st02-page .profile-details dt {
+:host .profile-details dt {
   color: var(--text-muted);
   font-size: 13px;
 }
 
-study-st02-page .profile-details dd {
+:host .profile-details dd {
   margin: 4px 0 0;
   overflow-wrap: anywhere;
   color: var(--text-primary);
   font-weight: 650;
 }
 
-study-st02-page .profile-gate__icon {
+:host .profile-gate__icon {
   display: grid;
   width: 80px;
   height: 80px;
@@ -222,7 +222,7 @@ study-st02-page .profile-gate__icon {
   background: var(--ocean-soft);
 }
 
-study-st02-page .profile-gate__icon svg {
+:host .profile-gate__icon svg {
   width: 42px;
   height: 42px;
   stroke: currentColor;
@@ -231,7 +231,7 @@ study-st02-page .profile-gate__icon svg {
   stroke-width: 2;
 }
 
-study-st02-page .profile-gate h2 {
+:host .profile-gate h2 {
   margin: 0;
   color: var(--text-primary);
   font-size: 21px;
@@ -240,7 +240,7 @@ study-st02-page .profile-gate h2 {
   line-height: 1.35;
 }
 
-study-st02-page .profile-gate__message {
+:host .profile-gate__message {
   max-width: 440px;
   margin: 14px 0 24px;
   color: var(--text-muted);
@@ -248,61 +248,61 @@ study-st02-page .profile-gate__message {
   line-height: 1.7;
 }
 
-study-st02-page .profile-gate__actions {
+:host .profile-gate__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
 }
 
-study-st02-page .profile-edit {
+:host .profile-edit {
   color: var(--surface);
   background: var(--ocean-primary);
   box-shadow: 0 2px 5px rgb(23 50 77 / 10%);
   transition: background-color 140ms ease, transform 140ms ease;
 }
 
-study-st02-page .profile-edit:hover {
+:host .profile-edit:hover {
   background: var(--ocean-hover);
 }
 
-study-st02-page .profile-edit:active {
+:host .profile-edit:active {
   transform: translateY(1px);
 }
 
-study-st02-page .profile-gate__icon--avatar img {
+:host .profile-gate__icon--avatar img {
   width: 100%;
   height: 100%;
   border-radius: inherit;
   object-fit: cover;
 }
 
-study-st02-page .profile-footer {
+:host .profile-footer {
   border-top: 1px solid var(--border);
   background: var(--ocean-soft);
 }
 
-study-st02-page .profile-footer__content {
+:host .profile-footer__content {
   min-height: 88px;
 }
 
-study-st02-page .profile-footer__brand {
+:host .profile-footer__brand {
   font-size: 20px;
 }
 
-study-st02-page .profile-footer__navigation {
+:host .profile-footer__navigation {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
-study-st02-page .profile-footer__navigation a,
-study-st02-page .profile-footer__navigation span {
+:host .profile-footer__navigation a,
+:host .profile-footer__navigation span {
   padding-inline: 8px;
   font-weight: 450;
 }
 
-study-st02-page a:focus-visible,
-study-st02-page button:focus-visible {
+:host a:focus-visible,
+:host button:focus-visible {
   outline: 3px solid var(--ocean-primary);
   outline-offset: 3px;
 }

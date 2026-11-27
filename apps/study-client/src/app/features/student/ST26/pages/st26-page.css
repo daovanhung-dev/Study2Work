@@ -33,7 +33,7 @@
   line-height: 1;
 }
 
-.st26-page .api-button {
+.st26-page button {
   min-height: 44px;
 }
 
@@ -94,6 +94,7 @@
   width: 100%;
 }
 
+.notification-tabs .tab:disabled,
 .coordinator-help .api-button:disabled {
   cursor: not-allowed;
   opacity: 0.65;
@@ -111,7 +112,6 @@
   align-items: center;
   gap: 7px;
   flex: none;
-  min-height: 44px;
   padding: 8px 14px;
   border: 0;
   border-radius: 999px;
@@ -121,7 +121,7 @@
   font: inherit;
 }
 
-.notification-tabs .tab:hover:not(:disabled) {
+.notification-tabs .tab:hover:not(:disabled):not(.active) {
   background: var(--border);
   color: var(--text-primary);
 }
@@ -135,16 +135,6 @@
   background: var(--ocean-primary);
   color: var(--surface);
   font-weight: 700;
-}
-
-.notification-tabs .tab.active:hover {
-  background: var(--ocean-primary);
-  color: var(--surface);
-}
-
-.notification-tabs .tab:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
 }
 
 .notification-count {
@@ -195,8 +185,6 @@
   border-radius: 10px;
   background: var(--ocean-soft);
   color: var(--ocean-primary);
-  font-size: 1.5rem;
-  line-height: 1;
 }
 
 .notice-icon svg {

@@ -4,11 +4,11 @@
 |---|---|
 | Screen ID | `ME-03` |
 | Module | Mentor |
-| Route | `/mentor/courses/:courseId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/courses/:courseId` — source-wired in `mentor.route.ts`; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — source-backed phần cây Content và roster progress; contract API #65, permission, course summary và phần lớn dữ liệu mẫu/UI còn quyết định hoặc không có nguồn.; **Implementation status:** `SOURCE_PARTIAL` — route và caller #46/#49/#65 có trong Study Web; route ID và response được kiểm tra trước khi render, các hành động/panel chỉ có trong prototype vẫn chưa được triển khai.; **Runtime status:** `RUNTIME NOT VERIFIED` — không chạy frontend/API production hoặc live DB trong phiên này. |
+| DD status | `DD BLOCKED` — API #65, permissions, course summary and prototype-only panels/actions still need product/API decisions.<br>`Implementation: SOURCE_PARTIAL` — route and #46/#49/#65 callers are present; route IDs and responses are validated, access errors fail closed, and unsupported prototype panels remain unavailable.<br>`Runtime: RUNTIME NOT VERIFIED` — no authenticated browser, deployed API/DB, or production runtime has been exercised. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-27 |
 | Nguồn đối chiếu | [ME-03.md](../../screen_stitch/04_mentor/ME-03_workspace-khoa-hoc-cua-mentor/ME-03.md), [ME-03_PLAN.md](../../screen_stitch/04_mentor/ME-03_workspace-khoa-hoc-cua-mentor/ME-03_PLAN.md), [ME-03_markers.json](../../screen_stitch/04_mentor/ME-03_workspace-khoa-hoc-cua-mentor/ME-03_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -50,6 +50,13 @@
 > **DD status:** `DD BLOCKED` — source-backed phần cây Content và roster progress; contract API #65, permission, course summary và phần lớn dữ liệu mẫu/UI còn quyết định hoặc không có nguồn.
 > **Implementation status:** `SOURCE_PARTIAL` — route `/mentor/courses/:courseId` và callers #46/#49/#65 có trong Study Web. ME-03 theo dõi `courseId`, hủy request cũ khi route đổi, kiểm tra response và tách trạng thái tải cây nội dung/tiến độ. Các panel prototype không có dữ liệu/API phù hợp vẫn chưa triển khai.
 > **Runtime status:** `RUNTIME NOT VERIFIED` — không chạy frontend/API production hoặc live DB trong phiên này.
+
+### Current source reconciliation — 2026-11-27
+
+- The current Angular route calls #46 for course title, #49 for Content, and #65 for the local Student progress projection. All three requests use the Mentor session/API transport; #49/#65 are read-only server queries with direct-owner checks.
+- The page validates route IDs, separates Content/progress loading and error states, and clears both panels if either endpoint returns an access-denial response. A successful envelope with a wrong business code or invalid projection uses a screen validation message; a `success:false` envelope preserves its server message.
+- Five routed HTTP-backed tests cover the authenticated request paths, source-backed rendering, invalid route ID, fail-closed access handling, and response validation. Focused ME-03 tests pass 5/5; the Study Web suite passes 104 spec files/375 tests. These local mocks do not close ME03-B01–B09 or verify runtime.
+- The source excerpt below is the original design-time snapshot; statements there that the Study Web route is absent do not describe the current checkout.
 
 ## Trích đoạn tổng quan từ DD nguồn
 

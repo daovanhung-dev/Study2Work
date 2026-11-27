@@ -16,13 +16,13 @@
 - In-scope: GET #32 sau accepted #31; pending hiển thị trạng thái, không suy ra score=0; `GRADED` không tự nghĩa là pass; chỉ render field được phép theo response/disclosure policy.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
 
-### Current implementation — 2026-11-20
+### Current implementation — 2026-11-27
 
 - ST-16 has a route/page and follows `attemptId` changes. It calls #32 with Student Bearer, cancels stale reads, checks `DESIGN_RESOURCE_RETRIEVED`, validates the returned attempt ID and payload, and offers retry after read errors.
-- Current #32 source authorizes Student and filters the attempt and answers by authenticated `user_id`. The response exposes `status`, `score` only for `GRADED`, and `answers[]` with question IDs only. It does not return feedback, question text, correctness, or per-question score. Although the handler computes `passed`, the response model drops that field.
-- The page accepts only `PENDING_GRADE` or `GRADED`; an unsupported status is treated as an invalid response. It shows pending status without a zero score, and shows a server score only for `GRADED`; it does not claim pass/fail when #32 omits `passed`, and does not present answer details.
+- Current #32 source authorizes Student and filters the attempt and answers by authenticated `user_id`. The response exposes `status`, `score` and the handler-computed `passed` only for `GRADED`, and `answers[]` with question IDs only. It does not return feedback, question text, correctness, or per-question score.
+- The page accepts only `PENDING_GRADE` or `GRADED`; a matching attempt with another or missing status now gets an explicit unsupported-state message, while a mismatched attempt ID retains its separate error. It shows pending status without a score, shows a server score only for `GRADED`, does not render the returned `passed` field while DD disclosure policy remains open, and does not present answer details.
 - The two accepted states are rendered as “Đang chờ chấm” and “Đã chấm”; raw status codes are not shown. This display mapping does not make `GRADED` a pass result.
-- The source DD's score/feedback/pass disclosure, screenshot content, visual states and CTA destinations remain unresolved. Tests and runtime were not verified.
+- The source DD's score/feedback/pass disclosure, screenshot content, visual states and CTA destinations remain unresolved. Focused ST-16 page/service tests now pass; deployed runtime remains unverified.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -45,7 +45,7 @@
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-16 source screen.png](../../screen_stitch/03_student/ST-16_ket-qua-bai-kiem-tra/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-16_ket-qua-bai-kiem-tra/screen_annotated.png))
 - Luồng: GET #32 sau accepted #31; pending hiển thị trạng thái, không suy ra score=0; `GRADED` không tự nghĩa là pass; chỉ render field được phép theo response/disclosure policy.
-- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #32 route/view/query/model and Study Client caller exist; server checks authenticated Student ownership and returns question IDs only; score is omitted unless status is GRADED, and `passed` is dropped by the response model. Feedback/correctness/detail disclosure and result-state/CTA design remain open; legacy BIGINT and V1-PILOT UUID schemas differ; PNG and HTML disagree and do not match the Study Web target.
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #32 route/view/query/model and Study Client caller exist; server checks authenticated Student ownership and returns question IDs only; score and computed `passed` are omitted unless status is GRADED. ST-16 currently renders the score but not `passed`. Feedback/correctness/detail disclosure and result-state/CTA design remain open; legacy BIGINT and V1-PILOT UUID schemas differ; PNG and HTML disagree and do not match the Study Web target.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.

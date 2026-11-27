@@ -71,6 +71,15 @@ def sample_resource_rows() -> list[dict[str, Any]]:
     ]
 
 
+def allow_active_enrollment(monkeypatch: pytest.MonkeyPatch) -> None:
+    def query_one(db: Any, query: str, params: dict[str, Any]) -> dict[str, int]:
+        assert query == lessons_resources_view.CHECK_ACTIVE_ENROLLMENT
+        assert params == {"user_id": 1001, "course_id": 9001}
+        return {"active": 1}
+
+    monkeypatch.setattr(lessons_resources_view, "query_one", query_one)
+
+
 def test_validate_lesson_id_valid() -> None:
     result = validate_lesson_id("101", trace_id="test-trace")
     assert result == 101
@@ -152,6 +161,7 @@ def test_get_lesson_resources_db_error(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_get_lesson_resources_success(monkeypatch: pytest.MonkeyPatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: student_claims())
+    allow_active_enrollment(monkeypatch)
     monkeypatch.setattr(
         lessons_resources_view,
         "find_published_lesson",
@@ -180,6 +190,7 @@ def test_get_lesson_resources_success(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_get_lesson_resources_empty_resources(monkeypatch: pytest.MonkeyPatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: student_claims())
+    allow_active_enrollment(monkeypatch)
     monkeypatch.setattr(
         lessons_resources_view,
         "find_published_lesson",
@@ -203,6 +214,32 @@ def test_get_lesson_resources_empty_resources(monkeypatch: pytest.MonkeyPatch) -
     assert response["data"]["resources"] == []
 
 
+def test_get_lesson_resources_requires_active_enrollment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FakeSession()
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: student_claims())
+    monkeypatch.setattr(
+        lessons_resources_view,
+        "find_published_lesson",
+        lambda db, *, lesson_id: sample_lesson_row(),
+    )
+    monkeypatch.setattr(lessons_resources_view, "query_one", lambda db, query, params: None)
+
+    response = get_lesson_resources(
+        authorization="Bearer student-token",
+        lesson_id_raw="101",
+        db=session,  # type: ignore[arg-type]
+        trace_id="test-trace",
+    )
+
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 403
+    payload = json.loads(response.body.decode())
+    assert payload["businessCode"] == "DESIGN_ACCESS_DENIED"
+    assert session.rollback_count == 0
+
+
 def test_lesson_resources_route_via_client(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -210,6 +247,7 @@ def test_lesson_resources_route_via_client(
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: student_claims())
+    allow_active_enrollment(monkeypatch)
     monkeypatch.setattr(
         lessons_resources_view,
         "find_published_lesson",

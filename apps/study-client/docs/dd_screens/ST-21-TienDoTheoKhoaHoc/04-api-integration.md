@@ -43,12 +43,12 @@ returns aggregate PUBLISHED-lesson counts only, without lesson timeline data.
 | Thuộc tính | API #37 |
 |---|---|
 | Method / endpoint | `GET /api/v1/users/me/progress/{course_id}` |
-| Authentication | Bearer JWT; role Student theo catalog. Claim-to-user mapping và route guard chưa được #37 xác định trong current source. |
-| Path | `course_id:int64!`; min/max/domain, parse/range behavior chưa đặc tả. |
+| Authentication | Bearer JWT; role Student theo catalog. Current `validate_course_progress_request` validates the token and Student role; the query uses the token-derived user ID and requires an ACTIVE enrollment. This is local source evidence only. |
+| Path | `course_id:int64!`; current source parses a positive int64 and returns `DESIGN_RESOURCE_NOT_FOUND` for an invalid or unavailable course. |
 | Query / body | Không có query parameter hoặc request body trong catalog/DD request. |
-| Success | HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<UserProfile>`. `UserProfile` không có progress fields nên không map được expected course/lesson progress. |
-| Errors | Chỉ 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`. Catalog không khai báo 400/422. |
-| Current source | `DECLARED_NOT_RUNNABLE`: #37 route/module/query/test NOT_FOUND. API DD Draft; không có request chạy được để xác minh. |
+| Success | Catalog declares `ApiEnvelope<UserProfile>`, which conflicts with the current local `ApiEnvelope<CourseProgress>` response (`course_id`, lesson counts, percentage, `has_content`). No contract approval or deployed response is inferred. |
+| Errors | Catalog expects 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`; current source returns 404 for invalid/missing course progress, uses the Student auth responses, and maps database/model errors to 500. Catalog does not declare 400/422. |
+| Current source | Rechecked 2026-11-27: route `/users/me/progress/{course_id}`, validator, query, and `CourseProgress` response model are registered in local Study Server source. Three focused route-level tests cover Student auth, query identity mapping, and aggregate projection with mocked DB reads; deployed runtime remains unverified. |
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

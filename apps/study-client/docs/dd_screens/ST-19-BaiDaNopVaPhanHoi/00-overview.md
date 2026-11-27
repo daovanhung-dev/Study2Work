@@ -20,7 +20,7 @@
 
 - ST-19 follows `submissionId` changes, cancels stale #36 reads, validates `DESIGN_RESOURCE_RETRIEVED` plus response identity/shape, and offers retry.
 - #36 authenticates Student and queries by both `submission_id` and token-derived `user_id`; missing/foreign submissions return 404. The query only selects score/feedback when status is `GRADED`; it maps the legacy single `file_url` into a zero-or-one `files[]` result.
-- The page shows receipt/content and file metadata, never opens returned file URLs, and shows score/feedback only for `GRADED`. It links back to assignment detail. It does not implement the full Stitch rubric, mentor/cohort/skills/next-assignment interactions or progress route because #36 does not supply those contracts.
+- The page currently renders the returned status and optional submitted text. It withholds timestamp, score, feedback and file metadata while timezone, disclosure and asset-mapping decisions remain open. It links back to assignment detail. It does not implement the full Stitch rubric, mentor/cohort/skills/next-assignment interactions or progress route because #36 does not supply those contracts.
 - The page labels only `SUBMITTED` and `GRADED` as “Đã nộp” and “Đã chấm”; any other submission status uses a neutral unsupported-state label. File status is omitted because its full enum is not established.
 - API #35 returns `data.id` while inventory names `submission_id`; the current ST-18 caller passes `data.id`. Runtime and tests were not verified.
 
@@ -93,7 +93,7 @@
 
 **Expected behavior:** nhận ID bài nộp từ ST-18, xác thực Student, gọi GET #36, kiểm tra envelope/business code và hiển thị đúng receipt/grade fields mà API được duyệt cho phép. `SUBMITTED` không tự biến thành `GRADED`; score/feedback chỉ được trình bày theo disclosure policy đã chốt. Các links quay lại ST-17/ST-20 theo route/data hợp lệ.
 
-**Current behavior:** Study Web chưa có ST-19 route. API #36 chưa có Student route/module/query/test; catalog và DD chỉ là design evidence. Mentor API #55 hiện có là endpoint riêng cho Mentor với path `/api/v1/mentor/submissions/{submission_id}` và không thay thế API #36. PNG/HTML là mockup/fallback, không phải runtime.
+**Current behavior:** Study Web có ST-19 route/page và caller #36. The page renders the server status and optional submitted text only. It withholds timestamp formatting, score, feedback and file metadata because timezone, disclosure and asset-mapping rules remain unresolved. The Student #36 route/query are local source evidence; deployed API, live schema, browser session and production runtime remain unverified. Mentor API #55 is a separate endpoint and does not replace #36. PNG/HTML remain design references, not runtime.
 
 ### A.4. API contract và trạng thái source
 

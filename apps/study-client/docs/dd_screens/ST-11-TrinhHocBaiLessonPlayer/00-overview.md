@@ -16,13 +16,13 @@
 - In-scope: GET #24; GET #26 lazy; PATCH #25 khi có biến cố progress hợp lệ; GET #27 sau completed.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
 
-### Current implementation — 2026-11-20
+### Current implementation — 2026-11-27
 
 - Study Client có route và page ST-11. ST-10 truyền `lessonId`; ST-11 gọi API #24 bằng Student Bearer, hủy request cũ khi route đổi ID, kiểm tra business code, payload và ID trả về, rồi hiển thị nội dung văn bản.
 - Response guard chỉ chấp nhận lesson `PUBLISHED`; nhãn trạng thái hiển thị là “Đã xuất bản”, không phải raw enum.
 - ST-11 có loading, lỗi có thể thử lại, nội dung và liên kết sang ST-12. Player/video, progress (#25), bài kế tiếp (#27), mục lục và completed state chưa được triển khai vì nguồn phát và progress/terminal contract còn thiếu hoặc khác catalog.
 - Backend #24 kiểm tra lesson/course `PUBLISHED` và enrollment `ACTIVE` hoặc `COMPLETED`. #25, #26 và #27 có source route/module; ST-11 hiện không gọi #25/#27 và tải ST-12 theo thao tác người học.
-- Không chạy test hoặc xác minh browser/live runtime trong lần cập nhật này. Các đoạn source-DD bên dưới tiếp tục mô tả thiết kế gốc, không phải trạng thái runtime hiện hành.
+- Local verification: five routed page tests cover #24 loading, invalid route/business-code/ID handling, gated player/progress UI, and retry; one service test verifies the exact #24 `lesson_id` mapping. The full Study Web suite passes 97 spec files / 345 tests. These use local mocks; browser/live runtime remains unverified. The source-DD paragraphs below continue to describe the original design, not current runtime behavior.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |

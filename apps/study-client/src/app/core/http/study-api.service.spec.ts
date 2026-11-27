@@ -13,13 +13,13 @@ describe('Study Server API registry', () => {
     const entries = Object.values(STUDY_SERVER_APIS);
     const catalogIds = entries.flatMap((api) => (typeof api.id === 'number' ? [api.id] : []));
 
-    expect(entries).toHaveLength(104);
+    expect(entries).toHaveLength(106);
     expect(catalogIds.sort((first, second) => first - second)).toEqual(
-      Array.from({ length: 103 }, (_value, index) => index + 1),
+      Array.from({ length: 105 }, (_value, index) => index + 1),
     );
-    expect(entries.filter((api) => api.status === 'WIRED')).toHaveLength(66);
+    expect(entries.filter((api) => api.status === 'WIRED')).toHaveLength(98);
     expect(entries.filter((api) => api.status === 'STUB')).toHaveLength(1);
-    expect(entries.filter((api) => api.status === 'UNWIRED')).toHaveLength(36);
+    expect(entries.filter((api) => api.status === 'UNWIRED')).toHaveLength(6);
     expect(entries.filter((api) => api.status === 'SOURCE_ONLY')).toHaveLength(1);
 
     expect(STUDY_SERVER_APIS.API_010).toMatchObject({
@@ -140,7 +140,7 @@ describe('StudyApiService', () => {
 
   it('rejects unwired APIs before sending HTTP', () => {
     expect(() =>
-      api.request(STUDY_SERVER_APIS.API_011, { pathParams: { course_id: '42' } }),
+      api.request(STUDY_SERVER_APIS.API_016),
     ).toThrow(/UNWIRED/);
     httpTestingController.expectNone((request) => request.url.startsWith('/api/v1'));
   });

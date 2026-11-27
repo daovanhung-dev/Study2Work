@@ -1,5 +1,7 @@
 # ME-03 — Data Flow & State
 
+> **Current source reconciliation — 2026-11-27:** `ME03Page` requests #46, #49 and #65 through `ME03WorkspaceService` and the authenticated Mentor transport. #49/#65 are read-only GETs with direct-owner guards; #65 currently returns the derived `Page<MentorStudentProgress>` shape, which still differs from the catalog. The page validates route IDs and response projections, cancels stale route reads, and fails closed on 401/403/404. Failed envelopes retain their server error message; wrong success codes or malformed projections use screen validation errors. Current client tests pass 5/5; live DB/runtime and the #65 contract remain unverified.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
